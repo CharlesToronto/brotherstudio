@@ -3,9 +3,9 @@ export const site = {
   instagramUrl:
     "https://www.instagram.com/brother_studio_canada?igsh=MXgydTE2ZXhmbTFqOQ==",
   contact: {
-    addressLines: ["Address line 1", "City, State ZIP", "Country"],
-    email: "email@example.com",
-    phone: "+1 000 000 0000",
+    addressLines: ["87 Ashbury Blvrd", "Ajax, L1Z 1N1", "Canada"],
+    email: "info@brotherstudio.ca",
+    phone: "+1 437 677 3212",
     openingHours: "Mon–Fri 09:00–18:00",
   },
 } as const;
