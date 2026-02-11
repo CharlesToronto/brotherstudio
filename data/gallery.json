@@ -2,18 +2,8 @@
   "items": [
     {
       "id": "01",
-      "src": "/uploads/01-1770837572350.png",
+      "src": "/uploads/01-1770842937345.png",
       "architect": "BS / Nike Paris"
-    },
-    {
-      "id": "09",
-      "src": "/uploads/09-1770837180130.png",
-      "architect": "BS / EcoQuartier VS"
-    },
-    {
-      "id": "02",
-      "src": "/uploads/02-1770836897957.avif",
-      "architect": "BS / Home"
     },
     {
       "id": "05",
@@ -21,9 +11,9 @@
       "architect": "BS / Home"
     },
     {
-      "id": "03",
-      "src": "/uploads/03-1770837652152.png",
-      "architect": "BS / Nike Paris"
+      "id": "02",
+      "src": "/uploads/02-1770836897957.avif",
+      "architect": "BS / Home"
     },
     {
       "id": "04",
@@ -46,9 +36,9 @@
       "architect": "BS / Home"
     },
     {
-      "id": "5bab6c3d-676d-4741-8694-d4219df9fcda",
-      "src": "/uploads/5bab6c3d-676d-4741-8694-d4219df9fcda-1770837872412.png",
-      "architect": "BS / Theatre Fribourg"
+      "id": "f008bf4b-ea84-4c9c-a60a-06fde579fda0",
+      "src": "/uploads/f008bf4b-ea84-4c9c-a60a-06fde579fda0-1770843125236.png",
+      "architect": "Architect / Studio"
     },
     {
       "id": "e447022d-7df8-484d-bee3-4ef455c2038a",
@@ -56,9 +46,24 @@
       "architect": "BS / Chillon Montreux"
     },
     {
-      "id": "031cc9ea-76e7-48f2-b50d-ec785d557f3d",
-      "src": "/uploads/031cc9ea-76e7-48f2-b50d-ec785d557f3d-1770838431749.png",
-      "architect": "BS / Home"
+      "id": "6de312f5-b7ca-4262-9db6-4395a45ca20a",
+      "src": "/uploads/6de312f5-b7ca-4262-9db6-4395a45ca20a-1770843148652.png",
+      "architect": "Architect / Studio"
+    },
+    {
+      "id": "9f1682bb-5ad1-44b3-8caa-95e464a1e601",
+      "src": "/uploads/9f1682bb-5ad1-44b3-8caa-95e464a1e601-1770843162262.png",
+      "architect": "Architect / Studio"
+    },
+    {
+      "id": "bf610e79-0f67-4f50-9125-5a09d4875974",
+      "src": "/uploads/bf610e79-0f67-4f50-9125-5a09d4875974-1770843115569.png",
+      "architect": "Architect / Studio"
+    },
+    {
+      "id": "32dc8c6e-5a11-4316-8170-d189612f8af0",
+      "src": "/uploads/32dc8c6e-5a11-4316-8170-d189612f8af0-1770844292092.png",
+      "architect": "Architect / Studio"
     }
   ]
 }

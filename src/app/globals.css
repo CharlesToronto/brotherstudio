@@ -237,3 +237,7 @@ input:focus-visible {
 .contactSpacer {
   height: 16px;
 }
+
+.contactAccent {
+  color: #ff4d00;
+}

@@ -15,9 +15,8 @@ export default function ContactPage() {
           <a href={`tel:${site.contact.phone}`}>{site.contact.phone}</a>
         </div>
         <div className="contactSpacer" />
-        <div>{site.contact.openingHours}</div>
+        <div className="contactAccent">{site.contact.openingHours}</div>
       </address>
     </main>
   );
 }
-
