@@ -1,6 +1,7 @@
 export const site = {
   name: "BrotherStudio",
-  instagramUrl: "https://www.instagram.com/",
+  instagramUrl:
+    "https://www.instagram.com/brother_studio_canada?igsh=MXgydTE2ZXhmbTFqOQ==",
   contact: {
     addressLines: ["Address line 1", "City, State ZIP", "Country"],
     email: "email@example.com",
@@ -8,4 +9,3 @@ export const site = {
     openingHours: "Mon–Fri 09:00–18:00",
   },
 } as const;
-
