@@ -3,17 +3,17 @@
     {
       "id": "01",
       "src": "/uploads/01-1770842937345.png",
-      "architect": "BS / Nike Paris"
+      "architect": "BS"
     },
     {
       "id": "06",
       "src": "/uploads/06-1770836961566.png",
-      "architect": "BS / Home"
+      "architect": "BS / Home GVA"
     },
     {
       "id": "04",
       "src": "/uploads/04-1770836826671.png",
-      "architect": "BS / Home"
+      "architect": "BS / Home Lac"
     },
     {
       "id": "6de312f5-b7ca-4262-9db6-4395a45ca20a",
@@ -23,12 +23,12 @@
     {
       "id": "05",
       "src": "/uploads/05-1770836909443.png",
-      "architect": "BS / Home"
+      "architect": "BS / Home GVA"
     },
     {
       "id": "f008bf4b-ea84-4c9c-a60a-06fde579fda0",
       "src": "/uploads/f008bf4b-ea84-4c9c-a60a-06fde579fda0-1770843125236.png",
-      "architect": "Architect / Studio"
+      "architect": "BS / Home GVA"
     },
     {
       "id": "e447022d-7df8-484d-bee3-4ef455c2038a",
@@ -38,42 +38,47 @@
     {
       "id": "07",
       "src": "/uploads/07-1770836838872.png",
-      "architect": "BS / Home"
+      "architect": "BS / Home GVA"
     },
     {
       "id": "9f1682bb-5ad1-44b3-8caa-95e464a1e601",
       "src": "/uploads/9f1682bb-5ad1-44b3-8caa-95e464a1e601-1770843162262.png",
-      "architect": "Architect / Studio"
+      "architect": "BS / Home Lac"
     },
     {
       "id": "08",
       "src": "/uploads/08-1770836930659.png",
-      "architect": "BS / Home"
+      "architect": "BS / Home GVA"
     },
     {
       "id": "02",
       "src": "/uploads/02-1770836897957.avif",
-      "architect": "BS / Home"
+      "architect": "BS / Home GVA"
     },
     {
       "id": "bf610e79-0f67-4f50-9125-5a09d4875974",
       "src": "/uploads/bf610e79-0f67-4f50-9125-5a09d4875974-1770843115569.png",
-      "architect": "Architect / Studio"
+      "architect": "BS / Home GVA"
+    },
+    {
+      "id": "b238c6b8-7695-4412-8525-76ca89c3ab45",
+      "src": "/uploads/b238c6b8-7695-4412-8525-76ca89c3ab45-1770847232197.png",
+      "architect": "BS / Home (Canada)"
     },
     {
       "id": "32dc8c6e-5a11-4316-8170-d189612f8af0",
       "src": "/uploads/32dc8c6e-5a11-4316-8170-d189612f8af0-1770844292092.png",
-      "architect": "Architect / Studio"
+      "architect": "BS / Home Lac"
     },
     {
       "id": "a952777e-9ab1-4d0a-8156-82ad17f41e64",
       "src": "/uploads/a952777e-9ab1-4d0a-8156-82ad17f41e64-1770844736207.png",
-      "architect": "Architect / Studio"
+      "architect": "BS / Home Lac"
     },
     {
       "id": "6d3ddc58-530d-441a-aba6-9b226f7052c2",
       "src": "/uploads/6d3ddc58-530d-441a-aba6-9b226f7052c2-1770846022117.png",
-      "architect": "Architect / Studio"
+      "architect": "BS / Home (Canada)"
     }
   ]
 }
