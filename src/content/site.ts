@@ -6,6 +6,6 @@ export const site = {
     addressLines: ["87 Ashbury Blvrd", "Ajax, L1Z 1N1", "Canada"],
     email: "info@brotherstudio.ca",
     phone: "+1 437 677 3212",
-    openingHours: "Mon–Fri 09:00–18:00",
+    openingHours: "",
   },
 } as const;
