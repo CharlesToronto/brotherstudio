@@ -57,7 +57,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
           aria-label="Toggle theme"
           aria-pressed={theme === "dark"}
         >
-          {theme === "dark" ? "ON" : "OFF"}
+          {theme === "dark" ? "BLACK" : "WHITE"}
         </button>
       </nav>
     </header>
