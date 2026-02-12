@@ -2,11 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { site } from "@/content/site";
 
-export function SiteHeader() {
+type Theme = "light" | "dark";
+const THEME_COOKIE_KEY = "theme";
+
+type SiteHeaderProps = {
+  initialTheme: Theme;
+};
+
+export function SiteHeader({ initialTheme }: SiteHeaderProps) {
   const pathname = usePathname();
+  const [theme, setTheme] = useState<Theme>(initialTheme);
+
+  const toggleTheme = () => {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    setTheme(next);
+    try {
+      document.cookie = `${THEME_COOKIE_KEY}=${next}; path=/; max-age=31536000; samesite=lax`;
+    } catch {}
+  };
 
   return (
     <header className="siteHeader">
@@ -32,8 +50,16 @@ export function SiteHeader() {
         >
           Contact
         </Link>
+        <button
+          className="siteNavLink themeToggle"
+          type="button"
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+          aria-pressed={theme === "dark"}
+        >
+          {theme === "dark" ? "ON" : "OFF"}
+        </button>
       </nav>
     </header>
   );
 }
-
