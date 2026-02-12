@@ -2,7 +2,7 @@
   "items": [
     {
       "id": "01",
-      "src": "/uploads/01-1770842937345.png",
+      "src": "/uploads/01-1770917369940.png",
       "architect": "BS"
     },
     {
@@ -28,12 +28,12 @@
     {
       "id": "f008bf4b-ea84-4c9c-a60a-06fde579fda0",
       "src": "/uploads/f008bf4b-ea84-4c9c-a60a-06fde579fda0-1770843125236.png",
-      "architect": "BS / Home GVA"
+      "architect": "BS / Home (Canada)"
     },
     {
-      "id": "e447022d-7df8-484d-bee3-4ef455c2038a",
-      "src": "/uploads/e447022d-7df8-484d-bee3-4ef455c2038a-1770838041389.png",
-      "architect": "BS / Chillon Montreux"
+      "id": "2d863c3f-3534-4140-a650-02fd3a544075",
+      "src": "/uploads/2d863c3f-3534-4140-a650-02fd3a544075-1770908344894.png",
+      "architect": "BS / Home (Canada)"
     },
     {
       "id": "07",
@@ -52,7 +52,7 @@
     },
     {
       "id": "02",
-      "src": "/uploads/02-1770836897957.avif",
+      "src": "/uploads/02-1770907395755.png",
       "architect": "BS / Home GVA"
     },
     {
@@ -79,6 +79,21 @@
       "id": "6d3ddc58-530d-441a-aba6-9b226f7052c2",
       "src": "/uploads/6d3ddc58-530d-441a-aba6-9b226f7052c2-1770846022117.png",
       "architect": "BS / Home (Canada)"
+    },
+    {
+      "id": "6acc7e91-ce3b-4ce4-b1c8-abdee339828d",
+      "src": "/uploads/6acc7e91-ce3b-4ce4-b1c8-abdee339828d-1770907507443.png",
+      "architect": "BS / Home (Canada)"
+    },
+    {
+      "id": "6f5fec3e-3992-4a2c-87e4-c9f2d2206aeb",
+      "src": "/uploads/6f5fec3e-3992-4a2c-87e4-c9f2d2206aeb-1770907591275.png",
+      "architect": "BS / Home (Canada)"
+    },
+    {
+      "id": "9daff2f2-ceb0-4024-9de6-041280dd4fac",
+      "src": "/uploads/9daff2f2-ceb0-4024-9de6-041280dd4fac-1770916752231.png",
+      "architect": "BS / Church (Canada)"
     }
   ]
 }
