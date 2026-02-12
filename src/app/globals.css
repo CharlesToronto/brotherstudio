@@ -112,9 +112,9 @@ input:focus-visible {
   }
 
   .siteNav {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 18px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
   }
 
   .gallery {
