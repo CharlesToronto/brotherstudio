@@ -89,6 +89,139 @@ input:focus-visible {
   padding: 0 var(--page-padding) var(--page-padding);
 }
 
+.adminAnalyticsSection {
+  margin: 0 0 22px;
+  padding: 16px;
+  border: 1px solid var(--foreground);
+}
+
+.adminAnalyticsTitle {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.adminAnalyticsText {
+  margin: 0;
+  max-width: 72ch;
+}
+
+.adminAnalyticsTables {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(320px, 1fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.adminStatsTable,
+.adminTopPagesTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.adminStatsTable th,
+.adminStatsTable td,
+.adminTopPagesTable th,
+.adminTopPagesTable td {
+  border: 1px solid var(--foreground);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.adminStatsTable td,
+.adminTopPagesTable td:nth-child(2),
+.adminTopPagesTable td:nth-child(3),
+.adminTopPagesTable th:nth-child(2),
+.adminTopPagesTable th:nth-child(3) {
+  text-align: right;
+}
+
+.adminEmptyCell {
+  text-align: center;
+}
+
+.adminAnalyticsLink {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.adminLockOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  background: rgb(255 255 255 / 34%);
+}
+
+html[data-theme="dark"] .adminLockOverlay {
+  background: rgb(0 0 0 / 38%);
+}
+
+.adminLockCard {
+  width: min(380px, calc(100vw - 32px));
+  border: 1px solid var(--foreground);
+  background: var(--background);
+  color: var(--foreground);
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.adminLockTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.adminLockText {
+  margin: 0;
+}
+
+.adminLockInput {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--foreground);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  padding: 10px;
+}
+
+.adminLockButton {
+  border: 1px solid var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.adminLockError {
+  margin: 0;
+  color: #c43b2f;
+}
+
 .gallery {
   column-count: 3;
   column-gap: var(--grid-gap);
@@ -119,6 +252,10 @@ input:focus-visible {
 
   .gallery {
     column-count: 1;
+  }
+
+  .adminAnalyticsTables {
+    grid-template-columns: 1fr;
   }
 }
 
