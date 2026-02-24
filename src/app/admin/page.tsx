@@ -1,9 +1,18 @@
+import type { Metadata } from "next";
 import { AdminLockOverlay } from "@/components/AdminLockOverlay";
 import { Gallery } from "@/components/Gallery";
 import { getAnalyticsSummary } from "@/lib/analyticsStore";
 import { getGalleryItems } from "@/lib/galleryStore";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Admin",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
+};
 
 function formatTimestamp(value: string | null) {
   if (!value) return "Aucune visite enregistrée";

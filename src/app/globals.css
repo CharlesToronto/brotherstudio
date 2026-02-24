@@ -381,8 +381,163 @@ html[data-theme="dark"] .adminLockOverlay {
 
 .contactText {
   font-style: normal;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.5;
+}
+
+.contactLayout {
+  display: grid;
+  grid-template-columns: minmax(320px, 560px) minmax(220px, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.contactBlock {
+  display: grid;
+  gap: 10px;
+}
+
+.contactTitle {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.contactIntro {
+  margin: 0;
+  max-width: 64ch;
+}
+
+.contactForm {
+  --contact-form-border: #d6d6d6;
+  display: grid;
+  gap: 12px;
+  margin: 2px 0 0;
+}
+
+html[data-theme="dark"] .contactForm {
+  --contact-form-border: #4d4d4d;
+}
+
+.contactField {
+  display: grid;
+  gap: 6px;
+}
+
+.contactLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7f7f7f;
+}
+
+.contactTemplateList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.contactTemplateButton {
+  border: 1px solid var(--contact-form-border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.contactTemplateButton[data-active="true"] {
+  border-color: var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.contactInput,
+.contactTextarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--contact-form-border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  padding: 8px;
+  border-radius: 0;
+}
+
+.contactInput {
+  height: 34px;
+}
+
+.contactTextarea {
+  resize: vertical;
+  min-height: 88px;
+}
+
+.contactInput::placeholder,
+.contactTextarea::placeholder {
+  color: rgb(127 127 127);
+  opacity: 1;
+}
+
+.contactHoneypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.contactFormActions {
+  display: grid;
+  gap: 10px;
+  align-items: start;
+  justify-items: start;
+  margin-top: 4px;
+}
+
+.contactButton {
+  border: 1px solid var(--contact-form-border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.contactButton:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.contactStatus {
+  margin: 0;
+  max-width: 72ch;
+  font-size: 12px;
+}
+
+.contactStatus--success {
+  color: inherit;
+}
+
+.contactStatus--error {
+  color: #c43b2f;
 }
 
 .contactSpacer {
@@ -391,4 +546,82 @@ html[data-theme="dark"] .adminLockOverlay {
 
 .contactAccent {
   color: #ff4d00;
+}
+
+@media (max-width: 640px) {
+  .contactLayout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .contactBlockDetails {
+    order: -1;
+  }
+
+  .contactTemplateList {
+    gap: 6px;
+  }
+
+  .contactTemplateButton {
+    min-width: 88px;
+  }
+
+  .contactInput,
+  .contactTextarea {
+    font-size: 12px;
+  }
+}
+
+.servicesLayout {
+  display: grid;
+  gap: 24px;
+  max-width: 980px;
+}
+
+.servicesSection {
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.servicesTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.servicesIntro {
+  margin: 0;
+  max-width: 72ch;
+}
+
+.servicesList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.servicesItem {
+  position: relative;
+  margin-left: 16px;
+  padding-left: 18px;
+  line-height: 1.5;
+}
+
+.servicesItem::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 8px;
+  border-top: 1px solid var(--foreground);
+}
+
+.servicesNote {
+  margin: 0;
+  font-style: normal;
 }

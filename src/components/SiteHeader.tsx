@@ -2,9 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { getMessages } from "@/content/messages";
 import { site } from "@/content/site";
+import {
+  DEFAULT_LOCALE,
+  LOCALE_COOKIE_KEY,
+  getLocaleFromPathname,
+  stripLocaleFromPathname,
+  withLocalePath,
+} from "@/lib/i18n";
 
 type Theme = "light" | "dark";
 const THEME_COOKIE_KEY = "theme";
@@ -16,6 +24,20 @@ type SiteHeaderProps = {
 export function SiteHeader({ initialTheme }: SiteHeaderProps) {
   const pathname = usePathname();
   const [theme, setTheme] = useState<Theme>(initialTheme);
+  const localeFromPath = getLocaleFromPathname(pathname);
+  const locale = localeFromPath ?? DEFAULT_LOCALE;
+  const subpath = stripLocaleFromPathname(pathname);
+  const messages = getMessages(locale).header;
+  const isGalleryPage = subpath === "/";
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    try {
+      document.cookie = `${LOCALE_COOKIE_KEY}=${locale}; path=/; max-age=31536000; samesite=lax`;
+    } catch {}
+  }, [locale]);
+
+  const localizedHref = (target: string) => withLocalePath(locale, target);
 
   const toggleTheme = () => {
     const next: Theme = theme === "dark" ? "light" : "dark";
@@ -28,27 +50,34 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
 
   return (
     <header className="siteHeader">
-      <Link className="siteLogo" href="/">
+      <Link className="siteLogo" href={localizedHref("/")}>
         {site.name}
       </Link>
 
       <nav className="siteNav" aria-label="Primary">
         <Link
           className="siteNavLink"
-          href="/"
-          aria-current={pathname === "/" ? "page" : undefined}
+          href={localizedHref("/")}
+          aria-current={isGalleryPage ? "page" : undefined}
         >
-          Gallery
+          {messages.nav.gallery}
         </Link>
         <a className="siteNavLink" href={site.instagramUrl}>
-          Instagram
+          {messages.nav.instagram}
         </a>
         <Link
           className="siteNavLink"
-          href="/contact"
-          aria-current={pathname === "/contact" ? "page" : undefined}
+          href={localizedHref("/services")}
+          aria-current={subpath === "/services" ? "page" : undefined}
         >
-          Contact
+          {messages.nav.services}
+        </Link>
+        <Link
+          className="siteNavLink"
+          href={localizedHref("/contact")}
+          aria-current={subpath === "/contact" ? "page" : undefined}
+        >
+          {messages.nav.contact}
         </Link>
         <button
           className="siteNavLink themeToggle"
@@ -57,7 +86,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
           aria-label="Toggle theme"
           aria-pressed={theme === "dark"}
         >
-          {theme === "dark" ? "BLACK" : "WHITE"}
+          {theme === "dark" ? messages.themeLabels.dark : messages.themeLabels.light}
         </button>
       </nav>
     </header>

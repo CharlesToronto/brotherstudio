@@ -11,14 +11,14 @@
       "architect": "BS / Home Lac"
     },
     {
-      "id": "05",
-      "src": "/uploads/05-1770836909443.png",
-      "architect": "BS / Home GVA"
-    },
-    {
       "id": "f008bf4b-ea84-4c9c-a60a-06fde579fda0",
       "src": "/uploads/f008bf4b-ea84-4c9c-a60a-06fde579fda0-1770843125236.png",
       "architect": "BS / Home (Canada)"
+    },
+    {
+      "id": "5cc258a7-6854-420a-bb30-b96cdbe2a9ad",
+      "src": "/uploads/5cc258a7-6854-420a-bb30-b96cdbe2a9ad-1771959395311.jpeg",
+      "architect": "BS / Kitchen"
     },
     {
       "id": "07",
@@ -29,6 +29,11 @@
       "id": "9f1682bb-5ad1-44b3-8caa-95e464a1e601",
       "src": "/uploads/9f1682bb-5ad1-44b3-8caa-95e464a1e601-1770843162262.png",
       "architect": "BS / Home Lac"
+    },
+    {
+      "id": "0024c281-1ba2-495c-88c7-873bcad4855a",
+      "src": "/uploads/0024c281-1ba2-495c-88c7-873bcad4855a-1771959346436.jpeg",
+      "architect": "BS / Kitchen"
     },
     {
       "id": "af35e25a-90bf-47d3-92f4-8675e5f2ea46",
@@ -61,6 +66,11 @@
       "architect": "BS / Home GVA"
     },
     {
+      "id": "05",
+      "src": "/uploads/05-1770836909443.png",
+      "architect": "BS / Home GVA"
+    },
+    {
       "id": "a952777e-9ab1-4d0a-8156-82ad17f41e64",
       "src": "/uploads/a952777e-9ab1-4d0a-8156-82ad17f41e64-1770844736207.png",
       "architect": "BS / Home Lac"
@@ -79,16 +89,6 @@
       "id": "8d30da55-00fc-4ec4-9824-09f163adb606",
       "src": "/uploads/8d30da55-00fc-4ec4-9824-09f163adb606-1771520458136.png",
       "architect": "BS / Home"
-    },
-    {
-      "id": "0024c281-1ba2-495c-88c7-873bcad4855a",
-      "src": "/uploads/0024c281-1ba2-495c-88c7-873bcad4855a-1771959346436.jpeg",
-      "architect": "BS / Kitchen"
-    },
-    {
-      "id": "5cc258a7-6854-420a-bb30-b96cdbe2a9ad",
-      "src": "/uploads/5cc258a7-6854-420a-bb30-b96cdbe2a9ad-1771959395311.jpeg",
-      "architect": "BS / Kitchen"
     }
   ]
 }
