@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -11,6 +12,9 @@ type GalleryProps = {
   items: GalleryItem[];
   editable?: boolean;
 };
+
+const GALLERY_IMAGE_SIZES =
+  "(max-width: 640px) calc(100vw - 36px), (max-width: 1100px) calc((100vw - 84px) / 2), calc((100vw - 112px) / 3)";
 
 function arraysEqual(a: string[], b: string[]) {
   if (a.length !== b.length) return false;
@@ -279,9 +283,11 @@ export function Gallery({ items, editable = false }: GalleryProps) {
           void saveOrder(next, previous);
         }}
       >
-        {localItems.map((item) => {
+        {localItems.map((item, index) => {
           const isDropTarget =
             editable && dragId !== null && dragId !== item.id && dragOverId === item.id;
+          const isPriorityImage = index < 4;
+          const isSvgImage = item.src.toLowerCase().endsWith(".svg");
           return (
             <div
               key={item.id}
@@ -329,12 +335,17 @@ export function Gallery({ items, editable = false }: GalleryProps) {
                   setDragOverId(null);
                 }}
               >
-                <img
+                <Image
                   className="galleryImage"
                   src={item.src}
                   alt={item.architect}
-                  loading="lazy"
+                  width={1600}
+                  height={1600}
+                  sizes={GALLERY_IMAGE_SIZES}
+                  priority={isPriorityImage}
+                  loading={isPriorityImage ? undefined : "lazy"}
                   decoding="async"
+                  unoptimized={isSvgImage}
                 />
               </button>
 
