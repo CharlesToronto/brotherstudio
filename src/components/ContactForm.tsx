@@ -167,7 +167,6 @@ export function ContactForm({ messages }: ContactFormProps) {
           value={messageValue}
           onChange={(event) => {
             setMessageValue(event.target.value);
-            if (activeTemplateId !== null) setActiveTemplateId(null);
           }}
           placeholder={messages.messagePlaceholder}
         />
