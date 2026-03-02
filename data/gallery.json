@@ -11,6 +11,11 @@
       "architect": "BS / Home Lac"
     },
     {
+      "id": "afc57519-61e4-4225-bb43-8cdc51125275",
+      "src": "/uploads/afc57519-61e4-4225-bb43-8cdc51125275-1772482585969.png",
+      "architect": "BS / Living room"
+    },
+    {
       "id": "f008bf4b-ea84-4c9c-a60a-06fde579fda0",
       "src": "/uploads/f008bf4b-ea84-4c9c-a60a-06fde579fda0-1770843125236.png",
       "architect": "BS / Home (Canada)"
@@ -56,11 +61,6 @@
       "architect": "BS / Home GVA"
     },
     {
-      "id": "b238c6b8-7695-4412-8525-76ca89c3ab45",
-      "src": "/uploads/b238c6b8-7695-4412-8525-76ca89c3ab45-1770847232197.png",
-      "architect": "BS / Home (Canada)"
-    },
-    {
       "id": "06",
       "src": "/uploads/06-1770836961566.png",
       "architect": "BS / Home GVA"
@@ -76,9 +76,24 @@
       "architect": "BS / Home Lac"
     },
     {
-      "id": "6d3ddc58-530d-441a-aba6-9b226f7052c2",
-      "src": "/uploads/6d3ddc58-530d-441a-aba6-9b226f7052c2-1770846022117.png",
-      "architect": "BS / Home (Canada)"
+      "id": "d319f063-7b8b-41b2-857c-471d64d9083c",
+      "src": "/uploads/d319f063-7b8b-41b2-857c-471d64d9083c-1772482521516.png",
+      "architect": "BS / Living room"
+    },
+    {
+      "id": "dad937c0-08dc-46fc-bd08-73bb5e18c351",
+      "src": "/uploads/dad937c0-08dc-46fc-bd08-73bb5e18c351-1772482534590.png",
+      "architect": "BS / Focus"
+    },
+    {
+      "id": "5c406e49-1c08-4dfb-b0a5-affd4f426e7c",
+      "src": "/uploads/5c406e49-1c08-4dfb-b0a5-affd4f426e7c-1772482551953.png",
+      "architect": "BS / Bed room"
+    },
+    {
+      "id": "03315390-9045-44d2-9845-6f3c5783dc32",
+      "src": "/uploads/03315390-9045-44d2-9845-6f3c5783dc32-1772482572726.png",
+      "architect": "BS / Focus"
     },
     {
       "id": "9daff2f2-ceb0-4024-9de6-041280dd4fac",
