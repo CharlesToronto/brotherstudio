@@ -33,6 +33,14 @@ body {
   letter-spacing: 0.01em;
 }
 
+.homeIntro {
+  margin: 0 0 18px;
+  max-width: none;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -65,7 +73,15 @@ input:focus-visible {
   gap: 26px;
 }
 
+.siteNavMobile {
+  display: none;
+}
+
 .siteNavLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -92,6 +108,49 @@ input:focus-visible {
 
 .siteMain {
   padding: 0 var(--page-padding) var(--page-padding);
+}
+
+.siteFooter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  padding: 0 var(--page-padding) var(--page-padding);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.siteFooterText {
+  color: rgb(127 127 127);
+}
+
+.siteFooterLink {
+  font-weight: 500;
+}
+
+.backToTopButton {
+  display: none;
+  position: fixed;
+  right: var(--page-padding);
+  bottom: calc(var(--page-padding) + 8px);
+  z-index: 40;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--foreground);
+  background: rgb(255 255 255 / 88%);
+  color: var(--foreground);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+html[data-theme="dark"] .backToTopButton {
+  background: rgb(0 0 0 / 82%);
+}
+
+.backToTopIcon {
+  display: block;
 }
 
 .adminAnalyticsSection {
@@ -244,15 +303,75 @@ html[data-theme="dark"] .adminLockOverlay {
     --grid-gap: 18px;
   }
 
-  .siteHeader {
-    align-items: flex-start;
-    gap: 14px;
+  .homeIntro {
+    max-width: 32ch;
+    white-space: normal;
   }
 
-  .siteNav {
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
+  .siteMain {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  .siteFooter {
+    padding-bottom: calc(var(--page-padding) + 82px + env(safe-area-inset-bottom));
+  }
+
+  .backToTopButton {
+    display: inline-flex;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+
+  .siteHeader {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .siteNavDesktop {
+    display: none;
+  }
+
+  .siteNavMobile {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    z-index: 45;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 12px calc(max(12px, 50% - 42px))
+      calc(12px + env(safe-area-inset-bottom));
+    background: rgb(255 255 255 / 0.16);
+    border: 1px solid rgb(0 0 0 / 0.08);
+    backdrop-filter: blur(16px);
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 50%;
+    scrollbar-width: none;
+  }
+
+  html[data-theme="dark"] .siteNavMobile {
+    background: rgb(0 0 0 / 0.2);
+    border-top-color: rgb(255 255 255 / 0.08);
+  }
+
+  .siteNavMobile::-webkit-scrollbar {
+    display: none;
+  }
+
+  .siteNavMobile .siteNavLink,
+  .siteNavMobile .themeToggle {
+    flex: 0 0 auto;
+    scroll-snap-align: center;
+  }
+
+  .siteNavMobile .siteNavLink {
+    font-size: 11px;
+    min-height: 34px;
   }
 
   .gallery {
@@ -680,6 +799,25 @@ html[data-theme="dark"] .contactForm {
 .aboutBiographyContent {
   display: grid;
   gap: 10px;
+}
+
+.pageCta {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid rgb(127 127 127 / 0.35);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.pageCtaLink {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pageCtaInlineLink {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .aboutList {

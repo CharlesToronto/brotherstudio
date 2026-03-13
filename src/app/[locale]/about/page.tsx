@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { AboutBiography } from "@/components/AboutBiography";
 import { getMessages } from "@/content/messages";
@@ -121,6 +122,13 @@ export default async function LocalizedAboutPage({
               </a>
             </div>
           </section>
+
+          <p className="pageCta">
+            {messages.about.ctaText}{" "}
+            <Link className="pageCtaLink" href={withLocalePath(locale, "/contact")}>
+              {messages.about.ctaLinkLabel}
+            </Link>
+          </p>
         </section>
       </div>
     </main>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { getMessages } from "@/content/messages";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
@@ -76,6 +77,15 @@ export default async function LocalizedServicesPage({
             ))}
           </ul>
         </section>
+
+        <p className="pageCta">
+          <Link
+            className="pageCtaInlineLink"
+            href={withLocalePath(locale, "/contact")}
+          >
+            {messages.services.ctaText}
+          </Link>
+        </p>
       </div>
     </main>
   );

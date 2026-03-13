@@ -47,6 +47,8 @@ export type SiteMessages = {
   home: {
     metadataTitle: string;
     metadataDescription: string;
+    introLine: string;
+    backToTopLabel: string;
   };
   services: {
     title: string;
@@ -56,6 +58,8 @@ export type SiteMessages = {
     includedTitle: string;
     services: string[];
     pricingIncludes: string[];
+    ctaText: string;
+    ctaLinkLabel: string;
   };
   about: {
     title: string;
@@ -76,6 +80,8 @@ export type SiteMessages = {
     connectText: string;
     emailLabel: string;
     instagramLabel: string;
+    ctaText: string;
+    ctaLinkLabel: string;
   };
   contact: {
     title: string;
@@ -220,6 +226,9 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       metadataTitle: "BrotherStudio - 3D Rendering",
       metadataDescription:
         "BrotherStudio creates photorealistic 3D architectural renderings, interior visualizations, and landscape design images for residential projects, kitchens, and concept spaces in Canada.",
+      introLine:
+        "High-end architectural visualization, landscape atmospheres, and real estate presentation.",
+      backToTopLabel: "Back to top",
     },
     services: {
       title: "Services",
@@ -245,6 +254,8 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Delivery of complete documents",
         "Premium renderings: high-definition outputs optimized for real estate marketing (brochures, portals, digital marketing)",
       ],
+      ctaText: "For inquiries, contact BrotherStudio.",
+      ctaLinkLabel: "Contact",
     },
     about: {
       title: "About",
@@ -280,6 +291,8 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "For project inquiries, reach BrotherStudio by email or on Instagram.",
       emailLabel: "Email",
       instagramLabel: "Instagram",
+      ctaText: "For inquiries, contact BrotherStudio.",
+      ctaLinkLabel: "Contact",
     },
     contact: {
       title: "Contact",
@@ -330,6 +343,9 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       metadataTitle: "BrotherStudio - Rendu 3D",
       metadataDescription:
         "BrotherStudio cree des rendus 3D photorealistes, visualisations interieures et images de paysage pour des projets residentiels, cuisines et espaces conceptuels au Canada.",
+      introLine:
+        "Visualisation architecturale haut de gamme, atmospheres paysageres et presentation immobiliere.",
+      backToTopLabel: "Retour en haut",
     },
     services: {
       title: "Services",
@@ -355,6 +371,8 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Remise des documents complets",
         "Rendus premium : haute definition optimises pour commercialisation immobiliere (brochures, portails, marketing digital).",
       ],
+      ctaText: "Pour toute demande, contactez BrotherStudio.",
+      ctaLinkLabel: "Contact",
     },
     about: {
       title: "A propos",
@@ -390,6 +408,8 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Pour un projet, contacte BrotherStudio par email ou sur Instagram.",
       emailLabel: "Email",
       instagramLabel: "Instagram",
+      ctaText: "Pour toute demande, contactez BrotherStudio.",
+      ctaLinkLabel: "Contact",
     },
     contact: {
       title: "Contact",

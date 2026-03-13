@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
+import { BackToTopButton } from "@/components/BackToTopButton";
 import { Gallery } from "@/components/Gallery";
+import { SiteFooter } from "@/components/SiteFooter";
 import { getMessages } from "@/content/messages";
 import { getGalleryItems } from "@/lib/galleryStore";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
@@ -42,12 +44,18 @@ export async function generateMetadata({
 }
 
 export default async function LocalizedHomePage({ params }: LocalePageProps) {
-  await resolveLocaleParam(params);
+  const locale = await resolveLocaleParam(params);
+  const messages = getMessages(locale);
   const items = await getGalleryItems();
 
   return (
-    <main className="siteMain">
-      <Gallery items={items} />
-    </main>
+    <>
+      <main className="siteMain">
+        <p className="homeIntro contactAccent">{messages.home.introLine}</p>
+        <Gallery items={items} />
+        <BackToTopButton label={messages.home.backToTopLabel} />
+      </main>
+      <SiteFooter />
+    </>
   );
 }
