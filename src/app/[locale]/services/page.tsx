@@ -45,7 +45,7 @@ export default async function LocalizedServicesPage({
     <main className="siteMain">
       <div className="servicesLayout">
         <section className="servicesSection" aria-labelledby="servicesTitle">
-          <h1 id="servicesTitle" className="servicesTitle">
+          <h1 id="servicesTitle" className="servicesTitle contactAccent">
             {messages.services.title}
           </h1>
           <p className="servicesIntro">{messages.services.intro}</p>
@@ -62,7 +62,10 @@ export default async function LocalizedServicesPage({
           className="servicesSection"
           aria-labelledby="servicesIncludedTitle"
         >
-          <h2 id="servicesIncludedTitle" className="servicesTitle">
+          <h2
+            id="servicesIncludedTitle"
+            className="servicesTitle contactAccent"
+          >
             {messages.services.includedTitle}
           </h2>
           <ul className="servicesList" aria-label={`${messages.services.includedTitle} list`}>

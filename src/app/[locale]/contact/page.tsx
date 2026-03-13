@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import { ContactForm } from "@/components/ContactForm";
 import { getMessages } from "@/content/messages";
 import { site } from "@/content/site";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
@@ -45,38 +44,23 @@ export default async function LocalizedContactPage({
 
   return (
     <main className="siteMain">
-      <div className="contactLayout">
-        <section
-          className="contactBlock contactBlockForm"
-          aria-labelledby="contactFormTitle"
-        >
-          <h1 id="contactFormTitle" className="contactTitle">
-            {messages.contact.title}
-          </h1>
-          <ContactForm messages={messages.contact.form} />
-        </section>
-
-        <section
-          className="contactBlock contactBlockDetails"
-          aria-labelledby="contactDetailsTitle"
-        >
-          <h2 id="contactDetailsTitle" className="contactTitle contactAccent">
-            {messages.contact.detailsTitle}
-          </h2>
-          <address className="contactText contactAccent">
-            {site.contact.addressLines.map((line) => (
-              <div key={line}>{line}</div>
-            ))}
-            <div className="contactSpacer" />
-            <div>
-              <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a>
-            </div>
-            <div>
-              <a href={`tel:${site.contact.phone}`}>{site.contact.phone}</a>
-            </div>
-          </address>
-        </section>
-      </div>
+      <section className="contactBlock" aria-labelledby="contactTitle">
+        <h1 id="contactTitle" className="contactTitle contactAccent">
+          {messages.contact.title}
+        </h1>
+        <address className="contactText contactAccent">
+          {site.contact.addressLines.map((line) => (
+            <div key={line}>{line}</div>
+          ))}
+          <div className="contactSpacer" />
+          <div>
+            <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a>
+          </div>
+          <div>
+            <a href={`tel:${site.contact.phone}`}>{site.contact.phone}</a>
+          </div>
+        </address>
+      </section>
     </main>
   );
 }

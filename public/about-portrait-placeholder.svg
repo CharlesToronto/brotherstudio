@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-labelledby="title desc">
+  <title id="title">BrotherStudio portrait placeholder</title>
+  <desc id="desc">Graphic placeholder for a future portrait photo.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4ede3"/>
+      <stop offset="100%" stop-color="#ded2c3"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <rect x="52" y="52" width="696" height="896" fill="none" stroke="#111111" stroke-width="2"/>
+  <circle cx="400" cy="360" r="118" fill="#111111"/>
+  <path d="M190 842c28-168 136-254 210-254s182 86 210 254" fill="#111111"/>
+  <rect x="88" y="84" width="164" height="28" fill="#ff4d00"/>
+  <rect x="548" y="888" width="164" height="28" fill="#ff4d00"/>
+  <text x="88" y="154" fill="#111111" font-family="Helvetica, Arial, sans-serif" font-size="38" letter-spacing="8">
+    ABOUT
+  </text>
+  <text x="88" y="214" fill="#111111" font-family="Helvetica, Arial, sans-serif" font-size="38" letter-spacing="8">
+    PORTRAIT
+  </text>
+  <text x="88" y="916" fill="#111111" font-family="Helvetica, Arial, sans-serif" font-size="20" letter-spacing="5">
+    REPLACE WITH YOUR PHOTO
+  </text>
+</svg>

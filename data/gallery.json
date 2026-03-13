@@ -46,18 +46,8 @@
       "architect": "BS / Home"
     },
     {
-      "id": "08",
-      "src": "/uploads/08-1770836930659.png",
-      "architect": "BS / Home GVA"
-    },
-    {
       "id": "02",
       "src": "/uploads/02-1770907395755.png",
-      "architect": "BS / Home GVA"
-    },
-    {
-      "id": "bf610e79-0f67-4f50-9125-5a09d4875974",
-      "src": "/uploads/bf610e79-0f67-4f50-9125-5a09d4875974-1770843115569.png",
       "architect": "BS / Home GVA"
     },
     {
@@ -104,6 +94,41 @@
       "id": "8d30da55-00fc-4ec4-9824-09f163adb606",
       "src": "/uploads/8d30da55-00fc-4ec4-9824-09f163adb606-1771520458136.png",
       "architect": "BS / Home"
+    },
+    {
+      "id": "7ed9ad20-4238-45f8-be89-d937f2ce9dcf",
+      "src": "/uploads/7ed9ad20-4238-45f8-be89-d937f2ce9dcf-1773428118472.png",
+      "architect": "BS / Exterior"
+    },
+    {
+      "id": "9a18a588-da54-48b3-987a-3809a86b91b0",
+      "src": "/uploads/9a18a588-da54-48b3-987a-3809a86b91b0-1773428133011.png",
+      "architect": "BS / Exterior"
+    },
+    {
+      "id": "727cafd2-51a5-4e24-b85d-c52f3647815e",
+      "src": "/uploads/727cafd2-51a5-4e24-b85d-c52f3647815e-1773428139267.png",
+      "architect": "BS / Exterior"
+    },
+    {
+      "id": "f045c921-b94d-43fb-81d2-a27cd059c236",
+      "src": "/uploads/f045c921-b94d-43fb-81d2-a27cd059c236-1773428144739.png",
+      "architect": "BS / Exterior"
+    },
+    {
+      "id": "80b8b12e-28cf-443a-addf-c053c6b76fe1",
+      "src": "/uploads/80b8b12e-28cf-443a-addf-c053c6b76fe1-1773429753518.jpeg",
+      "architect": "BS / Concept Study"
+    },
+    {
+      "id": "d9dc7201-a915-405c-8eeb-4cc9a998fc95",
+      "src": "/uploads/d9dc7201-a915-405c-8eeb-4cc9a998fc95-1773433162312.jpeg",
+      "architect": "BS / Concept Study"
+    },
+    {
+      "id": "df768d04-b445-40f0-ade8-f09849d98140",
+      "src": "/uploads/df768d04-b445-40f0-ade8-f09849d98140-1773433070035.png",
+      "architect": "BS / Bed Room"
     }
   ]
 }

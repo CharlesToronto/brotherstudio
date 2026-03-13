@@ -62,9 +62,6 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
         >
           {messages.nav.gallery}
         </Link>
-        <a className="siteNavLink" href={site.instagramUrl}>
-          {messages.nav.instagram}
-        </a>
         <Link
           className="siteNavLink"
           href={localizedHref("/services")}
@@ -74,11 +71,21 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
         </Link>
         <Link
           className="siteNavLink"
+          href={localizedHref("/about")}
+          aria-current={subpath === "/about" ? "page" : undefined}
+        >
+          {messages.nav.about}
+        </Link>
+        <Link
+          className="siteNavLink"
           href={localizedHref("/contact")}
           aria-current={subpath === "/contact" ? "page" : undefined}
         >
           {messages.nav.contact}
         </Link>
+        <a className="siteNavLink" href={site.instagramUrl}>
+          {messages.nav.instagram}
+        </a>
         <button
           className="siteNavLink themeToggle"
           type="button"
