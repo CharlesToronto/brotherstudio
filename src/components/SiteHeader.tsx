@@ -138,8 +138,13 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     },
   ];
 
-  const renderNavItem = () =>
-    navItems.map((item) => {
+  const mobileNavItems = [
+    navItems.find((item) => item.key === "theme"),
+    ...navItems.filter((item) => item.key !== "theme"),
+  ].filter((item) => item !== undefined);
+
+  const renderNavItems = (items: typeof navItems) =>
+    items.map((item) => {
       const commonProps = {
         className: `siteNavLink${item.kind === "button" ? " themeToggle" : ""}`,
         "data-nav-key": item.key,
@@ -187,11 +192,11 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
       </Link>
 
       <nav className="siteNav siteNavDesktop" aria-label="Primary">
-        {renderNavItem()}
+        {renderNavItems(navItems)}
       </nav>
 
       <nav ref={mobileNavRef} className="siteNavMobile" aria-label="Primary">
-        {renderNavItem()}
+        {renderNavItems(mobileNavItems)}
       </nav>
     </header>
   );

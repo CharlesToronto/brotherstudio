@@ -138,15 +138,10 @@ input:focus-visible {
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid var(--foreground);
-  background: rgb(255 255 255 / 88%);
+  border: 0;
+  background: transparent;
   color: var(--foreground);
   cursor: pointer;
-  backdrop-filter: blur(8px);
-}
-
-html[data-theme="dark"] .backToTopButton {
-  background: rgb(0 0 0 / 82%);
 }
 
 .backToTopIcon {
