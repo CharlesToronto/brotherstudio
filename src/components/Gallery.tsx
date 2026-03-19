@@ -7,10 +7,20 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { GalleryItem } from "@/lib/galleryStore";
+import {
+  DEFAULT_GALLERY_PROJECT,
+  PROJECT_OPTIONS,
+  getGalleryProjectLabel,
+  type GalleryProjectKey,
+} from "@/lib/galleryProjects";
 
 type GalleryProps = {
   items: GalleryItem[];
   editable?: boolean;
+  filterLabels?: {
+    all: string;
+    ariaLabel: string;
+  };
 };
 
 const GALLERY_IMAGE_SIZES =
@@ -70,10 +80,11 @@ function TrashIcon() {
   );
 }
 
-export function Gallery({ items, editable = false }: GalleryProps) {
+export function Gallery({ items, editable = false, filterLabels }: GalleryProps) {
   const router = useRouter();
   const [localItems, setLocalItems] = useState<GalleryItem[]>(items);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeProject, setActiveProject] = useState<GalleryProjectKey | "all">("all");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -81,6 +92,7 @@ export function Gallery({ items, editable = false }: GalleryProps) {
   const addInputRef = useRef<HTMLInputElement | null>(null);
   const replaceTargetIdRef = useRef<string | null>(null);
   const lastSavedArchitectByIdRef = useRef<Map<string, string>>(new Map());
+  const lastSavedProjectByIdRef = useRef<Map<string, GalleryProjectKey>>(new Map());
   const lastSavedOrderRef = useRef<string[]>([]);
 
   useEffect(() => {
@@ -88,8 +100,30 @@ export function Gallery({ items, editable = false }: GalleryProps) {
     lastSavedArchitectByIdRef.current = new Map(
       items.map((i) => [i.id, i.architect] as const),
     );
+    lastSavedProjectByIdRef.current = new Map(
+      items.map((i) => [i.id, i.project] as const),
+    );
     lastSavedOrderRef.current = items.map((i) => i.id);
   }, [items]);
+
+  const availableProjects = useMemo(
+    () =>
+      PROJECT_OPTIONS.filter((option) =>
+        localItems.some((item) => item.project === option.key),
+      ),
+    [localItems],
+  );
+
+  useEffect(() => {
+    if (activeProject === "all") return;
+    if (availableProjects.some((option) => option.key === activeProject)) return;
+    setActiveProject("all");
+  }, [activeProject, availableProjects]);
+
+  const filteredItems = useMemo(() => {
+    if (editable || activeProject === "all") return localItems;
+    return localItems.filter((item) => item.project === activeProject);
+  }, [activeProject, editable, localItems]);
 
   const activeItem = useMemo(() => {
     if (activeId === null) return null;
@@ -157,6 +191,7 @@ export function Gallery({ items, editable = false }: GalleryProps) {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("architect", architect);
+      formData.append("project", DEFAULT_GALLERY_PROJECT);
 
       const response = await fetch("/api/gallery", { method: "POST", body: formData });
       if (!response.ok) {
@@ -232,6 +267,41 @@ export function Gallery({ items, editable = false }: GalleryProps) {
     }
   };
 
+  const saveProject = async (id: string, project: GalleryProjectKey) => {
+    const lastSavedProject =
+      lastSavedProjectByIdRef.current.get(id) ?? DEFAULT_GALLERY_PROJECT;
+
+    if (project === lastSavedProject) return;
+
+    setBusyId(id);
+    try {
+      const response = await fetch(`/api/gallery/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ project }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error ?? "Update failed");
+      }
+
+      lastSavedProjectByIdRef.current.set(id, project);
+      setLocalItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, project } : item)),
+      );
+      router.refresh();
+    } catch (error) {
+      setLocalItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, project: lastSavedProject } : item,
+        ),
+      );
+      window.alert(error instanceof Error ? error.message : "Update failed");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const saveOrder = async (nextItems: GalleryItem[], previousItems: GalleryItem[]) => {
     const nextOrder = nextItems.map((i) => i.id);
     if (arraysEqual(nextOrder, lastSavedOrderRef.current)) return;
@@ -260,6 +330,30 @@ export function Gallery({ items, editable = false }: GalleryProps) {
 
   return (
     <>
+      {!editable && filterLabels && availableProjects.length > 0 ? (
+        <div className="galleryFilters" role="toolbar" aria-label={filterLabels.ariaLabel}>
+          <button
+            type="button"
+            className="galleryFilterButton"
+            data-active={activeProject === "all"}
+            onClick={() => setActiveProject("all")}
+          >
+            {filterLabels.all}
+          </button>
+          {availableProjects.map((project) => (
+            <button
+              key={project.key}
+              type="button"
+              className="galleryFilterButton"
+              data-active={activeProject === project.key}
+              onClick={() => setActiveProject(project.key)}
+            >
+              {project.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       <div
         className="gallery"
         role="list"
@@ -283,7 +377,7 @@ export function Gallery({ items, editable = false }: GalleryProps) {
           void saveOrder(next, previous);
         }}
       >
-        {localItems.map((item, index) => {
+        {filteredItems.map((item, index) => {
           const isDropTarget =
             editable && dragId !== null && dragId !== item.id && dragOverId === item.id;
           const isPriorityImage = index < 4;
@@ -381,27 +475,61 @@ export function Gallery({ items, editable = false }: GalleryProps) {
               ) : null}
 
               {editable ? (
-                <input
-                  className="galleryCaptionInput"
-                  type="text"
-                  value={item.architect}
-                  onChange={(event) => {
-                    const next = event.target.value;
-                    setLocalItems((prev) =>
-                      prev.map((i) => (i.id === item.id ? { ...i, architect: next } : i)),
-                    );
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.currentTarget.blur();
-                    }
-                  }}
-                  onBlur={(event) => void saveArchitect(item.id, event.currentTarget.value)}
-                  disabled={busyId !== null}
-                  aria-label="Architect / Studio name"
-                />
+                <div className="galleryMeta">
+                  <label className="galleryMetaLabel" htmlFor={`gallery-project-${item.id}`}>
+                    Project
+                  </label>
+                  <select
+                    id={`gallery-project-${item.id}`}
+                    className="galleryProjectSelect"
+                    value={item.project}
+                    onChange={(event) => {
+                      const nextProject = event.target.value as GalleryProjectKey;
+                      setLocalItems((prev) =>
+                        prev.map((i) =>
+                          i.id === item.id ? { ...i, project: nextProject } : i,
+                        ),
+                      );
+                      void saveProject(item.id, nextProject);
+                    }}
+                    disabled={busyId !== null}
+                    aria-label="Project"
+                  >
+                    {PROJECT_OPTIONS.map((project) => (
+                      <option key={project.key} value={project.key}>
+                        {project.label}
+                      </option>
+                    ))}
+                  </select>
+                  <label className="galleryMetaLabel" htmlFor={`gallery-caption-${item.id}`}>
+                    Architect / Studio
+                  </label>
+                  <input
+                    id={`gallery-caption-${item.id}`}
+                    className="galleryCaptionInput"
+                    type="text"
+                    value={item.architect}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setLocalItems((prev) =>
+                        prev.map((i) => (i.id === item.id ? { ...i, architect: next } : i)),
+                      );
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.currentTarget.blur();
+                      }
+                    }}
+                    onBlur={(event) => void saveArchitect(item.id, event.currentTarget.value)}
+                    disabled={busyId !== null}
+                    aria-label="Architect / Studio name"
+                  />
+                </div>
               ) : (
-                <div className="galleryCaption">{item.architect}</div>
+                <div className="galleryMeta galleryMetaInline">
+                  <div className="galleryCaption">{item.architect}</div>
+                  <div className="galleryProjectInline">{getGalleryProjectLabel(item.project)}</div>
+                </div>
               )}
             </div>
           );

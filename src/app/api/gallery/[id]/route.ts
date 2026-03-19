@@ -4,6 +4,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 
 import { deleteGalleryItem, getGalleryItems, updateGalleryItem } from "@/lib/galleryStore";
+import { isGalleryProjectKey } from "@/lib/galleryProjects";
 
 export const runtime = "nodejs";
 
@@ -23,15 +24,31 @@ export async function PATCH(
   const { id } = await params;
   const body = (await request.json().catch(() => null)) as unknown;
   const architect = (body as { architect?: unknown })?.architect;
+  const project = (body as { project?: unknown })?.project;
 
-  if (typeof architect !== "string" || !architect.trim()) {
-    return NextResponse.json({ error: "Invalid architect" }, { status: 400 });
+  if (typeof architect !== "undefined") {
+    if (typeof architect !== "string" || !architect.trim()) {
+      return NextResponse.json({ error: "Invalid architect" }, { status: 400 });
+    }
+
+    const updated = await updateGalleryItem(id, { architect: architect.trim() });
+    if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    return NextResponse.json({ item: updated });
   }
 
-  const updated = await updateGalleryItem(id, { architect: architect.trim() });
-  if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (typeof project !== "undefined") {
+    if (!isGalleryProjectKey(project)) {
+      return NextResponse.json({ error: "Invalid project" }, { status: 400 });
+    }
 
-  return NextResponse.json({ item: updated });
+    const updated = await updateGalleryItem(id, { project });
+    if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    return NextResponse.json({ item: updated });
+  }
+
+  return NextResponse.json({ error: "Missing update payload" }, { status: 400 });
 }
 
 export async function DELETE(

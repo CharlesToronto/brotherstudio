@@ -4,6 +4,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 
 import { addGalleryItem, getGalleryItems, reorderGalleryItems } from "@/lib/galleryStore";
+import { normalizeGalleryProject } from "@/lib/galleryProjects";
 
 export const runtime = "nodejs";
 
@@ -30,12 +31,14 @@ export async function POST(request: Request) {
   const formData = await request.formData();
   const file = formData.get("file");
   const architectRaw = formData.get("architect");
+  const projectRaw = formData.get("project");
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Missing file" }, { status: 400 });
   }
 
   const architect = typeof architectRaw === "string" ? architectRaw.trim() : "";
+  const project = normalizeGalleryProject(projectRaw);
   if (!architect) {
     return NextResponse.json({ error: "Missing architect" }, { status: 400 });
   }
@@ -54,7 +57,7 @@ export async function POST(request: Request) {
   await fs.writeFile(outputPath, buffer);
 
   const src = `/uploads/${filename}`;
-  const item = await addGalleryItem({ id, src, architect });
+  const item = await addGalleryItem({ id, src, architect, project });
 
   return NextResponse.json({ item }, { status: 201 });
 }

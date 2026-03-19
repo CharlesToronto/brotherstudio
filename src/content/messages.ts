@@ -49,6 +49,8 @@ export type SiteMessages = {
     metadataDescription: string;
     introLine: string;
     backToTopLabel: string;
+    projectFilterAllLabel: string;
+    projectFilterAriaLabel: string;
   };
   services: {
     title: string;
@@ -229,6 +231,8 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       introLine:
         "High-end architectural visualization, landscape atmospheres, and real estate presentation.",
       backToTopLabel: "Back to top",
+      projectFilterAllLabel: "All",
+      projectFilterAriaLabel: "Project filters",
     },
     services: {
       title: "Services",
@@ -346,6 +350,8 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       introLine:
         "Visualisation architecturale haut de gamme, atmospheres paysageres et presentation immobiliere.",
       backToTopLabel: "Retour en haut",
+      projectFilterAllLabel: "Tous",
+      projectFilterAriaLabel: "Filtres de projet",
     },
     services: {
       title: "Services",

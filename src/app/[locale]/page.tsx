@@ -52,7 +52,13 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
     <>
       <main className="siteMain">
         <p className="homeIntro contactAccent">{messages.home.introLine}</p>
-        <Gallery items={items} />
+        <Gallery
+          items={items}
+          filterLabels={{
+            all: messages.home.projectFilterAllLabel,
+            ariaLabel: messages.home.projectFilterAriaLabel,
+          }}
+        />
         <BackToTopButton label={messages.home.backToTopLabel} />
       </main>
       <SiteFooter />

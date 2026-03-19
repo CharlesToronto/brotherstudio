@@ -1,10 +1,17 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+import {
+  DEFAULT_GALLERY_PROJECT,
+  normalizeGalleryProject,
+  type GalleryProjectKey,
+} from "@/lib/galleryProjects";
+
 export type GalleryItem = {
   id: string;
   src: string;
   architect: string;
+  project: GalleryProjectKey;
 };
 
 type GalleryData = {
@@ -15,15 +22,60 @@ const galleryFilePath = path.join(process.cwd(), "data", "gallery.json");
 
 const defaultData: GalleryData = {
   items: [
-    { id: "01", src: "/gallery/01.svg", architect: "Architect / Studio 01" },
-    { id: "02", src: "/gallery/02.svg", architect: "Architect / Studio 02" },
-    { id: "03", src: "/gallery/03.svg", architect: "Architect / Studio 03" },
-    { id: "04", src: "/gallery/04.svg", architect: "Architect / Studio 04" },
-    { id: "05", src: "/gallery/05.svg", architect: "Architect / Studio 05" },
-    { id: "06", src: "/gallery/06.svg", architect: "Architect / Studio 06" },
-    { id: "07", src: "/gallery/07.svg", architect: "Architect / Studio 07" },
-    { id: "08", src: "/gallery/08.svg", architect: "Architect / Studio 08" },
-    { id: "09", src: "/gallery/09.svg", architect: "Architect / Studio 09" },
+    {
+      id: "01",
+      src: "/gallery/01.svg",
+      architect: "Architect / Studio 01",
+      project: DEFAULT_GALLERY_PROJECT,
+    },
+    {
+      id: "02",
+      src: "/gallery/02.svg",
+      architect: "Architect / Studio 02",
+      project: DEFAULT_GALLERY_PROJECT,
+    },
+    {
+      id: "03",
+      src: "/gallery/03.svg",
+      architect: "Architect / Studio 03",
+      project: DEFAULT_GALLERY_PROJECT,
+    },
+    {
+      id: "04",
+      src: "/gallery/04.svg",
+      architect: "Architect / Studio 04",
+      project: DEFAULT_GALLERY_PROJECT,
+    },
+    {
+      id: "05",
+      src: "/gallery/05.svg",
+      architect: "Architect / Studio 05",
+      project: DEFAULT_GALLERY_PROJECT,
+    },
+    {
+      id: "06",
+      src: "/gallery/06.svg",
+      architect: "Architect / Studio 06",
+      project: DEFAULT_GALLERY_PROJECT,
+    },
+    {
+      id: "07",
+      src: "/gallery/07.svg",
+      architect: "Architect / Studio 07",
+      project: DEFAULT_GALLERY_PROJECT,
+    },
+    {
+      id: "08",
+      src: "/gallery/08.svg",
+      architect: "Architect / Studio 08",
+      project: DEFAULT_GALLERY_PROJECT,
+    },
+    {
+      id: "09",
+      src: "/gallery/09.svg",
+      architect: "Architect / Studio 09",
+      project: DEFAULT_GALLERY_PROJECT,
+    },
   ],
 };
 
@@ -65,6 +117,7 @@ async function readGalleryData(): Promise<GalleryData> {
         id: anyItem.id,
         src: anyItem.src,
         architect: anyItem.architect,
+        project: normalizeGalleryProject(anyItem.project),
       });
     }
 
@@ -96,6 +149,7 @@ export async function addGalleryItem(input: Omit<GalleryItem, "id"> & { id?: str
     id,
     src: input.src,
     architect: input.architect,
+    project: normalizeGalleryProject(input.project),
   };
 
   data.items.push(item);
@@ -105,7 +159,7 @@ export async function addGalleryItem(input: Omit<GalleryItem, "id"> & { id?: str
 
 export async function updateGalleryItem(
   id: string,
-  patch: Partial<Pick<GalleryItem, "src" | "architect">>,
+  patch: Partial<Pick<GalleryItem, "src" | "architect" | "project">>,
 ) {
   const data = await readGalleryData();
   const index = data.items.findIndex((i) => i.id === id);
@@ -116,6 +170,9 @@ export async function updateGalleryItem(
     ...current,
     ...(typeof patch.src === "string" ? { src: patch.src } : null),
     ...(typeof patch.architect === "string" ? { architect: patch.architect } : null),
+    ...(patch.project !== undefined
+      ? { project: normalizeGalleryProject(patch.project) }
+      : null),
   };
 
   data.items[index] = updated;
