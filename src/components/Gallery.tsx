@@ -58,6 +58,21 @@ function moveToEnd(items: GalleryItem[], id: string) {
   return moveItem(items, fromIndex, items.length - 1);
 }
 
+function mergeVisibleOrder(
+  allItems: GalleryItem[],
+  visibleItems: GalleryItem[],
+  nextVisibleItems: GalleryItem[],
+) {
+  if (visibleItems.length === allItems.length) return nextVisibleItems;
+
+  const visibleIds = new Set(visibleItems.map((item) => item.id));
+  let visibleIndex = 0;
+
+  return allItems.map((item) =>
+    visibleIds.has(item.id) ? nextVisibleItems[visibleIndex++] : item,
+  );
+}
+
 function UploadIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
@@ -82,6 +97,10 @@ function TrashIcon() {
 
 export function Gallery({ items, editable = false, filterLabels }: GalleryProps) {
   const router = useRouter();
+  const resolvedFilterLabels = filterLabels ?? {
+    all: editable ? "Tous" : "All",
+    ariaLabel: editable ? "Filtres de projet" : "Project filters",
+  };
   const [localItems, setLocalItems] = useState<GalleryItem[]>(items);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeProject, setActiveProject] = useState<GalleryProjectKey | "all">("all");
@@ -121,9 +140,9 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
   }, [activeProject, availableProjects]);
 
   const filteredItems = useMemo(() => {
-    if (editable || activeProject === "all") return localItems;
+    if (activeProject === "all") return localItems;
     return localItems.filter((item) => item.project === activeProject);
-  }, [activeProject, editable, localItems]);
+  }, [activeProject, localItems]);
 
   const activeItem = useMemo(() => {
     if (activeId === null) return null;
@@ -186,12 +205,15 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
       window.prompt("Architect / Studio name", "Architect / Studio")?.trim() ?? "";
     if (!architect) return;
 
+    const project =
+      activeProject === "all" ? DEFAULT_GALLERY_PROJECT : activeProject;
+
     setBusyId("add");
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("architect", architect);
-      formData.append("project", DEFAULT_GALLERY_PROJECT);
+      formData.append("project", project);
 
       const response = await fetch("/api/gallery", { method: "POST", body: formData });
       if (!response.ok) {
@@ -330,15 +352,19 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
 
   return (
     <>
-      {!editable && filterLabels && availableProjects.length > 0 ? (
-        <div className="galleryFilters" role="toolbar" aria-label={filterLabels.ariaLabel}>
+      {availableProjects.length > 0 ? (
+        <div
+          className="galleryFilters"
+          role="toolbar"
+          aria-label={resolvedFilterLabels.ariaLabel}
+        >
           <button
             type="button"
             className="galleryFilterButton"
             data-active={activeProject === "all"}
             onClick={() => setActiveProject("all")}
           >
-            {filterLabels.all}
+            {resolvedFilterLabels.all}
           </button>
           {availableProjects.map((project) => (
             <button
@@ -367,14 +393,17 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
           const fromId = dragId ?? event.dataTransfer.getData("text/plain") ?? null;
           if (!fromId) return;
 
-          const previous = localItems;
-          const next = moveToEnd(previous, fromId);
-          if (next === previous) return;
+          const previousAll = localItems;
+          const previousVisible = filteredItems;
+          const nextVisible = moveToEnd(previousVisible, fromId);
+          if (nextVisible === previousVisible) return;
 
-          setLocalItems(next);
+          const nextAll = mergeVisibleOrder(previousAll, previousVisible, nextVisible);
+
+          setLocalItems(nextAll);
           setDragId(null);
           setDragOverId(null);
-          void saveOrder(next, previous);
+          void saveOrder(nextAll, previousAll);
         }}
       >
         {filteredItems.map((item, index) => {
@@ -400,14 +429,21 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
                 const fromId = dragId ?? event.dataTransfer.getData("text/plain") ?? null;
                 if (!fromId || fromId === item.id) return;
 
-                const previous = localItems;
-                const next = reorderById(previous, fromId, item.id);
-                if (next === previous) return;
+                const previousAll = localItems;
+                const previousVisible = filteredItems;
+                const nextVisible = reorderById(previousVisible, fromId, item.id);
+                if (nextVisible === previousVisible) return;
 
-                setLocalItems(next);
+                const nextAll = mergeVisibleOrder(
+                  previousAll,
+                  previousVisible,
+                  nextVisible,
+                );
+
+                setLocalItems(nextAll);
                 setDragId(null);
                 setDragOverId(null);
-                void saveOrder(next, previous);
+                void saveOrder(nextAll, previousAll);
               }}
             >
               <button
