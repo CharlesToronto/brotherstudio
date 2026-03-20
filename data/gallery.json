@@ -9,19 +9,19 @@
     {
       "id": "04",
       "src": "/uploads/04-1770836826671.png",
-      "architect": "BS / Home Lac",
+      "architect": "BS / Kitchen",
       "project": "others"
     },
     {
       "id": "afc57519-61e4-4225-bb43-8cdc51125275",
-      "src": "/uploads/afc57519-61e4-4225-bb43-8cdc51125275-1773937930851.png",
+      "src": "/uploads/afc57519-61e4-4225-bb43-8cdc51125275-1774016096392.jpg",
       "architect": "BS / Living room",
       "project": "mesange"
     },
     {
       "id": "f008bf4b-ea84-4c9c-a60a-06fde579fda0",
       "src": "/uploads/f008bf4b-ea84-4c9c-a60a-06fde579fda0-1770843125236.png",
-      "architect": "BS / Home (Canada)",
+      "architect": "BS / Véranda",
       "project": "markham"
     },
     {
@@ -39,7 +39,7 @@
     {
       "id": "9f1682bb-5ad1-44b3-8caa-95e464a1e601",
       "src": "/uploads/9f1682bb-5ad1-44b3-8caa-95e464a1e601-1770843162262.png",
-      "architect": "BS / Home Lac",
+      "architect": "BS / Living room",
       "project": "others"
     },
     {
@@ -51,8 +51,14 @@
     {
       "id": "af35e25a-90bf-47d3-92f4-8675e5f2ea46",
       "src": "/uploads/af35e25a-90bf-47d3-92f4-8675e5f2ea46-1771517881411.jpeg",
-      "architect": "BS / Home",
+      "architect": "BS / Bed room",
       "project": "others"
+    },
+    {
+      "id": "d319f063-7b8b-41b2-857c-471d64d9083c",
+      "src": "/uploads/d319f063-7b8b-41b2-857c-471d64d9083c-1774016140036.jpg",
+      "architect": "BS / Living room",
+      "project": "mesange"
     },
     {
       "id": "02",
@@ -63,55 +69,55 @@
     {
       "id": "06",
       "src": "/uploads/06-1770836961566.png",
-      "architect": "BS / Home GVA",
+      "architect": "BS / Bed room",
       "project": "violette"
     },
     {
       "id": "05",
       "src": "/uploads/05-1770836909443.png",
-      "architect": "BS / Home GVA",
+      "architect": "BS / Living room",
       "project": "violette"
     },
     {
       "id": "a952777e-9ab1-4d0a-8156-82ad17f41e64",
       "src": "/uploads/a952777e-9ab1-4d0a-8156-82ad17f41e64-1770844736207.png",
-      "architect": "BS / Home Lac",
+      "architect": "BS / Living room",
       "project": "others"
     },
     {
-      "id": "d319f063-7b8b-41b2-857c-471d64d9083c",
-      "src": "/uploads/d319f063-7b8b-41b2-857c-471d64d9083c-1772482521516.png",
-      "architect": "BS / Living room",
-      "project": "mesange"
-    },
-    {
-      "id": "dad937c0-08dc-46fc-bd08-73bb5e18c351",
-      "src": "/uploads/dad937c0-08dc-46fc-bd08-73bb5e18c351-1772482534590.png",
-      "architect": "BS / Focus",
-      "project": "mesange"
-    },
-    {
       "id": "5c406e49-1c08-4dfb-b0a5-affd4f426e7c",
-      "src": "/uploads/5c406e49-1c08-4dfb-b0a5-affd4f426e7c-1773938169138.png",
+      "src": "/uploads/5c406e49-1c08-4dfb-b0a5-affd4f426e7c-1774016168643.jpg",
       "architect": "BS / Bed room",
       "project": "mesange"
     },
     {
       "id": "03315390-9045-44d2-9845-6f3c5783dc32",
-      "src": "/uploads/03315390-9045-44d2-9845-6f3c5783dc32-1773938078561.png",
+      "src": "/uploads/03315390-9045-44d2-9845-6f3c5783dc32-1774016188150.jpg",
       "architect": "BS / Focus",
       "project": "mesange"
     },
     {
       "id": "9daff2f2-ceb0-4024-9de6-041280dd4fac",
       "src": "/uploads/9daff2f2-ceb0-4024-9de6-041280dd4fac-1770916752231.png",
-      "architect": "BS / Church (Canada)",
+      "architect": "BS / Church",
       "project": "cfoc"
     },
     {
       "id": "7ed9ad20-4238-45f8-be89-d937f2ce9dcf",
       "src": "/uploads/7ed9ad20-4238-45f8-be89-d937f2ce9dcf-1773938060753.png",
       "architect": "BS / Exterior",
+      "project": "mesange"
+    },
+    {
+      "id": "c7bc14ed-d41a-4b36-8825-b08db2add70a",
+      "src": "/uploads/c7bc14ed-d41a-4b36-8825-b08db2add70a-1774016261817.jpg",
+      "architect": "BS / Bed room",
+      "project": "mesange"
+    },
+    {
+      "id": "dad937c0-08dc-46fc-bd08-73bb5e18c351",
+      "src": "/uploads/dad937c0-08dc-46fc-bd08-73bb5e18c351-1774016150948.jpg",
+      "architect": "BS / Focus",
       "project": "mesange"
     },
     {
@@ -122,13 +128,13 @@
     },
     {
       "id": "727cafd2-51a5-4e24-b85d-c52f3647815e",
-      "src": "/uploads/727cafd2-51a5-4e24-b85d-c52f3647815e-1773937992099.png",
+      "src": "/uploads/727cafd2-51a5-4e24-b85d-c52f3647815e-1774016118185.jpg",
       "architect": "BS / Exterior",
       "project": "mesange"
     },
     {
       "id": "f045c921-b94d-43fb-81d2-a27cd059c236",
-      "src": "/uploads/f045c921-b94d-43fb-81d2-a27cd059c236-1773938007226.png",
+      "src": "/uploads/f045c921-b94d-43fb-81d2-a27cd059c236-1774016130004.jpg",
       "architect": "BS / Exterior",
       "project": "mesange"
     },
@@ -146,19 +152,13 @@
     },
     {
       "id": "df768d04-b445-40f0-ade8-f09849d98140",
-      "src": "/uploads/df768d04-b445-40f0-ade8-f09849d98140-1773433070035.png",
-      "architect": "BS / Bed room",
-      "project": "mesange"
-    },
-    {
-      "id": "c7bc14ed-d41a-4b36-8825-b08db2add70a",
-      "src": "/uploads/c7bc14ed-d41a-4b36-8825-b08db2add70a-1773938095330.png",
+      "src": "/uploads/df768d04-b445-40f0-ade8-f09849d98140-1774016157243.jpg",
       "architect": "BS / Bed room",
       "project": "mesange"
     },
     {
       "id": "60dcacb8-447a-4eb2-b2c7-100a63eeee7d",
-      "src": "/uploads/60dcacb8-447a-4eb2-b2c7-100a63eeee7d-1773938105390.png",
+      "src": "/uploads/60dcacb8-447a-4eb2-b2c7-100a63eeee7d-1774016180346.jpg",
       "architect": "BS / Bed room",
       "project": "mesange"
     }

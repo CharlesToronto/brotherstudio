@@ -246,6 +246,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "3D Photorealistic Interior Images",
         "3D Photorealistic Exterior Images",
         "3D Floor Plans",
+        "Marketing brochure floor plans",
         "Video Walkthrough",
         "Marketing Videos",
         "Drone View Videos",
@@ -255,6 +256,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Full environment integration according to client style (furniture, plants, weather, people, etc.)",
         "Image treatment - lighting and materials",
         "Revisions and retouching until client satisfaction",
+        "Image delivery up to 6K quality",
         "Delivery of complete documents",
         "Premium renderings: high-definition outputs optimized for real estate marketing (brochures, portals, digital marketing)",
       ],
@@ -274,7 +276,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       intro:
         "Charles is an architectural draftsman and the founder of BrotherStudio, a studio specializing in high-end architectural visualization, landscape atmospheres, and real estate presentation.",
       paragraphs: [
-        "He obtained his Architectural Drafting Diploma in Europe in 2017, beginning his career working on residential architecture projects including luxury chalets, apartment buildings, and neighborhood developments. These early experiences shaped his design sensibility through the strong influence of European architectural culture: precision, balanced proportions, refined materials, and clean spatial composition.",
+        "He obtained his Architectural Drafting Diploma in 2017 in Sion, Switzerland, beginning his career working on residential architecture projects including luxury chalets, apartment buildings, and neighborhood developments. These early experiences shaped his design sensibility through the strong influence of European architectural culture: precision, balanced proportions, refined materials, and clean spatial composition.",
         "From 2017 to 2022, he contributed to multiple residential developments, translating architectural concepts into clear technical drawings and visual presentations used for design coordination, planning approvals, and project communication.",
         "After relocating to Canada in 2022, he expanded his work beyond technical drafting into architectural visualization and design presentation, while also serving as Mission Director in community initiatives.",
         "In December 2024, he founded BrotherStudio, focusing on photorealistic architectural imagery, marketing floor plans, and visual storytelling for architects, developers, and real estate professionals.",
@@ -365,6 +367,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Images 3D photorealistes interieures",
         "Images 3D photorealistes exterieures",
         "3D FloorPlan",
+        "Plan de vente pour brochure marketing",
         "Video Walkthrough",
         "Video Marketing",
         "Video (drone View)",
@@ -374,6 +377,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Integration de l'environnement complet selon style du client (mobilier, vegetaux, meteo, personne, etc.)",
         "Traitement image - Lumiere & materiaux",
         "Modifications & retouche jusqu'a satisfaction client",
+        "Livraison d'images jusqu'en qualite 6K",
         "Remise des documents complets",
         "Rendus premium : haute definition optimises pour commercialisation immobiliere (brochures, portails, marketing digital).",
       ],
@@ -393,7 +397,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       intro:
         "Charles est dessinateur en architecture et fondateur de BrotherStudio, un studio specialise dans la visualisation architecturale haut de gamme, les atmospheres paysageres et la presentation immobiliere.",
       paragraphs: [
-        "Il a obtenu son diplome de dessin architectural en Europe en 2017, commencant sa carriere sur des projets residentiels incluant des chalets de luxe, des immeubles a appartements et des developpements de quartier. Ces premieres experiences ont faconne sa sensibilite du design sous l'influence forte de la culture architecturale europeenne : precision, proportions equilibrees, materiaux raffines et composition spatiale epuree.",
+        "Il a obtenu son diplome de dessin architectural en 2017 a Sion, en Suisse, commencant sa carriere sur des projets residentiels incluant des chalets de luxe, des immeubles a appartements et des developpements de quartier. Ces premieres experiences ont faconne sa sensibilite du design sous l'influence forte de la culture architecturale europeenne : precision, proportions equilibrees, materiaux raffines et composition spatiale epuree.",
         "De 2017 a 2022, il a contribue a plusieurs developpements residentiels, traduisant des concepts architecturaux en dessins techniques clairs et en presentations visuelles utilisees pour la coordination de design, les approbations et la communication de projet.",
         "Apres son arrivee au Canada en 2022, il a etendu son travail au-dela du dessin technique vers la visualisation architecturale et la presentation de design, tout en servant egalement comme Mission Director dans des initiatives communautaires.",
         "En decembre 2024, il a fonde BrotherStudio, avec un focus sur les images architecturales photorealistes, les floor plans marketing et le visual storytelling pour les architectes, developpeurs et professionnels de l'immobilier.",

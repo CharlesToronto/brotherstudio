@@ -1,10 +1,8 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 import Link from "next/link";
-
 import { AboutBiography } from "@/components/AboutBiography";
 import { getMessages } from "@/content/messages";
-import { site } from "@/content/site";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
 
@@ -103,32 +101,13 @@ export default async function LocalizedAboutPage({
             </ul>
           </section>
 
-          <section className="aboutSection" aria-labelledby="aboutConnectTitle">
-            <h2 id="aboutConnectTitle" className="aboutSectionTitle">
-              {messages.about.connectTitle}
+          <section className="aboutSection" aria-labelledby="aboutContactTitle">
+            <h2 id="aboutContactTitle" className="aboutSectionTitle">
+              <Link href={withLocalePath(locale, "/contact")}>
+                {messages.about.ctaLinkLabel}
+              </Link>
             </h2>
-            <p className="aboutParagraph">{messages.about.connectText}</p>
-            <div className="aboutLinkRow">
-              <a className="aboutLink" href={`mailto:${site.contact.email}`}>
-                {messages.about.emailLabel}: {site.contact.email}
-              </a>
-              <a
-                className="aboutLink"
-                href={site.instagramUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {messages.about.instagramLabel}
-              </a>
-            </div>
           </section>
-
-          <p className="pageCta">
-            {messages.about.ctaText}{" "}
-            <Link className="pageCtaLink" href={withLocalePath(locale, "/contact")}>
-              {messages.about.ctaLinkLabel}
-            </Link>
-          </p>
         </section>
       </div>
     </main>

@@ -397,6 +397,10 @@ html[data-theme="dark"] .adminLockOverlay {
     min-height: 34px;
   }
 
+  .siteNavMobile .siteNavLink[aria-current="page"] {
+    color: #ff4d00;
+  }
+
   .gallery {
     column-count: 1;
   }
@@ -440,6 +444,9 @@ html[data-theme="dark"] .adminLockOverlay {
   border: 0;
   background: transparent;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .galleryImage {
