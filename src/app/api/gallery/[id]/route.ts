@@ -38,7 +38,7 @@ export async function PATCH(
   }
 
   if (typeof project !== "undefined") {
-    if (!isGalleryProjectKey(project)) {
+    if (project !== null && !isGalleryProjectKey(project)) {
       return NextResponse.json({ error: "Invalid project" }, { status: 400 });
     }
 

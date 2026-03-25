@@ -3,15 +3,15 @@ import path from "node:path";
 
 import {
   DEFAULT_GALLERY_PROJECT,
-  normalizeGalleryProject,
-  type GalleryProjectKey,
+  normalizeOptionalGalleryProject,
+  type GalleryProjectValue,
 } from "@/lib/galleryProjects";
 
 export type GalleryItem = {
   id: string;
   src: string;
   architect: string;
-  project: GalleryProjectKey;
+  project: GalleryProjectValue;
 };
 
 type GalleryData = {
@@ -117,7 +117,7 @@ async function readGalleryData(): Promise<GalleryData> {
         id: anyItem.id,
         src: anyItem.src,
         architect: anyItem.architect,
-        project: normalizeGalleryProject(anyItem.project),
+        project: normalizeOptionalGalleryProject(anyItem.project),
       });
     }
 
@@ -149,10 +149,10 @@ export async function addGalleryItem(input: Omit<GalleryItem, "id"> & { id?: str
     id,
     src: input.src,
     architect: input.architect,
-    project: normalizeGalleryProject(input.project),
+    project: normalizeOptionalGalleryProject(input.project),
   };
 
-  data.items.push(item);
+  data.items.unshift(item);
   await writeGalleryData(data);
   return item;
 }
@@ -170,9 +170,7 @@ export async function updateGalleryItem(
     ...current,
     ...(typeof patch.src === "string" ? { src: patch.src } : null),
     ...(typeof patch.architect === "string" ? { architect: patch.architect } : null),
-    ...(patch.project !== undefined
-      ? { project: normalizeGalleryProject(patch.project) }
-      : null),
+    ...(patch.project !== undefined ? { project: normalizeOptionalGalleryProject(patch.project) } : null),
   };
 
   data.items[index] = updated;

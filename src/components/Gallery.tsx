@@ -12,6 +12,7 @@ import {
   PROJECT_OPTIONS,
   getGalleryProjectLabel,
   type GalleryProjectKey,
+  type GalleryProjectValue,
 } from "@/lib/galleryProjects";
 
 type GalleryProps = {
@@ -111,7 +112,7 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
   const addInputRef = useRef<HTMLInputElement | null>(null);
   const replaceTargetIdRef = useRef<string | null>(null);
   const lastSavedArchitectByIdRef = useRef<Map<string, string>>(new Map());
-  const lastSavedProjectByIdRef = useRef<Map<string, GalleryProjectKey>>(new Map());
+  const lastSavedProjectByIdRef = useRef<Map<string, GalleryProjectValue>>(new Map());
   const lastSavedOrderRef = useRef<string[]>([]);
 
   useEffect(() => {
@@ -126,11 +127,13 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
   }, [items]);
 
   const availableProjects = useMemo(
-    () =>
-      PROJECT_OPTIONS.filter((option) =>
+    () => {
+      if (editable) return [...PROJECT_OPTIONS];
+      return PROJECT_OPTIONS.filter((option) =>
         localItems.some((item) => item.project === option.key),
-      ),
-    [localItems],
+      );
+    },
+    [editable, localItems],
   );
 
   useEffect(() => {
@@ -289,9 +292,10 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
     }
   };
 
-  const saveProject = async (id: string, project: GalleryProjectKey) => {
-    const lastSavedProject =
-      lastSavedProjectByIdRef.current.get(id) ?? DEFAULT_GALLERY_PROJECT;
+  const saveProject = async (id: string, project: GalleryProjectValue) => {
+    const lastSavedProject = lastSavedProjectByIdRef.current.has(id)
+      ? (lastSavedProjectByIdRef.current.get(id) ?? null)
+      : DEFAULT_GALLERY_PROJECT;
 
     if (project === lastSavedProject) return;
 
@@ -518,9 +522,12 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
                   <select
                     id={`gallery-project-${item.id}`}
                     className="galleryProjectSelect"
-                    value={item.project}
+                    value={item.project ?? ""}
                     onChange={(event) => {
-                      const nextProject = event.target.value as GalleryProjectKey;
+                      const nextProject =
+                        event.target.value === ""
+                          ? null
+                          : (event.target.value as GalleryProjectKey);
                       setLocalItems((prev) =>
                         prev.map((i) =>
                           i.id === item.id ? { ...i, project: nextProject } : i,
@@ -531,6 +538,7 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
                     disabled={busyId !== null}
                     aria-label="Project"
                   >
+                    <option value="">Tous uniquement</option>
                     {PROJECT_OPTIONS.map((project) => (
                       <option key={project.key} value={project.key}>
                         {project.label}
@@ -564,7 +572,11 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
               ) : (
                 <div className="galleryMeta galleryMetaInline">
                   <div className="galleryCaption">{item.architect}</div>
-                  <div className="galleryProjectInline">{getGalleryProjectLabel(item.project)}</div>
+                  {getGalleryProjectLabel(item.project) ? (
+                    <div className="galleryProjectInline">
+                      {getGalleryProjectLabel(item.project)}
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>

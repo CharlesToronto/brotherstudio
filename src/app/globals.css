@@ -62,10 +62,15 @@ select:focus-visible {
 }
 
 .siteLogo {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.siteLogoImage {
+  display: block;
+  width: clamp(150px, 18vw, 190px);
+  height: auto;
 }
 
 .siteNav {
@@ -349,6 +354,10 @@ html[data-theme="dark"] .adminLockOverlay {
     gap: 10px;
   }
 
+  .siteLogoImage {
+    width: 136px;
+  }
+
   .siteNavDesktop {
     display: none;
   }
@@ -398,7 +407,7 @@ html[data-theme="dark"] .adminLockOverlay {
   }
 
   .siteNavMobile .siteNavLink[aria-current="page"] {
-    color: #ff4d00;
+    color: #c40018;
   }
 
   .gallery {
@@ -776,7 +785,7 @@ html[data-theme="dark"] .contactForm {
 }
 
 .contactAccent {
-  color: #ff4d00;
+  color: #c40018;
 }
 
 @media (max-width: 640px) {
@@ -835,7 +844,7 @@ html[data-theme="dark"] .contactForm {
   font-size: 10px;
   line-height: 1.5;
   letter-spacing: 0.02em;
-  color: #ff4d00;
+  color: #c40018;
   white-space: nowrap;
 }
 

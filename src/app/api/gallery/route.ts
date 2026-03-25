@@ -4,7 +4,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 
 import { addGalleryItem, getGalleryItems, reorderGalleryItems } from "@/lib/galleryStore";
-import { normalizeGalleryProject } from "@/lib/galleryProjects";
+import { normalizeOptionalGalleryProject } from "@/lib/galleryProjects";
 
 export const runtime = "nodejs";
 
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   }
 
   const architect = typeof architectRaw === "string" ? architectRaw.trim() : "";
-  const project = normalizeGalleryProject(projectRaw);
+  const project = normalizeOptionalGalleryProject(projectRaw);
   if (!architect) {
     return NextResponse.json({ error: "Missing architect" }, { status: 400 });
   }

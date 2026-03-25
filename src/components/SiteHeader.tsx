@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -188,7 +189,14 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
   return (
     <header className="siteHeader">
       <Link className="siteLogo" href={localizedHref("/")}>
-        {site.name}
+        <Image
+          className="siteLogoImage"
+          src="/site-logo-header.png"
+          alt={site.name}
+          width={789}
+          height={91}
+          priority
+        />
       </Link>
 
       <nav className="siteNav siteNavDesktop" aria-label="Primary">
