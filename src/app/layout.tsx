@@ -11,12 +11,12 @@ import { getSiteUrl } from "@/lib/siteUrl";
 
 const siteUrl = getSiteUrl();
 const defaultDescription =
-  "BrotherStudio creates photorealistic 3D architectural renderings, interior visualizations, and landscape design images for residential projects, kitchens, and concept spaces in Canada.";
+  "Images haut de gamme pour promouvoir et vendre vos projets immobiliers.";
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
   title: {
-    default: "BrotherStudio - 3D Rendering",
+    default: "Rendus 3D architecture photoréalistes | BrotherStudio",
     template: `%s | ${site.name}`,
   },
   description: defaultDescription,
@@ -26,14 +26,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: site.name,
-    title: "BrotherStudio - 3D Rendering",
+    title: "Rendus 3D architecture photoréalistes | BrotherStudio",
     description: defaultDescription,
     url: "/",
     locale: "en_CA",
   },
   twitter: {
     card: "summary",
-    title: "BrotherStudio - 3D Rendering",
+    title: "Rendus 3D architecture photoréalistes | BrotherStudio",
     description: defaultDescription,
   },
   icons: {

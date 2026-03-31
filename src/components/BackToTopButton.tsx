@@ -30,7 +30,7 @@ export function BackToTopButton({ label }: BackToTopButtonProps) {
       type="button"
       aria-label={label}
       onClick={() => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({ top: 0, behavior: "auto" });
       }}
     >
       <svg

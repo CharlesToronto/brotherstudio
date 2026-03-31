@@ -225,11 +225,11 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       },
     },
     home: {
-      metadataTitle: "BrotherStudio - 3D Rendering",
+      metadataTitle: "Rendus 3D architecture photoréalistes | BrotherStudio",
       metadataDescription:
-        "BrotherStudio creates photorealistic 3D architectural renderings, interior visualizations, and landscape design images for residential projects, kitchens, and concept spaces in Canada.",
+        "Images haut de gamme pour promouvoir et vendre vos projets immobiliers.",
       introLine:
-        "High-end architectural visualization, landscape atmospheres, and real estate presentation.",
+        "We help architects and developers present and sell their projects through high-end visualizations.",
       backToTopLabel: "Back to top",
       projectFilterAllLabel: "All",
       projectFilterAriaLabel: "Project filters",
@@ -346,11 +346,11 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       },
     },
     home: {
-      metadataTitle: "BrotherStudio - Rendu 3D",
+      metadataTitle: "Rendus 3D architecture photoréalistes | BrotherStudio",
       metadataDescription:
-        "BrotherStudio cree des rendus 3D photorealistes, visualisations interieures et images de paysage pour des projets residentiels, cuisines et espaces conceptuels au Canada.",
+        "Images haut de gamme pour promouvoir et vendre vos projets immobiliers.",
       introLine:
-        "Visualisation architecturale haut de gamme, atmospheres paysageres et presentation immobiliere.",
+        "Nous aidons les architectes et les developpeurs a presenter et vendre leurs projets grace a des visualisations haut de gamme.",
       backToTopLabel: "Retour en haut",
       projectFilterAllLabel: "Tous",
       projectFilterAriaLabel: "Filtres de projet",

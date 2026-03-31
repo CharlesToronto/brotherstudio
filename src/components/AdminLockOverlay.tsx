@@ -2,13 +2,21 @@
 
 import { FormEvent, useState } from "react";
 
-const ADMIN_CODE = "783870";
+const ACCESS_CODE = "1870";
 const ADMIN_UNLOCK_STORAGE_KEY = "bs_admin_unlocked";
 
-export function AdminLockOverlay() {
+type AdminLockOverlayProps = {
+  title?: string;
+  storageKey?: string;
+};
+
+export function AdminLockOverlay({
+  title = "Accès Admin",
+  storageKey = ADMIN_UNLOCK_STORAGE_KEY,
+}: AdminLockOverlayProps) {
   const [isUnlocked, setIsUnlocked] = useState(() => {
     if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem(ADMIN_UNLOCK_STORAGE_KEY) === "1";
+    return window.sessionStorage.getItem(storageKey) === "1";
   });
   const [error, setError] = useState("");
 
@@ -19,12 +27,12 @@ export function AdminLockOverlay() {
     const codeRaw = formData.get("code");
     const code = typeof codeRaw === "string" ? codeRaw.trim() : "";
 
-    if (code !== ADMIN_CODE) {
+    if (code !== ACCESS_CODE) {
       setError("Code incorrect.");
       return;
     }
 
-    window.sessionStorage.setItem(ADMIN_UNLOCK_STORAGE_KEY, "1");
+    window.sessionStorage.setItem(storageKey, "1");
     setError("");
     setIsUnlocked(true);
   };
@@ -35,7 +43,7 @@ export function AdminLockOverlay() {
     <div className="adminLockOverlay" role="dialog" aria-modal="true" aria-labelledby="adminLockTitle">
       <form className="adminLockCard" onSubmit={handleSubmit}>
         <h2 id="adminLockTitle" className="adminLockTitle">
-          Accès Admin
+          {title}
         </h2>
         <p className="adminLockText">Entrez le code pour déverrouiller cette page.</p>
         <input

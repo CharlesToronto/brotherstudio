@@ -61,7 +61,7 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
         />
         <BackToTopButton label={messages.home.backToTopLabel} />
       </main>
-      <SiteFooter />
+      <SiteFooter locale={locale} />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AdminLockOverlay } from "@/components/AdminLockOverlay";
 import { Gallery } from "@/components/Gallery";
 import { getAnalyticsSummary } from "@/lib/analyticsStore";
@@ -99,6 +100,9 @@ export default async function AdminPage() {
         >
           Ouvrir le dashboard analytics
         </a>
+        <Link className="adminAnalyticsLink" href="/admin/client-projects">
+          Ouvrir les projets review
+        </Link>
       </section>
       <Gallery items={items} editable />
     </main>
