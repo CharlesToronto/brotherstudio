@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { site } from "@/content/site";
 import { DEFAULT_LOCALE, LOCALE_COOKIE_KEY, normalizeLocale } from "@/lib/i18n";
@@ -81,6 +82,7 @@ export default async function RootLayout({
         <SiteHeader initialTheme={theme} />
         <AnalyticsTracker />
         {children}
+        <SiteFooter locale={locale} />
         {shouldLoadAnalytics ? (
           <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />
         ) : null}

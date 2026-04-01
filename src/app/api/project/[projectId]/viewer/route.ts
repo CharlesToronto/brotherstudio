@@ -3,10 +3,17 @@ import { NextResponse } from "next/server";
 
 import {
   getProjectAccessCookieName,
+  getProjectViewerCookieName,
+  getProjectViewerRoleCookieName,
   isProjectAccessAuthorized,
   isProjectFeedbackConfigured,
+  verifyProjectAccessPassword,
   registerProjectViewer,
 } from "@/lib/projectFeedbackStore";
+import {
+  normalizeProjectViewerEmail,
+  normalizeProjectViewerRole,
+} from "@/lib/projectViewerIdentity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,33 +31,77 @@ export async function POST(
 
   const { projectId } = await params;
   const cookieStore = await cookies();
-  const isAuthorized = await isProjectAccessAuthorized(
-    projectId,
-    cookieStore.get(getProjectAccessCookieName(projectId))?.value,
-  );
-
-  if (!isAuthorized) {
-    return NextResponse.json(
-      { error: "Project password required." },
-      { status: 403 },
-    );
-  }
 
   const body = (await request.json().catch(() => null)) as
     | {
         email?: unknown;
+        password?: unknown;
+        role?: unknown;
       }
     | null;
 
   const email = typeof body?.email === "string" ? body.email : "";
+  const password = typeof body?.password === "string" ? body.password : "";
+  const role = normalizeProjectViewerRole(
+    typeof body?.role === "string" ? body.role : null,
+  );
 
   try {
+    const existingPassword =
+      cookieStore.get(getProjectAccessCookieName(projectId))?.value ?? null;
+
+    if (role === "team") {
+      const isAuthorized =
+        (await isProjectAccessAuthorized(projectId, existingPassword)) ||
+        (await verifyProjectAccessPassword(projectId, password));
+
+      if (!isAuthorized) {
+        return NextResponse.json(
+          { error: "Invalid project password." },
+          { status: 403 },
+        );
+      }
+    }
+
     const project = await registerProjectViewer({
       projectId,
       email,
     });
 
-    return NextResponse.json({ project }, { status: 201 });
+    const response = NextResponse.json({ project }, { status: 201 });
+    response.cookies.set(
+      getProjectViewerRoleCookieName(projectId),
+      role,
+      {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+      },
+    );
+    response.cookies.set(
+      getProjectViewerCookieName(projectId),
+      normalizeProjectViewerEmail(email),
+      {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+      },
+    );
+    if (role === "team" && password.trim()) {
+      response.cookies.set(getProjectAccessCookieName(projectId), password.trim(), {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+      });
+    }
+
+    return response;
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to open project.";

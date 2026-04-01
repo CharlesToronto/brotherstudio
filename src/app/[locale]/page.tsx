@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { Gallery } from "@/components/Gallery";
-import { SiteFooter } from "@/components/SiteFooter";
 import { getMessages } from "@/content/messages";
 import { getGalleryItems } from "@/lib/galleryStore";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
@@ -49,19 +48,19 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
   const items = await getGalleryItems();
 
   return (
-    <>
-      <main className="siteMain">
-        <p className="homeIntro homeIntroHighlight">{messages.home.introLine}</p>
-        <Gallery
-          items={items}
-          filterLabels={{
-            all: messages.home.projectFilterAllLabel,
-            ariaLabel: messages.home.projectFilterAriaLabel,
-          }}
-        />
-        <BackToTopButton label={messages.home.backToTopLabel} />
-      </main>
-      <SiteFooter locale={locale} />
-    </>
+    <main className="siteMain">
+      <p className="homeIntro homeIntroHighlight">{messages.home.introLine}</p>
+      <Gallery
+        items={items}
+        filterLabels={{
+          all: messages.home.projectFilterAllLabel,
+          ariaLabel: messages.home.projectFilterAriaLabel,
+        }}
+      />
+      <BackToTopButton
+        label={messages.home.backToTopLabel}
+        footerLabel={messages.home.backToFooterLabel}
+      />
+    </main>
   );
 }

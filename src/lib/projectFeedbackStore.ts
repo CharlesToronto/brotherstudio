@@ -1,8 +1,16 @@
 import { getSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import {
+  getProjectViewerCookieName,
+  getProjectViewerRoleCookieName,
+  maskProjectViewerEmail,
+  normalizeProjectViewerEmail,
+  normalizeProjectViewerRole,
+} from "@/lib/projectViewerIdentity";
 import type {
   ProjectFeedbackComment,
   ProjectFeedbackImage,
   ProjectFeedbackProject,
+  ProjectFeedbackTeamMessage,
   ProjectStatus,
   ProjectSummary,
   ProjectVersionGroup,
@@ -10,6 +18,7 @@ import type {
 
 const PROJECT_IMAGE_BUCKET = "project-images";
 const PROJECT_ASSET_BROWSER_CACHE_TTL_SECONDS = "31536000";
+const DEFAULT_COMMENT_COLOR = "#d88fa2";
 
 type ProjectRow = {
   id: string;
@@ -34,6 +43,7 @@ type CommentRow = {
   image_id: string;
   x: number;
   y: number;
+  color?: string | null;
   author: string | null;
   content: string;
   created_at: string;
@@ -47,6 +57,21 @@ type ProjectViewerRow = {
   last_seen_at: string;
 };
 
+type TeamMessageRow = {
+  id: string;
+  project_id: string;
+  image_id: string;
+  reply_to_id?: string | null;
+  author: string | null;
+  content: string;
+  created_at: string;
+};
+
+type ProjectImageDownloadAsset = {
+  filename: string;
+  url: string;
+};
+
 function normalizeStatus(status: string | null | undefined): ProjectStatus {
   return status === "approved" ? "approved" : "in_review";
 }
@@ -56,11 +81,16 @@ function normalizeAccessPassword(value: string | null | undefined) {
 }
 
 function normalizeEmail(value: string) {
-  return value.trim().toLowerCase();
+  return normalizeProjectViewerEmail(value);
 }
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function normalizeCommentColor(value: string | null | undefined) {
+  const color = value?.trim().toLowerCase() ?? "";
+  return /^#[0-9a-f]{6}$/.test(color) ? color : DEFAULT_COMMENT_COLOR;
 }
 
 function sanitizeFilename(name: string) {
@@ -72,6 +102,17 @@ function sanitizeFilename(name: string) {
       .replace(/[^a-z0-9.-]+/g, "-")
       .replace(/^-+|-+$/g, "") || "image"
   );
+}
+
+function extensionFromUrl(url: string) {
+  try {
+    const pathname = new URL(url).pathname;
+    const lastSegment = pathname.split("/").pop() ?? "";
+    const dotIndex = lastSegment.lastIndexOf(".");
+    return dotIndex >= 0 ? lastSegment.slice(dotIndex) : ".jpg";
+  } catch {
+    return ".jpg";
+  }
 }
 
 function extensionForFile(file: File) {
@@ -96,12 +137,97 @@ export function getProjectAccessCookieName(projectId: string) {
   return `bs_myproject_access_${projectId}`;
 }
 
+export { getProjectViewerCookieName, getProjectViewerRoleCookieName };
+
 function getStoragePathFromPublicUrl(url: string) {
   const marker = `/storage/v1/object/public/${PROJECT_IMAGE_BUCKET}/`;
   const index = url.indexOf(marker);
   if (index === -1) return null;
 
   return decodeURIComponent(url.slice(index + marker.length).split("?")[0] ?? "");
+}
+
+function buildTeamMessagePayload(
+  message: TeamMessageRow,
+  replySource: TeamMessageRow | null,
+): ProjectFeedbackTeamMessage {
+  return {
+    id: message.id,
+    projectId: message.project_id,
+    imageId: message.image_id,
+    author: message.author?.trim() || "Team",
+    content: message.content,
+    createdAt: message.created_at,
+    replyToMessageId: message.reply_to_id ?? null,
+    replyToAuthor: replySource?.author?.trim() || null,
+    replyToContent: replySource?.content ?? null,
+  };
+}
+
+async function resolveProjectViewerAuthor(projectId: string, viewerEmail: string) {
+  const email = normalizeEmail(viewerEmail);
+  if (!isValidEmail(email)) {
+    throw new Error("Open the project with your email before posting.");
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("project_viewers")
+    .select("email")
+    .eq("project_id", projectId)
+    .eq("email", email)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("Open the project with your email before posting.");
+  }
+
+  return maskProjectViewerEmail(email);
+}
+
+export async function isRegisteredProjectViewer(
+  projectId: string,
+  viewerEmail: string | null | undefined,
+) {
+  const email = normalizeEmail(viewerEmail ?? "");
+  if (!isValidEmail(email)) return false;
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("project_viewers")
+    .select("id")
+    .eq("project_id", projectId)
+    .eq("email", email)
+    .maybeSingle();
+
+  if (error) throw error;
+  return Boolean(data);
+}
+
+export async function canProjectViewerRead(
+  projectId: string,
+  viewerEmail: string | null | undefined,
+) {
+  return isRegisteredProjectViewer(projectId, viewerEmail);
+}
+
+export async function canProjectViewerInteract(input: {
+  projectId: string;
+  password: string | null | undefined;
+  viewerRole: string | null | undefined;
+  viewerEmail: string | null | undefined;
+}) {
+  const role = normalizeProjectViewerRole(input.viewerRole);
+  if (role !== "team") return false;
+
+  const hasViewerAccess = await isRegisteredProjectViewer(
+    input.projectId,
+    input.viewerEmail,
+  );
+  if (!hasViewerAccess) return false;
+
+  return isProjectAccessAuthorized(input.projectId, input.password);
 }
 
 function buildProjectPayload(
@@ -122,6 +248,7 @@ function buildProjectPayload(
       imageId: comment.image_id,
       x: Math.min(Math.max(comment.x, 0), 1),
       y: Math.min(Math.max(comment.y, 0), 1),
+      color: normalizeCommentColor(comment.color),
       author: comment.author?.trim() || "Guest",
       content: comment.content,
       createdAt: comment.created_at,
@@ -189,7 +316,7 @@ async function loadProjectRows(projectId: string) {
       .order("created_at", { ascending: true }),
     supabase
       .from("comments")
-      .select("id, project_id, image_id, x, y, author, content, created_at")
+      .select("id, project_id, image_id, x, y, color, author, content, created_at")
       .eq("project_id", projectId)
       .order("created_at", { ascending: true }),
     supabase
@@ -477,7 +604,8 @@ export async function createProjectComment(input: {
   imageId: string;
   x: number;
   y: number;
-  author: string;
+  color: string;
+  viewerEmail: string;
   content: string;
 }) {
   if (!Number.isFinite(input.x) || input.x < 0 || input.x > 1) {
@@ -490,6 +618,8 @@ export async function createProjectComment(input: {
 
   const content = input.content.trim();
   if (!content) throw new Error("Comment content is required.");
+  const color = normalizeCommentColor(input.color);
+  const author = await resolveProjectViewerAuthor(input.projectId, input.viewerEmail);
 
   const supabase = getSupabaseAdminClient();
   const { error } = await supabase.from("comments").insert({
@@ -497,7 +627,8 @@ export async function createProjectComment(input: {
     image_id: input.imageId,
     x: input.x,
     y: input.y,
-    author: input.author.trim() || "Guest",
+    color,
+    author,
     content,
   });
 
@@ -506,6 +637,106 @@ export async function createProjectComment(input: {
   const project = await getProjectFeedbackProject(input.projectId);
   if (!project) throw new Error("Project not found.");
   return project;
+}
+
+export async function listProjectImageTeamMessages(
+  projectId: string,
+  imageId: string,
+) {
+  const supabase = getSupabaseAdminClient();
+  const { data: imageData, error: imageError } = await supabase
+    .from("images")
+    .select("id")
+    .eq("id", imageId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  if (imageError) throw imageError;
+  if (!imageData) throw new Error("Image not found.");
+
+  const { data, error } = await supabase
+    .from("image_team_messages")
+    .select("id, project_id, image_id, reply_to_id, author, content, created_at")
+    .eq("project_id", projectId)
+    .eq("image_id", imageId)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  const messages = (data as TeamMessageRow[] | null) ?? [];
+  const messageById = new Map(messages.map((message) => [message.id, message]));
+  return messages.map((message) =>
+    buildTeamMessagePayload(
+      message,
+      message.reply_to_id ? (messageById.get(message.reply_to_id) ?? null) : null,
+    ),
+  );
+}
+
+export async function createProjectImageTeamMessage(input: {
+  projectId: string;
+  imageId: string;
+  viewerEmail: string;
+  content: string;
+  replyToMessageId?: string | null;
+}) {
+  const content = input.content.trim();
+  if (!content) throw new Error("Message content is required.");
+  const author = await resolveProjectViewerAuthor(input.projectId, input.viewerEmail);
+  const replyToMessageId = input.replyToMessageId?.trim() || null;
+
+  const supabase = getSupabaseAdminClient();
+  const { data: imageData, error: imageError } = await supabase
+    .from("images")
+    .select("id")
+    .eq("id", input.imageId)
+    .eq("project_id", input.projectId)
+    .maybeSingle();
+
+  if (imageError) throw imageError;
+  if (!imageData) throw new Error("Image not found.");
+
+  if (replyToMessageId) {
+    const { data: replyData, error: replyError } = await supabase
+      .from("image_team_messages")
+      .select("id")
+      .eq("id", replyToMessageId)
+      .eq("project_id", input.projectId)
+      .eq("image_id", input.imageId)
+      .maybeSingle();
+
+    if (replyError) throw replyError;
+    if (!replyData) throw new Error("Reply target not found.");
+  }
+
+  const { data, error } = await supabase
+    .from("image_team_messages")
+    .insert({
+      project_id: input.projectId,
+      image_id: input.imageId,
+      reply_to_id: replyToMessageId,
+      author,
+      content,
+    })
+    .select("id, project_id, image_id, reply_to_id, author, content, created_at")
+    .single();
+
+  if (error) throw error;
+  const message = data as TeamMessageRow;
+
+  let replySource: TeamMessageRow | null = null;
+  if (message.reply_to_id) {
+    const { data: replyData, error: replyError } = await supabase
+      .from("image_team_messages")
+      .select("id, project_id, image_id, reply_to_id, author, content, created_at")
+      .eq("id", message.reply_to_id)
+      .maybeSingle();
+
+    if (replyError) throw replyError;
+    replySource = (replyData as TeamMessageRow | null) ?? null;
+  }
+
+  return buildTeamMessagePayload(message, replySource);
 }
 
 export async function updateProjectStatus(
@@ -696,4 +927,43 @@ export async function replaceProjectImage(
   const nextProject = await getProjectFeedbackProject(projectId);
   if (!nextProject) throw new Error("Project not found.");
   return nextProject;
+}
+
+export async function getProjectImageDownloadAsset(
+  projectId: string,
+  imageId: string,
+): Promise<ProjectImageDownloadAsset> {
+  const supabase = getSupabaseAdminClient();
+
+  const { data: projectData, error: projectError } = await supabase
+    .from("projects")
+    .select("id, name, status")
+    .eq("id", projectId)
+    .maybeSingle();
+
+  if (projectError) throw projectError;
+  const project = projectData as Pick<ProjectRow, "id" | "name" | "status"> | null;
+  if (!project) throw new Error("Project not found.");
+  if (normalizeStatus(project.status) !== "approved") {
+    throw new Error("Project is not approved for download.");
+  }
+
+  const { data: imageData, error: imageError } = await supabase
+    .from("images")
+    .select("id, url, version")
+    .eq("id", imageId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  if (imageError) throw imageError;
+  const image = imageData as Pick<ImageRow, "id" | "url" | "version"> | null;
+  if (!image) throw new Error("Image not found.");
+
+  const extension = extensionFromUrl(image.url);
+  const filename = `${sanitizeFilename(project.name)}-v${image.version}-${image.id.slice(0, 8)}${extension}`;
+
+  return {
+    filename,
+    url: image.url,
+  };
 }

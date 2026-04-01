@@ -1,4 +1,5 @@
 export const PROJECT_OPTIONS = [
+  { key: "come", label: "Come" },
   { key: "boe", label: "Boè" },
   { key: "mesange", label: "Mésange" },
   { key: "jolimont", label: "Jolimont" },

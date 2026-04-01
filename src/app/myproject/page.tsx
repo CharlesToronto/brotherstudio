@@ -31,7 +31,7 @@ export default async function MyProjectAccessPage() {
     );
   }
 
-  const projects = await listProjectSummaries({ status: "in_review" });
+  const projects = await listProjectSummaries();
 
   return (
     <main className="siteMain">

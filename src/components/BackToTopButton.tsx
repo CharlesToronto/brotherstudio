@@ -1,19 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type BackToTopButtonProps = {
   label: string;
+  footerLabel: string;
 };
 
-export function BackToTopButton({ label }: BackToTopButtonProps) {
+export function BackToTopButton({ label, footerLabel }: BackToTopButtonProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [direction, setDirection] = useState<"up" | "down">("up");
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     const syncVisibility = () => {
-      setIsVisible(window.scrollY > 260);
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollY.current;
+
+      setIsVisible(currentScrollY > 260);
+
+      if (Math.abs(delta) > 3) {
+        setDirection(delta > 0 ? "down" : "up");
+      }
+
+      lastScrollY.current = currentScrollY;
     };
 
+    lastScrollY.current = window.scrollY;
     syncVisibility();
     window.addEventListener("scroll", syncVisibility, { passive: true });
 
@@ -24,12 +37,22 @@ export function BackToTopButton({ label }: BackToTopButtonProps) {
 
   if (!isVisible) return null;
 
+  const buttonLabel = direction === "down" ? footerLabel : label;
+
   return (
     <button
       className="backToTopButton"
       type="button"
-      aria-label={label}
+      aria-label={buttonLabel}
+      data-direction={direction}
       onClick={() => {
+        if (direction === "down") {
+          document
+            .getElementById("site-footer")
+            ?.scrollIntoView({ block: "start", behavior: "auto" });
+          return;
+        }
+
         window.scrollTo({ top: 0, behavior: "auto" });
       }}
     >

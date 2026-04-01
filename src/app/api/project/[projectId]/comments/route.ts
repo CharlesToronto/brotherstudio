@@ -2,9 +2,11 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import {
+  canProjectViewerInteract,
   createProjectComment,
   getProjectAccessCookieName,
-  isProjectAccessAuthorized,
+  getProjectViewerCookieName,
+  getProjectViewerRoleCookieName,
   isProjectFeedbackConfigured,
 } from "@/lib/projectFeedbackStore";
 
@@ -24,14 +26,16 @@ export async function POST(
 
   const { projectId } = await params;
   const cookieStore = await cookies();
-  const isAuthorized = await isProjectAccessAuthorized(
+  const isAuthorized = await canProjectViewerInteract({
     projectId,
-    cookieStore.get(getProjectAccessCookieName(projectId))?.value,
-  );
+    password: cookieStore.get(getProjectAccessCookieName(projectId))?.value,
+    viewerRole: cookieStore.get(getProjectViewerRoleCookieName(projectId))?.value,
+    viewerEmail: cookieStore.get(getProjectViewerCookieName(projectId))?.value,
+  });
 
   if (!isAuthorized) {
     return NextResponse.json(
-      { error: "Project password required." },
+      { error: "Team member access is required to post edit requests." },
       { status: 403 },
     );
   }
@@ -41,7 +45,8 @@ export async function POST(
         imageId?: unknown;
         x?: unknown;
         y?: unknown;
-        author?: unknown;
+        color?: unknown;
+        viewerEmail?: unknown;
         content?: unknown;
       }
     | null;
@@ -49,7 +54,10 @@ export async function POST(
   const imageId = typeof body?.imageId === "string" ? body.imageId : "";
   const x = typeof body?.x === "number" ? body.x : Number.NaN;
   const y = typeof body?.y === "number" ? body.y : Number.NaN;
-  const author = typeof body?.author === "string" ? body.author : "";
+  const color = typeof body?.color === "string" ? body.color : "";
+  const viewerEmail =
+    cookieStore.get(getProjectViewerCookieName(projectId))?.value ??
+    (typeof body?.viewerEmail === "string" ? body.viewerEmail : "");
   const content = typeof body?.content === "string" ? body.content : "";
 
   try {
@@ -58,7 +66,8 @@ export async function POST(
       imageId,
       x,
       y,
-      author,
+      color,
+      viewerEmail,
       content,
     });
 
@@ -66,7 +75,10 @@ export async function POST(
   } catch (error) {
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Failed to save comment.",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to save edit request.",
       },
       { status: 400 },
     );

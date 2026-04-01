@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { AdminLockOverlay } from "@/components/AdminLockOverlay";
 import { ClientProjectsAdmin } from "@/components/ClientProjectsAdmin";
@@ -68,11 +67,6 @@ export default async function AdminClientProjectsPage() {
   return (
     <main className="siteMain">
       <AdminLockOverlay />
-      <p className="pageCta">
-        <Link className="pageCtaInlineLink" href="/admin">
-          Return to gallery admin
-        </Link>
-      </p>
       <ClientProjectsAdmin
         initialProjects={projects}
         isConfigured={isConfigured}

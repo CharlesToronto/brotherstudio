@@ -4,15 +4,18 @@ import { cookies } from "next/headers";
 import { ProjectFeedbackAccess } from "@/components/ProjectFeedbackAccess";
 import {
   getProjectAccessCookieName,
+  getProjectViewerRoleCookieName,
   isProjectAccessAuthorized,
   isProjectFeedbackConfigured,
 } from "@/lib/projectFeedbackStore";
+import { normalizeProjectViewerRole } from "@/lib/projectViewerIdentity";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type MyProjectFeedbackPageProps = {
   params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ viewer?: string | string[] }>;
 };
 
 export async function generateMetadata({
@@ -32,8 +35,14 @@ export async function generateMetadata({
 
 export default async function MyProjectFeedbackPage({
   params,
+  searchParams,
 }: MyProjectFeedbackPageProps) {
   const { projectId } = await params;
+  const resolvedSearchParams = await searchParams;
+  const viewerParam = Array.isArray(resolvedSearchParams.viewer)
+    ? resolvedSearchParams.viewer[0]
+    : resolvedSearchParams.viewer;
+  const forceVisitorEntry = viewerParam === "visitor";
 
   if (!isProjectFeedbackConfigured()) {
     return (
@@ -54,12 +63,17 @@ export default async function MyProjectFeedbackPage({
     projectId,
     cookieStore.get(getProjectAccessCookieName(projectId))?.value,
   ).catch(() => false);
+  const initialRole = normalizeProjectViewerRole(
+    cookieStore.get(getProjectViewerRoleCookieName(projectId))?.value ?? null,
+  );
 
   return (
     <main className="siteMain">
       <ProjectFeedbackAccess
         projectId={projectId}
         initialUnlocked={initialUnlocked}
+        initialRole={initialRole}
+        forceVisitorEntry={forceVisitorEntry}
       />
     </main>
   );

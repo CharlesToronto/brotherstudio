@@ -23,7 +23,8 @@ function formatProjectDate(value: string) {
 }
 
 function getProjectUrl(projectId: string, origin?: string) {
-  return origin ? `${origin}/myproject/${projectId}` : `/myproject/${projectId}`;
+  const path = `/myproject/${projectId}?viewer=visitor`;
+  return origin ? `${origin}${path}` : path;
 }
 
 export function ClientProjectsAdmin({
@@ -295,8 +296,8 @@ export function ClientProjectsAdmin({
             myStudio Admin
           </h1>
           <p className="clientAdminText">
-            Create a project, copy the unique link, then upload images
-            directly from the review page.
+            Create a project, copy the client link, then open the admin project page
+            to add project variants, replace images, or delete images.
           </p>
         </div>
 
@@ -406,107 +407,114 @@ export function ClientProjectsAdmin({
               </div>
 
               <div className="clientProjectCardBody">
-                <div className="clientProjectCardHeader">
+                <div className="clientProjectCardTop">
                   <div>
-                    <h2 className="clientProjectCardTitle">{project.name}</h2>
+                    <div className="clientProjectCardTitleRow">
+                      <h2 className="clientProjectCardTitle">{project.name}</h2>
+                      <span
+                        className="clientProjectCardStatus"
+                        data-status={project.status}
+                      >
+                        {project.status === "approved" ? "Approved" : "In review"}
+                      </span>
+                    </div>
                     <p className="clientProjectCardMeta">
                       Created {formatProjectDate(project.createdAt)}
                     </p>
-                  </div>
-                  <div className="clientAdminActions">
-                    <a
-                      className="clientAdminButton clientAdminButtonGhost"
-                      href={`/myproject/${project.id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Open project
-                    </a>
-                    <button
-                      className="clientAdminButton clientAdminButtonGhost"
-                      type="button"
-                      onClick={() => void handleCopyLink(project.id)}
-                    >
-                      {copiedProjectId === project.id ? "Copied" : "Copy link"}
-                    </button>
+                    <p className="clientProjectCardMeta">
+                      {project.latestVersion > 0
+                        ? `Latest variant: V${project.latestVersion}`
+                        : "No variants yet"}
+                    </p>
                   </div>
                 </div>
 
-                <dl className="clientProjectInfo">
-                  <div>
-                    <dt>Status</dt>
-                    <dd>{project.status === "approved" ? "Approved" : "In review"}</dd>
-                  </div>
-                  <div>
-                    <dt>Latest upload</dt>
-                    <dd>{project.latestVersion > 0 ? `Upload ${project.latestVersion}` : "None"}</dd>
-                  </div>
-                  <div>
-                    <dt>Images</dt>
-                    <dd>{project.imageCount}</dd>
-                  </div>
-                  <div>
-                    <dt>Comments</dt>
-                    <dd>{project.commentCount}</dd>
-                  </div>
-                  <div>
-                    <dt>Viewers</dt>
-                    <dd>{project.viewerCount}</dd>
-                  </div>
-                </dl>
-                <div className="clientAdminPasswordRow">
-                  <label className="clientAdminField">
-                    <span className="clientAdminLabel">Project name</span>
-                    <input
-                      className="clientAdminInput"
-                      type="text"
-                      value={nameDrafts[project.id] ?? ""}
-                      onChange={(event) =>
-                        setNameDrafts((current) => ({
-                          ...current,
-                          [project.id]: event.target.value,
-                        }))
-                      }
-                    />
-                  </label>
+                <div className="clientProjectCardStats">
+                  <span>{project.imageCount} image(s)</span>
+                  <span>
+                    {project.commentCount} edit request{project.commentCount === 1 ? "" : "s"}
+                  </span>
+                  <span>{project.viewerCount} viewer(s)</span>
+                </div>
+
+                <div className="clientProjectCardActions">
+                  <a
+                    className="clientAdminButton clientAdminButtonGhost"
+                    href={`/admin/client-projects/${project.id}`}
+                  >
+                    Manage variants
+                  </a>
                   <button
                     className="clientAdminButton clientAdminButtonGhost"
                     type="button"
-                    disabled={savingNameProjectId === project.id}
-                    onClick={() => void handleSaveName(project.id)}
+                    onClick={() => void handleCopyLink(project.id)}
                   >
-                    {savingNameProjectId === project.id ? "Saving..." : "Save name"}
+                    {copiedProjectId === project.id ? "Copied" : "Copy link"}
                   </button>
                 </div>
-                <div className="clientAdminPasswordRow">
-                  <label className="clientAdminField">
-                    <span className="clientAdminLabel">Project password</span>
-                    <input
-                      className="clientAdminInput"
-                      type="text"
-                      value={passwordDrafts[project.id] ?? ""}
-                      onChange={(event) =>
-                        setPasswordDrafts((current) => ({
-                          ...current,
-                          [project.id]: event.target.value,
-                        }))
-                      }
-                    />
-                  </label>
-                  <button
-                    className="clientAdminButton clientAdminButtonGhost"
-                    type="button"
-                    disabled={savingPasswordProjectId === project.id}
-                    onClick={() => void handleSavePassword(project.id)}
-                  >
-                    {savingPasswordProjectId === project.id
-                      ? "Saving..."
-                      : "Save password"}
-                  </button>
-                </div>
-                <p className="clientAdminText clientAdminCode">
-                  {getProjectUrl(project.id, origin)}
-                </p>
+
+                <details className="clientProjectSettingsDisclosure">
+                  <summary className="clientProjectSettingsSummary">
+                    Project settings
+                  </summary>
+                  <div className="clientProjectCardSettings">
+                    <div className="clientAdminPasswordRow">
+                      <label className="clientAdminField">
+                        <span className="clientAdminLabel">Project name</span>
+                        <input
+                          className="clientAdminInput"
+                          type="text"
+                          value={nameDrafts[project.id] ?? ""}
+                          onChange={(event) =>
+                            setNameDrafts((current) => ({
+                              ...current,
+                              [project.id]: event.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+                      <button
+                        className="clientAdminButton clientAdminButtonGhost"
+                        type="button"
+                        disabled={savingNameProjectId === project.id}
+                        onClick={() => void handleSaveName(project.id)}
+                      >
+                        {savingNameProjectId === project.id
+                          ? "Saving..."
+                          : "Save name"}
+                      </button>
+                    </div>
+                    <div className="clientAdminPasswordRow">
+                      <label className="clientAdminField">
+                        <span className="clientAdminLabel">Project password</span>
+                        <input
+                          className="clientAdminInput"
+                          type="text"
+                          value={passwordDrafts[project.id] ?? ""}
+                          onChange={(event) =>
+                            setPasswordDrafts((current) => ({
+                              ...current,
+                              [project.id]: event.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+                      <button
+                        className="clientAdminButton clientAdminButtonGhost"
+                        type="button"
+                        disabled={savingPasswordProjectId === project.id}
+                        onClick={() => void handleSavePassword(project.id)}
+                      >
+                        {savingPasswordProjectId === project.id
+                          ? "Saving..."
+                          : "Save password"}
+                      </button>
+                    </div>
+                  </div>
+                  <p className="clientAdminText clientAdminCode">
+                    {getProjectUrl(project.id, origin)}
+                  </p>
+                </details>
               </div>
             </article>
           ))

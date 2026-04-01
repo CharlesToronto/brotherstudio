@@ -1,4 +1,5 @@
 export type ProjectStatus = "in_review" | "approved";
+export type ProjectViewerRole = "team" | "visitor";
 
 export type ProjectFeedbackComment = {
   id: string;
@@ -6,9 +7,22 @@ export type ProjectFeedbackComment = {
   imageId: string;
   x: number;
   y: number;
+  color: string;
   author: string;
   content: string;
   createdAt: string;
+};
+
+export type ProjectFeedbackTeamMessage = {
+  id: string;
+  projectId: string;
+  imageId: string;
+  author: string;
+  content: string;
+  createdAt: string;
+  replyToMessageId: string | null;
+  replyToAuthor: string | null;
+  replyToContent: string | null;
 };
 
 export type ProjectFeedbackImage = {

@@ -49,6 +49,7 @@ export type SiteMessages = {
     metadataDescription: string;
     introLine: string;
     backToTopLabel: string;
+    backToFooterLabel: string;
     projectFilterAllLabel: string;
     projectFilterAriaLabel: string;
   };
@@ -231,6 +232,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       introLine:
         "We help architects and developers present and sell their projects through high-end visualizations.",
       backToTopLabel: "Back to top",
+      backToFooterLabel: "Go to footer",
       projectFilterAllLabel: "All",
       projectFilterAriaLabel: "Project filters",
     },
@@ -352,6 +354,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       introLine:
         "Nous aidons les architectes et les developpeurs a presenter et vendre leurs projets grace a des visualisations haut de gamme.",
       backToTopLabel: "Retour en haut",
+      backToFooterLabel: "Aller au footer",
       projectFilterAllLabel: "Tous",
       projectFilterAriaLabel: "Filtres de projet",
     },

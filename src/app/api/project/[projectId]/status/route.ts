@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import {
   getProjectAccessCookieName,
+  getProjectViewerRoleCookieName,
   isProjectAccessAuthorized,
   isProjectFeedbackConfigured,
   updateProjectStatus,
@@ -25,6 +26,15 @@ export async function PATCH(
 
   const { projectId } = await params;
   const cookieStore = await cookies();
+  const currentRole = cookieStore.get(getProjectViewerRoleCookieName(projectId))?.value;
+
+  if (currentRole === "visitor") {
+    return NextResponse.json(
+      { error: "Visitor access cannot approve a project." },
+      { status: 403 },
+    );
+  }
+
   const isAuthorized = await isProjectAccessAuthorized(
     projectId,
     cookieStore.get(getProjectAccessCookieName(projectId))?.value,

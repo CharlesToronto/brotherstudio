@@ -3,70 +3,48 @@
 import { useEffect, useEffectEvent, useState } from "react";
 
 import { ProjectFeedbackWorkspace } from "@/components/ProjectFeedbackWorkspace";
-import type { ProjectFeedbackProject } from "@/lib/projectFeedbackTypes";
+import type {
+  ProjectFeedbackProject,
+  ProjectViewerRole,
+} from "@/lib/projectFeedbackTypes";
+import {
+  getProjectViewerRoleStorageKey,
+  getProjectViewerStorageKey,
+  normalizeProjectViewerRole,
+} from "@/lib/projectViewerIdentity";
 
 type ProjectFeedbackAccessProps = {
   projectId: string;
   initialUnlocked: boolean;
+  initialRole: ProjectViewerRole;
+  forceVisitorEntry?: boolean;
 };
-
-const projectAccessStorageKey = (projectId: string) =>
-  `bs_project_access_email:${projectId}`;
 
 export function ProjectFeedbackAccess({
   projectId,
   initialUnlocked,
+  initialRole,
+  forceVisitorEntry = false,
 }: ProjectFeedbackAccessProps) {
+  const [mode, setMode] = useState<ProjectViewerRole>(
+    forceVisitorEntry ? "visitor" : initialRole,
+  );
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [project, setProject] = useState<ProjectFeedbackProject | null>(null);
-  const [isUnlocked, setIsUnlocked] = useState(initialUnlocked);
-  const [isLoading, setIsLoading] = useState(initialUnlocked);
+  const [accessRole, setAccessRole] = useState<ProjectViewerRole>(
+    forceVisitorEntry ? "visitor" : initialRole,
+  );
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUnlocking, setIsUnlocking] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const requestUnlock = async (submittedPassword: string) => {
-    setIsUnlocking(true);
-    setErrorMessage("");
-
-    try {
-      const response = await fetch(`/api/project/${projectId}/unlock`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ password: submittedPassword }),
-      });
-
-      const payload = (await response.json().catch(() => null)) as
-        | { ok?: boolean; error?: string }
-        | null;
-
-      if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error ?? "Failed to unlock project.");
-      }
-
-      setIsUnlocked(true);
-      setPassword("");
-
-      if (typeof window !== "undefined") {
-        const savedEmail =
-          window.localStorage.getItem(projectAccessStorageKey(projectId)) ?? "";
-
-        if (savedEmail) {
-          setEmail(savedEmail);
-          await requestAccess(savedEmail, false);
-        }
-      }
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to unlock project.",
-      );
-    } finally {
-      setIsUnlocking(false);
-    }
-  };
-
-  const requestAccess = async (submittedEmail: string, persist = true) => {
+  const requestAccess = async (
+    submittedEmail: string,
+    submittedRole: ProjectViewerRole,
+    submittedPassword = "",
+    persist = true,
+  ) => {
     setIsSubmitting(true);
     setErrorMessage("");
 
@@ -74,7 +52,11 @@ export function ProjectFeedbackAccess({
       const response = await fetch(`/api/project/${projectId}/viewer`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: submittedEmail }),
+        body: JSON.stringify({
+          email: submittedEmail,
+          role: submittedRole,
+          password: submittedRole === "team" ? submittedPassword : undefined,
+        }),
       });
 
       const payload = (await response.json().catch(() => null)) as
@@ -87,16 +69,24 @@ export function ProjectFeedbackAccess({
 
       setProject(payload.project);
       setEmail(submittedEmail);
+      setPassword("");
+      setAccessRole(submittedRole);
+      setMode(submittedRole);
 
       if (persist && typeof window !== "undefined") {
         window.localStorage.setItem(
-          projectAccessStorageKey(projectId),
+          getProjectViewerStorageKey(projectId),
           submittedEmail,
+        );
+        window.localStorage.setItem(
+          getProjectViewerRoleStorageKey(projectId),
+          submittedRole,
         );
       }
     } catch (error) {
       if (typeof window !== "undefined") {
-        window.localStorage.removeItem(projectAccessStorageKey(projectId));
+        window.localStorage.removeItem(getProjectViewerStorageKey(projectId));
+        window.localStorage.removeItem(getProjectViewerRoleStorageKey(projectId));
       }
 
       setErrorMessage(
@@ -110,18 +100,43 @@ export function ProjectFeedbackAccess({
 
   const restoreSavedAccess = useEffectEvent(async () => {
     if (typeof window === "undefined") return;
+
     const savedEmail =
-      window.localStorage.getItem(projectAccessStorageKey(projectId)) ?? "";
+      window.localStorage.getItem(getProjectViewerStorageKey(projectId)) ?? "";
+    const savedRole = normalizeProjectViewerRole(
+      window.localStorage.getItem(getProjectViewerRoleStorageKey(projectId)) ??
+        initialRole,
+    );
+    const nextRole = forceVisitorEntry ? "visitor" : savedRole;
 
-    setIsUnlocked(initialUnlocked);
+    setMode(nextRole);
+    setAccessRole(nextRole);
 
-    if (!initialUnlocked || !savedEmail) {
+    if (!savedEmail) {
       setIsLoading(false);
       return;
     }
 
+    if (forceVisitorEntry) {
+      setEmail(savedEmail);
+      setIsLoading(false);
+      return;
+    }
+
+    if (savedRole === "visitor") {
+      setEmail(savedEmail);
+      await requestAccess(savedEmail, "visitor", "", false);
+      return;
+    }
+
+    if (initialUnlocked) {
+      setEmail(savedEmail);
+      await requestAccess(savedEmail, "team", "", false);
+      return;
+    }
+
     setEmail(savedEmail);
-    await requestAccess(savedEmail, false);
+    setIsLoading(false);
   });
 
   useEffect(() => {
@@ -129,13 +144,19 @@ export function ProjectFeedbackAccess({
     setPassword("");
     setErrorMessage("");
     void restoreSavedAccess();
-  }, [projectId, initialUnlocked]);
+  }, [projectId, initialUnlocked, initialRole, forceVisitorEntry]);
 
   if (project) {
-    return <ProjectFeedbackWorkspace initialProject={project} />;
+    return (
+      <ProjectFeedbackWorkspace
+        initialProject={project}
+        canInteract={accessRole === "team"}
+        viewerRole={accessRole}
+      />
+    );
   }
 
-  if (isLoading || isSubmitting || isUnlocking) {
+  if (isLoading || isSubmitting) {
     return (
       <section className="projectFeedbackShell">
         <div className="projectFeedbackHeader projectFeedbackLoadingState">
@@ -143,11 +164,7 @@ export function ProjectFeedbackAccess({
           <div className="projectFeedbackIntro">
             <p className="projectFeedbackEyebrow">myStudio Review</p>
             <h1 className="projectFeedbackTitle">
-              {isUnlocking
-                ? "Unlocking Review"
-                : isSubmitting
-                  ? "Opening Review"
-                  : "Loading Review"}
+              {isSubmitting ? "Opening Review" : "Loading Review"}
             </h1>
             <p className="projectFeedbackVersionMeta">
               Please wait while the project is being prepared.
@@ -158,15 +175,15 @@ export function ProjectFeedbackAccess({
     );
   }
 
-  if (!isUnlocked) {
+  if (forceVisitorEntry) {
     return (
       <section className="projectFeedbackShell">
         <div className="projectFeedbackHeader">
           <div className="projectFeedbackIntro">
             <p className="projectFeedbackEyebrow">myStudio Review</p>
-            <h1 className="projectFeedbackTitle">Enter Project Password</h1>
+            <h1 className="projectFeedbackTitle">Enter Your Email To Continue</h1>
             <p className="projectFeedbackVersionMeta">
-              This review space is protected. Enter the project password to continue.
+              This shared review link opens in visitor mode.
             </p>
           </div>
 
@@ -174,23 +191,28 @@ export function ProjectFeedbackAccess({
             className="projectFeedbackAccessForm"
             onSubmit={(event) => {
               event.preventDefault();
-              void requestUnlock(password);
+              void requestAccess(email, "visitor", "");
             }}
           >
             <label className="projectFeedbackField">
-              <span>Password</span>
+              <span>Email</span>
               <input
                 className="projectFeedbackInput"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="name@company.com"
+                autoComplete="email"
                 required
               />
             </label>
 
-            <button className="projectFeedbackAction" type="submit">
-              Open protected project
+            <button
+              className="projectFeedbackAction"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              Open as visitor
             </button>
 
             {errorMessage ? (
@@ -209,18 +231,37 @@ export function ProjectFeedbackAccess({
       <div className="projectFeedbackHeader">
         <div className="projectFeedbackIntro">
           <p className="projectFeedbackEyebrow">myStudio Review</p>
-          <h1 className="projectFeedbackTitle">Enter Your Email To Continue</h1>
+          <h1 className="projectFeedbackTitle">Choose Access Type</h1>
           <p className="projectFeedbackVersionMeta">
-            Every reviewer must submit an email before accessing this review
-            space.
+            Team members can post edit requests and chat. Visitors can only view
+            the project.
           </p>
+        </div>
+
+        <div className="projectFeedbackRoleSwitch" role="tablist" aria-label="Access type">
+          <button
+            className="projectFeedbackRoleButton"
+            type="button"
+            data-active={mode === "team" ? "true" : "false"}
+            onClick={() => setMode("team")}
+          >
+            Team member
+          </button>
+          <button
+            className="projectFeedbackRoleButton"
+            type="button"
+            data-active={mode === "visitor" ? "true" : "false"}
+            onClick={() => setMode("visitor")}
+          >
+            Visitor
+          </button>
         </div>
 
         <form
           className="projectFeedbackAccessForm"
           onSubmit={(event) => {
             event.preventDefault();
-            void requestAccess(email);
+            void requestAccess(email, mode, password);
           }}
         >
           <label className="projectFeedbackField">
@@ -236,12 +277,27 @@ export function ProjectFeedbackAccess({
             />
           </label>
 
+          {mode === "team" ? (
+            <label className="projectFeedbackField">
+              <span>Password</span>
+              <input
+                className="projectFeedbackInput"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Use the team link to skip the password if you don't have it."
+                autoComplete="current-password"
+                required
+              />
+            </label>
+          ) : null}
+
           <button
             className="projectFeedbackAction"
             type="submit"
-            disabled={isLoading || isSubmitting}
+            disabled={isSubmitting}
           >
-            {isLoading || isSubmitting ? "Opening..." : "Open review"}
+            {mode === "team" ? "Open as team member" : "Open as visitor"}
           </button>
 
           {errorMessage ? (
