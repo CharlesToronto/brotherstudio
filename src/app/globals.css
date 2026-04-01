@@ -40,6 +40,10 @@ body {
   white-space: nowrap;
 }
 
+.homeIntroHighlight {
+  color: #1f5cff;
+}
+
 a {
   color: inherit;
   text-decoration: none;

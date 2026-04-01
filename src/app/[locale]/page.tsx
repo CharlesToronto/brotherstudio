@@ -51,7 +51,7 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
   return (
     <>
       <main className="siteMain">
-        <p className="homeIntro contactAccent">{messages.home.introLine}</p>
+        <p className="homeIntro homeIntroHighlight">{messages.home.introLine}</p>
         <Gallery
           items={items}
           filterLabels={{
