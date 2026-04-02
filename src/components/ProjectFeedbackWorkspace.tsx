@@ -922,46 +922,55 @@ function ProjectFeedbackImageCard({
         ) : null}
       </div>
 
-      <aside className="projectFeedbackComments">
-        <div className="projectFeedbackCommentsHeader">
-          <h3 className="projectFeedbackCommentsTitle">Edit Requests</h3>
-          <div className="projectFeedbackCommentsMetaGroup">
-            <p className="projectFeedbackCommentsMeta">
-              {editRequestCountLabel(findImageCommentCount(image))}
-            </p>
-          </div>
-        </div>
+      <details className="projectFeedbackSectionPanel projectFeedbackCommentsPanel">
+        <summary className="projectFeedbackSectionSummary">
+          <span className="projectFeedbackCommentsTitle">Edit Requests</span>
+          <span className="projectFeedbackCommentsMeta">
+            {editRequestCountLabel(findImageCommentCount(image))}
+          </span>
+        </summary>
 
-        {image.comments.length > 0 ? (
-          <div className="projectFeedbackCommentWindow">
-            <div className="projectFeedbackCommentList">
-              {image.comments.map((comment, index) => (
-                <button
-                  key={comment.id}
-                  className="projectFeedbackCommentItem"
-                  type="button"
-                  data-active={activeCommentId === comment.id ? "true" : "false"}
-                  style={{ "--comment-color": comment.color } as CSSProperties}
-                  onClick={() => onCommentSelect(comment.id)}
-                >
-                  <span className="projectFeedbackCommentIndex">{index + 1}</span>
-                  <span className="projectFeedbackCommentBody">
-                    <strong>{comment.author}</strong>
-                    <span>{comment.content}</span>
-                    <span>{formatTimestamp(comment.createdAt)}</span>
-                  </span>
-                </button>
-              ))}
+        <aside className="projectFeedbackComments">
+          <div className="projectFeedbackCommentsHeader">
+            <h3 className="projectFeedbackCommentsTitle">Edit Requests</h3>
+            <div className="projectFeedbackCommentsMetaGroup">
+              <p className="projectFeedbackCommentsMeta">
+                {editRequestCountLabel(findImageCommentCount(image))}
+              </p>
             </div>
           </div>
-        ) : (
-          <p className="projectFeedbackCommentsMeta">
-            {canInteract
-              ? "Click on the image to add the first edit request."
-              : "Visitor mode is view-only for edit requests."}
-          </p>
-        )}
-      </aside>
+
+          {image.comments.length > 0 ? (
+            <div className="projectFeedbackCommentWindow">
+              <div className="projectFeedbackCommentList">
+                {image.comments.map((comment, index) => (
+                  <button
+                    key={comment.id}
+                    className="projectFeedbackCommentItem"
+                    type="button"
+                    data-active={activeCommentId === comment.id ? "true" : "false"}
+                    style={{ "--comment-color": comment.color } as CSSProperties}
+                    onClick={() => onCommentSelect(comment.id)}
+                  >
+                    <span className="projectFeedbackCommentIndex">{index + 1}</span>
+                    <span className="projectFeedbackCommentBody">
+                      <strong>{comment.author}</strong>
+                      <span>{comment.content}</span>
+                      <span>{formatTimestamp(comment.createdAt)}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="projectFeedbackCommentsMeta">
+              {canInteract
+                ? "Click on the image to add the first edit request."
+                : "Visitor mode is view-only for edit requests."}
+            </p>
+          )}
+        </aside>
+      </details>
 
       {hasTeamChat ? (
         <ProjectFeedbackTeamChat
@@ -1100,136 +1109,145 @@ function ProjectFeedbackTeamChat({
   };
 
   return (
-    <aside className="projectFeedbackTeamChat">
-      <div className="projectFeedbackCommentsHeader">
-        <h3 className="projectFeedbackCommentsTitle">Team Chat</h3>
-        <div className="projectFeedbackCommentsMetaGroup">
-          <p className="projectFeedbackCommentsMeta">
-            {teamMessageCountLabel(messages.length)}
-          </p>
-        </div>
-      </div>
+    <details className="projectFeedbackSectionPanel projectFeedbackChatPanel">
+      <summary className="projectFeedbackSectionSummary">
+        <span className="projectFeedbackCommentsTitle">Team Chat</span>
+        <span className="projectFeedbackCommentsMeta">
+          {teamMessageCountLabel(messages.length)}
+        </span>
+      </summary>
 
-      <div className="projectFeedbackTeamChatPanel">
-        <div className="projectFeedbackTeamChatMessages" ref={listRef}>
-          {isLoading ? (
-            <p className="projectFeedbackCommentsMeta">Loading team chat...</p>
-          ) : messages.length > 0 ? (
-            <div className="projectFeedbackTeamChatList">
-              {messages.map((message) => {
-                const isMine =
-                  viewerIdentityLabel.length > 0 &&
-                  message.author === viewerIdentityLabel;
-
-                return (
-                  <article
-                    key={message.id}
-                    className="projectFeedbackTeamChatMessage"
-                    data-mine={isMine ? "true" : "false"}
-                  >
-                    <div className="projectFeedbackTeamChatMessageHeader">
-                      <strong>{message.author}</strong>
-                      <span>{formatTimestamp(message.createdAt)}</span>
-                    </div>
-
-                    {message.replyToMessageId ? (
-                      <div className="projectFeedbackTeamChatReplyPreview">
-                        <strong>{message.replyToAuthor ?? "Reply"}</strong>
-                        <span>{message.replyToContent ?? "Message unavailable"}</span>
-                      </div>
-                    ) : null}
-
-                    <p>{message.content}</p>
-
-                    {canInteract ? (
-                      <div className="projectFeedbackTeamChatMessageActions">
-                        <button
-                          className="projectFeedbackTeamChatReplyButton"
-                          type="button"
-                          onClick={() => setReplyTargetId(message.id)}
-                        >
-                          Reply
-                        </button>
-                      </div>
-                    ) : null}
-                  </article>
-                );
-              })}
-            </div>
-          ) : (
+      <aside className="projectFeedbackTeamChat">
+        <div className="projectFeedbackCommentsHeader">
+          <h3 className="projectFeedbackCommentsTitle">Team Chat</h3>
+          <div className="projectFeedbackCommentsMetaGroup">
             <p className="projectFeedbackCommentsMeta">
-              No team messages yet for this image.
+              {teamMessageCountLabel(messages.length)}
             </p>
-          )}
+          </div>
         </div>
 
-        <form
-          className="projectFeedbackTeamChatComposer"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleSubmit();
-          }}
-        >
-          <div className="projectFeedbackIdentityTag">
-            {!canInteract
-              ? viewerRole === "visitor"
-                ? "Visitor mode is read-only for team chat."
-                : "Team member access is required to join the team chat."
-              : viewerIdentityLabel
-              ? `Posting as ${viewerIdentityLabel}`
-              : "Open the project with your email to join the team chat."}
+        <div className="projectFeedbackTeamChatPanel">
+          <div className="projectFeedbackTeamChatMessages" ref={listRef}>
+            {isLoading ? (
+              <p className="projectFeedbackCommentsMeta">Loading team chat...</p>
+            ) : messages.length > 0 ? (
+              <div className="projectFeedbackTeamChatList">
+                {messages.map((message) => {
+                  const isMine =
+                    viewerIdentityLabel.length > 0 &&
+                    message.author === viewerIdentityLabel;
+
+                  return (
+                    <article
+                      key={message.id}
+                      className="projectFeedbackTeamChatMessage"
+                      data-mine={isMine ? "true" : "false"}
+                    >
+                      <div className="projectFeedbackTeamChatMessageHeader">
+                        <strong>{message.author}</strong>
+                        <span>{formatTimestamp(message.createdAt)}</span>
+                      </div>
+
+                      {message.replyToMessageId ? (
+                        <div className="projectFeedbackTeamChatReplyPreview">
+                          <strong>{message.replyToAuthor ?? "Reply"}</strong>
+                          <span>{message.replyToContent ?? "Message unavailable"}</span>
+                        </div>
+                      ) : null}
+
+                      <p>{message.content}</p>
+
+                      {canInteract ? (
+                        <div className="projectFeedbackTeamChatMessageActions">
+                          <button
+                            className="projectFeedbackTeamChatReplyButton"
+                            type="button"
+                            onClick={() => setReplyTargetId(message.id)}
+                          >
+                            Reply
+                          </button>
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="projectFeedbackCommentsMeta">
+                No team messages yet for this image.
+              </p>
+            )}
           </div>
 
-          {replyTarget ? (
-            <div className="projectFeedbackTeamChatReplyComposer">
-              <div className="projectFeedbackTeamChatReplyPreview">
-                <strong>{replyTarget.author}</strong>
-                <span>{replyTarget.content}</span>
+          <form
+            className="projectFeedbackTeamChatComposer"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSubmit();
+            }}
+          >
+            <div className="projectFeedbackIdentityTag">
+              {!canInteract
+                ? viewerRole === "visitor"
+                  ? "Visitor mode is read-only for team chat."
+                  : "Team member access is required to join the team chat."
+                : viewerIdentityLabel
+                ? `Posting as ${viewerIdentityLabel}`
+                : "Open the project with your email to join the team chat."}
+            </div>
+
+            {replyTarget ? (
+              <div className="projectFeedbackTeamChatReplyComposer">
+                <div className="projectFeedbackTeamChatReplyPreview">
+                  <strong>{replyTarget.author}</strong>
+                  <span>{replyTarget.content}</span>
+                </div>
+                <button
+                  className="projectFeedbackTeamChatReplyButton"
+                  type="button"
+                  onClick={() => setReplyTargetId(null)}
+                >
+                  Cancel reply
+                </button>
               </div>
+            ) : null}
+
+            <label className="projectFeedbackField">
+              <span>Message</span>
+              <textarea
+                className="projectFeedbackTextarea"
+                value={content}
+                onChange={(event) => setContent(event.target.value)}
+                placeholder={
+                  canPost
+                    ? "Write a message about this image"
+                    : "Open the project with your email to chat"
+                }
+                required
+                disabled={!canPost || isSending}
+              />
+            </label>
+
+            <div className="projectFeedbackDraftActions">
               <button
-                className="projectFeedbackTeamChatReplyButton"
-                type="button"
-                onClick={() => setReplyTargetId(null)}
+                className="projectFeedbackAction"
+                type="submit"
+                disabled={isSending || !canPost}
               >
-                Cancel reply
+                {isSending ? "Sending..." : "Send message"}
               </button>
             </div>
-          ) : null}
 
-          <label className="projectFeedbackField">
-            <span>Message</span>
-            <textarea
-              className="projectFeedbackTextarea"
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              placeholder={
-                canPost
-                  ? "Write a message about this image"
-                  : "Open the project with your email to chat"
-              }
-              required
-              disabled={!canPost || isSending}
-            />
-          </label>
-
-          <div className="projectFeedbackDraftActions">
-            <button
-              className="projectFeedbackAction"
-              type="submit"
-              disabled={isSending || !canPost}
-            >
-              {isSending ? "Sending..." : "Send message"}
-            </button>
-          </div>
-
-          {errorMessage ? (
-            <p className="projectFeedbackMessage projectFeedbackMessageError">
-              {errorMessage}
-            </p>
-          ) : null}
-        </form>
-      </div>
-    </aside>
+            {errorMessage ? (
+              <p className="projectFeedbackMessage projectFeedbackMessageError">
+                {errorMessage}
+              </p>
+            ) : null}
+          </form>
+        </div>
+      </aside>
+    </details>
   );
 }
 
