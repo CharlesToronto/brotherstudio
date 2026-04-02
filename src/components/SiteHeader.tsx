@@ -35,7 +35,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     ? "gallery"
     : subpath === "/services"
       ? "services"
-      : subpath === "/myproject"
+      : subpath === "/mystudio" || subpath === "/myproject"
         ? "mystudio"
       : subpath === "/about"
         ? "about"
@@ -117,8 +117,8 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     {
       key: "mystudio",
       label: "myStudio",
-      href: "/myproject",
-      isCurrent: subpath === "/myproject",
+      href: "/mystudio",
+      isCurrent: subpath === "/mystudio" || subpath === "/myproject",
       kind: "link" as const,
     },
     {

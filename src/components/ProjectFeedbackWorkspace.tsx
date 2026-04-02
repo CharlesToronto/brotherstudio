@@ -121,8 +121,8 @@ export function ProjectFeedbackWorkspace({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [savedCommentColor, setSavedCommentColor] = useState(defaultCommentColor);
   const [viewerEmail, setViewerEmail] = useState("");
-  const resolvedProjectPath = projectPath ?? `/myproject/${initialProject.id}`;
-  const resolvedSharePath = `/myproject/${initialProject.id}?viewer=visitor`;
+  const resolvedProjectPath = projectPath ?? `/mystudio/${initialProject.id}`;
+  const resolvedSharePath = `/mystudio/${initialProject.id}?viewer=visitor`;
   const [projectUrl, setProjectUrl] = useState(resolvedProjectPath);
   const [shareProjectUrl, setShareProjectUrl] = useState(resolvedSharePath);
   const [busyImageId, setBusyImageId] = useState<string | null>(null);

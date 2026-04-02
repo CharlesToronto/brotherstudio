@@ -23,7 +23,7 @@ function formatProjectDate(value: string) {
 }
 
 function getProjectUrl(projectId: string, origin?: string) {
-  const path = `/myproject/${projectId}?viewer=visitor`;
+  const path = `/mystudio/${projectId}?viewer=visitor`;
   return origin ? `${origin}${path}` : path;
 }
 

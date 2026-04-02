@@ -22,7 +22,6 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
   const [modes, setModes] = useState<Record<string, ProjectViewerRole | null>>({});
   const [busyProjectId, setBusyProjectId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [layout, setLayout] = useState<"grid" | "list">("grid");
 
   const handleOpenProject = async (projectId: string) => {
     const mode = modes[projectId] ?? null;
@@ -71,7 +70,7 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
         window.localStorage.setItem(getProjectViewerRoleStorageKey(projectId), mode);
       }
 
-      router.push(`/myproject/${projectId}`);
+      router.push(`/mystudio/${projectId}`);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to open project.",
@@ -82,53 +81,108 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
   };
 
   return (
-    <section className="projectDirectoryShell" aria-labelledby="projectDirectoryTitle">
-      <header className="projectFeedbackHeader">
+    <section className="projectDirectoryShell" aria-label="Current projects">
+      <section className="projectFeedbackHeader myStudioGuide" aria-labelledby="myStudioGuideTitle">
         <div className="projectFeedbackIntro">
-          <p className="projectFeedbackEyebrow">myStudio</p>
-          <h1 id="projectDirectoryTitle" className="projectFeedbackTitle">
-            Current Projects
-          </h1>
+          <h2
+            id="myStudioGuideTitle"
+            className="projectFeedbackTitle myStudioGuideHeading"
+          >
+            Welcome on <span className="myStudioGuideWord">myStudio</span>
+          </h2>
           <p className="projectFeedbackVersionMeta">
-            Open a project as a team member to collaborate, or as a visitor for
-            view-only access.
+            myStudio keeps every project variant in one place. Team members can
+            leave edit requests directly on the image and use team chat, while
+            visitors can simply review the latest delivery.
           </p>
         </div>
 
-        {errorMessage ? (
-          <p className="projectFeedbackMessage projectFeedbackMessageError">
-            {errorMessage}
-          </p>
-        ) : null}
+        <div className="myStudioGuideSteps" aria-label="myStudio workflow">
+          <article className="myStudioGuideStep">
+            <div className="myStudioGuideVisual" data-visual="project" aria-hidden="true">
+              <svg viewBox="0 0 120 84" role="presentation">
+                <rect x="10" y="14" width="100" height="56" rx="6" />
+                <rect x="18" y="22" width="48" height="40" rx="4" />
+                <path d="M24 52l12-12 10 10 12-16 10 12" />
+                <path d="M74 28h24" />
+                <path d="M74 40h20" />
+                <path d="M74 52h16" />
+              </svg>
+            </div>
 
-        <div className="projectDirectoryToolbar">
-          <div className="projectDirectoryToolbarGroup">
-            <p className="projectFeedbackVersionMeta">{projects.length} project(s)</p>
+            <div className="myStudioGuideStepCopy">
+              <p className="myStudioGuideStepIndex">01</p>
+              <h3 className="myStudioGuideStepTitle">Open your project</h3>
+              <p className="myStudioGuideStepMeta">
+                Team access or visitor view
+              </p>
+            </div>
+          </article>
+
+          <div className="myStudioGuideArrow" aria-hidden="true">
+            <svg viewBox="0 0 64 20" role="presentation">
+              <path d="M2 10h54" />
+              <path d="M46 3l14 7-14 7" />
+            </svg>
           </div>
 
-          <div className="projectDirectoryToolbarGroup">
-            <button
-              className="clientAdminButton clientAdminButtonGhost"
-              type="button"
-              data-active={layout === "grid" ? "true" : "false"}
-              onClick={() => setLayout("grid")}
-            >
-              Grille
-            </button>
-            <button
-              className="clientAdminButton clientAdminButtonGhost"
-              type="button"
-              data-active={layout === "list" ? "true" : "false"}
-              onClick={() => setLayout("list")}
-            >
-              Liste
-            </button>
+          <article className="myStudioGuideStep">
+            <div className="myStudioGuideVisual" data-visual="review" aria-hidden="true">
+              <svg viewBox="0 0 120 84" role="presentation">
+                <path d="M28 20h64a8 8 0 0 1 8 8v24a8 8 0 0 1-8 8H58l-16 12v-12H28a8 8 0 0 1-8-8V28a8 8 0 0 1 8-8Z" />
+                <circle cx="42" cy="40" r="6" />
+                <path d="M58 36h24" />
+                <path d="M58 46h18" />
+                <path d="M32 14l6 6" />
+                <path d="M38 8l2 12" />
+              </svg>
+            </div>
+
+            <div className="myStudioGuideStepCopy">
+              <p className="myStudioGuideStepIndex">02</p>
+              <h3 className="myStudioGuideStepTitle">Review and discuss</h3>
+              <p className="myStudioGuideStepMeta">
+                Edit requests and team chat
+              </p>
+            </div>
+          </article>
+
+          <div className="myStudioGuideArrow" aria-hidden="true">
+            <svg viewBox="0 0 64 20" role="presentation">
+              <path d="M2 10h54" />
+              <path d="M46 3l14 7-14 7" />
+            </svg>
           </div>
+
+          <article className="myStudioGuideStep">
+            <div className="myStudioGuideVisual" data-visual="approval" aria-hidden="true">
+              <svg viewBox="0 0 120 84" role="presentation">
+                <path d="M34 28h52a6 6 0 0 1 6 6v28a6 6 0 0 1-6 6H34a6 6 0 0 1-6-6V34a6 6 0 0 1 6-6Z" />
+                <path d="M48 48l8 8 18-20" />
+                <path d="M60 10v28" />
+                <path d="M50 28l10 10 10-10" />
+              </svg>
+            </div>
+
+            <div className="myStudioGuideStepCopy">
+              <p className="myStudioGuideStepIndex">03</p>
+              <h3 className="myStudioGuideStepTitle">Approve and deliver</h3>
+              <p className="myStudioGuideStepMeta">
+                Final files stay in the project
+              </p>
+            </div>
+          </article>
         </div>
-      </header>
+      </section>
+
+      {errorMessage ? (
+        <p className="projectFeedbackMessage projectFeedbackMessageError">
+          {errorMessage}
+        </p>
+      ) : null}
 
       {projects.length > 0 ? (
-        <div className="projectDirectoryGrid" data-layout={layout}>
+        <div className="projectDirectoryGrid" data-layout="grid">
           {projects.map((project) => {
             const mode = modes[project.id] ?? null;
 
@@ -136,7 +190,7 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
               <article
                 key={project.id}
                 className="projectDirectoryCard"
-                data-layout={layout}
+                data-layout="grid"
               >
                 <div className="projectDirectoryMedia">
                   {project.coverImageUrl ? (

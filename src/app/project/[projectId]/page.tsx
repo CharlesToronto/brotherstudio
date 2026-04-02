@@ -11,5 +11,5 @@ export default async function LegacyProjectFeedbackPage({
   params,
 }: LegacyProjectFeedbackPageProps) {
   const { projectId } = await params;
-  redirect(`/myproject/${projectId}`);
+  redirect(`/mystudio/${projectId}`);
 }
