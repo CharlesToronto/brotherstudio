@@ -1652,6 +1652,14 @@ html[data-theme="dark"] .contactForm {
   border-color: var(--foreground);
 }
 
+.clientAdminButtonGhost[data-copied="true"],
+.projectFeedbackActionGhost[data-copied="true"] {
+  border-color: #6a95ff;
+  background: #e9f0ff;
+  color: #1f5eff;
+  animation: copyLinkPulse 1.2s ease;
+}
+
 .clientAdminStatus,
 .clientPortalError {
   margin: 0;
@@ -2267,6 +2275,23 @@ html[data-theme="dark"] .contactForm {
   border-color: rgb(127 127 127 / 0.35);
   background: transparent;
   color: inherit;
+}
+
+@keyframes copyLinkPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgb(31 94 255 / 0.18);
+  }
+
+  35% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 8px rgb(31 94 255 / 0.08);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgb(31 94 255 / 0);
+  }
 }
 
 .projectFeedbackAction:disabled,
@@ -3372,17 +3397,15 @@ html[data-theme="dark"] .myStudioGuideArrow {
   gap: 8px;
   width: min(88%, 290px);
   padding: 12px 14px;
-  border: 1px solid rgb(127 127 127 / 0.14);
+  border: 1px solid var(--chat-bubble-border, rgb(127 127 127 / 0.14));
   border-radius: 18px 18px 18px 8px;
-  background: #fff;
+  background: var(--chat-bubble-background, #fff);
   box-shadow: 0 10px 24px rgb(0 0 0 / 0.05);
 }
 
 .projectFeedbackTeamChatMessage[data-mine="true"] {
   justify-self: end;
-  border-color: rgb(31 94 255 / 0.14);
   border-radius: 18px 18px 8px 18px;
-  background: #eef4ff;
 }
 
 .projectFeedbackTeamChatMessageHeader {
@@ -3392,6 +3415,10 @@ html[data-theme="dark"] .myStudioGuideArrow {
   align-items: baseline;
   font-size: 11px;
   line-height: 1.4;
+}
+
+.projectFeedbackTeamChatMessageHeader strong {
+  color: var(--chat-bubble-accent, inherit);
 }
 
 .projectFeedbackTeamChatMessageHeader span {
@@ -3414,8 +3441,12 @@ html[data-theme="dark"] .myStudioGuideArrow {
   display: grid;
   gap: 2px;
   padding: 8px 10px;
-  border-left: 2px solid rgb(127 127 127 / 0.35);
-  background: rgb(255 255 255 / 0.72);
+  border-left: 2px solid var(--chat-bubble-accent, rgb(127 127 127 / 0.35));
+  background: color-mix(
+    in srgb,
+    var(--chat-bubble-background, #fff) 82%,
+    white 18%
+  );
   font-size: 10px;
   line-height: 1.45;
   color: #666;

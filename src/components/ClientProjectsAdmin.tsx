@@ -23,7 +23,7 @@ function formatProjectDate(value: string) {
 }
 
 function getProjectUrl(projectId: string, origin?: string) {
-  const path = `/mystudio/${projectId}?viewer=visitor`;
+  const path = `/mystudio/${projectId}`;
   return origin ? `${origin}${path}` : path;
 }
 
@@ -71,6 +71,15 @@ export function ClientProjectsAdmin({
     if (typeof window === "undefined") return;
     setOrigin(window.location.origin);
   }, []);
+
+  useEffect(() => {
+    if (!copiedProjectId) return;
+    const timeoutId = window.setTimeout(() => {
+      setCopiedProjectId(null);
+    }, 1600);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [copiedProjectId]);
 
   const sortedProjects = useMemo(
     () =>
@@ -447,6 +456,7 @@ export function ClientProjectsAdmin({
                   <button
                     className="clientAdminButton clientAdminButtonGhost"
                     type="button"
+                    data-copied={copiedProjectId === project.id ? "true" : "false"}
                     onClick={() => void handleCopyLink(project.id)}
                   >
                     {copiedProjectId === project.id ? "Copied" : "Copy link"}

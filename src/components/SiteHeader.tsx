@@ -108,17 +108,17 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
       kind: "link" as const,
     },
     {
-      key: "services",
-      label: messages.nav.services,
-      href: localizedHref("/services"),
-      isCurrent: subpath === "/services",
-      kind: "link" as const,
-    },
-    {
       key: "mystudio",
       label: "myStudio",
       href: "/mystudio",
       isCurrent: subpath === "/mystudio" || subpath === "/myproject",
+      kind: "link" as const,
+    },
+    {
+      key: "services",
+      label: messages.nav.services,
+      href: localizedHref("/services"),
+      isCurrent: subpath === "/services",
       kind: "link" as const,
     },
     {

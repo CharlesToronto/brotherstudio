@@ -895,7 +895,11 @@ export async function updateProjectStatus(
   return project;
 }
 
-export async function uploadProjectVersion(projectId: string, files: File[]) {
+export async function uploadProjectVersion(
+  projectId: string,
+  files: File[],
+  options?: { targetVersion?: number | null },
+) {
   if (files.length === 0) throw new Error("Select at least one image.");
 
   const supabase = getSupabaseAdminClient();
@@ -920,7 +924,23 @@ export async function uploadProjectVersion(projectId: string, files: File[]) {
   if (latestImageError) throw latestImageError;
   const latestImage = latestImageData as { version: number } | null;
 
-  const nextVersion = (latestImage?.version ?? 0) + 1;
+  const latestVersion = latestImage?.version ?? 0;
+  const requestedVersion =
+    typeof options?.targetVersion === "number" &&
+    Number.isInteger(options.targetVersion) &&
+    options.targetVersion > 0
+      ? options.targetVersion
+      : null;
+
+  if (
+    requestedVersion !== null &&
+    requestedVersion !== latestVersion &&
+    requestedVersion !== latestVersion + 1
+  ) {
+    throw new Error("Invalid target variant.");
+  }
+
+  const nextVersion = requestedVersion ?? latestVersion + 1;
   const rowsToInsert: Array<{
     project_id: string;
     project_name: string;
@@ -978,7 +998,10 @@ export async function uploadProjectVersion(projectId: string, files: File[]) {
 
   const nextProject = await getProjectFeedbackProject(projectId);
   if (!nextProject) throw new Error("Project not found.");
-  return nextProject;
+  return {
+    project: nextProject,
+    version: nextVersion,
+  };
 }
 
 export async function deleteProjectImage(projectId: string, imageId: string) {

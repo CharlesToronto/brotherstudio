@@ -1,9 +1,6 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import {
-  getProjectAccessCookieName,
-  isProjectAccessAuthorized,
   isProjectFeedbackConfigured,
   uploadProjectVersion,
 } from "@/lib/projectFeedbackStore";
@@ -23,19 +20,6 @@ export async function POST(
   }
 
   const { projectId } = await params;
-  const cookieStore = await cookies();
-  const isAuthorized = await isProjectAccessAuthorized(
-    projectId,
-    cookieStore.get(getProjectAccessCookieName(projectId))?.value,
-  );
-
-  if (!isAuthorized) {
-    return NextResponse.json(
-      { error: "Parcel number required." },
-      { status: 403 },
-    );
-  }
-
   const formData = await request.formData();
   const files = formData
     .getAll("files")

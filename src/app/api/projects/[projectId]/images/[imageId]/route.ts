@@ -1,0 +1,73 @@
+import { NextResponse } from "next/server";
+
+import {
+  deleteProjectImage,
+  isProjectFeedbackConfigured,
+  replaceProjectImage,
+} from "@/lib/projectFeedbackStore";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function DELETE(
+  _request: Request,
+  {
+    params,
+  }: { params: Promise<{ projectId: string; imageId: string }> },
+) {
+  if (!isProjectFeedbackConfigured()) {
+    return NextResponse.json(
+      { error: "Supabase is not configured." },
+      { status: 500 },
+    );
+  }
+
+  const { projectId, imageId } = await params;
+
+  try {
+    const project = await deleteProjectImage(projectId, imageId);
+    return NextResponse.json({ project });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to delete image.";
+    const status = message === "Image not found." ? 404 : 400;
+
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+
+export async function POST(
+  request: Request,
+  {
+    params,
+  }: { params: Promise<{ projectId: string; imageId: string }> },
+) {
+  if (!isProjectFeedbackConfigured()) {
+    return NextResponse.json(
+      { error: "Supabase is not configured." },
+      { status: 500 },
+    );
+  }
+
+  const { projectId, imageId } = await params;
+  const formData = await request.formData();
+  const file = formData.get("file");
+
+  if (!(file instanceof File)) {
+    return NextResponse.json(
+      { error: "Select one image to replace the existing file." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const project = await replaceProjectImage(projectId, imageId, file);
+    return NextResponse.json({ project });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to replace image.";
+    const status = message === "Image not found." ? 404 : 400;
+
+    return NextResponse.json({ error: message }, { status });
+  }
+}

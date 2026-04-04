@@ -70,6 +70,8 @@ type NumberedVersionGroup = {
 
 const commentColorStorageKey = "bs_project_feedback_color";
 const defaultCommentColor = "#d88fa2";
+const teamChatPollIntervalMs = 1500;
+const vercelFunctionPayloadLimitBytes = 4.5 * 1024 * 1024;
 const commentColorOptions = [
   "#d88fa2",
   "#e7a27d",
@@ -85,8 +87,37 @@ const commentColorOptions = [
   "#d59cbc",
 ];
 
+const teamChatBubblePalettes = [
+  { background: "#eef4ff", border: "#bfd3ff", accent: "#4f7df0" },
+  { background: "#fdf0f4", border: "#f3c1d2", accent: "#d86d97" },
+  { background: "#f6f1ff", border: "#d8c4ff", accent: "#8b67dd" },
+  { background: "#eefaf4", border: "#bfe6ce", accent: "#54a16f" },
+  { background: "#fff6ec", border: "#f2d2b2", accent: "#cf8b42" },
+  { background: "#eef8fb", border: "#b9dce7", accent: "#4d95ac" },
+];
+
 function clampCoordinate(value: number) {
   return Math.min(Math.max(value, 0), 1);
+}
+
+function hashString(value: string) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+
+  return hash;
+}
+
+function getTeamChatBubblePalette(author: string) {
+  const normalizedAuthor = author.trim().toLowerCase();
+  const palette =
+    teamChatBubblePalettes[
+      hashString(normalizedAuthor) % teamChatBubblePalettes.length
+    ] ?? teamChatBubblePalettes[0];
+
+  return palette;
 }
 
 function formatTimestamp(value: string) {
@@ -116,6 +147,10 @@ function imageDimensionsLabel(dimensions: ImageDimensions | null) {
   return `${dimensions.width} × ${dimensions.height}px`;
 }
 
+function getUploadLimitError(fileName: string) {
+  return `${fileName} exceeds the 4.5 MB Vercel upload limit. Export a lighter image before uploading.`;
+}
+
 function findImageCommentCount(image: ProjectFeedbackImage) {
   return image.comments.length;
 }
@@ -141,8 +176,9 @@ export function ProjectFeedbackWorkspace({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [savedCommentColor, setSavedCommentColor] = useState(defaultCommentColor);
   const [viewerEmail, setViewerEmail] = useState("");
-  const resolvedSharePath = `/mystudio/${initialProject.id}?viewer=visitor`;
+  const resolvedSharePath = `/mystudio/${initialProject.id}`;
   const [shareProjectUrl, setShareProjectUrl] = useState(resolvedSharePath);
+  const [isCopyLinkCopied, setIsCopyLinkCopied] = useState(false);
   const [busyImageId, setBusyImageId] = useState<string | null>(null);
   const [busyImageAction, setBusyImageAction] = useState<"delete" | "replace" | null>(
     null,
@@ -198,6 +234,15 @@ export function ProjectFeedbackWorkspace({
     if (typeof window === "undefined") return;
     setShareProjectUrl(new URL(resolvedSharePath, window.location.origin).toString());
   }, [project.id, resolvedSharePath]);
+
+  useEffect(() => {
+    if (!isCopyLinkCopied) return;
+    const timeoutId = window.setTimeout(() => {
+      setIsCopyLinkCopied(false);
+    }, 1600);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isCopyLinkCopied]);
 
   const numberedVersions = useMemo<NumberedVersionGroup[]>(() => {
     return [...project.versions]
@@ -390,26 +435,64 @@ export function ProjectFeedbackWorkspace({
     setErrorMessage("");
 
     try {
-      const formData = new FormData();
-      Array.from(files).forEach((file) => {
-        formData.append("files", file);
-      });
+      const uploadRouteBase = allowImageManagement
+        ? `/api/projects/${project.id}/images`
+        : `/api/project/${project.id}/images`;
+      const selectedFiles = Array.from(files);
+      const oversizedFile = selectedFiles.find(
+        (file) => file.size > vercelFunctionPayloadLimitBytes,
+      );
 
-      const response = await fetch(`/api/project/${project.id}/images`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const payload = (await response.json().catch(() => null)) as
-        | { project?: ProjectFeedbackProject; error?: string }
-        | null;
-
-      if (!response.ok || !payload?.project) {
-        throw new Error(payload?.error ?? "Failed to upload images.");
+      if (oversizedFile) {
+        throw new Error(getUploadLimitError(oversizedFile.name));
       }
 
-      resetFeedbackState(payload.project);
-      setStatusMessage(`Variant V${payload.project.latestVersion} added.`);
+      let targetVersion: number | null = null;
+      let nextProject: ProjectFeedbackProject | null = null;
+
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append("files", file);
+
+        if (targetVersion !== null) {
+          formData.append("version", String(targetVersion));
+        }
+
+        const response = await fetch(uploadRouteBase, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.status === 413) {
+          throw new Error(getUploadLimitError(file.name));
+        }
+
+        const payload = response.ok
+          ? ((await response.json().catch(() => null)) as
+              | { project?: ProjectFeedbackProject; version?: number }
+              | null)
+          : null;
+
+        if (!response.ok) {
+          throw new Error(
+            await getResponseErrorMessage(response, "Failed to upload images."),
+          );
+        }
+
+        if (!payload?.project || typeof payload.version !== "number") {
+          throw new Error("Failed to upload images.");
+        }
+
+        targetVersion = payload.version;
+        nextProject = payload.project;
+      }
+
+      if (!nextProject) {
+        throw new Error("Failed to upload images.");
+      }
+
+      resetFeedbackState(nextProject);
+      setStatusMessage(`Variant V${nextProject.latestVersion} added.`);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to upload images.",
@@ -430,16 +513,27 @@ export function ProjectFeedbackWorkspace({
     setErrorMessage("");
 
     try {
-      const response = await fetch(`/api/project/${project.id}/images/${imageId}`, {
+      const imageRouteBase = allowImageManagement
+        ? `/api/projects/${project.id}/images`
+        : `/api/project/${project.id}/images`;
+      const response = await fetch(`${imageRouteBase}/${imageId}`, {
         method: "DELETE",
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | { project?: ProjectFeedbackProject; error?: string }
-        | null;
+      const payload = response.ok
+        ? ((await response.json().catch(() => null)) as
+            | { project?: ProjectFeedbackProject }
+            | null)
+        : null;
 
-      if (!response.ok || !payload?.project) {
-        throw new Error(payload?.error ?? "Failed to delete image.");
+      if (!response.ok) {
+        throw new Error(
+          await getResponseErrorMessage(response, "Failed to delete image."),
+        );
+      }
+
+      if (!payload?.project) {
+        throw new Error("Failed to delete image.");
       }
 
       resetFeedbackState(payload.project);
@@ -461,20 +555,39 @@ export function ProjectFeedbackWorkspace({
     setErrorMessage("");
 
     try {
+      const imageRouteBase = allowImageManagement
+        ? `/api/projects/${project.id}/images`
+        : `/api/project/${project.id}/images`;
+      if (file.size > vercelFunctionPayloadLimitBytes) {
+        throw new Error(getUploadLimitError(file.name));
+      }
+
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(`/api/project/${project.id}/images/${imageId}`, {
+      const response = await fetch(`${imageRouteBase}/${imageId}`, {
         method: "POST",
         body: formData,
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | { project?: ProjectFeedbackProject; error?: string }
-        | null;
+      if (response.status === 413) {
+        throw new Error(getUploadLimitError(file.name));
+      }
 
-      if (!response.ok || !payload?.project) {
-        throw new Error(payload?.error ?? "Failed to replace image.");
+      const payload = response.ok
+        ? ((await response.json().catch(() => null)) as
+            | { project?: ProjectFeedbackProject }
+            | null)
+        : null;
+
+      if (!response.ok) {
+        throw new Error(
+          await getResponseErrorMessage(response, "Failed to replace image."),
+        );
+      }
+
+      if (!payload?.project) {
+        throw new Error("Failed to replace image.");
       }
 
       resetFeedbackState(payload.project);
@@ -681,8 +794,10 @@ export function ProjectFeedbackWorkspace({
       }
 
       await navigator.clipboard.writeText(shareProjectUrl);
+      setIsCopyLinkCopied(true);
       setStatusMessage("Project link copied.");
     } catch (error) {
+      setIsCopyLinkCopied(false);
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to copy project link.",
       );
@@ -780,9 +895,10 @@ export function ProjectFeedbackWorkspace({
               <button
                 className="projectFeedbackAction projectFeedbackActionGhost"
                 type="button"
+                data-copied={isCopyLinkCopied ? "true" : "false"}
                 onClick={() => void handleCopyProjectLink()}
               >
-                Copy link
+                {isCopyLinkCopied ? "Copied" : "Copy link"}
               </button>
             ) : null}
 
@@ -1902,10 +2018,16 @@ function ProjectFeedbackTeamChat({
 
   useEffect(() => {
     let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
-    const loadMessages = async () => {
-      setIsLoading(true);
-      setErrorMessage("");
+    const loadMessages = async ({ silent = false }: { silent?: boolean } = {}) => {
+      if (!silent) {
+        setIsLoading(true);
+      }
+
+      if (!silent) {
+        setErrorMessage("");
+      }
 
       try {
         const response = await fetch(
@@ -1925,15 +2047,18 @@ function ProjectFeedbackTeamChat({
 
         if (!cancelled) {
           setMessages(payload.messages);
+          if (!silent) {
+            setErrorMessage("");
+          }
         }
       } catch (error) {
-        if (!cancelled) {
+        if (!cancelled && !silent) {
           setErrorMessage(
             error instanceof Error ? error.message : "Failed to load team chat.",
           );
         }
       } finally {
-        if (!cancelled) {
+        if (!cancelled && !silent) {
           setIsLoading(false);
         }
       }
@@ -1941,8 +2066,32 @@ function ProjectFeedbackTeamChat({
 
     void loadMessages();
 
+    intervalId = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+        return;
+      }
+
+      void loadMessages({ silent: true });
+    }, teamChatPollIntervalMs);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void loadMessages({ silent: true });
+      }
+    };
+
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    }
+
     return () => {
       cancelled = true;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      }
     };
   }, [imageId, projectId]);
 
@@ -2042,12 +2191,20 @@ function ProjectFeedbackTeamChat({
                 const isMine =
                   viewerIdentityLabel.length > 0 &&
                   message.author === viewerIdentityLabel;
+                const bubblePalette = getTeamChatBubblePalette(message.author);
 
                 return (
                   <article
                     key={message.id}
                     className="projectFeedbackTeamChatMessage"
                     data-mine={isMine ? "true" : "false"}
+                    style={
+                      {
+                        "--chat-bubble-background": bubblePalette.background,
+                        "--chat-bubble-border": bubblePalette.border,
+                        "--chat-bubble-accent": bubblePalette.accent,
+                      } as CSSProperties
+                    }
                   >
                     <div className="projectFeedbackTeamChatMessageHeader">
                       <strong>{message.author}</strong>
