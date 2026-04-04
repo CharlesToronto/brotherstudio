@@ -16,8 +16,10 @@ import type {
   ProjectFeedbackProject,
   ProjectFeedbackImage,
   ProjectFeedbackTeamMessage,
+  ProjectStatus,
   ProjectViewerRole,
 } from "@/lib/projectFeedbackTypes";
+import { getResponseErrorMessage } from "@/lib/errorMessage";
 import {
   getProjectViewerStorageKey,
   getProjectViewerRoleStorageKey,
@@ -30,7 +32,6 @@ type ProjectFeedbackWorkspaceProps = {
   showTeamChat?: boolean;
   canInteract?: boolean;
   viewerRole?: ProjectViewerRole;
-  projectPath?: string;
   adminAccent?: boolean;
 };
 
@@ -42,9 +43,29 @@ type DraftComment = {
   content: string;
 };
 
+type EditingComment = {
+  id: string;
+  imageId: string;
+  color: string;
+  content: string;
+};
+
 type ImageDimensions = {
   width: number;
   height: number;
+};
+
+type WorkspaceTab = "review" | "approved";
+type ImageSidePanelTab = "requests" | "chat";
+
+type VersionImageEntry = {
+  image: ProjectFeedbackImage;
+  imageLabel: string;
+};
+
+type NumberedVersionGroup = {
+  version: number;
+  images: VersionImageEntry[];
 };
 
 const commentColorStorageKey = "bs_project_feedback_color";
@@ -105,7 +126,6 @@ export function ProjectFeedbackWorkspace({
   showTeamChat = true,
   canInteract = true,
   viewerRole = "team",
-  projectPath,
   adminAccent = false,
 }: ProjectFeedbackWorkspaceProps) {
   const [project, setProject] = useState(initialProject);
@@ -121,14 +141,36 @@ export function ProjectFeedbackWorkspace({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [savedCommentColor, setSavedCommentColor] = useState(defaultCommentColor);
   const [viewerEmail, setViewerEmail] = useState("");
-  const resolvedProjectPath = projectPath ?? `/mystudio/${initialProject.id}`;
   const resolvedSharePath = `/mystudio/${initialProject.id}?viewer=visitor`;
-  const [projectUrl, setProjectUrl] = useState(resolvedProjectPath);
   const [shareProjectUrl, setShareProjectUrl] = useState(resolvedSharePath);
   const [busyImageId, setBusyImageId] = useState<string | null>(null);
   const [busyImageAction, setBusyImageAction] = useState<"delete" | "replace" | null>(
     null,
   );
+  const [editingComment, setEditingComment] = useState<EditingComment | null>(null);
+  const [busyCommentId, setBusyCommentId] = useState<string | null>(null);
+  const [busyCommentAction, setBusyCommentAction] = useState<"update" | "delete" | null>(
+    null,
+  );
+  const [busyImageStatusId, setBusyImageStatusId] = useState<string | null>(null);
+  const [busyImageStatus, setBusyImageStatus] = useState<ProjectStatus | null>(null);
+  const [isDownloadingApproved, setIsDownloadingApproved] = useState(false);
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<WorkspaceTab>(() => {
+    const approvedCount = initialProject.versions.reduce(
+      (total, versionGroup) =>
+        total +
+        versionGroup.images.filter((image) => image.status === "approved").length,
+      0,
+    );
+    const reviewCount = initialProject.versions.reduce(
+      (total, versionGroup) =>
+        total +
+        versionGroup.images.filter((image) => image.status !== "approved").length,
+      0,
+    );
+
+    return reviewCount === 0 && approvedCount > 0 ? "approved" : "review";
+  });
   const previousLatestVersionRef = useRef<number | null>(
     initialProject.latestVersion > 0 ? initialProject.latestVersion : null,
   );
@@ -148,29 +190,67 @@ export function ProjectFeedbackWorkspace({
   useEffect(() => {
     setProject(initialProject);
     setDraft(null);
+    setEditingComment(null);
     setActiveCommentId(null);
   }, [initialProject]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setProjectUrl(new URL(resolvedProjectPath, window.location.origin).toString());
     setShareProjectUrl(new URL(resolvedSharePath, window.location.origin).toString());
-  }, [project.id, resolvedProjectPath, resolvedSharePath]);
+  }, [project.id, resolvedSharePath]);
 
-  const numberedVersions = useMemo(() => {
+  const numberedVersions = useMemo<NumberedVersionGroup[]>(() => {
     return [...project.versions]
       .sort((a, b) => a.version - b.version)
       .map((versionGroup) => ({
-      version: versionGroup.version,
-      images: versionGroup.images.map((image, index) => ({
-        image,
-        imageLabel: `Image ${index + 1}`,
-      })),
-    }));
+        version: versionGroup.version,
+        images: versionGroup.images.map((image, index) => ({
+          image,
+          imageLabel: `Image ${index + 1}`,
+        })),
+      }));
   }, [project.versions]);
 
+  const reviewVersions = useMemo(
+    () =>
+      numberedVersions
+        .map((versionGroup) => ({
+          version: versionGroup.version,
+          images: versionGroup.images.filter(
+            ({ image }) => image.status !== "approved",
+          ),
+        }))
+        .filter((versionGroup) => versionGroup.images.length > 0),
+    [numberedVersions],
+  );
+
+  const approvedImages = useMemo(
+    () =>
+      numberedVersions
+        .flatMap((versionGroup) =>
+          versionGroup.images
+            .filter(({ image }) => image.status === "approved")
+            .map(({ image, imageLabel }) => ({
+              image,
+              imageLabel,
+              version: versionGroup.version,
+            })),
+        )
+        .sort((a, b) => {
+          if (a.version !== b.version) return b.version - a.version;
+          return b.image.createdAt.localeCompare(a.image.createdAt);
+        }),
+    [numberedVersions],
+  );
+
+  const reviewImageCount = reviewVersions.reduce(
+    (total, versionGroup) => total + versionGroup.images.length,
+    0,
+  );
+  const approvedImageCount = approvedImages.length;
+
   useEffect(() => {
-    const latestVersion = project.latestVersion > 0 ? project.latestVersion : null;
+    const latestVersion = reviewVersions[0]?.version ?? null;
     const latestChanged = previousLatestVersionRef.current !== latestVersion;
     previousLatestVersionRef.current = latestVersion;
 
@@ -180,7 +260,7 @@ export function ProjectFeedbackWorkspace({
     }
 
     setSelectedVersion((current) => {
-      const currentExists = numberedVersions.some(
+      const currentExists = reviewVersions.some(
         (versionGroup) => versionGroup.version === current,
       );
 
@@ -190,13 +270,23 @@ export function ProjectFeedbackWorkspace({
 
       return current;
     });
-  }, [numberedVersions, project.latestVersion]);
+  }, [reviewVersions]);
+
+  useEffect(() => {
+    setActiveWorkspaceTab((current) => {
+      if (current === "review" && reviewImageCount > 0) return current;
+      if (current === "approved" && approvedImageCount > 0) return current;
+      if (reviewImageCount === 0 && approvedImageCount > 0) return "approved";
+      return "review";
+    });
+  }, [approvedImageCount, reviewImageCount]);
 
   const activeVersionGroup =
-    numberedVersions.find((versionGroup) => versionGroup.version === selectedVersion) ??
-    numberedVersions[numberedVersions.length - 1] ??
+    reviewVersions.find((versionGroup) => versionGroup.version === selectedVersion) ??
+    reviewVersions[reviewVersions.length - 1] ??
     null;
   const viewerIdentityLabel = viewerEmail ? maskProjectViewerEmail(viewerEmail) : "";
+  const canManageApprovedImages = allowImageManagement || canInteract;
 
   const busyNoticeLabel = isUploading
     ? "Adding variant..."
@@ -204,6 +294,12 @@ export function ProjectFeedbackWorkspace({
       ? "Replacing image..."
       : busyImageAction === "delete"
         ? "Deleting image..."
+        : busyImageStatus === "approved"
+          ? "Approving image..."
+          : busyImageStatus === "in_review"
+            ? "Moving image back to review..."
+            : isDownloadingApproved
+              ? "Preparing downloads..."
         : "";
   const canApprove = allowImageManagement || canInteract;
   const showCopyLink = allowImageManagement || viewerRole === "team";
@@ -214,6 +310,7 @@ export function ProjectFeedbackWorkspace({
       setProject(nextProject);
     }
     setDraft(null);
+    setEditingComment(null);
     setActiveCommentId(null);
   };
 
@@ -423,6 +520,157 @@ export function ProjectFeedbackWorkspace({
     }
   };
 
+  const imageStatusRouteBase = allowImageManagement
+    ? `/api/projects/${project.id}/images`
+    : `/api/project/${project.id}/images`;
+
+  const commentRouteBase = allowImageManagement
+    ? `/api/projects/${project.id}/comments`
+    : `/api/project/${project.id}/comments`;
+
+  const handleUpdateImageStatus = async (
+    imageId: string,
+    status: ProjectStatus,
+  ) => {
+    setBusyImageStatusId(imageId);
+    setBusyImageStatus(status);
+    setStatusMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(`${imageStatusRouteBase}/${imageId}/status`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      const payload = response.ok
+        ? ((await response.json().catch(() => null)) as
+            | { project?: ProjectFeedbackProject }
+            | null)
+        : null;
+
+      if (!response.ok) {
+        throw new Error(
+          await getResponseErrorMessage(response, "Failed to update image status."),
+        );
+      }
+
+      if (!payload?.project) {
+        throw new Error("Failed to update image status.");
+      }
+
+      resetFeedbackState(payload.project);
+      setStatusMessage(
+        status === "approved"
+          ? "Image moved to approved images."
+          : "Image moved back to review.",
+      );
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to update image status.",
+      );
+    } finally {
+      setBusyImageStatusId(null);
+      setBusyImageStatus(null);
+    }
+  };
+
+  const handleStartCommentEdit = (comment: ProjectFeedbackComment) => {
+    setEditingComment({
+      id: comment.id,
+      imageId: comment.imageId,
+      content: comment.content,
+      color: comment.color,
+    });
+    setActiveCommentId(comment.id);
+    setDraft(null);
+    setStatusMessage("");
+    setErrorMessage("");
+  };
+
+  const handleSaveCommentEdit = async () => {
+    if (!editingComment) return;
+
+    setBusyCommentId(editingComment.id);
+    setBusyCommentAction("update");
+    setStatusMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(
+        `${commentRouteBase}/${editingComment.id}`,
+        {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            content: editingComment.content,
+            color: editingComment.color,
+          }),
+        },
+      );
+
+      const payload = (await response.json().catch(() => null)) as
+        | { project?: ProjectFeedbackProject; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.project) {
+        throw new Error(payload?.error ?? "Failed to update edit request.");
+      }
+
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(commentColorStorageKey, editingComment.color);
+      }
+      setSavedCommentColor(editingComment.color);
+      resetFeedbackState(payload.project);
+      setStatusMessage("Edit request updated.");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to update edit request.",
+      );
+    } finally {
+      setBusyCommentId(null);
+      setBusyCommentAction(null);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    const confirmed =
+      typeof window === "undefined"
+        ? true
+        : window.confirm("Delete this edit request?");
+    if (!confirmed) return;
+
+    setBusyCommentId(commentId);
+    setBusyCommentAction("delete");
+    setStatusMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(`${commentRouteBase}/${commentId}`, {
+        method: "DELETE",
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { project?: ProjectFeedbackProject; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.project) {
+        throw new Error(payload?.error ?? "Failed to delete edit request.");
+      }
+
+      resetFeedbackState(payload.project);
+      setStatusMessage("Edit request deleted.");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to delete edit request.",
+      );
+    } finally {
+      setBusyCommentId(null);
+      setBusyCommentAction(null);
+    }
+  };
+
   const handleCopyProjectLink = async () => {
     setStatusMessage("");
     setErrorMessage("");
@@ -477,6 +725,44 @@ export function ProjectFeedbackWorkspace({
     }
   };
 
+  const handleDownloadAllApproved = async () => {
+    if (approvedImages.length === 0 || typeof document === "undefined") return;
+
+    setIsDownloadingApproved(true);
+    setStatusMessage("");
+    setErrorMessage("");
+
+    try {
+      const downloadBase = allowImageManagement
+        ? `/api/projects/${project.id}/images`
+        : `/api/project/${project.id}/images`;
+
+      for (const { image } of approvedImages) {
+        const link = document.createElement("a");
+        link.href = `${downloadBase}/${image.id}/download`;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        await new Promise((resolve) => window.setTimeout(resolve, 180));
+      }
+
+      setStatusMessage(
+        `Started downloading ${approvedImages.length} approved image${
+          approvedImages.length === 1 ? "" : "s"
+        }.`,
+      );
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to download approved images.",
+      );
+    } finally {
+      setIsDownloadingApproved(false);
+    }
+  };
+
   return (
     <section
       className="projectFeedbackShell"
@@ -487,19 +773,9 @@ export function ProjectFeedbackWorkspace({
           <div className="projectFeedbackIntro">
             <p className="projectFeedbackEyebrow">Project Review</p>
             <h1 className="projectFeedbackTitle">{project.name}</h1>
-            <p className="projectFeedbackMeta projectFeedbackMetaCode">
-              {projectUrl}
-            </p>
           </div>
 
           <div className="projectFeedbackActions">
-            <span
-              className="projectFeedbackStatus"
-              data-status={project.status}
-            >
-              {project.status === "approved" ? "Approved" : "In review"}
-            </span>
-
             {showCopyLink ? (
               <button
                 className="projectFeedbackAction projectFeedbackActionGhost"
@@ -543,7 +819,7 @@ export function ProjectFeedbackWorkspace({
                 onClick={() => void handleMarkApproved()}
                 disabled={isUpdatingStatus || project.status === "approved"}
               >
-                {isUpdatingStatus ? "Updating..." : "Mark as approved"}
+                {isUpdatingStatus ? "Updating..." : "Approve all the project"}
               </button>
             ) : null}
           </div>
@@ -556,6 +832,7 @@ export function ProjectFeedbackWorkspace({
               : "No images yet"}
           </span>
           <span>{project.imageCount} image(s)</span>
+          <span>{approvedImageCount} approved</span>
           <span>{editRequestCountLabel(project.commentCount)}</span>
           <span>{viewerCountLabel(project.viewerCount)}</span>
         </div>
@@ -579,12 +856,39 @@ export function ProjectFeedbackWorkspace({
 
       {project.versions.length > 0 ? (
         <>
+          <div className="projectFeedbackWorkspaceTabs" role="tablist" aria-label="Project views">
+            <button
+              className="projectFeedbackWorkspaceTab"
+              type="button"
+              role="tab"
+              data-active={activeWorkspaceTab === "review" ? "true" : "false"}
+              aria-selected={activeWorkspaceTab === "review"}
+              onClick={() => setActiveWorkspaceTab("review")}
+            >
+              In Review
+              <span>{reviewImageCount}</span>
+            </button>
+            <button
+              className="projectFeedbackWorkspaceTab"
+              type="button"
+              role="tab"
+              data-active={activeWorkspaceTab === "approved" ? "true" : "false"}
+              aria-selected={activeWorkspaceTab === "approved"}
+              onClick={() => setActiveWorkspaceTab("approved")}
+            >
+              Approved Images
+              <span>{approvedImageCount}</span>
+            </button>
+          </div>
+
+          {activeWorkspaceTab === "review" ? (
+            <>
           <div
             className="projectFeedbackVersionTabs"
             role="tablist"
             aria-label="Project variants"
           >
-            {numberedVersions.map((versionGroup) => (
+            {reviewVersions.map((versionGroup) => (
               <button
                 key={versionGroup.version}
                 className="projectFeedbackVersionTab"
@@ -598,6 +902,7 @@ export function ProjectFeedbackWorkspace({
                   setSelectedVersion(versionGroup.version);
                   setDraft(null);
                   setActiveCommentId(null);
+                  setEditingComment(null);
                 }}
               >
                 {`V${versionGroup.version}`}
@@ -619,6 +924,7 @@ export function ProjectFeedbackWorkspace({
                       draft={draft}
                       isSavingComment={isSavingComment}
                       isBusy={busyImageId === image.id}
+                      isStatusUpdating={busyImageStatusId === image.id}
                       busyActionLabel={
                         busyImageId === image.id && busyImageAction
                           ? busyImageAction === "replace"
@@ -627,14 +933,17 @@ export function ProjectFeedbackWorkspace({
                           : null
                       }
                       showImageActions={allowImageManagement}
-                      showDownloadAction={
-                        project.status === "approved" && !allowImageManagement
-                      }
+                      showDownloadAction={false}
                       showTeamChat={showTeamChat}
+                      allowCommentManagement={allowImageManagement || canInteract}
+                      allowImageApproval={canManageApprovedImages}
                       canInteract={canInteract}
                       viewerRole={viewerRole}
                       viewerIdentityLabel={viewerIdentityLabel}
                       viewerEmail={viewerEmail}
+                      onApproveImage={(imageId) => {
+                        void handleUpdateImageStatus(imageId, "approved");
+                      }}
                       onImageClick={handleCreateDraft}
                       onDeleteImage={(imageId) => {
                         void handleDeleteImage(imageId);
@@ -645,6 +954,16 @@ export function ProjectFeedbackWorkspace({
                       onDraftChange={setDraft}
                       onDraftCancel={() => setDraft(null)}
                       onDraftSubmit={() => void handleSubmitComment()}
+                      editingComment={editingComment}
+                      busyCommentId={busyCommentId}
+                      busyCommentAction={busyCommentAction}
+                      onCommentEditStart={handleStartCommentEdit}
+                      onCommentEditCancel={() => setEditingComment(null)}
+                      onCommentEditChange={setEditingComment}
+                      onCommentEditSave={() => void handleSaveCommentEdit()}
+                      onCommentDelete={(commentId) => {
+                        void handleDeleteComment(commentId);
+                      }}
                       onCommentSelect={(commentId) => {
                         setActiveCommentId(commentId);
                         setDraft(null);
@@ -653,8 +972,30 @@ export function ProjectFeedbackWorkspace({
                   ))}
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="projectFeedbackEmpty">
+                <h2 className="projectFeedbackVersionTitle">No images in review</h2>
+                <p className="projectFeedbackVersionMeta">
+                  All current images are already in approved delivery.
+                </p>
+              </div>
+            )}
           </div>
+            </>
+          ) : (
+            <ProjectFeedbackApprovedGallery
+              projectId={project.id}
+              approvedImages={approvedImages}
+              allowImageManagement={allowImageManagement}
+              canManageApprovedImages={canManageApprovedImages}
+              isDownloadingAll={isDownloadingApproved}
+              busyImageStatusId={busyImageStatusId}
+              onDownloadAll={() => void handleDownloadAllApproved()}
+              onMoveToReview={(imageId) => {
+                void handleUpdateImageStatus(imageId, "in_review");
+              }}
+            />
+          )}
         </>
       ) : (
         <div className="projectFeedbackEmpty">
@@ -678,12 +1019,19 @@ type ProjectFeedbackImageCardProps = {
   draft: DraftComment | null;
   isSavingComment: boolean;
   isBusy: boolean;
+  isStatusUpdating: boolean;
   busyActionLabel: string | null;
   showImageActions: boolean;
   showDownloadAction: boolean;
   showTeamChat: boolean;
+  allowCommentManagement: boolean;
+  allowImageApproval: boolean;
   canInteract: boolean;
   viewerRole: ProjectViewerRole;
+  editingComment: EditingComment | null;
+  busyCommentId: string | null;
+  busyCommentAction: "update" | "delete" | null;
+  onApproveImage: (imageId: string) => void;
   onImageClick: (
     image: ProjectFeedbackImage,
     event: MouseEvent<HTMLDivElement>,
@@ -693,8 +1041,205 @@ type ProjectFeedbackImageCardProps = {
   onDraftChange: Dispatch<SetStateAction<DraftComment | null>>;
   onDraftCancel: () => void;
   onDraftSubmit: () => void;
+  onCommentEditStart: (comment: ProjectFeedbackComment) => void;
+  onCommentEditCancel: () => void;
+  onCommentEditChange: Dispatch<SetStateAction<EditingComment | null>>;
+  onCommentEditSave: () => void;
+  onCommentDelete: (commentId: string) => void;
   onCommentSelect: (commentId: string) => void;
 };
+
+type ProjectFeedbackEditRequestsPanelContentProps = {
+  image: ProjectFeedbackImage;
+  activeCommentId: string | null;
+  editingCommentForImage: EditingComment | null;
+  allowCommentManagement: boolean;
+  canInteract: boolean;
+  busyCommentId: string | null;
+  busyCommentAction: "update" | "delete" | null;
+  onCommentSelect: (commentId: string) => void;
+  onCommentEditStart: (comment: ProjectFeedbackComment) => void;
+  onCommentEditCancel: () => void;
+  onCommentEditChange: Dispatch<SetStateAction<EditingComment | null>>;
+  onCommentEditSave: () => void;
+  onCommentDelete: (commentId: string) => void;
+};
+
+function ProjectFeedbackEditRequestsPanelContent({
+  image,
+  activeCommentId,
+  editingCommentForImage,
+  allowCommentManagement,
+  canInteract,
+  busyCommentId,
+  busyCommentAction,
+  onCommentSelect,
+  onCommentEditStart,
+  onCommentEditCancel,
+  onCommentEditChange,
+  onCommentEditSave,
+  onCommentDelete,
+}: ProjectFeedbackEditRequestsPanelContentProps) {
+  return (
+    <aside className="projectFeedbackComments">
+      <div className="projectFeedbackCommentsHeader">
+        <h3 className="projectFeedbackCommentsTitle">Edit Requests</h3>
+        <div className="projectFeedbackCommentsMetaGroup">
+          <p className="projectFeedbackCommentsMeta">
+            {editRequestCountLabel(findImageCommentCount(image))}
+          </p>
+        </div>
+      </div>
+
+      {image.comments.length > 0 ? (
+        <div className="projectFeedbackCommentWindow">
+          <div className="projectFeedbackCommentList">
+            {image.comments.map((comment, index) => (
+              <article
+                key={comment.id}
+                className="projectFeedbackCommentItem"
+                data-active={activeCommentId === comment.id ? "true" : "false"}
+                data-editing={editingCommentForImage?.id === comment.id ? "true" : "false"}
+                style={{ "--comment-color": comment.color } as CSSProperties}
+              >
+                <div className="projectFeedbackCommentItemTop">
+                  <button
+                    className="projectFeedbackCommentMain"
+                    type="button"
+                    onClick={() => onCommentSelect(comment.id)}
+                  >
+                    <span className="projectFeedbackCommentIndex">{index + 1}</span>
+                    <span className="projectFeedbackCommentBody">
+                      <strong>{comment.author}</strong>
+                      <span>{comment.content}</span>
+                      <span>{formatTimestamp(comment.createdAt)}</span>
+                    </span>
+                  </button>
+
+                  {allowCommentManagement ? (
+                    <div className="projectFeedbackCommentActions">
+                      {editingCommentForImage?.id === comment.id ? (
+                        <>
+                          <button
+                            className="projectFeedbackCommentIconButton"
+                            type="button"
+                            aria-label="Save edit request"
+                            title="Save edit request"
+                            disabled={
+                              busyCommentId === comment.id ||
+                              editingCommentForImage.content.trim().length === 0
+                            }
+                            onClick={() => onCommentEditSave()}
+                          >
+                            <ProjectFeedbackCheckIcon />
+                          </button>
+                          <button
+                            className="projectFeedbackCommentIconButton"
+                            type="button"
+                            aria-label="Cancel editing edit request"
+                            title="Cancel editing edit request"
+                            disabled={busyCommentId === comment.id}
+                            onClick={() => onCommentEditCancel()}
+                          >
+                            <ProjectFeedbackCloseIcon />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="projectFeedbackCommentIconButton"
+                            type="button"
+                            aria-label="Edit edit request"
+                            title="Edit edit request"
+                            disabled={busyCommentId === comment.id}
+                            onClick={() => onCommentEditStart(comment)}
+                          >
+                            <ProjectFeedbackEditIcon />
+                          </button>
+                          <button
+                            className="projectFeedbackCommentIconButton projectFeedbackCommentIconButtonDanger"
+                            type="button"
+                            aria-label="Delete edit request"
+                            title="Delete edit request"
+                            disabled={busyCommentId === comment.id}
+                            onClick={() => onCommentDelete(comment.id)}
+                          >
+                            <ProjectFeedbackTrashIcon />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+
+                {editingCommentForImage?.id === comment.id ? (
+                  <div className="projectFeedbackCommentEditForm">
+                    <textarea
+                      className="projectFeedbackCommentEditTextarea"
+                      value={editingCommentForImage.content}
+                      onChange={(event) =>
+                        onCommentEditChange((current) =>
+                          current?.id === comment.id
+                            ? { ...current, content: event.target.value }
+                            : current,
+                        )
+                      }
+                      placeholder="Update the edit request"
+                      aria-label="Edit request content"
+                      required
+                    />
+
+                    <div
+                      className="projectFeedbackColorOptions"
+                      role="group"
+                      aria-label="Edit request color"
+                    >
+                      {commentColorOptions.map((colorOption) => (
+                        <button
+                          key={colorOption}
+                          className="projectFeedbackColorOption"
+                          type="button"
+                          data-active={
+                            editingCommentForImage.color === colorOption ? "true" : "false"
+                          }
+                          style={{ "--comment-color": colorOption } as CSSProperties}
+                          aria-label={`Select color ${colorOption}`}
+                          onClick={() =>
+                            onCommentEditChange((current) =>
+                              current?.id === comment.id
+                                ? { ...current, color: colorOption }
+                                : current,
+                            )
+                          }
+                        >
+                          <span />
+                        </button>
+                      ))}
+                    </div>
+
+                    {busyCommentId === comment.id ? (
+                      <p className="projectFeedbackCommentsMeta">
+                        {busyCommentAction === "delete"
+                          ? "Deleting edit request..."
+                          : "Updating edit request..."}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="projectFeedbackCommentsMeta">
+          {canInteract
+            ? "Click on the image to add the first edit request."
+            : "Visitor mode is view-only for edit requests."}
+        </p>
+      )}
+    </aside>
+  );
+}
 
 function ProjectFeedbackImageCard({
   projectId,
@@ -706,22 +1251,37 @@ function ProjectFeedbackImageCard({
   draft,
   isSavingComment,
   isBusy,
+  isStatusUpdating,
   busyActionLabel,
   showImageActions,
   showDownloadAction,
   showTeamChat,
+  allowCommentManagement,
+  allowImageApproval,
   canInteract,
   viewerRole,
+  editingComment,
+  busyCommentId,
+  busyCommentAction,
+  onApproveImage,
   onImageClick,
   onDeleteImage,
   onReplaceImage,
   onDraftChange,
   onDraftCancel,
   onDraftSubmit,
+  onCommentEditStart,
+  onCommentEditCancel,
+  onCommentEditChange,
+  onCommentEditSave,
+  onCommentDelete,
   onCommentSelect,
 }: ProjectFeedbackImageCardProps) {
   const draftForImage = draft?.imageId === image.id ? draft : null;
+  const editingCommentForImage =
+    editingComment?.imageId === image.id ? editingComment : null;
   const [dimensions, setDimensions] = useState<ImageDimensions | null>(null);
+  const [activeSidePanel, setActiveSidePanel] = useState<ImageSidePanelTab>("requests");
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
   const dimensionsLabel = imageDimensionsLabel(dimensions);
   const hasTeamChat = showTeamChat;
@@ -765,8 +1325,18 @@ function ProjectFeedbackImageCard({
           </h3>
         </div>
 
-        {showImageActions || showDownloadAction ? (
+        {showImageActions || showDownloadAction || allowImageApproval ? (
           <div className="projectFeedbackImageActions">
+            {allowImageApproval ? (
+              <button
+                className="projectFeedbackMiniAction projectFeedbackMiniActionApprove"
+                type="button"
+                disabled={isStatusUpdating}
+                onClick={() => onApproveImage(image.id)}
+              >
+                {isStatusUpdating ? "Approving..." : "Approve image"}
+              </button>
+            ) : null}
             {showDownloadAction ? (
               <a className="projectFeedbackMiniAction" href={downloadHref}>
                 Download
@@ -922,67 +1492,379 @@ function ProjectFeedbackImageCard({
         ) : null}
       </div>
 
-      <details className="projectFeedbackSectionPanel projectFeedbackCommentsPanel">
-        <summary className="projectFeedbackSectionSummary">
-          <span className="projectFeedbackCommentsTitle">Edit Requests</span>
-          <span className="projectFeedbackCommentsMeta">
-            {editRequestCountLabel(findImageCommentCount(image))}
-          </span>
-        </summary>
+      <div className="projectFeedbackDesktopSidePanel">
+        <div className="projectFeedbackSidePanelTabs" role="tablist" aria-label="Image panels">
+          <button
+            className="projectFeedbackSidePanelTab"
+            type="button"
+            role="tab"
+            data-active={activeSidePanel === "requests" ? "true" : "false"}
+            aria-selected={activeSidePanel === "requests"}
+            onClick={() => setActiveSidePanel("requests")}
+          >
+            Edit Requests
+            <span>{image.comments.length}</span>
+          </button>
+          {hasTeamChat ? (
+            <button
+              className="projectFeedbackSidePanelTab"
+              type="button"
+              role="tab"
+              data-active={activeSidePanel === "chat" ? "true" : "false"}
+              aria-selected={activeSidePanel === "chat"}
+              onClick={() => setActiveSidePanel("chat")}
+            >
+              Team Chat
+            </button>
+          ) : null}
+        </div>
 
-        <aside className="projectFeedbackComments">
-          <div className="projectFeedbackCommentsHeader">
-            <h3 className="projectFeedbackCommentsTitle">Edit Requests</h3>
-            <div className="projectFeedbackCommentsMetaGroup">
-              <p className="projectFeedbackCommentsMeta">
-                {editRequestCountLabel(findImageCommentCount(image))}
-              </p>
-            </div>
+        <div className="projectFeedbackSidePanelBody">
+          <div hidden={activeSidePanel !== "requests"}>
+            <ProjectFeedbackEditRequestsPanelContent
+              image={image}
+              activeCommentId={activeCommentId}
+              editingCommentForImage={editingCommentForImage}
+              allowCommentManagement={allowCommentManagement}
+              canInteract={canInteract}
+              busyCommentId={busyCommentId}
+              busyCommentAction={busyCommentAction}
+              onCommentSelect={onCommentSelect}
+              onCommentEditStart={onCommentEditStart}
+              onCommentEditCancel={onCommentEditCancel}
+              onCommentEditChange={onCommentEditChange}
+              onCommentEditSave={onCommentEditSave}
+              onCommentDelete={onCommentDelete}
+            />
           </div>
 
-          {image.comments.length > 0 ? (
-            <div className="projectFeedbackCommentWindow">
-              <div className="projectFeedbackCommentList">
-                {image.comments.map((comment, index) => (
-                  <button
-                    key={comment.id}
-                    className="projectFeedbackCommentItem"
-                    type="button"
-                    data-active={activeCommentId === comment.id ? "true" : "false"}
-                    style={{ "--comment-color": comment.color } as CSSProperties}
-                    onClick={() => onCommentSelect(comment.id)}
-                  >
-                    <span className="projectFeedbackCommentIndex">{index + 1}</span>
-                    <span className="projectFeedbackCommentBody">
-                      <strong>{comment.author}</strong>
-                      <span>{comment.content}</span>
-                      <span>{formatTimestamp(comment.createdAt)}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
+          {hasTeamChat && activeSidePanel === "chat" ? (
+            <div>
+              <ProjectFeedbackTeamChat
+                projectId={projectId}
+                imageId={image.id}
+                viewerEmail={viewerEmail}
+                viewerIdentityLabel={viewerIdentityLabel}
+                canInteract={canInteract}
+                viewerRole={viewerRole}
+                detailsMode={false}
+              />
             </div>
-          ) : (
-            <p className="projectFeedbackCommentsMeta">
-              {canInteract
-                ? "Click on the image to add the first edit request."
-                : "Visitor mode is view-only for edit requests."}
-            </p>
-          )}
-        </aside>
-      </details>
+          ) : null}
+        </div>
+      </div>
 
-      {hasTeamChat ? (
-        <ProjectFeedbackTeamChat
-          projectId={projectId}
-          imageId={image.id}
-          viewerEmail={viewerEmail}
-          viewerIdentityLabel={viewerIdentityLabel}
-          canInteract={canInteract}
-          viewerRole={viewerRole}
-        />
-      ) : null}
+      <div className="projectFeedbackMobilePanels">
+        <details className="projectFeedbackSectionPanel projectFeedbackCommentsPanel">
+          <summary className="projectFeedbackSectionSummary">
+            <span className="projectFeedbackCommentsTitle">Edit Requests</span>
+            <span className="projectFeedbackCommentsMeta">
+              {editRequestCountLabel(findImageCommentCount(image))}
+            </span>
+          </summary>
+
+          <ProjectFeedbackEditRequestsPanelContent
+            image={image}
+            activeCommentId={activeCommentId}
+            editingCommentForImage={editingCommentForImage}
+            allowCommentManagement={allowCommentManagement}
+            canInteract={canInteract}
+            busyCommentId={busyCommentId}
+            busyCommentAction={busyCommentAction}
+            onCommentSelect={onCommentSelect}
+            onCommentEditStart={onCommentEditStart}
+            onCommentEditCancel={onCommentEditCancel}
+            onCommentEditChange={onCommentEditChange}
+            onCommentEditSave={onCommentEditSave}
+            onCommentDelete={onCommentDelete}
+          />
+        </details>
+
+        {hasTeamChat ? (
+          <ProjectFeedbackTeamChat
+            projectId={projectId}
+            imageId={image.id}
+            viewerEmail={viewerEmail}
+            viewerIdentityLabel={viewerIdentityLabel}
+            canInteract={canInteract}
+            viewerRole={viewerRole}
+            detailsMode
+          />
+        ) : null}
+      </div>
     </article>
+  );
+}
+
+type ProjectFeedbackApprovedGalleryProps = {
+  projectId: string;
+  approvedImages: Array<{
+    image: ProjectFeedbackImage;
+    imageLabel: string;
+    version: number;
+  }>;
+  allowImageManagement: boolean;
+  canManageApprovedImages: boolean;
+  isDownloadingAll: boolean;
+  busyImageStatusId: string | null;
+  onDownloadAll: () => void;
+  onMoveToReview: (imageId: string) => void;
+};
+
+type ProjectFeedbackApprovedCardProps = {
+  image: ProjectFeedbackImage;
+  imageLabel: string;
+  version: number;
+  downloadBase: string;
+  canManageApprovedImages: boolean;
+  busyImageStatusId: string | null;
+  onMoveToReview: (imageId: string) => void;
+};
+
+function ProjectFeedbackApprovedCard({
+  image,
+  imageLabel,
+  version,
+  downloadBase,
+  canManageApprovedImages,
+  busyImageStatusId,
+  onMoveToReview,
+}: ProjectFeedbackApprovedCardProps) {
+  const [dimensions, setDimensions] = useState<ImageDimensions | null>(null);
+  const dimensionsLabel = imageDimensionsLabel(dimensions);
+
+  return (
+    <article className="projectFeedbackApprovedCard">
+      <div className="projectFeedbackApprovedCardHeader">
+        <div className="projectFeedbackImageCardCopy">
+          <h3 className="projectFeedbackImageTitle">
+            <span className="projectFeedbackImageTitleLabel">{imageLabel}</span>
+            {dimensionsLabel ? (
+              <span className="projectFeedbackImageTitleDimensions">
+                - {dimensionsLabel}
+              </span>
+            ) : null}
+          </h3>
+          <p className="projectFeedbackImageMeta">{`Variant V${version}`}</p>
+        </div>
+
+        <span className="projectFeedbackApprovedBadge">Approved</span>
+      </div>
+
+      <div className="projectFeedbackApprovedMedia">
+        <img
+          className="projectFeedbackImage"
+          src={image.url}
+          alt={`${imageLabel} from variant V${version}`}
+          loading="lazy"
+          decoding="async"
+          onLoad={(event) => {
+            setDimensions({
+              width: event.currentTarget.naturalWidth,
+              height: event.currentTarget.naturalHeight,
+            });
+          }}
+          onError={() => setDimensions(null)}
+        />
+      </div>
+
+      <div className="projectFeedbackApprovedActions">
+        <a
+          className="projectFeedbackMiniAction"
+          href={`${downloadBase}/${image.id}/download`}
+        >
+          Download image
+        </a>
+
+        {canManageApprovedImages ? (
+          <button
+            className="projectFeedbackMiniAction projectFeedbackMiniActionGhost"
+            type="button"
+            disabled={busyImageStatusId === image.id}
+            onClick={() => onMoveToReview(image.id)}
+          >
+            {busyImageStatusId === image.id ? "Updating..." : "Move to review"}
+          </button>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function ProjectFeedbackApprovedGallery({
+  projectId,
+  approvedImages,
+  allowImageManagement,
+  canManageApprovedImages,
+  isDownloadingAll,
+  busyImageStatusId,
+  onDownloadAll,
+  onMoveToReview,
+}: ProjectFeedbackApprovedGalleryProps) {
+  const downloadBase = allowImageManagement
+    ? `/api/projects/${projectId}/images`
+    : `/api/project/${projectId}/images`;
+
+  if (approvedImages.length === 0) {
+    return (
+      <div className="projectFeedbackEmpty">
+        <h2 className="projectFeedbackVersionTitle">No approved images yet</h2>
+        <p className="projectFeedbackVersionMeta">
+          Approved images will move here automatically.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <section className="projectFeedbackApprovedShell">
+      <div className="projectFeedbackApprovedHeader">
+        <div className="projectFeedbackCommentsHeader">
+          <h2 className="projectFeedbackCommentsTitle">Approved Images</h2>
+          <div className="projectFeedbackCommentsMetaGroup">
+            <p className="projectFeedbackCommentsMeta">
+              {approvedImages.length} approved image{approvedImages.length === 1 ? "" : "s"}
+            </p>
+          </div>
+        </div>
+
+        <button
+          className="projectFeedbackAction projectFeedbackActionGhost"
+          type="button"
+          disabled={isDownloadingAll}
+          onClick={onDownloadAll}
+        >
+          {isDownloadingAll ? "Preparing..." : "Download all"}
+        </button>
+      </div>
+
+      <div className="projectFeedbackApprovedGrid">
+        {approvedImages.map(({ image, imageLabel, version }) => (
+          <ProjectFeedbackApprovedCard
+            key={image.id}
+            image={image}
+            imageLabel={imageLabel}
+            version={version}
+            downloadBase={downloadBase}
+            canManageApprovedImages={canManageApprovedImages}
+            busyImageStatusId={busyImageStatusId}
+            onMoveToReview={onMoveToReview}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ProjectFeedbackEditIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M4 20h4l10-10-4-4L4 16v4Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M12 6l4 4"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function ProjectFeedbackTrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M5 7h14"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M9 7V5h6v2"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M7 7l1 12h8l1-12"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M10 11v5M14 11v5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function ProjectFeedbackCheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="m5 13 4 4L19 7"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.9"
+      />
+    </svg>
+  );
+}
+
+function ProjectFeedbackCloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M7 7l10 10M17 7 7 17"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.9"
+      />
+    </svg>
+  );
+}
+
+function ProjectFeedbackSendIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M4 12h12"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.9"
+      />
+      <path
+        d="m12 6 6 6-6 6"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.9"
+      />
+    </svg>
   );
 }
 
@@ -993,6 +1875,7 @@ type ProjectFeedbackTeamChatProps = {
   viewerIdentityLabel: string;
   canInteract: boolean;
   viewerRole: ProjectViewerRole;
+  detailsMode?: boolean;
 };
 
 function ProjectFeedbackTeamChat({
@@ -1002,6 +1885,7 @@ function ProjectFeedbackTeamChat({
   viewerIdentityLabel,
   canInteract,
   viewerRole,
+  detailsMode = true,
 }: ProjectFeedbackTeamChatProps) {
   const [messages, setMessages] = useState<ProjectFeedbackTeamMessage[]>([]);
   const [content, setContent] = useState("");
@@ -1009,10 +1893,12 @@ function ProjectFeedbackTeamChat({
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [animatedPlaceholder, setAnimatedPlaceholder] = useState("");
   const listRef = useRef<HTMLDivElement | null>(null);
   const canPost = canInteract && viewerEmail.length > 0;
   const replyTarget =
     messages.find((message) => message.id === replyTargetId) ?? null;
+  const placeholderTarget = "Anything to say ?";
 
   useEffect(() => {
     let cancelled = false;
@@ -1065,6 +1951,33 @@ function ProjectFeedbackTeamChat({
     listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [messages.length]);
 
+  useEffect(() => {
+    if (!canPost) {
+      setAnimatedPlaceholder("Open the project with your email to chat");
+      return;
+    }
+
+    let frame = 0;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const tick = () => {
+      const cycle = placeholderTarget.length + 18;
+      const position = frame % cycle;
+      const sliceLength =
+        position <= placeholderTarget.length ? position : placeholderTarget.length;
+
+      setAnimatedPlaceholder(placeholderTarget.slice(0, sliceLength));
+      frame += 1;
+      timeoutId = setTimeout(tick, position < placeholderTarget.length ? 65 : 95);
+    };
+
+    tick();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [canPost]);
+
   const handleSubmit = async () => {
     const trimmedContent = content.trim();
     if (!trimmedContent || !canPost) return;
@@ -1108,6 +2021,138 @@ function ProjectFeedbackTeamChat({
     }
   };
 
+  const teamChatContent = (
+    <aside className="projectFeedbackTeamChat">
+      <div className="projectFeedbackCommentsHeader">
+        <h3 className="projectFeedbackCommentsTitle">Team Chat</h3>
+        <div className="projectFeedbackCommentsMetaGroup">
+          <p className="projectFeedbackCommentsMeta">
+            {teamMessageCountLabel(messages.length)}
+          </p>
+        </div>
+      </div>
+
+      <div className="projectFeedbackTeamChatPanel">
+        <div className="projectFeedbackTeamChatMessages" ref={listRef}>
+          {isLoading ? (
+            <p className="projectFeedbackCommentsMeta">Loading team chat...</p>
+          ) : messages.length > 0 ? (
+            <div className="projectFeedbackTeamChatList">
+              {messages.map((message) => {
+                const isMine =
+                  viewerIdentityLabel.length > 0 &&
+                  message.author === viewerIdentityLabel;
+
+                return (
+                  <article
+                    key={message.id}
+                    className="projectFeedbackTeamChatMessage"
+                    data-mine={isMine ? "true" : "false"}
+                  >
+                    <div className="projectFeedbackTeamChatMessageHeader">
+                      <strong>{message.author}</strong>
+                      <span>{formatTimestamp(message.createdAt)}</span>
+                    </div>
+
+                    {message.replyToMessageId ? (
+                      <div className="projectFeedbackTeamChatReplyPreview">
+                        <strong>{message.replyToAuthor ?? "Reply"}</strong>
+                        <span>{message.replyToContent ?? "Message unavailable"}</span>
+                      </div>
+                    ) : null}
+
+                    <p>{message.content}</p>
+
+                    {canInteract ? (
+                      <div className="projectFeedbackTeamChatMessageActions">
+                        <button
+                          className="projectFeedbackTeamChatReplyButton"
+                          type="button"
+                          onClick={() => setReplyTargetId(message.id)}
+                        >
+                          Reply
+                        </button>
+                      </div>
+                    ) : null}
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="projectFeedbackCommentsMeta">
+              No team messages yet for this image.
+            </p>
+          )}
+        </div>
+
+        <form
+          className="projectFeedbackTeamChatComposer"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSubmit();
+          }}
+        >
+          {replyTarget ? (
+            <div className="projectFeedbackTeamChatReplyComposer">
+              <div className="projectFeedbackTeamChatReplyPreview">
+                <strong>{replyTarget.author}</strong>
+                <span>{replyTarget.content}</span>
+              </div>
+              <button
+                className="projectFeedbackTeamChatReplyButton"
+                type="button"
+                onClick={() => setReplyTargetId(null)}
+              >
+                Cancel reply
+              </button>
+            </div>
+          ) : null}
+
+          {!canInteract ? (
+            <p className="projectFeedbackCommentsMeta">
+              {viewerRole === "visitor"
+                ? "Visitor mode is read-only for team chat."
+                : "Team member access is required to join the team chat."}
+            </p>
+          ) : null}
+
+          <label className="projectFeedbackField projectFeedbackTeamChatField">
+            <textarea
+              className="projectFeedbackTextarea"
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              placeholder={animatedPlaceholder}
+              aria-label="Message"
+              required
+              disabled={!canPost || isSending}
+            />
+          </label>
+
+          <div className="projectFeedbackDraftActions">
+            <button
+              className="projectFeedbackChatSendButton"
+              type="submit"
+              aria-label={isSending ? "Sending message" : "Send message"}
+              disabled={isSending || !canPost}
+            >
+              {isSending ? "..." : <ProjectFeedbackSendIcon />}
+            </button>
+          </div>
+
+          {errorMessage ? (
+            <p className="projectFeedbackMessage projectFeedbackMessageError">
+              {errorMessage}
+            </p>
+          ) : null}
+        </form>
+      </div>
+    </aside>
+  );
+
+  if (!detailsMode) {
+    return teamChatContent;
+  }
+
   return (
     <details className="projectFeedbackSectionPanel projectFeedbackChatPanel">
       <summary className="projectFeedbackSectionSummary">
@@ -1117,136 +2162,7 @@ function ProjectFeedbackTeamChat({
         </span>
       </summary>
 
-      <aside className="projectFeedbackTeamChat">
-        <div className="projectFeedbackCommentsHeader">
-          <h3 className="projectFeedbackCommentsTitle">Team Chat</h3>
-          <div className="projectFeedbackCommentsMetaGroup">
-            <p className="projectFeedbackCommentsMeta">
-              {teamMessageCountLabel(messages.length)}
-            </p>
-          </div>
-        </div>
-
-        <div className="projectFeedbackTeamChatPanel">
-          <div className="projectFeedbackTeamChatMessages" ref={listRef}>
-            {isLoading ? (
-              <p className="projectFeedbackCommentsMeta">Loading team chat...</p>
-            ) : messages.length > 0 ? (
-              <div className="projectFeedbackTeamChatList">
-                {messages.map((message) => {
-                  const isMine =
-                    viewerIdentityLabel.length > 0 &&
-                    message.author === viewerIdentityLabel;
-
-                  return (
-                    <article
-                      key={message.id}
-                      className="projectFeedbackTeamChatMessage"
-                      data-mine={isMine ? "true" : "false"}
-                    >
-                      <div className="projectFeedbackTeamChatMessageHeader">
-                        <strong>{message.author}</strong>
-                        <span>{formatTimestamp(message.createdAt)}</span>
-                      </div>
-
-                      {message.replyToMessageId ? (
-                        <div className="projectFeedbackTeamChatReplyPreview">
-                          <strong>{message.replyToAuthor ?? "Reply"}</strong>
-                          <span>{message.replyToContent ?? "Message unavailable"}</span>
-                        </div>
-                      ) : null}
-
-                      <p>{message.content}</p>
-
-                      {canInteract ? (
-                        <div className="projectFeedbackTeamChatMessageActions">
-                          <button
-                            className="projectFeedbackTeamChatReplyButton"
-                            type="button"
-                            onClick={() => setReplyTargetId(message.id)}
-                          >
-                            Reply
-                          </button>
-                        </div>
-                      ) : null}
-                    </article>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="projectFeedbackCommentsMeta">
-                No team messages yet for this image.
-              </p>
-            )}
-          </div>
-
-          <form
-            className="projectFeedbackTeamChatComposer"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleSubmit();
-            }}
-          >
-            <div className="projectFeedbackIdentityTag">
-              {!canInteract
-                ? viewerRole === "visitor"
-                  ? "Visitor mode is read-only for team chat."
-                  : "Team member access is required to join the team chat."
-                : viewerIdentityLabel
-                ? `Posting as ${viewerIdentityLabel}`
-                : "Open the project with your email to join the team chat."}
-            </div>
-
-            {replyTarget ? (
-              <div className="projectFeedbackTeamChatReplyComposer">
-                <div className="projectFeedbackTeamChatReplyPreview">
-                  <strong>{replyTarget.author}</strong>
-                  <span>{replyTarget.content}</span>
-                </div>
-                <button
-                  className="projectFeedbackTeamChatReplyButton"
-                  type="button"
-                  onClick={() => setReplyTargetId(null)}
-                >
-                  Cancel reply
-                </button>
-              </div>
-            ) : null}
-
-            <label className="projectFeedbackField">
-              <span>Message</span>
-              <textarea
-                className="projectFeedbackTextarea"
-                value={content}
-                onChange={(event) => setContent(event.target.value)}
-                placeholder={
-                  canPost
-                    ? "Write a message about this image"
-                    : "Open the project with your email to chat"
-                }
-                required
-                disabled={!canPost || isSending}
-              />
-            </label>
-
-            <div className="projectFeedbackDraftActions">
-              <button
-                className="projectFeedbackAction"
-                type="submit"
-                disabled={isSending || !canPost}
-              >
-                {isSending ? "Sending..." : "Send message"}
-              </button>
-            </div>
-
-            {errorMessage ? (
-              <p className="projectFeedbackMessage projectFeedbackMessageError">
-                {errorMessage}
-              </p>
-            ) : null}
-          </form>
-        </div>
-      </aside>
+      {teamChatContent}
     </details>
   );
 }

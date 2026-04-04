@@ -29,6 +29,7 @@ export type ProjectFeedbackImage = {
   id: string;
   projectId: string;
   url: string;
+  status: ProjectStatus;
   version: number;
   createdAt: string;
   comments: ProjectFeedbackComment[];

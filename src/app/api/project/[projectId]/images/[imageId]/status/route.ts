@@ -1,12 +1,13 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { getErrorMessage } from "@/lib/errorMessage";
 import {
   getProjectAccessCookieName,
   getProjectViewerRoleCookieName,
   isProjectAccessAuthorized,
   isProjectFeedbackConfigured,
-  updateProjectStatus,
+  updateProjectImageStatus,
 } from "@/lib/projectFeedbackStore";
 import type { ProjectStatus } from "@/lib/projectFeedbackTypes";
 
@@ -15,7 +16,9 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ projectId: string }> },
+  {
+    params,
+  }: { params: Promise<{ projectId: string; imageId: string }> },
 ) {
   if (!isProjectFeedbackConfigured()) {
     return NextResponse.json(
@@ -24,13 +27,13 @@ export async function PATCH(
     );
   }
 
-  const { projectId } = await params;
+  const { projectId, imageId } = await params;
   const cookieStore = await cookies();
   const currentRole = cookieStore.get(getProjectViewerRoleCookieName(projectId))?.value;
 
   if (currentRole === "visitor") {
     return NextResponse.json(
-      { error: "Visitor access cannot approve a project." },
+      { error: "Visitor access cannot approve an image." },
       { status: 403 },
     );
   }
@@ -56,14 +59,15 @@ export async function PATCH(
   const status = body?.status === "approved" ? "approved" : "in_review";
 
   try {
-    const project = await updateProjectStatus(projectId, status as ProjectStatus);
+    const project = await updateProjectImageStatus(
+      projectId,
+      imageId,
+      status as ProjectStatus,
+    );
     return NextResponse.json({ project });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Failed to update status.",
-      },
-      { status: 400 },
-    );
+    const message = getErrorMessage(error, "Failed to update image status.");
+    const responseStatus = message === "Image not found." ? 404 : 400;
+    return NextResponse.json({ error: message }, { status: responseStatus });
   }
 }

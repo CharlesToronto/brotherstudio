@@ -34,7 +34,7 @@ export function ClientProjectsAdmin({
 }: ClientProjectsAdminProps) {
   const [projects, setProjects] = useState(initialProjects);
   const [name, setName] = useState("");
-  const [accessPassword, setAccessPassword] = useState("");
+  const [accessPassword, setAccessPassword] = useState("1870");
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -106,7 +106,7 @@ export function ClientProjectsAdmin({
 
       setProjects((current) => [payload.project!, ...current]);
       setName("");
-      setAccessPassword("");
+      setAccessPassword("1870");
       setNameDrafts((current) => ({
         ...current,
         [payload.project!.id]: payload.project!.name,
@@ -129,7 +129,7 @@ export function ClientProjectsAdmin({
   const handleSavePassword = async (projectId: string) => {
     const nextAccessPassword = passwordDrafts[projectId]?.trim() ?? "";
     if (!nextAccessPassword) {
-      setErrorMessage("Project password is required.");
+      setErrorMessage("Parcel number is required.");
       setStatusMessage("");
       return;
     }
@@ -153,7 +153,7 @@ export function ClientProjectsAdmin({
         | null;
 
       if (!response.ok || !payload?.project) {
-        throw new Error(payload?.error ?? "Failed to update project password.");
+        throw new Error(payload?.error ?? "Failed to update parcel number.");
       }
 
       const updatedProject = payload.project;
@@ -167,12 +167,12 @@ export function ClientProjectsAdmin({
         ...current,
         [projectId]: updatedProject.accessPassword ?? nextAccessPassword,
       }));
-      setStatusMessage("Project password updated.");
+      setStatusMessage("Parcel number updated.");
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Failed to update project password.",
+          : "Failed to update parcel number.",
       );
     } finally {
       setSavingPasswordProjectId(null);
@@ -347,7 +347,7 @@ export function ClientProjectsAdmin({
             </label>
 
             <label className="clientAdminField">
-              <span className="clientAdminLabel">Project password</span>
+              <span className="clientAdminLabel">Parcel Number</span>
               <input
                 className="clientAdminInput"
                 type="text"
@@ -486,7 +486,7 @@ export function ClientProjectsAdmin({
                     </div>
                     <div className="clientAdminPasswordRow">
                       <label className="clientAdminField">
-                        <span className="clientAdminLabel">Project password</span>
+                        <span className="clientAdminLabel">Parcel Number</span>
                         <input
                           className="clientAdminInput"
                           type="text"
@@ -507,7 +507,7 @@ export function ClientProjectsAdmin({
                       >
                         {savingPasswordProjectId === project.id
                           ? "Saving..."
-                          : "Save password"}
+                          : "Save parcel number"}
                       </button>
                     </div>
                   </div>

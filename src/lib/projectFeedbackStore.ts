@@ -33,6 +33,7 @@ type ImageRow = {
   project_id: string;
   project_name?: string | null;
   url: string;
+  status?: string | null;
   version: number;
   created_at: string;
 };
@@ -72,7 +73,16 @@ type ProjectImageDownloadAsset = {
   url: string;
 };
 
+const IMAGE_SELECT_WITH_STATUS = "id, project_id, url, status, version, created_at";
+const IMAGE_SELECT_WITHOUT_STATUS = "id, project_id, url, version, created_at";
+const IMAGE_DOWNLOAD_SELECT_WITH_STATUS = "id, url, status, version";
+const IMAGE_DOWNLOAD_SELECT_WITHOUT_STATUS = "id, url, version";
+
 function normalizeStatus(status: string | null | undefined): ProjectStatus {
+  return status === "approved" ? "approved" : "in_review";
+}
+
+function normalizeImageStatus(status: string | null | undefined): ProjectStatus {
   return status === "approved" ? "approved" : "in_review";
 }
 
@@ -91,6 +101,35 @@ function isValidEmail(value: string) {
 function normalizeCommentColor(value: string | null | undefined) {
   const color = value?.trim().toLowerCase() ?? "";
   return /^#[0-9a-f]{6}$/.test(color) ? color : DEFAULT_COMMENT_COLOR;
+}
+
+function isMissingImageStatusColumnError(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+
+  const code = typeof candidate.code === "string" ? candidate.code.trim() : "";
+  const combined = [candidate.message, candidate.details, candidate.hint]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    (code === "42703" && combined.includes("status")) ||
+    combined.includes("column images.status does not exist") ||
+    combined.includes("column \"status\" does not exist")
+  );
+}
+
+function buildImageStatusMigrationError() {
+  return new Error(
+    "Run the latest myStudio image-status SQL migration before approving images.",
+  );
 }
 
 function sanitizeFilename(name: string) {
@@ -267,6 +306,7 @@ function buildProjectPayload(
       id: image.id,
       projectId: image.project_id,
       url: image.url,
+      status: normalizeImageStatus(image.status),
       version: image.version,
       createdAt: image.created_at,
       comments: commentsByImageId.get(image.id) ?? [],
@@ -299,7 +339,6 @@ async function loadProjectRows(projectId: string) {
 
   const [
     { data: projectData, error: projectError },
-    { data: imagesData, error: imagesError },
     { data: commentsData, error: commentsError },
     { data: viewersData, error: viewersError },
   ] = await Promise.all([
@@ -308,12 +347,6 @@ async function loadProjectRows(projectId: string) {
       .select("id, name, status, created_at")
       .eq("id", projectId)
       .maybeSingle(),
-    supabase
-      .from("images")
-      .select("id, project_id, url, version, created_at")
-      .eq("project_id", projectId)
-      .order("version", { ascending: false })
-      .order("created_at", { ascending: true }),
     supabase
       .from("comments")
       .select("id, project_id, image_id, x, y, color, author, content, created_at")
@@ -325,14 +358,46 @@ async function loadProjectRows(projectId: string) {
       .eq("project_id", projectId),
   ]);
 
+  const {
+    data: imagesData,
+    error: imagesError,
+  } = await supabase
+    .from("images")
+    .select(IMAGE_SELECT_WITH_STATUS)
+    .eq("project_id", projectId)
+    .order("version", { ascending: false })
+    .order("created_at", { ascending: true });
+
   if (projectError) throw projectError;
-  if (imagesError) throw imagesError;
+  let images: ImageRow[] = [];
+
+  if (imagesError) {
+    if (!isMissingImageStatusColumnError(imagesError)) {
+      throw imagesError;
+    }
+
+    const { data: fallbackImagesData, error: fallbackImagesError } = await supabase
+      .from("images")
+      .select(IMAGE_SELECT_WITHOUT_STATUS)
+      .eq("project_id", projectId)
+      .order("version", { ascending: false })
+      .order("created_at", { ascending: true });
+
+    if (fallbackImagesError) throw fallbackImagesError;
+    images = ((fallbackImagesData as ImageRow[] | null) ?? []).map((image) => ({
+      ...image,
+      status: "in_review",
+    }));
+  } else {
+    images = (imagesData as ImageRow[] | null) ?? [];
+  }
+
   if (commentsError) throw commentsError;
   if (viewersError) throw viewersError;
 
   return {
     project: (projectData as ProjectRow | null) ?? null,
-    images: (imagesData as ImageRow[] | null) ?? [],
+    images,
     comments: (commentsData as CommentRow[] | null) ?? [],
     viewers: (viewersData as ProjectViewerRow[] | null) ?? [],
   };
@@ -442,27 +507,49 @@ export async function listProjectSummaries(options?: {
 
   const [
     { data: projectsData, error: projectsError },
-    { data: imagesData, error: imagesError },
     { data: commentsData, error: commentsError },
     { data: viewersData, error: viewersError },
   ] = await Promise.all([
     projectQuery,
-    supabase
-      .from("images")
-      .select("id, project_id, url, version, created_at"),
     supabase.from("comments").select("id, project_id"),
     supabase.from("project_viewers").select("id, project_id"),
   ]);
 
+  const {
+    data: imagesData,
+    error: imagesError,
+  } = await supabase.from("images").select(IMAGE_SELECT_WITH_STATUS);
+
   if (projectsError) throw projectsError;
-  if (imagesError) throw imagesError;
+  let images:
+    | Array<Pick<ImageRow, "id" | "project_id" | "version" | "url" | "created_at">>
+    | [] = [];
+
+  if (imagesError) {
+    if (!isMissingImageStatusColumnError(imagesError)) {
+      throw imagesError;
+    }
+
+    const { data: fallbackImagesData, error: fallbackImagesError } = await supabase
+      .from("images")
+      .select(IMAGE_SELECT_WITHOUT_STATUS);
+
+    if (fallbackImagesError) throw fallbackImagesError;
+    images =
+      (fallbackImagesData as Array<
+        Pick<ImageRow, "id" | "project_id" | "version" | "url" | "created_at">
+      > | null) ?? [];
+  } else {
+    images =
+      (imagesData as Array<
+        Pick<ImageRow, "id" | "project_id" | "version" | "url" | "created_at">
+      > | null) ?? [];
+  }
+
   if (commentsError) throw commentsError;
   if (viewersError) throw viewersError;
 
   const projects = (projectsData as unknown as ProjectRow[] | null) ?? [];
-  const images =
-    (imagesData as Array<Pick<ImageRow, "id" | "project_id" | "version" | "url" | "created_at">> | null) ??
-    [];
   const comments =
     (commentsData as Array<Pick<CommentRow, "id" | "project_id">> | null) ?? [];
   const viewers =
@@ -535,7 +622,7 @@ export async function createProject(input: { name: string; accessPassword: strin
   const name = input.name.trim();
   if (!name) throw new Error("Project name is required.");
   const accessPassword = normalizeAccessPassword(input.accessPassword);
-  if (!accessPassword) throw new Error("Project password is required.");
+  if (!accessPassword) throw new Error("Parcel number is required.");
 
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
@@ -575,7 +662,7 @@ export async function updateProjectSettings(
 
   if (typeof input.accessPassword === "string") {
     const accessPassword = normalizeAccessPassword(input.accessPassword);
-    if (!accessPassword) throw new Error("Project password is required.");
+    if (!accessPassword) throw new Error("Parcel number is required.");
     updates.access_password = accessPassword;
   }
 
@@ -635,6 +722,58 @@ export async function createProjectComment(input: {
   if (error) throw error;
 
   const project = await getProjectFeedbackProject(input.projectId);
+  if (!project) throw new Error("Project not found.");
+  return project;
+}
+
+export async function updateProjectComment(input: {
+  projectId: string;
+  commentId: string;
+  color?: string;
+  content: string;
+}) {
+  const content = input.content.trim();
+  if (!content) throw new Error("Comment content is required.");
+
+  const updates: Partial<CommentRow> = {
+    content,
+  };
+
+  if (typeof input.color === "string") {
+    updates.color = normalizeCommentColor(input.color);
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("comments")
+    .update(updates)
+    .eq("id", input.commentId)
+    .eq("project_id", input.projectId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("Edit request not found.");
+
+  const project = await getProjectFeedbackProject(input.projectId);
+  if (!project) throw new Error("Project not found.");
+  return project;
+}
+
+export async function deleteProjectComment(projectId: string, commentId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("comments")
+    .delete()
+    .eq("id", commentId)
+    .eq("project_id", projectId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("Edit request not found.");
+
+  const project = await getProjectFeedbackProject(projectId);
   if (!project) throw new Error("Project not found.");
   return project;
 }
@@ -786,6 +925,7 @@ export async function uploadProjectVersion(projectId: string, files: File[]) {
     project_id: string;
     project_name: string;
     url: string;
+    status: ProjectStatus;
     version: number;
   }> = [];
 
@@ -814,12 +954,27 @@ export async function uploadProjectVersion(projectId: string, files: File[]) {
       project_id: projectId,
       project_name: project.name,
       url: data.publicUrl,
+      status: "in_review",
       version: nextVersion,
     });
   }
 
   const { error: insertError } = await supabase.from("images").insert(rowsToInsert);
-  if (insertError) throw insertError;
+  if (insertError) {
+    if (!isMissingImageStatusColumnError(insertError)) throw insertError;
+
+    const fallbackRowsToInsert = rowsToInsert.map((row) => ({
+      project_id: row.project_id,
+      project_name: row.project_name,
+      url: row.url,
+      version: row.version,
+    }));
+    const { error: fallbackInsertError } = await supabase
+      .from("images")
+      .insert(fallbackRowsToInsert);
+
+    if (fallbackInsertError) throw fallbackInsertError;
+  }
 
   const nextProject = await getProjectFeedbackProject(projectId);
   if (!nextProject) throw new Error("Project not found.");
@@ -937,27 +1092,51 @@ export async function getProjectImageDownloadAsset(
 
   const { data: projectData, error: projectError } = await supabase
     .from("projects")
-    .select("id, name, status")
+    .select("id, name")
     .eq("id", projectId)
     .maybeSingle();
 
   if (projectError) throw projectError;
-  const project = projectData as Pick<ProjectRow, "id" | "name" | "status"> | null;
+  const project = projectData as Pick<ProjectRow, "id" | "name"> | null;
   if (!project) throw new Error("Project not found.");
-  if (normalizeStatus(project.status) !== "approved") {
-    throw new Error("Project is not approved for download.");
-  }
 
   const { data: imageData, error: imageError } = await supabase
     .from("images")
-    .select("id, url, version")
+    .select(IMAGE_DOWNLOAD_SELECT_WITH_STATUS)
     .eq("id", imageId)
     .eq("project_id", projectId)
     .maybeSingle();
 
-  if (imageError) throw imageError;
-  const image = imageData as Pick<ImageRow, "id" | "url" | "version"> | null;
+  let image: Pick<ImageRow, "id" | "url" | "status" | "version"> | null = null;
+
+  if (imageError) {
+    if (!isMissingImageStatusColumnError(imageError)) throw imageError;
+
+    const {
+      data: fallbackImageData,
+      error: fallbackImageError,
+    } = await supabase
+      .from("images")
+      .select(IMAGE_DOWNLOAD_SELECT_WITHOUT_STATUS)
+      .eq("id", imageId)
+      .eq("project_id", projectId)
+      .maybeSingle();
+
+    if (fallbackImageError) throw fallbackImageError;
+    image = fallbackImageData
+      ? ({
+          ...(fallbackImageData as Pick<ImageRow, "id" | "url" | "version">),
+          status: "in_review",
+        } satisfies Pick<ImageRow, "id" | "url" | "status" | "version">)
+      : null;
+  } else {
+    image = imageData as Pick<ImageRow, "id" | "url" | "status" | "version"> | null;
+  }
+
   if (!image) throw new Error("Image not found.");
+  if (normalizeImageStatus(image.status) !== "approved") {
+    throw new Error("Image is not approved for download.");
+  }
 
   const extension = extensionFromUrl(image.url);
   const filename = `${sanitizeFilename(project.name)}-v${image.version}-${image.id.slice(0, 8)}${extension}`;
@@ -966,4 +1145,31 @@ export async function getProjectImageDownloadAsset(
     filename,
     url: image.url,
   };
+}
+
+export async function updateProjectImageStatus(
+  projectId: string,
+  imageId: string,
+  status: ProjectStatus,
+) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("images")
+    .update({ status })
+    .eq("id", imageId)
+    .eq("project_id", projectId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingImageStatusColumnError(error)) {
+      throw buildImageStatusMigrationError();
+    }
+    throw error;
+  }
+  if (!data) throw new Error("Image not found.");
+
+  const project = await getProjectFeedbackProject(projectId);
+  if (!project) throw new Error("Project not found.");
+  return project;
 }

@@ -5,6 +5,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useTypingPlaceholder } from "@/components/useTypingPlaceholder";
 import type { ProjectSummary, ProjectViewerRole } from "@/lib/projectFeedbackTypes";
 import {
   getProjectViewerRoleStorageKey,
@@ -17,6 +18,9 @@ type MyProjectDirectoryProps = {
 
 export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
   const router = useRouter();
+  const passwordPlaceholder = useTypingPlaceholder(
+    "use the team link to skip the parcel number.",
+  );
   const [passwords, setPasswords] = useState<Record<string, string>>({});
   const [emails, setEmails] = useState<Record<string, string>>({});
   const [modes, setModes] = useState<Record<string, ProjectViewerRole | null>>({});
@@ -39,7 +43,7 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
     }
 
     if (mode === "team" && !password) {
-      setErrorMessage("Enter the project password to continue as a team member.");
+      setErrorMessage("Enter the parcel number to continue as a team member.");
       return;
     }
 
@@ -280,7 +284,7 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
 
                         {mode === "team" ? (
                           <label className="projectFeedbackField">
-                            <span>Password</span>
+                            <span>Parcel Number</span>
                             <input
                               className="projectFeedbackInput"
                               type="password"
@@ -291,7 +295,7 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
                                   [project.id]: event.target.value,
                                 }))
                               }
-                              placeholder="Use the team link to skip the password if you don't have it."
+                              placeholder={passwordPlaceholder}
                               autoComplete="current-password"
                               required
                             />

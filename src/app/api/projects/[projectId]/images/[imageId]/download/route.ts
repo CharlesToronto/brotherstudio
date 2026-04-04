@@ -1,10 +1,7 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import {
-  canProjectViewerRead,
   getProjectImageDownloadAsset,
-  getProjectViewerCookieName,
   isProjectFeedbackConfigured,
 } from "@/lib/projectFeedbackStore";
 
@@ -25,18 +22,6 @@ export async function GET(
   }
 
   const { projectId, imageId } = await params;
-  const cookieStore = await cookies();
-  const isAuthorized = await canProjectViewerRead(
-    projectId,
-    cookieStore.get(getProjectViewerCookieName(projectId))?.value,
-  );
-
-  if (!isAuthorized) {
-    return NextResponse.json(
-      { error: "Open the project with your email before downloading images." },
-      { status: 403 },
-    );
-  }
 
   try {
     const asset = await getProjectImageDownloadAsset(projectId, imageId);

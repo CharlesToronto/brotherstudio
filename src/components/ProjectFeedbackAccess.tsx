@@ -3,6 +3,7 @@
 import { useEffect, useEffectEvent, useState } from "react";
 
 import { ProjectFeedbackWorkspace } from "@/components/ProjectFeedbackWorkspace";
+import { useTypingPlaceholder } from "@/components/useTypingPlaceholder";
 import type {
   ProjectFeedbackProject,
   ProjectViewerRole,
@@ -26,6 +27,9 @@ export function ProjectFeedbackAccess({
   initialRole,
   forceVisitorEntry = false,
 }: ProjectFeedbackAccessProps) {
+  const passwordPlaceholder = useTypingPlaceholder(
+    "use the team link to skip the parcel number.",
+  );
   const [mode, setMode] = useState<ProjectViewerRole>(
     forceVisitorEntry ? "visitor" : initialRole,
   );
@@ -279,13 +283,13 @@ export function ProjectFeedbackAccess({
 
           {mode === "team" ? (
             <label className="projectFeedbackField">
-              <span>Password</span>
+              <span>Parcel Number</span>
               <input
                 className="projectFeedbackInput"
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Use the team link to skip the password if you don't have it."
+                placeholder={passwordPlaceholder}
                 autoComplete="current-password"
                 required
               />

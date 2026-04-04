@@ -31,7 +31,7 @@ export async function POST(
 
   if (!isAuthorized) {
     return NextResponse.json(
-      { error: "Project password required." },
+      { error: "Parcel number required." },
       { status: 403 },
     );
   }

@@ -33,7 +33,7 @@ export async function POST(
     const isValid = await verifyProjectAccessPassword(projectId, password);
     if (!isValid) {
       return NextResponse.json(
-        { error: "Invalid project password." },
+        { error: "Invalid parcel number." },
         { status: 403 },
       );
     }

@@ -57,7 +57,7 @@ export async function POST(
 
       if (!isAuthorized) {
         return NextResponse.json(
-          { error: "Invalid project password." },
+          { error: "Invalid parcel number." },
           { status: 403 },
         );
       }

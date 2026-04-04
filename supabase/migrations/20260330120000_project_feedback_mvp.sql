@@ -27,9 +27,24 @@ create table if not exists public.images (
   project_id uuid not null references public.projects(id) on delete cascade,
   project_name text not null,
   url text not null,
+  status text not null default 'in_review',
   version integer not null,
   created_at timestamptz not null default now()
 );
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'images_status_check'
+  ) then
+    alter table public.images
+      add constraint images_status_check
+      check (status in ('in_review', 'approved'));
+  end if;
+end
+$$;
 
 create table if not exists public.comments (
   id uuid primary key default gen_random_uuid(),

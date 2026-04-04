@@ -61,7 +61,6 @@ export default async function AdminClientProjectDetailPage({
       <ProjectFeedbackWorkspace
         initialProject={project}
         allowImageManagement
-        projectPath={`/mystudio/${projectId}`}
         adminAccent
       />
     </main>
