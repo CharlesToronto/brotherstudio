@@ -17,7 +17,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const locale = await resolveLocaleParam(params);
-  const pathname = "/team/client";
+  const pathname = "/team/call";
 
   return {
     title: locale === "fr" ? "Equipe" : "Team",

@@ -115,30 +115,6 @@ export function ProjectFeedbackAccess({
 
     setMode(nextRole);
     setAccessRole(nextRole);
-
-    if (!savedEmail) {
-      setIsLoading(false);
-      return;
-    }
-
-    if (forceVisitorEntry) {
-      setEmail(savedEmail);
-      setIsLoading(false);
-      return;
-    }
-
-    if (savedRole === "visitor") {
-      setEmail(savedEmail);
-      await requestAccess(savedEmail, "visitor", "", false);
-      return;
-    }
-
-    if (initialUnlocked) {
-      setEmail(savedEmail);
-      await requestAccess(savedEmail, "team", "", false);
-      return;
-    }
-
     setEmail(savedEmail);
     setIsLoading(false);
   });

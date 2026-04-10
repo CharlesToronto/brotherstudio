@@ -7,13 +7,14 @@ import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
 
 const navItems = [
+  { key: "call", label: "Call" },
   { key: "client", label: "Client" },
   { key: "script", label: "Script" },
   { key: "note", label: "Note" },
 ] as const;
 
 export function TeamSectionNav({ locale }: { locale: Locale }) {
-  const activeSegment = useSelectedLayoutSegment() ?? "client";
+  const activeSegment = useSelectedLayoutSegment() ?? "call";
 
   return (
     <nav className="teamSidebarNav">

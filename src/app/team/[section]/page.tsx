@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { withLocalePath } from "@/lib/i18n";
 import { getPreferredRequestLocale } from "@/lib/requestLocale";
 
-const validSections = new Set(["client", "script", "note"]);
+const validSections = new Set(["call", "client", "script", "note"]);
 
 type LegacyTeamSectionRedirectPageProps = {
   params: Promise<{ section: string }>;

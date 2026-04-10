@@ -5,5 +5,5 @@ import { getPreferredRequestLocale } from "@/lib/requestLocale";
 
 export default async function LegacyTeamRedirectPage() {
   const locale = await getPreferredRequestLocale();
-  redirect(withLocalePath(locale, "/team/client"));
+  redirect(withLocalePath(locale, "/team/call"));
 }

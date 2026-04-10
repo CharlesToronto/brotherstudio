@@ -98,6 +98,7 @@ select:focus-visible {
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  transition: color 180ms ease;
 }
 
 .themeToggle {
@@ -116,6 +117,35 @@ select:focus-visible {
 
 .siteNavLink[aria-current="page"] {
   font-weight: 700;
+}
+
+.siteNavLink[data-nav-key="gallery"] {
+  --nav-hover-color: #2f6df6;
+}
+
+.siteNavLink[data-nav-key="mystudio"] {
+  --nav-hover-color: #148064;
+}
+
+.siteNavLink[data-nav-key="services"] {
+  --nav-hover-color: #be5c1f;
+}
+
+.siteNavLink[data-nav-key="about"] {
+  --nav-hover-color: #9b3f61;
+}
+
+.siteNavLink[data-nav-key="contact"] {
+  --nav-hover-color: #8a4e12;
+}
+
+.siteNavLink[data-nav-key="instagram"] {
+  --nav-hover-color: #d14569;
+}
+
+.siteNavLink[data-nav-key]:hover,
+.siteNavLink[data-nav-key]:focus-visible {
+  color: var(--nav-hover-color, inherit) !important;
 }
 
 .siteMain {
@@ -406,9 +436,9 @@ html[data-theme="dark"] .adminLockOverlay {
 }
 
 .galleryFilterButton {
-  border: 1px solid rgb(127 127 127 / 0.35);
-  background: transparent;
-  color: inherit;
+  border: 1px solid rgb(127 127 127 / 0.2);
+  background: #fff;
+  color: #959595;
   font: inherit;
   flex: 0 0 auto;
   font-size: 10px;
@@ -417,12 +447,22 @@ html[data-theme="dark"] .adminLockOverlay {
   text-transform: uppercase;
   padding: 8px 12px;
   cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
 }
 
 .galleryFilterButton[data-active="true"] {
-  border-color: var(--foreground);
-  background: var(--foreground);
-  color: var(--background);
+  border-color: rgb(127 127 127 / 0.3);
+  background: #fff;
+  color: #6f6f6f;
+}
+
+.galleryFilterButton:hover,
+.galleryFilterButton:focus-visible {
+  border-color: #111;
+  color: #111;
 }
 
 @media (max-width: 1100px) {
@@ -1315,6 +1355,129 @@ html[data-theme="dark"] .contactForm {
   gap: 5px;
 }
 
+.teamGuidedScriptList {
+  display: grid;
+  gap: 12px;
+}
+
+.teamGuidedScriptCard {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgb(127 127 127 / 0.18);
+  background: var(--team-script-surface, #f8fbff);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.32);
+}
+
+.teamGuidedScriptCard:nth-child(3n + 1) {
+  --team-script-accent: #2f6df6;
+  --team-script-surface: #f4f8ff;
+  --team-script-intro: #edf4ff;
+}
+
+.teamGuidedScriptCard:nth-child(3n + 2) {
+  --team-script-accent: #13806a;
+  --team-script-surface: #f3fbf8;
+  --team-script-intro: #eaf7f1;
+}
+
+.teamGuidedScriptCard:nth-child(3n + 3) {
+  --team-script-accent: #ba6f21;
+  --team-script-surface: #fff8f1;
+  --team-script-intro: #fff1df;
+}
+
+.teamGuidedScriptHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.teamGuidedScriptTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--team-script-accent, #2f6df6);
+}
+
+.teamGuidedScriptCard[data-kind="decision"] .teamGuidedScriptTitle {
+  color: #2f6df6;
+}
+
+.teamGuidedScriptIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid rgb(127 127 127 / 0.16);
+  background: rgb(255 255 255 / 0.72);
+  color: rgb(17 17 17 / 0.42);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.teamGuidedScriptIntro {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  background: var(--team-script-intro, #edf4ff);
+  border-left: 3px solid var(--team-script-accent, #2f6df6);
+}
+
+.teamGuidedScriptDecision {
+  display: grid;
+  gap: 16px;
+}
+
+.teamGuidedScriptQuestion {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #111;
+}
+
+.teamGuidedScriptAnswers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.teamGuidedScriptAnswer {
+  background: rgb(255 255 255 / 0.82);
+  border-color: rgb(127 127 127 / 0.24);
+}
+
+.teamGuidedScriptAnswer[data-active="true"] {
+  border-color: var(--team-script-accent, var(--foreground));
+  background: var(--team-script-accent, var(--foreground));
+  color: #fff;
+}
+
+.teamGuidedScriptOutcome {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgb(127 127 127 / 0.18);
+  background: rgb(255 255 255 / 0.82);
+}
+
+.teamGuidedScriptOutcome[data-answer="yes"] {
+  border-color: rgb(19 128 106 / 0.24);
+  background: #f2fbf7;
+}
+
+.teamGuidedScriptOutcome[data-answer="no"] {
+  border-color: rgb(186 111 33 / 0.24);
+  background: #fff7ef;
+}
+
 .teamField {
   display: grid;
   gap: 6px;
@@ -1469,6 +1632,90 @@ html[data-theme="dark"] .contactForm {
   gap: 12px;
 }
 
+.teamCallToolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.teamCallToolbarButton {
+  width: auto;
+}
+
+.teamCallClientRail {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.teamCallClientTabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.teamCallClientTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.teamCallClientTab {
+  border: 1px solid rgb(127 127 127 / 0.35);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.teamCallClientTab[data-active="true"] {
+  border-color: var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.teamCallClientForm {
+  border-top: 1px solid rgb(127 127 127 / 0.2);
+  padding-top: 14px;
+}
+
+.teamCallClientFormActions {
+  display: flex;
+  align-items: end;
+}
+
+.teamCallClientPanel {
+  gap: 12px;
+}
+
+.teamCallClientGrid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.teamCallColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.teamCallNoteFields {
+  display: grid;
+  gap: 12px;
+}
+
+.teamCallNotesTextarea {
+  min-height: 240px;
+}
+
 @media (max-width: 980px) {
   .teamShell {
     grid-template-columns: minmax(0, 1fr);
@@ -1479,11 +1726,16 @@ html[data-theme="dark"] .contactForm {
   }
 
   .teamSidebarNav {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .teamClientGrid,
   .teamClientForm {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .teamCallClientGrid,
+  .teamCallColumns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1493,9 +1745,19 @@ html[data-theme="dark"] .contactForm {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .teamCallToolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .teamInlineForm,
   .teamClientGrid,
-  .teamClientForm {
+  .teamClientForm,
+  .teamCallClientGrid,
+  .teamCallColumns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .teamGuidedScriptAnswers {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -1505,9 +1767,10 @@ html[data-theme="dark"] .contactForm {
     flex-direction: column;
   }
 
-.teamButton,
-.teamGhostButton {
-  width: 100%;
+  .teamButton,
+  .teamGhostButton,
+  .teamCallToolbarButton {
+    width: 100%;
   }
 }
 

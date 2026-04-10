@@ -11,5 +11,5 @@ export default async function LocalizedTeamPage({
   params,
 }: LocaleTeamPageProps) {
   const locale = await resolveLocaleParam(params);
-  redirect(withLocalePath(locale, "/team/client"));
+  redirect(withLocalePath(locale, "/team/call"));
 }

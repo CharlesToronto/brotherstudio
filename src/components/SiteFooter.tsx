@@ -33,7 +33,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   ];
   const accessLinks = [{ label: "myStudio", href: "/mystudio" }];
   const adminLinks = [
-    { label: "Team", href: withLocalePath(locale, "/team/client") },
+    { label: "Team", href: withLocalePath(locale, "/team/call") },
     { label: "myStudio Admin", href: "/admin/client-projects" },
   ];
   const contactLinks = [
