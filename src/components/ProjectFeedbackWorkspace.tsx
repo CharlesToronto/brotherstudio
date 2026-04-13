@@ -8,11 +8,15 @@ import type {
   ChangeEvent,
   Dispatch,
   MouseEvent,
+  PointerEvent,
   SetStateAction,
 } from "react";
 
 import type {
   ProjectFeedbackComment,
+  ProjectFeedbackDrawingElement,
+  ProjectFeedbackDrawingLayer,
+  ProjectFeedbackDrawingPoint,
   ProjectFeedbackProject,
   ProjectFeedbackImage,
   ProjectFeedbackTeamMessage,
@@ -56,7 +60,24 @@ type ImageDimensions = {
 };
 
 type WorkspaceTab = "review" | "approved";
-type ImageSidePanelTab = "requests" | "chat";
+type ImageSidePanelTab = "requests" | "chat" | "drawing";
+type DrawingTool = "freehand" | "line" | "rectangle" | "circle" | "eraser";
+type ShapeDrawingTool = Exclude<DrawingTool, "eraser">;
+
+type DrawingStrokeDraft =
+  | {
+      type: "freehand";
+      color: string;
+      strokeWidth: number;
+      points: ProjectFeedbackDrawingPoint[];
+    }
+  | {
+      type: "line" | "rectangle" | "circle";
+      color: string;
+      strokeWidth: number;
+      start: ProjectFeedbackDrawingPoint;
+      end: ProjectFeedbackDrawingPoint;
+    };
 
 type VersionImageEntry = {
   image: ProjectFeedbackImage;
@@ -71,7 +92,7 @@ type NumberedVersionGroup = {
 const commentColorStorageKey = "bs_project_feedback_color";
 const defaultCommentColor = "#d88fa2";
 const teamChatPollIntervalMs = 1500;
-const vercelFunctionPayloadLimitBytes = 4.5 * 1024 * 1024;
+const vercelFunctionPayloadLimitBytes = 8 * 1024 * 1024;
 const commentColorOptions = [
   "#d88fa2",
   "#e7a27d",
@@ -96,8 +117,22 @@ const teamChatBubblePalettes = [
   { background: "#eef8fb", border: "#b9dce7", accent: "#4d95ac" },
 ];
 
+const drawingStrokeWidths = [2, 4, 6, 8];
+const emptyCountBadgeStyle: CSSProperties = {
+  background: "#ececec",
+  color: "#7a7a7a",
+};
+
 function clampCoordinate(value: number) {
   return Math.min(Math.max(value, 0), 1);
+}
+
+function createId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function hashString(value: string) {
@@ -118,6 +153,132 @@ function getTeamChatBubblePalette(author: string) {
     ] ?? teamChatBubblePalettes[0];
 
   return palette;
+}
+
+function drawingPointDistance(
+  first: ProjectFeedbackDrawingPoint,
+  second: ProjectFeedbackDrawingPoint,
+) {
+  return Math.hypot(first.x - second.x, first.y - second.y);
+}
+
+function distanceToSegment(
+  point: ProjectFeedbackDrawingPoint,
+  start: ProjectFeedbackDrawingPoint,
+  end: ProjectFeedbackDrawingPoint,
+) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+
+  if (dx === 0 && dy === 0) {
+    return drawingPointDistance(point, start);
+  }
+
+  const projection =
+    ((point.x - start.x) * dx + (point.y - start.y) * dy) /
+    (dx * dx + dy * dy);
+  const clampedProjection = Math.min(Math.max(projection, 0), 1);
+
+  return Math.hypot(
+    point.x - (start.x + clampedProjection * dx),
+    point.y - (start.y + clampedProjection * dy),
+  );
+}
+
+function getDrawingHitThreshold(strokeWidth: number) {
+  return Math.max(0.014, strokeWidth / 260);
+}
+
+function isPointNearDrawingElement(
+  point: ProjectFeedbackDrawingPoint,
+  element: ProjectFeedbackDrawingElement,
+) {
+  const threshold = getDrawingHitThreshold(element.strokeWidth);
+
+  if (element.type === "freehand") {
+    for (let index = 0; index < element.points.length - 1; index += 1) {
+      if (
+        distanceToSegment(point, element.points[index], element.points[index + 1]) <=
+        threshold
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  if (element.type === "line") {
+    return distanceToSegment(point, element.start, element.end) <= threshold;
+  }
+
+  if (element.type === "rectangle") {
+    const minX = Math.min(element.start.x, element.end.x) - threshold;
+    const maxX = Math.max(element.start.x, element.end.x) + threshold;
+    const minY = Math.min(element.start.y, element.end.y) - threshold;
+    const maxY = Math.max(element.start.y, element.end.y) + threshold;
+
+    return point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY;
+  }
+
+  const centerX = (element.start.x + element.end.x) / 2;
+  const centerY = (element.start.y + element.end.y) / 2;
+  const radiusX = Math.abs(element.end.x - element.start.x) / 2;
+  const radiusY = Math.abs(element.end.y - element.start.y) / 2;
+
+  if (radiusX < 0.001 || radiusY < 0.001) {
+    return drawingPointDistance(point, { x: centerX, y: centerY }) <= threshold;
+  }
+
+  const normalizedDistance =
+    ((point.x - centerX) ** 2) / (radiusX + threshold) ** 2 +
+    ((point.y - centerY) ** 2) / (radiusY + threshold) ** 2;
+
+  return normalizedDistance <= 1.08;
+}
+
+function getSvgCoordinateValue(value: number) {
+  return Math.round(clampCoordinate(value) * 1000);
+}
+
+function getDrawingPointFromEvent(
+  event: PointerEvent<SVGSVGElement>,
+) {
+  const rect = event.currentTarget.getBoundingClientRect();
+  return {
+    x: clampCoordinate((event.clientX - rect.left) / rect.width),
+    y: clampCoordinate((event.clientY - rect.top) / rect.height),
+  };
+}
+
+function createDrawingElementFromDraft(
+  draft: DrawingStrokeDraft,
+): ProjectFeedbackDrawingElement | null {
+  if (draft.type === "freehand") {
+    if (draft.points.length < 2) return null;
+    return {
+      id: createId(),
+      type: "freehand",
+      color: draft.color,
+      strokeWidth: draft.strokeWidth,
+      points: draft.points,
+    };
+  }
+
+  if (
+    Math.abs(draft.start.x - draft.end.x) < 0.001 &&
+    Math.abs(draft.start.y - draft.end.y) < 0.001
+  ) {
+    return null;
+  }
+
+  return {
+    id: createId(),
+    type: draft.type,
+    color: draft.color,
+    strokeWidth: draft.strokeWidth,
+    start: draft.start,
+    end: draft.end,
+  };
 }
 
 function formatTimestamp(value: string) {
@@ -147,8 +308,16 @@ function imageDimensionsLabel(dimensions: ImageDimensions | null) {
   return `${dimensions.width} × ${dimensions.height}px`;
 }
 
-function getUploadLimitError(fileName: string) {
-  return `${fileName} exceeds the 4.5 MB Vercel upload limit. Export a lighter image before uploading.`;
+function formatFileSizeMb(bytes: number) {
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function getUploadLimitError(file: File) {
+  return `${file.name} is ${formatFileSizeMb(file.size)}. The current upload guard is 8 MB per image.`;
+}
+
+function getUploadPayloadRejectedError(file: File) {
+  return `${file.name} is ${formatFileSizeMb(file.size)}. Vercel rejected the upload request before the server processed it.`;
 }
 
 function findImageCommentCount(image: ProjectFeedbackImage) {
@@ -200,8 +369,7 @@ export function ProjectFeedbackWorkspace({
     );
     const reviewCount = initialProject.versions.reduce(
       (total, versionGroup) =>
-        total +
-        versionGroup.images.filter((image) => image.status !== "approved").length,
+        total + versionGroup.images.length,
       0,
     );
 
@@ -257,15 +425,7 @@ export function ProjectFeedbackWorkspace({
   }, [project.versions]);
 
   const reviewVersions = useMemo(
-    () =>
-      numberedVersions
-        .map((versionGroup) => ({
-          version: versionGroup.version,
-          images: versionGroup.images.filter(
-            ({ image }) => image.status !== "approved",
-          ),
-        }))
-        .filter((versionGroup) => versionGroup.images.length > 0),
+    () => numberedVersions,
     [numberedVersions],
   );
 
@@ -342,13 +502,18 @@ export function ProjectFeedbackWorkspace({
         : busyImageStatus === "approved"
           ? "Approving image..."
           : busyImageStatus === "in_review"
-            ? "Moving image back to review..."
+            ? "Removing approved state..."
             : isDownloadingApproved
               ? "Preparing downloads..."
-        : "";
+              : "";
   const canApprove = allowImageManagement || canInteract;
   const showCopyLink = allowImageManagement || viewerRole === "team";
   const showShareLink = !allowImageManagement && viewerRole === "team";
+  const showParcelNumberInTitle =
+    Boolean(project.accessPassword) && (allowImageManagement || canInteract);
+  const projectTitle = showParcelNumberInTitle
+    ? `${project.name} - ${project.accessPassword}`
+    : project.name;
 
   const resetFeedbackState = (nextProject?: ProjectFeedbackProject) => {
     if (nextProject) {
@@ -444,7 +609,7 @@ export function ProjectFeedbackWorkspace({
       );
 
       if (oversizedFile) {
-        throw new Error(getUploadLimitError(oversizedFile.name));
+        throw new Error(getUploadLimitError(oversizedFile));
       }
 
       let targetVersion: number | null = null;
@@ -464,7 +629,7 @@ export function ProjectFeedbackWorkspace({
         });
 
         if (response.status === 413) {
-          throw new Error(getUploadLimitError(file.name));
+          throw new Error(getUploadPayloadRejectedError(file));
         }
 
         const payload = response.ok
@@ -559,7 +724,7 @@ export function ProjectFeedbackWorkspace({
         ? `/api/projects/${project.id}/images`
         : `/api/project/${project.id}/images`;
       if (file.size > vercelFunctionPayloadLimitBytes) {
-        throw new Error(getUploadLimitError(file.name));
+        throw new Error(getUploadLimitError(file));
       }
 
       const formData = new FormData();
@@ -571,7 +736,7 @@ export function ProjectFeedbackWorkspace({
       });
 
       if (response.status === 413) {
-        throw new Error(getUploadLimitError(file.name));
+        throw new Error(getUploadPayloadRejectedError(file));
       }
 
       const payload = response.ok
@@ -676,8 +841,8 @@ export function ProjectFeedbackWorkspace({
       resetFeedbackState(payload.project);
       setStatusMessage(
         status === "approved"
-          ? "Image moved to approved images."
-          : "Image moved back to review.",
+          ? "Image approved. It remains visible in review and approved images."
+          : "Approved state removed. The image now only appears in review.",
       );
     } catch (error) {
       setErrorMessage(
@@ -887,7 +1052,7 @@ export function ProjectFeedbackWorkspace({
         <div className="projectFeedbackHeaderTop">
           <div className="projectFeedbackIntro">
             <p className="projectFeedbackEyebrow">Project Review</p>
-            <h1 className="projectFeedbackTitle">{project.name}</h1>
+            <h1 className="projectFeedbackTitle">{projectTitle}</h1>
           </div>
 
           <div className="projectFeedbackActions">
@@ -982,7 +1147,12 @@ export function ProjectFeedbackWorkspace({
               onClick={() => setActiveWorkspaceTab("review")}
             >
               In Review
-              <span>{reviewImageCount}</span>
+              <span
+                data-empty={reviewImageCount === 0 ? "true" : "false"}
+                style={reviewImageCount === 0 ? emptyCountBadgeStyle : undefined}
+              >
+                {reviewImageCount}
+              </span>
             </button>
             <button
               className="projectFeedbackWorkspaceTab"
@@ -993,7 +1163,12 @@ export function ProjectFeedbackWorkspace({
               onClick={() => setActiveWorkspaceTab("approved")}
             >
               Approved Images
-              <span>{approvedImageCount}</span>
+              <span
+                data-empty={approvedImageCount === 0 ? "true" : "false"}
+                style={approvedImageCount === 0 ? emptyCountBadgeStyle : undefined}
+              >
+                {approvedImageCount}
+              </span>
             </button>
           </div>
 
@@ -1167,6 +1342,7 @@ type ProjectFeedbackImageCardProps = {
 
 type ProjectFeedbackEditRequestsPanelContentProps = {
   image: ProjectFeedbackImage;
+  isApprovedImage: boolean;
   activeCommentId: string | null;
   editingCommentForImage: EditingComment | null;
   allowCommentManagement: boolean;
@@ -1183,6 +1359,7 @@ type ProjectFeedbackEditRequestsPanelContentProps = {
 
 function ProjectFeedbackEditRequestsPanelContent({
   image,
+  isApprovedImage,
   activeCommentId,
   editingCommentForImage,
   allowCommentManagement,
@@ -1350,7 +1527,9 @@ function ProjectFeedbackEditRequestsPanelContent({
         <p className="projectFeedbackCommentsMeta">
           {canInteract
             ? "Click on the image to add the first edit request."
-            : "Visitor mode is view-only for edit requests."}
+            : isApprovedImage
+              ? "Approved images stay visible here as read-only review history."
+              : "Visitor mode is view-only for edit requests."}
         </p>
       )}
     </aside>
@@ -1393,6 +1572,7 @@ function ProjectFeedbackImageCard({
   onCommentDelete,
   onCommentSelect,
 }: ProjectFeedbackImageCardProps) {
+  const isApprovedImage = image.status === "approved";
   const draftForImage = draft?.imageId === image.id ? draft : null;
   const editingCommentForImage =
     editingComment?.imageId === image.id ? editingComment : null;
@@ -1401,8 +1581,40 @@ function ProjectFeedbackImageCard({
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
   const dimensionsLabel = imageDimensionsLabel(dimensions);
   const hasTeamChat = showTeamChat;
-  const canPost = canInteract && viewerEmail.length > 0;
+  const canInteractWithImage = canInteract && !isApprovedImage;
+  const canManageCommentsForImage = allowCommentManagement && !isApprovedImage;
+  const canPost = canInteractWithImage && viewerEmail.length > 0;
+  const drawingRouteBase = showImageActions
+    ? `/api/projects/${projectId}/images/${image.id}/drawings`
+    : `/api/project/${projectId}/images/${image.id}/drawings`;
+  const teamChatRouteBase = showImageActions
+    ? `/api/projects/${projectId}/images/${image.id}/team-chat`
+    : `/api/project/${projectId}/images/${image.id}/team-chat`;
+  const [drawingLayer, setDrawingLayer] = useState<ProjectFeedbackDrawingLayer | null>(
+    null,
+  );
+  const [drawingElements, setDrawingElements] = useState<ProjectFeedbackDrawingElement[]>(
+    [],
+  );
+  const [drawingHistory, setDrawingHistory] = useState<
+    ProjectFeedbackDrawingElement[][]
+  >([]);
+  const [drawingFuture, setDrawingFuture] = useState<
+    ProjectFeedbackDrawingElement[][]
+  >([]);
+  const [drawingDraft, setDrawingDraft] = useState<DrawingStrokeDraft | null>(null);
+  const [drawingTool, setDrawingTool] = useState<DrawingTool>("freehand");
+  const [drawingColor, setDrawingColor] = useState(defaultCommentColor);
+  const [drawingStrokeWidth, setDrawingStrokeWidth] = useState(4);
+  const [drawingErrorMessage, setDrawingErrorMessage] = useState("");
+  const [isLoadingDrawingLayer, setIsLoadingDrawingLayer] = useState(true);
+  const [isSavingDrawingLayer, setIsSavingDrawingLayer] = useState(false);
   const downloadHref = `/api/project/${projectId}/images/${image.id}/download`;
+  const hasDrawingTab = true;
+  const isDrawingInteractionEnabled =
+    activeSidePanel === "drawing" && canInteractWithImage && hasDrawingTab;
+  const hasDrawingChanges =
+    JSON.stringify(drawingLayer?.elements ?? []) !== JSON.stringify(drawingElements);
   const draftHorizontalOffset = draftForImage
     ? draftForImage.x > 0.72
       ? "calc(-100% - 12px)"
@@ -1423,11 +1635,224 @@ function ProjectFeedbackImageCard({
     onReplaceImage(image.id, file);
   };
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDrawingLayer = async () => {
+      setIsLoadingDrawingLayer(true);
+      setDrawingErrorMessage("");
+
+      try {
+        const response = await fetch(drawingRouteBase, {
+          cache: "no-store",
+        });
+        const payload = (await response.json().catch(() => null)) as
+          | { layer?: ProjectFeedbackDrawingLayer; error?: string }
+          | null;
+
+        if (!response.ok || !payload?.layer) {
+          throw new Error(payload?.error ?? "Failed to load drawings.");
+        }
+
+        if (cancelled) return;
+        setDrawingLayer(payload.layer);
+        setDrawingElements(payload.layer.elements);
+        setDrawingHistory([]);
+        setDrawingFuture([]);
+        setDrawingDraft(null);
+      } catch (error) {
+        if (cancelled) return;
+        setDrawingErrorMessage(
+          error instanceof Error ? error.message : "Failed to load drawings.",
+        );
+      } finally {
+        if (!cancelled) {
+          setIsLoadingDrawingLayer(false);
+        }
+      }
+    };
+
+    void loadDrawingLayer();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [drawingRouteBase]);
+
+  useEffect(() => {
+    if (hasDrawingTab || activeSidePanel !== "drawing") return;
+    setActiveSidePanel("requests");
+  }, [activeSidePanel, hasDrawingTab]);
+
+  const commitDrawingElements = (next: ProjectFeedbackDrawingElement[]) => {
+    setDrawingHistory((current) => [...current, drawingElements]);
+    setDrawingFuture([]);
+    setDrawingElements(next);
+  };
+
+  const handleEraseDrawing = (point: ProjectFeedbackDrawingPoint) => {
+    const nextElements = [...drawingElements];
+    for (let index = nextElements.length - 1; index >= 0; index -= 1) {
+      if (isPointNearDrawingElement(point, nextElements[index])) {
+        nextElements.splice(index, 1);
+        commitDrawingElements(nextElements);
+        return;
+      }
+    }
+  };
+
+  const handleDrawingPointerDown = (
+    event: PointerEvent<SVGSVGElement>,
+  ) => {
+    if (!isDrawingInteractionEnabled) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const point = getDrawingPointFromEvent(event);
+
+    if (drawingTool === "eraser") {
+      handleEraseDrawing(point);
+      return;
+    }
+
+    const nextTool = drawingTool as ShapeDrawingTool;
+    const target = event.currentTarget;
+    target.setPointerCapture(event.pointerId);
+
+    if (nextTool === "freehand") {
+      setDrawingDraft({
+        type: "freehand",
+        color: drawingColor,
+        strokeWidth: drawingStrokeWidth,
+        points: [point],
+      });
+      return;
+    }
+
+    setDrawingDraft({
+      type: nextTool,
+      color: drawingColor,
+      strokeWidth: drawingStrokeWidth,
+      start: point,
+      end: point,
+    });
+  };
+
+  const handleDrawingPointerMove = (
+    event: PointerEvent<SVGSVGElement>,
+  ) => {
+    if (!drawingDraft) return;
+
+    const point = getDrawingPointFromEvent(event);
+    setDrawingDraft((current) => {
+      if (!current) return current;
+
+      if (current.type === "freehand") {
+        return {
+          ...current,
+          points: [...current.points, point],
+        };
+      }
+
+      return {
+        ...current,
+        end: point,
+      };
+    });
+  };
+
+  const handleDrawingPointerUp = (
+    event: PointerEvent<SVGSVGElement>,
+  ) => {
+    if (!drawingDraft) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    const nextElement = createDrawingElementFromDraft(drawingDraft);
+    setDrawingDraft(null);
+
+    if (!nextElement) return;
+    commitDrawingElements([...drawingElements, nextElement]);
+  };
+
+  const handleUndoDrawing = () => {
+    const previousElements = drawingHistory[drawingHistory.length - 1];
+    if (!previousElements) return;
+
+    setDrawingHistory((current) => current.slice(0, -1));
+    setDrawingFuture((current) => [...current, drawingElements]);
+    setDrawingElements(previousElements);
+    setDrawingDraft(null);
+  };
+
+  const handleRedoDrawing = () => {
+    const nextElements = drawingFuture[drawingFuture.length - 1];
+    if (!nextElements) return;
+
+    setDrawingFuture((current) => current.slice(0, -1));
+    setDrawingHistory((current) => [...current, drawingElements]);
+    setDrawingElements(nextElements);
+    setDrawingDraft(null);
+  };
+
+  const handleResetDrawingChanges = () => {
+    setDrawingElements(drawingLayer?.elements ?? []);
+    setDrawingHistory([]);
+    setDrawingFuture([]);
+    setDrawingDraft(null);
+    setDrawingErrorMessage("");
+  };
+
+  const handleSaveDrawingLayer = async () => {
+    if (!canInteractWithImage) return;
+
+    setIsSavingDrawingLayer(true);
+    setDrawingErrorMessage("");
+
+    try {
+      const response = await fetch(drawingRouteBase, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          viewerEmail,
+          elements: drawingElements,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { layer?: ProjectFeedbackDrawingLayer; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.layer) {
+        throw new Error(payload?.error ?? "Failed to save drawings.");
+      }
+
+      setDrawingLayer(payload.layer);
+      setDrawingElements(payload.layer.elements);
+      setDrawingHistory([]);
+      setDrawingFuture([]);
+      setDrawingDraft(null);
+    } catch (error) {
+      setDrawingErrorMessage(
+        error instanceof Error ? error.message : "Failed to save drawings.",
+      );
+    } finally {
+      setIsSavingDrawingLayer(false);
+    }
+  };
+
   return (
     <article
       className="projectFeedbackImageCard"
       data-team-chat={hasTeamChat ? "true" : "false"}
-      data-can-interact={canInteract ? "true" : "false"}
+      data-can-interact={canInteractWithImage ? "true" : "false"}
+      data-approved={isApprovedImage ? "true" : "false"}
     >
       <div className="projectFeedbackImageCardHeader">
         <div className="projectFeedbackImageCardCopy">
@@ -1447,10 +1872,14 @@ function ProjectFeedbackImageCard({
               <button
                 className="projectFeedbackMiniAction projectFeedbackMiniActionApprove"
                 type="button"
-                disabled={isStatusUpdating}
+                disabled={isStatusUpdating || isApprovedImage}
                 onClick={() => onApproveImage(image.id)}
               >
-                {isStatusUpdating ? "Approving..." : "Approve image"}
+                {isStatusUpdating
+                  ? "Approving..."
+                  : isApprovedImage
+                    ? "Approved"
+                    : "Approve image"}
               </button>
             ) : null}
             {showDownloadAction ? (
@@ -1491,9 +1920,10 @@ function ProjectFeedbackImageCard({
 
       <div
         className="projectFeedbackCanvas"
-        data-interactive={canInteract ? "true" : "false"}
+        data-interactive={canInteractWithImage ? "true" : "false"}
+        data-approved={isApprovedImage ? "true" : "false"}
         onClick={(event) => {
-          if (isBusy || !canInteract) return;
+          if (isBusy || !canInteractWithImage || isDrawingInteractionEnabled) return;
           onImageClick(image, event);
         }}
       >
@@ -1511,6 +1941,23 @@ function ProjectFeedbackImageCard({
           }}
           onError={() => setDimensions(null)}
         />
+
+        {isApprovedImage ? (
+          <div className="projectFeedbackApprovalWatermark" aria-hidden="true">
+            <span>Approved</span>
+          </div>
+        ) : null}
+
+        {hasDrawingTab ? (
+          <ProjectFeedbackDrawingCanvas
+            elements={drawingElements}
+            draft={drawingDraft}
+            interactive={isDrawingInteractionEnabled}
+            onPointerDown={handleDrawingPointerDown}
+            onPointerMove={handleDrawingPointerMove}
+            onPointerUp={handleDrawingPointerUp}
+          />
+        ) : null}
 
         {image.comments.map((comment, index) => (
           <ProjectFeedbackMarker
@@ -1539,8 +1986,10 @@ function ProjectFeedbackImageCard({
             }}
           >
             <div className="projectFeedbackIdentityTag">
-              {!canInteract
-                ? "Visitor mode is read-only for edit requests."
+              {!canInteractWithImage
+                ? isApprovedImage
+                  ? "Approved images stay visible here as read-only review history."
+                  : "Visitor mode is read-only for edit requests."
                 : viewerIdentityLabel
                 ? `Posting as ${viewerIdentityLabel}`
                 : "Open the project with your email to post an edit request."}
@@ -1619,7 +2068,12 @@ function ProjectFeedbackImageCard({
             onClick={() => setActiveSidePanel("requests")}
           >
             Edit Requests
-            <span>{image.comments.length}</span>
+            <span
+              data-empty={image.comments.length === 0 ? "true" : "false"}
+              style={image.comments.length === 0 ? emptyCountBadgeStyle : undefined}
+            >
+              {image.comments.length}
+            </span>
           </button>
           {hasTeamChat ? (
             <button
@@ -1633,16 +2087,35 @@ function ProjectFeedbackImageCard({
               Team Chat
             </button>
           ) : null}
+          {hasDrawingTab ? (
+            <button
+              className="projectFeedbackSidePanelTab"
+              type="button"
+              role="tab"
+              data-active={activeSidePanel === "drawing" ? "true" : "false"}
+              aria-selected={activeSidePanel === "drawing"}
+              onClick={() => setActiveSidePanel("drawing")}
+            >
+              Dessin
+              <span
+                data-empty={drawingElements.length === 0 ? "true" : "false"}
+                style={drawingElements.length === 0 ? emptyCountBadgeStyle : undefined}
+              >
+                {drawingElements.length}
+              </span>
+            </button>
+          ) : null}
         </div>
 
         <div className="projectFeedbackSidePanelBody">
           <div hidden={activeSidePanel !== "requests"}>
             <ProjectFeedbackEditRequestsPanelContent
               image={image}
+              isApprovedImage={isApprovedImage}
               activeCommentId={activeCommentId}
               editingCommentForImage={editingCommentForImage}
-              allowCommentManagement={allowCommentManagement}
-              canInteract={canInteract}
+              allowCommentManagement={canManageCommentsForImage}
+              canInteract={canInteractWithImage}
               busyCommentId={busyCommentId}
               busyCommentAction={busyCommentAction}
               onCommentSelect={onCommentSelect}
@@ -1657,13 +2130,43 @@ function ProjectFeedbackImageCard({
           {hasTeamChat && activeSidePanel === "chat" ? (
             <div>
               <ProjectFeedbackTeamChat
-                projectId={projectId}
-                imageId={image.id}
+                teamChatRouteBase={teamChatRouteBase}
                 viewerEmail={viewerEmail}
                 viewerIdentityLabel={viewerIdentityLabel}
-                canInteract={canInteract}
+                isApprovedImage={isApprovedImage}
+                canInteract={canInteractWithImage}
                 viewerRole={viewerRole}
                 detailsMode={false}
+              />
+            </div>
+          ) : null}
+
+          {hasDrawingTab && activeSidePanel === "drawing" ? (
+            <div>
+              <ProjectFeedbackDrawingPanelContent
+                isLoading={isLoadingDrawingLayer}
+                isSaving={isSavingDrawingLayer}
+                canInteract={canInteractWithImage}
+                isApprovedImage={isApprovedImage}
+                viewerIdentityLabel={viewerIdentityLabel}
+                viewerRole={viewerRole}
+                selectedTool={drawingTool}
+                selectedColor={drawingColor}
+                selectedStrokeWidth={drawingStrokeWidth}
+                drawingCount={drawingElements.length}
+                hasChanges={hasDrawingChanges}
+                canUndo={drawingHistory.length > 0}
+                canRedo={drawingFuture.length > 0}
+                updatedBy={drawingLayer?.updatedBy ?? null}
+                updatedAt={drawingLayer?.updatedAt ?? null}
+                errorMessage={drawingErrorMessage}
+                onSelectTool={setDrawingTool}
+                onSelectColor={setDrawingColor}
+                onSelectStrokeWidth={setDrawingStrokeWidth}
+                onUndo={handleUndoDrawing}
+                onRedo={handleRedoDrawing}
+                onReset={handleResetDrawingChanges}
+                onSave={() => void handleSaveDrawingLayer()}
               />
             </div>
           ) : null}
@@ -1674,17 +2177,24 @@ function ProjectFeedbackImageCard({
         <details className="projectFeedbackSectionPanel projectFeedbackCommentsPanel">
           <summary className="projectFeedbackSectionSummary">
             <span className="projectFeedbackCommentsTitle">Edit Requests</span>
-            <span className="projectFeedbackCommentsMeta">
+            <span
+              className="projectFeedbackCommentsMeta"
+              data-empty={findImageCommentCount(image) === 0 ? "true" : "false"}
+              style={
+                findImageCommentCount(image) === 0 ? emptyCountBadgeStyle : undefined
+              }
+            >
               {editRequestCountLabel(findImageCommentCount(image))}
             </span>
           </summary>
 
           <ProjectFeedbackEditRequestsPanelContent
             image={image}
+            isApprovedImage={isApprovedImage}
             activeCommentId={activeCommentId}
             editingCommentForImage={editingCommentForImage}
-            allowCommentManagement={allowCommentManagement}
-            canInteract={canInteract}
+            allowCommentManagement={canManageCommentsForImage}
+            canInteract={canInteractWithImage}
             busyCommentId={busyCommentId}
             busyCommentAction={busyCommentAction}
             onCommentSelect={onCommentSelect}
@@ -1698,14 +2208,57 @@ function ProjectFeedbackImageCard({
 
         {hasTeamChat ? (
           <ProjectFeedbackTeamChat
-            projectId={projectId}
-            imageId={image.id}
+            teamChatRouteBase={teamChatRouteBase}
             viewerEmail={viewerEmail}
             viewerIdentityLabel={viewerIdentityLabel}
-            canInteract={canInteract}
+            isApprovedImage={isApprovedImage}
+            canInteract={canInteractWithImage}
             viewerRole={viewerRole}
             detailsMode
           />
+        ) : null}
+
+        {hasDrawingTab ? (
+          <details className="projectFeedbackSectionPanel projectFeedbackDrawingSection">
+            <summary className="projectFeedbackSectionSummary">
+              <span className="projectFeedbackCommentsTitle">Dessin</span>
+              <span
+                className="projectFeedbackCommentsMeta"
+                data-empty={drawingElements.length === 0 ? "true" : "false"}
+                style={
+                  drawingElements.length === 0 ? emptyCountBadgeStyle : undefined
+                }
+              >
+                {drawingElements.length} item{drawingElements.length === 1 ? "" : "s"}
+              </span>
+            </summary>
+
+            <ProjectFeedbackDrawingPanelContent
+              isLoading={isLoadingDrawingLayer}
+              isSaving={isSavingDrawingLayer}
+              canInteract={canInteractWithImage}
+              isApprovedImage={isApprovedImage}
+              viewerIdentityLabel={viewerIdentityLabel}
+              viewerRole={viewerRole}
+              selectedTool={drawingTool}
+              selectedColor={drawingColor}
+              selectedStrokeWidth={drawingStrokeWidth}
+              drawingCount={drawingElements.length}
+              hasChanges={hasDrawingChanges}
+              canUndo={drawingHistory.length > 0}
+              canRedo={drawingFuture.length > 0}
+              updatedBy={drawingLayer?.updatedBy ?? null}
+              updatedAt={drawingLayer?.updatedAt ?? null}
+              errorMessage={drawingErrorMessage}
+              onSelectTool={setDrawingTool}
+              onSelectColor={setDrawingColor}
+              onSelectStrokeWidth={setDrawingStrokeWidth}
+              onUndo={handleUndoDrawing}
+              onRedo={handleRedoDrawing}
+              onReset={handleResetDrawingChanges}
+              onSave={() => void handleSaveDrawingLayer()}
+            />
+          </details>
         ) : null}
       </div>
     </article>
@@ -1726,6 +2279,317 @@ type ProjectFeedbackApprovedGalleryProps = {
   onDownloadAll: () => void;
   onMoveToReview: (imageId: string) => void;
 };
+
+type ProjectFeedbackDrawingCanvasProps = {
+  elements: ProjectFeedbackDrawingElement[];
+  draft: DrawingStrokeDraft | null;
+  interactive: boolean;
+  onPointerDown: (event: PointerEvent<SVGSVGElement>) => void;
+  onPointerMove: (event: PointerEvent<SVGSVGElement>) => void;
+  onPointerUp: (event: PointerEvent<SVGSVGElement>) => void;
+};
+
+type ProjectFeedbackDrawingPanelContentProps = {
+  isLoading: boolean;
+  isSaving: boolean;
+  canInteract: boolean;
+  isApprovedImage: boolean;
+  viewerIdentityLabel: string;
+  viewerRole: ProjectViewerRole;
+  selectedTool: DrawingTool;
+  selectedColor: string;
+  selectedStrokeWidth: number;
+  drawingCount: number;
+  hasChanges: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
+  updatedBy: string | null;
+  updatedAt: string | null;
+  errorMessage: string;
+  onSelectTool: Dispatch<SetStateAction<DrawingTool>>;
+  onSelectColor: Dispatch<SetStateAction<string>>;
+  onSelectStrokeWidth: Dispatch<SetStateAction<number>>;
+  onUndo: () => void;
+  onRedo: () => void;
+  onReset: () => void;
+  onSave: () => void;
+};
+
+function ProjectFeedbackDrawingShape({
+  element,
+}: {
+  element: ProjectFeedbackDrawingElement;
+}) {
+  const commonShapeProps = {
+    fill: "none",
+    stroke: element.color,
+    strokeWidth: element.strokeWidth,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    vectorEffect: "non-scaling-stroke" as const,
+  };
+
+  if (element.type === "freehand") {
+    return (
+      <polyline
+        points={element.points
+          .map((point) => `${getSvgCoordinateValue(point.x)},${getSvgCoordinateValue(point.y)}`)
+          .join(" ")}
+        {...commonShapeProps}
+      />
+    );
+  }
+
+  if (element.type === "line") {
+    return (
+      <line
+        x1={getSvgCoordinateValue(element.start.x)}
+        y1={getSvgCoordinateValue(element.start.y)}
+        x2={getSvgCoordinateValue(element.end.x)}
+        y2={getSvgCoordinateValue(element.end.y)}
+        {...commonShapeProps}
+      />
+    );
+  }
+
+  if (element.type === "rectangle") {
+    const minX = Math.min(element.start.x, element.end.x);
+    const minY = Math.min(element.start.y, element.end.y);
+    const width = Math.abs(element.end.x - element.start.x);
+    const height = Math.abs(element.end.y - element.start.y);
+
+    return (
+      <rect
+        x={getSvgCoordinateValue(minX)}
+        y={getSvgCoordinateValue(minY)}
+        width={Math.max(getSvgCoordinateValue(width), 1)}
+        height={Math.max(getSvgCoordinateValue(height), 1)}
+        {...commonShapeProps}
+      />
+    );
+  }
+
+  const centerX = (element.start.x + element.end.x) / 2;
+  const centerY = (element.start.y + element.end.y) / 2;
+  const radiusX = Math.abs(element.end.x - element.start.x) / 2;
+  const radiusY = Math.abs(element.end.y - element.start.y) / 2;
+
+  return (
+    <ellipse
+      cx={getSvgCoordinateValue(centerX)}
+      cy={getSvgCoordinateValue(centerY)}
+      rx={Math.max(getSvgCoordinateValue(radiusX), 1)}
+      ry={Math.max(getSvgCoordinateValue(radiusY), 1)}
+      {...commonShapeProps}
+    />
+  );
+}
+
+function ProjectFeedbackDrawingCanvas({
+  elements,
+  draft,
+  interactive,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+}: ProjectFeedbackDrawingCanvasProps) {
+  const draftElement = draft ? createDrawingElementFromDraft(draft) : null;
+
+  return (
+    <svg
+      className="projectFeedbackDrawingCanvas"
+      viewBox="0 0 1000 1000"
+      preserveAspectRatio="none"
+      data-interactive={interactive ? "true" : "false"}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+    >
+      {elements.map((element) => (
+        <ProjectFeedbackDrawingShape key={element.id} element={element} />
+      ))}
+
+      {draftElement ? <ProjectFeedbackDrawingShape element={draftElement} /> : null}
+    </svg>
+  );
+}
+
+function ProjectFeedbackDrawingPanelContent({
+  isLoading,
+  isSaving,
+  canInteract,
+  isApprovedImage,
+  viewerIdentityLabel,
+  viewerRole,
+  selectedTool,
+  selectedColor,
+  selectedStrokeWidth,
+  drawingCount,
+  hasChanges,
+  canUndo,
+  canRedo,
+  updatedBy,
+  updatedAt,
+  errorMessage,
+  onSelectTool,
+  onSelectColor,
+  onSelectStrokeWidth,
+  onUndo,
+  onRedo,
+  onReset,
+  onSave,
+}: ProjectFeedbackDrawingPanelContentProps) {
+  const toolOptions: Array<{ value: DrawingTool; label: string }> = [
+    { value: "freehand", label: "Freehand" },
+    { value: "line", label: "Line" },
+    { value: "rectangle", label: "Rectangle" },
+    { value: "circle", label: "Circle" },
+    { value: "eraser", label: "Eraser" },
+  ];
+
+  return (
+    <aside className="projectFeedbackDrawing">
+      <div className="projectFeedbackCommentsHeader">
+        <h3 className="projectFeedbackCommentsTitle">Dessin</h3>
+        <div className="projectFeedbackCommentsMetaGroup">
+          <p className="projectFeedbackCommentsMeta">
+            {drawingCount} shape{drawingCount === 1 ? "" : "s"}
+          </p>
+          {updatedAt ? (
+            <p className="projectFeedbackCommentsMeta">
+              {updatedBy ? `${updatedBy} · ` : ""}
+              {formatTimestamp(updatedAt)}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="projectFeedbackDrawingPanel">
+        {isLoading ? (
+          <p className="projectFeedbackCommentsMeta">Loading drawing layer...</p>
+        ) : (
+          <>
+            {canInteract ? (
+              <>
+                <div className="projectFeedbackDrawingTools">
+                  {toolOptions.map((toolOption) => (
+                    <button
+                      key={toolOption.value}
+                      className="projectFeedbackDrawingToolButton"
+                      type="button"
+                      data-active={selectedTool === toolOption.value ? "true" : "false"}
+                      disabled={!canInteract}
+                      onClick={() => onSelectTool(toolOption.value)}
+                    >
+                      {toolOption.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="projectFeedbackDrawingControls">
+                  <div className="projectFeedbackField">
+                    <span>Color</span>
+                    <div className="projectFeedbackColorOptions" role="group" aria-label="Drawing color">
+                      {commentColorOptions.map((colorOption) => (
+                        <button
+                          key={colorOption}
+                          className="projectFeedbackColorOption"
+                          type="button"
+                          data-active={selectedColor === colorOption ? "true" : "false"}
+                          style={{ "--comment-color": colorOption } as CSSProperties}
+                          disabled={!canInteract}
+                          onClick={() => onSelectColor(colorOption)}
+                        >
+                          <span />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="projectFeedbackField">
+                    <span>Stroke</span>
+                    <div className="projectFeedbackDrawingStrokeOptions">
+                      {drawingStrokeWidths.map((strokeWidth) => (
+                        <button
+                          key={strokeWidth}
+                          className="projectFeedbackDrawingStrokeButton"
+                          type="button"
+                          data-active={selectedStrokeWidth === strokeWidth ? "true" : "false"}
+                          disabled={!canInteract}
+                          onClick={() => onSelectStrokeWidth(strokeWidth)}
+                        >
+                          {strokeWidth}px
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="projectFeedbackDrawingActionRow">
+                  <button
+                    className="projectFeedbackMiniAction"
+                    type="button"
+                    disabled={!canInteract || !canUndo}
+                    onClick={onUndo}
+                  >
+                    Undo
+                  </button>
+                  <button
+                    className="projectFeedbackMiniAction"
+                    type="button"
+                    disabled={!canInteract || !canRedo}
+                    onClick={onRedo}
+                  >
+                    Redo
+                  </button>
+                  <button
+                    className="projectFeedbackMiniAction projectFeedbackMiniActionGhost"
+                    type="button"
+                    disabled={!canInteract || !hasChanges}
+                    onClick={onReset}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    className="projectFeedbackMiniAction projectFeedbackMiniActionApprove"
+                    type="button"
+                    disabled={!canInteract || !hasChanges || isSaving}
+                    onClick={onSave}
+                  >
+                    {isSaving ? "Saving..." : "Save layer"}
+                  </button>
+                </div>
+              </>
+            ) : null}
+
+            {!canInteract ? (
+              <p className="projectFeedbackCommentsMeta">
+                {isApprovedImage
+                  ? "Approved images keep the drawing layer visible in read-only mode."
+                  : viewerRole === "visitor"
+                    ? "Visitor mode is view-only for drawings."
+                    : "Open the project as a team member to edit drawings."}
+              </p>
+            ) : (
+              <p className="projectFeedbackCommentsMeta">
+                {viewerIdentityLabel
+                  ? `Editing as ${viewerIdentityLabel}`
+                  : "Draw directly on the image, then save the layer."}
+              </p>
+            )}
+
+            {errorMessage ? (
+              <p className="projectFeedbackMessage projectFeedbackMessageError">
+                {errorMessage}
+              </p>
+            ) : null}
+          </>
+        )}
+      </div>
+    </aside>
+  );
+}
 
 type ProjectFeedbackApprovedCardProps = {
   image: ProjectFeedbackImage;
@@ -1799,7 +2663,7 @@ function ProjectFeedbackApprovedCard({
             disabled={busyImageStatusId === image.id}
             onClick={() => onMoveToReview(image.id)}
           >
-            {busyImageStatusId === image.id ? "Updating..." : "Move to review"}
+            {busyImageStatusId === image.id ? "Updating..." : "Remove approved state"}
           </button>
         ) : null}
       </div>
@@ -1985,20 +2849,20 @@ function ProjectFeedbackSendIcon() {
 }
 
 type ProjectFeedbackTeamChatProps = {
-  projectId: string;
-  imageId: string;
+  teamChatRouteBase: string;
   viewerEmail: string;
   viewerIdentityLabel: string;
+  isApprovedImage: boolean;
   canInteract: boolean;
   viewerRole: ProjectViewerRole;
   detailsMode?: boolean;
 };
 
 function ProjectFeedbackTeamChat({
-  projectId,
-  imageId,
+  teamChatRouteBase,
   viewerEmail,
   viewerIdentityLabel,
+  isApprovedImage,
   canInteract,
   viewerRole,
   detailsMode = true,
@@ -2018,6 +2882,7 @@ function ProjectFeedbackTeamChat({
 
   useEffect(() => {
     let cancelled = false;
+    let isForbidden = false;
     let intervalId: ReturnType<typeof setInterval> | null = null;
 
     const loadMessages = async ({ silent = false }: { silent?: boolean } = {}) => {
@@ -2030,16 +2895,23 @@ function ProjectFeedbackTeamChat({
       }
 
       try {
-        const response = await fetch(
-          `/api/project/${projectId}/images/${imageId}/team-chat`,
-          {
-            cache: "no-store",
-          },
-        );
+        const response = await fetch(teamChatRouteBase, {
+          cache: "no-store",
+        });
 
         const payload = (await response.json().catch(() => null)) as
           | { messages?: ProjectFeedbackTeamMessage[]; error?: string }
           | null;
+
+        if (response.status === 403) {
+          isForbidden = true;
+          if (!cancelled && !silent) {
+            setErrorMessage(
+              payload?.error ?? "Open the project with your email to view the team chat.",
+            );
+          }
+          return;
+        }
 
         if (!response.ok || !payload?.messages) {
           throw new Error(payload?.error ?? "Failed to load team chat.");
@@ -2067,6 +2939,9 @@ function ProjectFeedbackTeamChat({
     void loadMessages();
 
     intervalId = setInterval(() => {
+      if (isForbidden) {
+        return;
+      }
       if (typeof document !== "undefined" && document.visibilityState !== "visible") {
         return;
       }
@@ -2093,7 +2968,7 @@ function ProjectFeedbackTeamChat({
         document.removeEventListener("visibilitychange", handleVisibilityChange);
       }
     };
-  }, [imageId, projectId]);
+  }, [teamChatRouteBase]);
 
   useEffect(() => {
     if (!listRef.current) return;
@@ -2102,7 +2977,11 @@ function ProjectFeedbackTeamChat({
 
   useEffect(() => {
     if (!canPost) {
-      setAnimatedPlaceholder("Open the project with your email to chat");
+      setAnimatedPlaceholder(
+        isApprovedImage
+          ? "Approved chat history"
+          : "Open the project with your email to chat",
+      );
       return;
     }
 
@@ -2125,7 +3004,7 @@ function ProjectFeedbackTeamChat({
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [canPost]);
+  }, [canPost, isApprovedImage]);
 
   const handleSubmit = async () => {
     const trimmedContent = content.trim();
@@ -2135,18 +3014,15 @@ function ProjectFeedbackTeamChat({
     setErrorMessage("");
 
     try {
-      const response = await fetch(
-        `/api/project/${projectId}/images/${imageId}/team-chat`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            viewerEmail,
-            content: trimmedContent,
-            replyToMessageId: replyTargetId,
-          }),
-        },
-      );
+      const response = await fetch(teamChatRouteBase, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          viewerEmail,
+          content: trimmedContent,
+          replyToMessageId: replyTargetId,
+        }),
+      });
 
       const payload = (await response.json().catch(() => null)) as
         | { message?: ProjectFeedbackTeamMessage; error?: string }
@@ -2267,7 +3143,9 @@ function ProjectFeedbackTeamChat({
 
           {!canInteract ? (
             <p className="projectFeedbackCommentsMeta">
-              {viewerRole === "visitor"
+              {isApprovedImage
+                ? "Approved images keep the team chat history visible in read-only mode."
+                : viewerRole === "visitor"
                 ? "Visitor mode is read-only for team chat."
                 : "Team member access is required to join the team chat."}
             </p>
@@ -2314,7 +3192,11 @@ function ProjectFeedbackTeamChat({
     <details className="projectFeedbackSectionPanel projectFeedbackChatPanel">
       <summary className="projectFeedbackSectionSummary">
         <span className="projectFeedbackCommentsTitle">Team Chat</span>
-        <span className="projectFeedbackCommentsMeta">
+        <span
+          className="projectFeedbackCommentsMeta"
+          data-empty={messages.length === 0 ? "true" : "false"}
+          style={messages.length === 0 ? emptyCountBadgeStyle : undefined}
+        >
           {teamMessageCountLabel(messages.length)}
         </span>
       </summary>

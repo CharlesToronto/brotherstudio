@@ -2655,8 +2655,14 @@ html[data-theme="dark"] .contactForm {
   height: 18px;
   padding: 0 6px;
   border-radius: 999px;
-  background: rgb(127 127 127 / 0.12);
+  background: #c40018;
+  color: #fff;
   font-size: 9px;
+}
+
+.projectFeedbackWorkspaceTab span[data-empty="true"] {
+  background: #ececec;
+  color: #7a7a7a;
 }
 
 .projectFeedbackWorkspaceTab[data-active="true"] {
@@ -2667,6 +2673,11 @@ html[data-theme="dark"] .contactForm {
 
 .projectFeedbackWorkspaceTab[data-active="true"] span {
   background: rgb(127 127 127 / 0.14);
+}
+
+.projectFeedbackWorkspaceTab[data-active="true"] span[data-empty="true"] {
+  background: #ececec;
+  color: #6f6f6f;
 }
 
 .projectFeedbackShell[data-admin-view="true"] .projectFeedbackWorkspaceTab[data-active="true"] {
@@ -3109,6 +3120,32 @@ html[data-theme="dark"] .myStudioGuideArrow {
   height: auto;
 }
 
+.projectFeedbackApprovalWatermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(-14deg);
+}
+
+.projectFeedbackApprovalWatermark span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 8px 18px;
+  border: 1px solid rgb(255 255 255 / 0.52);
+  background: rgb(255 255 255 / 0.14);
+  color: rgb(255 255 255 / 0.82);
+  font-size: clamp(18px, 3vw, 40px);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 14px rgb(0 0 0 / 0.16);
+  backdrop-filter: blur(2px);
+}
+
 .projectFeedbackMarker,
 .projectFeedbackDraft {
   position: absolute;
@@ -3247,6 +3284,8 @@ html[data-theme="dark"] .myStudioGuideArrow {
 }
 
 .projectFeedbackApprovedMedia {
+  position: relative;
+  overflow: hidden;
   border: 1px solid rgb(127 127 127 / 0.2);
   background: #f3f3f3;
 }
@@ -3514,7 +3553,8 @@ html[data-theme="dark"] .myStudioGuideArrow {
 }
 
 .projectFeedbackSectionPanel > .projectFeedbackComments,
-.projectFeedbackSectionPanel > .projectFeedbackTeamChat {
+.projectFeedbackSectionPanel > .projectFeedbackTeamChat,
+.projectFeedbackSectionPanel > .projectFeedbackDrawing {
   display: grid;
 }
 
@@ -3544,11 +3584,13 @@ html[data-theme="dark"] .myStudioGuideArrow {
 
 .projectFeedbackSidePanelTabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .projectFeedbackSidePanelTab {
   display: inline-flex;
+  flex: 0 1 auto;
   align-items: center;
   justify-content: center;
   gap: 8px;
@@ -3562,6 +3604,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -3573,8 +3616,14 @@ html[data-theme="dark"] .myStudioGuideArrow {
   height: 18px;
   padding: 0 6px;
   border-radius: 999px;
-  background: rgb(127 127 127 / 0.12);
+  background: #c40018;
+  color: #fff;
   font-size: 9px;
+}
+
+.projectFeedbackSidePanelTab span[data-empty="true"] {
+  background: #ececec;
+  color: #7a7a7a;
 }
 
 .projectFeedbackSidePanelTab[data-active="true"] {
@@ -3584,7 +3633,13 @@ html[data-theme="dark"] .myStudioGuideArrow {
 }
 
 .projectFeedbackSidePanelTab[data-active="true"] span {
-  background: rgb(127 127 127 / 0.16);
+  background: #c40018;
+  color: #fff;
+}
+
+.projectFeedbackSidePanelTab[data-active="true"] span[data-empty="true"] {
+  background: #ececec;
+  color: #6f6f6f;
 }
 
 .projectFeedbackSidePanelBody,
@@ -3617,6 +3672,95 @@ html[data-theme="dark"] .myStudioGuideArrow {
   align-self: stretch;
   min-height: 0;
   height: 100%;
+}
+
+.projectFeedbackDrawing {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  align-self: stretch;
+  min-height: 0;
+  height: 100%;
+}
+
+.projectFeedbackDrawingPanel {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+  height: 100%;
+  padding: 14px;
+  border: 1px solid rgb(127 127 127 / 0.22);
+  border-radius: 18px;
+  background: #f7f7f8;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.04);
+  align-content: start;
+}
+
+.projectFeedbackDrawingTools,
+.projectFeedbackDrawingStrokeOptions,
+.projectFeedbackDrawingActionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.projectFeedbackDrawingToolButton,
+.projectFeedbackDrawingStrokeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 8px 10px;
+  border: 1px solid rgb(127 127 127 / 0.24);
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.projectFeedbackDrawingToolButton[data-active="true"],
+.projectFeedbackDrawingStrokeButton[data-active="true"] {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
+.projectFeedbackDrawingToolButton:disabled,
+.projectFeedbackDrawingStrokeButton:disabled,
+.projectFeedbackColorOption:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.projectFeedbackDesktopSidePanel .projectFeedbackDrawing .projectFeedbackCommentsHeader {
+  display: none;
+}
+
+.projectFeedbackDesktopSidePanel .projectFeedbackDrawing {
+  gap: 0;
+  height: 100%;
+}
+
+.projectFeedbackDesktopSidePanel .projectFeedbackDrawingPanel {
+  height: 100%;
+}
+
+.projectFeedbackDrawingCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.projectFeedbackDrawingCanvas[data-interactive="true"] {
+  pointer-events: auto;
+  cursor: crosshair;
 }
 
 .projectFeedbackTeamChatPanel {
@@ -3879,7 +4023,8 @@ html[data-theme="dark"] .myStudioGuideArrow {
   }
 
   .projectFeedbackCommentsPanel,
-  .projectFeedbackChatPanel {
+  .projectFeedbackChatPanel,
+  .projectFeedbackDrawingSection {
     display: block;
     width: 100%;
     margin: 0;
@@ -3941,12 +4086,17 @@ html[data-theme="dark"] .myStudioGuideArrow {
     min-height: 28px;
     padding: 4px 10px;
     border-radius: 999px;
-    background: #f3f3f3;
-    color: #666;
+    background: #c40018;
+    color: #fff;
     font-size: 10px;
     line-height: 1.25;
     text-align: center;
     white-space: nowrap;
+  }
+
+  .projectFeedbackSectionSummary > .projectFeedbackCommentsMeta[data-empty="true"] {
+    background: #ececec;
+    color: #7a7a7a;
   }
 
   .projectFeedbackSectionSummary::after {
@@ -3982,12 +4132,14 @@ html[data-theme="dark"] .myStudioGuideArrow {
   }
 
   .projectFeedbackCommentsPanel .projectFeedbackCommentsHeader,
-  .projectFeedbackChatPanel .projectFeedbackCommentsHeader {
+  .projectFeedbackChatPanel .projectFeedbackCommentsHeader,
+  .projectFeedbackDrawingSection .projectFeedbackCommentsHeader {
     display: none;
   }
 
   .projectFeedbackCommentsPanel .projectFeedbackComments,
-  .projectFeedbackChatPanel .projectFeedbackTeamChat {
+  .projectFeedbackChatPanel .projectFeedbackTeamChat,
+  .projectFeedbackDrawingSection .projectFeedbackDrawing {
     gap: 0;
     padding: 12px;
     height: auto;
@@ -3995,7 +4147,8 @@ html[data-theme="dark"] .myStudioGuideArrow {
   }
 
   .projectFeedbackCommentsPanel .projectFeedbackCommentWindow,
-  .projectFeedbackChatPanel .projectFeedbackTeamChatPanel {
+  .projectFeedbackChatPanel .projectFeedbackTeamChatPanel,
+  .projectFeedbackDrawingSection .projectFeedbackDrawingPanel {
     border-color: rgb(127 127 127 / 0.18);
     height: auto;
     max-height: none;
@@ -4026,6 +4179,10 @@ html[data-theme="dark"] .myStudioGuideArrow {
 
   .projectFeedbackChatPanel .projectFeedbackTeamChatPanel {
     grid-template-rows: auto auto;
+  }
+
+  .projectFeedbackDrawingSection .projectFeedbackDrawingPanel {
+    box-shadow: none;
   }
 
   .projectFeedbackChatPanel .projectFeedbackTeamChatMessages {
@@ -4103,6 +4260,11 @@ html[data-theme="dark"] .myStudioGuideArrow {
     background: transparent;
   }
 
+  html[data-theme="dark"] .projectFeedbackDrawingSection .projectFeedbackDrawingPanel {
+    background: #111;
+    border-color: rgb(255 255 255 / 0.12);
+  }
+
   html[data-theme="dark"] .projectFeedbackCommentItem {
     background: #111;
     border-color: rgb(255 255 255 / 0.12);
@@ -4122,6 +4284,13 @@ html[data-theme="dark"] .myStudioGuideArrow {
     border-color: rgb(255 255 255 / 0.12);
     background: rgb(255 255 255 / 0.06);
     color: rgb(255 255 255 / 0.72);
+  }
+
+  html[data-theme="dark"]
+    .projectFeedbackSectionSummary
+    > .projectFeedbackCommentsMeta[data-empty="true"] {
+    background: rgb(255 255 255 / 0.08);
+    color: rgb(255 255 255 / 0.58);
   }
 
   html[data-theme="dark"] .projectFeedbackSectionPanel[open] > .projectFeedbackSectionSummary {

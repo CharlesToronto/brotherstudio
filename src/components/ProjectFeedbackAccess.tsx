@@ -9,6 +9,7 @@ import type {
   ProjectViewerRole,
 } from "@/lib/projectFeedbackTypes";
 import {
+  getProjectViewerEntryStorageKey,
   getProjectViewerRoleStorageKey,
   getProjectViewerStorageKey,
   normalizeProjectViewerRole,
@@ -88,7 +89,7 @@ export function ProjectFeedbackAccess({
         );
       }
     } catch (error) {
-      if (typeof window !== "undefined") {
+      if (persist && typeof window !== "undefined") {
         window.localStorage.removeItem(getProjectViewerStorageKey(projectId));
         window.localStorage.removeItem(getProjectViewerRoleStorageKey(projectId));
       }
@@ -112,10 +113,21 @@ export function ProjectFeedbackAccess({
         initialRole,
     );
     const nextRole = forceVisitorEntry ? "visitor" : savedRole;
+    const entrySource =
+      window.sessionStorage.getItem(getProjectViewerEntryStorageKey(projectId)) ?? "";
+
+    window.sessionStorage.removeItem(getProjectViewerEntryStorageKey(projectId));
 
     setMode(nextRole);
     setAccessRole(nextRole);
     setEmail(savedEmail);
+
+    if (entrySource === "dashboard" && savedEmail && !forceVisitorEntry) {
+      setIsLoading(true);
+      await requestAccess(savedEmail, nextRole, "", false);
+      return;
+    }
+
     setIsLoading(false);
   });
 

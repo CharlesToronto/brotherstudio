@@ -31,3 +31,7 @@ export function getProjectViewerRoleStorageKey(projectId: string) {
 export function getProjectViewerRoleCookieName(projectId: string) {
   return `bs_myproject_role_${projectId}`;
 }
+
+export function getProjectViewerEntryStorageKey(projectId: string) {
+  return `bs_project_access_entry:${projectId}`;
+}

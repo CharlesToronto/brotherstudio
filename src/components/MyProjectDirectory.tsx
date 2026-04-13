@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useTypingPlaceholder } from "@/components/useTypingPlaceholder";
 import type { ProjectSummary, ProjectViewerRole } from "@/lib/projectFeedbackTypes";
 import {
+  getProjectViewerEntryStorageKey,
   getProjectViewerRoleStorageKey,
   getProjectViewerStorageKey,
 } from "@/lib/projectViewerIdentity";
@@ -72,6 +73,10 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
       if (typeof window !== "undefined") {
         window.localStorage.setItem(getProjectViewerStorageKey(projectId), email);
         window.localStorage.setItem(getProjectViewerRoleStorageKey(projectId), mode);
+        window.sessionStorage.setItem(
+          getProjectViewerEntryStorageKey(projectId),
+          "dashboard",
+        );
       }
 
       router.push(`/mystudio/${projectId}`);

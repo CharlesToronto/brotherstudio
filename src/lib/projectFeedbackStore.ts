@@ -8,6 +8,9 @@ import {
 } from "@/lib/projectViewerIdentity";
 import type {
   ProjectFeedbackComment,
+  ProjectFeedbackDrawingElement,
+  ProjectFeedbackDrawingLayer,
+  ProjectFeedbackDrawingPoint,
   ProjectFeedbackImage,
   ProjectFeedbackProject,
   ProjectFeedbackTeamMessage,
@@ -68,6 +71,16 @@ type TeamMessageRow = {
   created_at: string;
 };
 
+type DrawingLayerRow = {
+  id: string;
+  project_id: string;
+  image_id: string;
+  elements: unknown;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 type ProjectImageDownloadAsset = {
   filename: string;
   url: string;
@@ -101,6 +114,134 @@ function isValidEmail(value: string) {
 function normalizeCommentColor(value: string | null | undefined) {
   const color = value?.trim().toLowerCase() ?? "";
   return /^#[0-9a-f]{6}$/.test(color) ? color : DEFAULT_COMMENT_COLOR;
+}
+
+function clampCoordinateValue(value: number) {
+  return Math.min(Math.max(value, 0), 1);
+}
+
+function normalizeDrawingStrokeWidth(value: unknown) {
+  const width = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(width)) return 3;
+  return Math.min(Math.max(width, 1), 16);
+}
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function normalizeDrawingPoint(
+  value: unknown,
+): ProjectFeedbackDrawingPoint | null {
+  if (!isObjectRecord(value)) return null;
+  const x = typeof value.x === "number" ? value.x : Number.NaN;
+  const y = typeof value.y === "number" ? value.y : Number.NaN;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+
+  return {
+    x: clampCoordinateValue(x),
+    y: clampCoordinateValue(y),
+  };
+}
+
+function normalizeDrawingElement(
+  value: unknown,
+): ProjectFeedbackDrawingElement | null {
+  if (!isObjectRecord(value) || typeof value.id !== "string") return null;
+  const type = typeof value.type === "string" ? value.type : "";
+  const color =
+    typeof value.color === "string"
+      ? normalizeCommentColor(value.color)
+      : DEFAULT_COMMENT_COLOR;
+  const strokeWidth = normalizeDrawingStrokeWidth(value.strokeWidth);
+
+  if (type === "freehand") {
+    const points = Array.isArray(value.points)
+      ? value.points
+          .map(normalizeDrawingPoint)
+          .filter((point): point is ProjectFeedbackDrawingPoint => point !== null)
+      : [];
+
+    if (points.length < 2) return null;
+
+    return {
+      id: value.id,
+      type,
+      color,
+      strokeWidth,
+      points,
+    };
+  }
+
+  if (type === "line" || type === "rectangle" || type === "circle") {
+    const start = normalizeDrawingPoint(value.start);
+    const end = normalizeDrawingPoint(value.end);
+    if (!start || !end) return null;
+
+    return {
+      id: value.id,
+      type,
+      color,
+      strokeWidth,
+      start,
+      end,
+    };
+  }
+
+  return null;
+}
+
+function normalizeDrawingElements(value: unknown): ProjectFeedbackDrawingElement[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map(normalizeDrawingElement)
+    .filter((element): element is ProjectFeedbackDrawingElement => element !== null);
+}
+
+function buildDrawingLayerPayload(
+  projectId: string,
+  imageId: string,
+  row: DrawingLayerRow | null,
+): ProjectFeedbackDrawingLayer {
+  return {
+    projectId,
+    imageId,
+    elements: normalizeDrawingElements(row?.elements ?? []),
+    updatedBy: row?.updated_by?.trim() || null,
+    updatedAt: row?.updated_at ?? null,
+  };
+}
+
+function isMissingDrawingLayerTableError(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+
+  const code = typeof candidate.code === "string" ? candidate.code.trim() : "";
+  const combined = [candidate.message, candidate.details, candidate.hint]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    code === "42P01" ||
+    code === "PGRST205" ||
+    combined.includes("image_drawing_layers") ||
+    combined.includes("drawing layer") ||
+    combined.includes("schema cache")
+  );
+}
+
+function buildDrawingLayerMigrationError() {
+  return new Error(
+    "Run the latest myStudio drawing-layer SQL migration before saving drawings.",
+  );
 }
 
 function isMissingImageStatusColumnError(error: unknown) {
@@ -324,6 +465,7 @@ function buildProjectPayload(
   return {
     id: project.id,
     name: project.name,
+    accessPassword: normalizeAccessPassword(project.access_password),
     status: normalizeStatus(project.status),
     createdAt: project.created_at,
     latestVersion: versions[0]?.version ?? 0,
@@ -344,7 +486,7 @@ async function loadProjectRows(projectId: string) {
   ] = await Promise.all([
     supabase
       .from("projects")
-      .select("id, name, status, created_at")
+      .select("id, name, status, access_password, created_at")
       .eq("id", projectId)
       .maybeSingle(),
     supabase
@@ -812,16 +954,15 @@ export async function listProjectImageTeamMessages(
   );
 }
 
-export async function createProjectImageTeamMessage(input: {
+async function createProjectImageTeamMessageInternal(input: {
   projectId: string;
   imageId: string;
-  viewerEmail: string;
+  author: string;
   content: string;
   replyToMessageId?: string | null;
 }) {
   const content = input.content.trim();
   if (!content) throw new Error("Message content is required.");
-  const author = await resolveProjectViewerAuthor(input.projectId, input.viewerEmail);
   const replyToMessageId = input.replyToMessageId?.trim() || null;
 
   const supabase = getSupabaseAdminClient();
@@ -854,7 +995,7 @@ export async function createProjectImageTeamMessage(input: {
       project_id: input.projectId,
       image_id: input.imageId,
       reply_to_id: replyToMessageId,
-      author,
+      author: input.author,
       content,
     })
     .select("id, project_id, image_id, reply_to_id, author, content, created_at")
@@ -876,6 +1017,150 @@ export async function createProjectImageTeamMessage(input: {
   }
 
   return buildTeamMessagePayload(message, replySource);
+}
+
+export async function createProjectImageTeamMessage(input: {
+  projectId: string;
+  imageId: string;
+  viewerEmail: string;
+  content: string;
+  replyToMessageId?: string | null;
+}) {
+  const author = await resolveProjectViewerAuthor(input.projectId, input.viewerEmail);
+  return createProjectImageTeamMessageInternal({
+    projectId: input.projectId,
+    imageId: input.imageId,
+    author,
+    content: input.content,
+    replyToMessageId: input.replyToMessageId,
+  });
+}
+
+export async function createAdminProjectImageTeamMessage(input: {
+  projectId: string;
+  imageId: string;
+  content: string;
+  replyToMessageId?: string | null;
+}) {
+  return createProjectImageTeamMessageInternal({
+    projectId: input.projectId,
+    imageId: input.imageId,
+    author: "Admin",
+    content: input.content,
+    replyToMessageId: input.replyToMessageId,
+  });
+}
+
+async function assertProjectImageExists(projectId: string, imageId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("images")
+    .select("id")
+    .eq("id", imageId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("Image not found.");
+}
+
+export async function listProjectImageDrawingLayer(
+  projectId: string,
+  imageId: string,
+) {
+  await assertProjectImageExists(projectId, imageId);
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("image_drawing_layers")
+    .select("id, project_id, image_id, elements, updated_by, created_at, updated_at")
+    .eq("project_id", projectId)
+    .eq("image_id", imageId)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingDrawingLayerTableError(error)) {
+      return buildDrawingLayerPayload(projectId, imageId, null);
+    }
+    throw error;
+  }
+
+  return buildDrawingLayerPayload(
+    projectId,
+    imageId,
+    (data as DrawingLayerRow | null) ?? null,
+  );
+}
+
+async function saveProjectImageDrawingLayerInternal(input: {
+  projectId: string;
+  imageId: string;
+  author: string;
+  elements: ProjectFeedbackDrawingElement[];
+}) {
+  await assertProjectImageExists(input.projectId, input.imageId);
+
+  const normalizedElements = normalizeDrawingElements(input.elements);
+  const supabase = getSupabaseAdminClient();
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("image_drawing_layers")
+    .upsert(
+      {
+        project_id: input.projectId,
+        image_id: input.imageId,
+        elements: normalizedElements,
+        updated_by: input.author,
+        updated_at: now,
+      },
+      {
+        onConflict: "image_id",
+      },
+    )
+    .select("id, project_id, image_id, elements, updated_by, created_at, updated_at")
+    .single();
+
+  if (error) {
+    if (isMissingDrawingLayerTableError(error)) {
+      throw buildDrawingLayerMigrationError();
+    }
+    throw error;
+  }
+
+  return buildDrawingLayerPayload(
+    input.projectId,
+    input.imageId,
+    data as DrawingLayerRow,
+  );
+}
+
+export async function saveProjectImageDrawingLayer(input: {
+  projectId: string;
+  imageId: string;
+  viewerEmail: string;
+  elements: ProjectFeedbackDrawingElement[];
+}) {
+  const author = await resolveProjectViewerAuthor(input.projectId, input.viewerEmail);
+  return saveProjectImageDrawingLayerInternal({
+    projectId: input.projectId,
+    imageId: input.imageId,
+    author,
+    elements: input.elements,
+  });
+}
+
+export async function saveAdminProjectImageDrawingLayer(input: {
+  projectId: string;
+  imageId: string;
+  elements: ProjectFeedbackDrawingElement[];
+}) {
+  return saveProjectImageDrawingLayerInternal({
+    projectId: input.projectId,
+    imageId: input.imageId,
+    author: "Admin",
+    elements: input.elements,
+  });
 }
 
 export async function updateProjectStatus(
