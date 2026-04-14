@@ -92,7 +92,6 @@ type NumberedVersionGroup = {
 const commentColorStorageKey = "bs_project_feedback_color";
 const defaultCommentColor = "#d88fa2";
 const teamChatPollIntervalMs = 1500;
-const vercelFunctionPayloadLimitBytes = 8 * 1024 * 1024;
 const commentColorOptions = [
   "#d88fa2",
   "#e7a27d",
@@ -312,12 +311,29 @@ function formatFileSizeMb(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-function getUploadLimitError(file: File) {
-  return `${file.name} is ${formatFileSizeMb(file.size)}. The current upload guard is 8 MB per image.`;
-}
+async function uploadFileToSignedUrl(input: {
+  signedUrl: string;
+  file: File;
+}) {
+  const formData = new FormData();
+  formData.append("cacheControl", "31536000");
+  formData.append("", input.file);
 
-function getUploadPayloadRejectedError(file: File) {
-  return `${file.name} is ${formatFileSizeMb(file.size)}. Vercel rejected the upload request before the server processed it.`;
+  const response = await fetch(input.signedUrl, {
+    method: "PUT",
+    headers: {
+      "x-upsert": "false",
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const responseMessage = await response.text().catch(() => "");
+    throw new Error(
+      responseMessage.trim() ||
+        `${input.file.name} (${formatFileSizeMb(input.file.size)}) failed during direct storage upload.`,
+    );
+  }
 }
 
 function findImageCommentCount(image: ProjectFeedbackImage) {
@@ -396,6 +412,9 @@ export function ProjectFeedbackWorkspace({
     setDraft(null);
     setEditingComment(null);
     setActiveCommentId(null);
+    setSelectedVersion(initialProject.latestVersion > 0 ? initialProject.latestVersion : null);
+    previousLatestVersionRef.current =
+      initialProject.latestVersion > 0 ? initialProject.latestVersion : null;
   }, [initialProject]);
 
   useEffect(() => {
@@ -455,7 +474,10 @@ export function ProjectFeedbackWorkspace({
   const approvedImageCount = approvedImages.length;
 
   useEffect(() => {
-    const latestVersion = reviewVersions[0]?.version ?? null;
+    const latestVersion =
+      reviewVersions.length > 0
+        ? reviewVersions[reviewVersions.length - 1]?.version ?? null
+        : null;
     const latestChanged = previousLatestVersionRef.current !== latestVersion;
     previousLatestVersionRef.current = latestVersion;
 
@@ -604,60 +626,76 @@ export function ProjectFeedbackWorkspace({
         ? `/api/projects/${project.id}/images`
         : `/api/project/${project.id}/images`;
       const selectedFiles = Array.from(files);
-      const oversizedFile = selectedFiles.find(
-        (file) => file.size > vercelFunctionPayloadLimitBytes,
-      );
+      const prepareResponse = await fetch(uploadRouteBase, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "prepare-upload",
+          files: selectedFiles.map((file) => ({
+            name: file.name,
+            type: file.type,
+          })),
+        }),
+      });
 
-      if (oversizedFile) {
-        throw new Error(getUploadLimitError(oversizedFile));
+      if (!prepareResponse.ok) {
+        throw new Error(
+          await getResponseErrorMessage(prepareResponse, "Failed to upload images."),
+        );
       }
 
-      let targetVersion: number | null = null;
-      let nextProject: ProjectFeedbackProject | null = null;
+      const preparePayload = (await prepareResponse.json().catch(() => null)) as
+        | {
+            version?: number;
+            uploads?: Array<{ signedUrl: string; publicUrl: string }>;
+          }
+        | null;
 
-      for (const file of selectedFiles) {
-        const formData = new FormData();
-        formData.append("files", file);
-
-        if (targetVersion !== null) {
-          formData.append("version", String(targetVersion));
-        }
-
-        const response = await fetch(uploadRouteBase, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (response.status === 413) {
-          throw new Error(getUploadPayloadRejectedError(file));
-        }
-
-        const payload = response.ok
-          ? ((await response.json().catch(() => null)) as
-              | { project?: ProjectFeedbackProject; version?: number }
-              | null)
-          : null;
-
-        if (!response.ok) {
-          throw new Error(
-            await getResponseErrorMessage(response, "Failed to upload images."),
-          );
-        }
-
-        if (!payload?.project || typeof payload.version !== "number") {
-          throw new Error("Failed to upload images.");
-        }
-
-        targetVersion = payload.version;
-        nextProject = payload.project;
-      }
-
-      if (!nextProject) {
+      if (
+        !preparePayload ||
+        typeof preparePayload.version !== "number" ||
+        !Array.isArray(preparePayload.uploads) ||
+        preparePayload.uploads.length !== selectedFiles.length
+      ) {
         throw new Error("Failed to upload images.");
       }
 
-      resetFeedbackState(nextProject);
-      setStatusMessage(`Variant V${nextProject.latestVersion} added.`);
+      for (const [index, file] of selectedFiles.entries()) {
+        const upload = preparePayload.uploads[index];
+        await uploadFileToSignedUrl({
+          signedUrl: upload.signedUrl,
+          file,
+        });
+      }
+
+      const commitResponse = await fetch(uploadRouteBase, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "commit-upload",
+          version: preparePayload.version,
+          uploads: preparePayload.uploads.map((upload) => ({
+            publicUrl: upload.publicUrl,
+          })),
+        }),
+      });
+
+      if (!commitResponse.ok) {
+        throw new Error(
+          await getResponseErrorMessage(commitResponse, "Failed to upload images."),
+        );
+      }
+
+      const commitPayload = (await commitResponse.json().catch(() => null)) as
+        | { project?: ProjectFeedbackProject; version?: number }
+        | null;
+
+      if (!commitPayload?.project) {
+        throw new Error("Failed to upload images.");
+      }
+
+      resetFeedbackState(commitPayload.project);
+      setStatusMessage(`Variant V${commitPayload.project.latestVersion} added.`);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to upload images.",
@@ -723,39 +761,61 @@ export function ProjectFeedbackWorkspace({
       const imageRouteBase = allowImageManagement
         ? `/api/projects/${project.id}/images`
         : `/api/project/${project.id}/images`;
-      if (file.size > vercelFunctionPayloadLimitBytes) {
-        throw new Error(getUploadLimitError(file));
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch(`${imageRouteBase}/${imageId}`, {
+      const prepareResponse = await fetch(`${imageRouteBase}/${imageId}`, {
         method: "POST",
-        body: formData,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "prepare-replace",
+          file: {
+            name: file.name,
+            type: file.type,
+          },
+        }),
       });
 
-      if (response.status === 413) {
-        throw new Error(getUploadPayloadRejectedError(file));
-      }
-
-      const payload = response.ok
-        ? ((await response.json().catch(() => null)) as
-            | { project?: ProjectFeedbackProject }
-            | null)
-        : null;
-
-      if (!response.ok) {
+      if (!prepareResponse.ok) {
         throw new Error(
-          await getResponseErrorMessage(response, "Failed to replace image."),
+          await getResponseErrorMessage(prepareResponse, "Failed to replace image."),
         );
       }
 
-      if (!payload?.project) {
+      const preparePayload = (await prepareResponse.json().catch(() => null)) as
+        | { signedUrl?: string; publicUrl?: string }
+        | null;
+
+      if (!preparePayload?.signedUrl || !preparePayload.publicUrl) {
         throw new Error("Failed to replace image.");
       }
 
-      resetFeedbackState(payload.project);
+      await uploadFileToSignedUrl({
+        signedUrl: preparePayload.signedUrl,
+        file,
+      });
+
+      const commitResponse = await fetch(`${imageRouteBase}/${imageId}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "commit-replace",
+          publicUrl: preparePayload.publicUrl,
+        }),
+      });
+
+      if (!commitResponse.ok) {
+        throw new Error(
+          await getResponseErrorMessage(commitResponse, "Failed to replace image."),
+        );
+      }
+
+      const commitPayload = (await commitResponse.json().catch(() => null)) as
+        | { project?: ProjectFeedbackProject }
+        | null;
+
+      if (!commitPayload?.project) {
+        throw new Error("Failed to replace image.");
+      }
+
+      resetFeedbackState(commitPayload.project);
       setStatusMessage("Image replaced.");
     } catch (error) {
       setErrorMessage(

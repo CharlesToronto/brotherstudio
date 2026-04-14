@@ -4,7 +4,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 
 import { deleteGalleryItem, getGalleryItems, updateGalleryItem } from "@/lib/galleryStore";
-import { isGalleryProjectKey } from "@/lib/galleryProjects";
+import { normalizeOptionalGalleryProject } from "@/lib/galleryProjects";
 
 export const runtime = "nodejs";
 
@@ -38,11 +38,13 @@ export async function PATCH(
   }
 
   if (typeof project !== "undefined") {
-    if (project !== null && !isGalleryProjectKey(project)) {
+    const normalizedProject = normalizeOptionalGalleryProject(project);
+
+    if (project !== null && normalizedProject === null) {
       return NextResponse.json({ error: "Invalid project" }, { status: 400 });
     }
 
-    const updated = await updateGalleryItem(id, { project });
+    const updated = await updateGalleryItem(id, { project: normalizedProject });
     if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     return NextResponse.json({ item: updated });

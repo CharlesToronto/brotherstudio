@@ -23,6 +23,13 @@ const PROJECT_IMAGE_BUCKET = "project-images";
 const PROJECT_ASSET_BROWSER_CACHE_TTL_SECONDS = "31536000";
 const DEFAULT_COMMENT_COLOR = "#d88fa2";
 
+type PreparedProjectImageUpload = {
+  path: string;
+  signedUrl: string;
+  token: string;
+  publicUrl: string;
+};
+
 type ProjectRow = {
   id: string;
   name: string;
@@ -307,9 +314,32 @@ function extensionForFile(file: File) {
   return ".jpg";
 }
 
+function extensionForUploadInput(fileName: string, fileType: string) {
+  const trimmedName = fileName.trim();
+  const nameParts = trimmedName.split(".");
+  const maybeExtension = nameParts.length > 1 ? nameParts.pop()?.toLowerCase() : "";
+  if (maybeExtension) return `.${maybeExtension}`;
+
+  if (fileType === "image/png") return ".png";
+  if (fileType === "image/webp") return ".webp";
+  if (fileType === "image/gif") return ".gif";
+  if (fileType === "image/svg+xml") return ".svg";
+  return ".jpg";
+}
+
 function createImagePath(projectId: string, version: number, file: File) {
   const extension = extensionForFile(file);
   const baseName = sanitizeFilename(file.name.replace(/\.[^.]+$/, ""));
+  return `${projectId}/v${version}/${crypto.randomUUID()}-${baseName}${extension}`;
+}
+
+function createImagePathFromUploadInput(
+  projectId: string,
+  version: number,
+  input: { name: string; type: string },
+) {
+  const extension = extensionForUploadInput(input.name, input.type);
+  const baseName = sanitizeFilename(input.name.replace(/\.[^.]+$/, ""));
   return `${projectId}/v${version}/${crypto.randomUUID()}-${baseName}${extension}`;
 }
 
@@ -1289,6 +1319,141 @@ export async function uploadProjectVersion(
   };
 }
 
+export async function prepareProjectVersionUpload(
+  projectId: string,
+  files: Array<{ name: string; type: string }>,
+  options?: { targetVersion?: number | null },
+) {
+  if (files.length === 0) throw new Error("Select at least one image.");
+
+  const supabase = getSupabaseAdminClient();
+  const { data: projectData, error: projectError } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", projectId)
+    .maybeSingle();
+
+  if (projectError) throw projectError;
+  if (!projectData) throw new Error("Project not found.");
+
+  const { data: latestImageData, error: latestImageError } = await supabase
+    .from("images")
+    .select("version")
+    .eq("project_id", projectId)
+    .order("version", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (latestImageError) throw latestImageError;
+  const latestImage = latestImageData as { version: number } | null;
+  const latestVersion = latestImage?.version ?? 0;
+  const requestedVersion =
+    typeof options?.targetVersion === "number" &&
+    Number.isInteger(options.targetVersion) &&
+    options.targetVersion > 0
+      ? options.targetVersion
+      : null;
+
+  if (
+    requestedVersion !== null &&
+    requestedVersion !== latestVersion &&
+    requestedVersion !== latestVersion + 1
+  ) {
+    throw new Error("Invalid target variant.");
+  }
+
+  const nextVersion = requestedVersion ?? latestVersion + 1;
+  const uploads: PreparedProjectImageUpload[] = [];
+
+  for (const file of files) {
+    if (!file.type.toLowerCase().startsWith("image/")) {
+      throw new Error("Only image files are allowed.");
+    }
+
+    const uploadPath = createImagePathFromUploadInput(projectId, nextVersion, file);
+    const { data: signedUploadData, error: signedUploadError } = await supabase.storage
+      .from(PROJECT_IMAGE_BUCKET)
+      .createSignedUploadUrl(uploadPath);
+
+    if (signedUploadError) throw signedUploadError;
+
+    const { data: publicUrlData } = supabase.storage
+      .from(PROJECT_IMAGE_BUCKET)
+      .getPublicUrl(uploadPath);
+
+    uploads.push({
+      path: signedUploadData.path,
+      signedUrl: signedUploadData.signedUrl,
+      token: signedUploadData.token,
+      publicUrl: publicUrlData.publicUrl,
+    });
+  }
+
+  return {
+    version: nextVersion,
+    uploads,
+  };
+}
+
+export async function commitProjectVersionUpload(
+  projectId: string,
+  input: {
+    version: number;
+    uploads: Array<{ publicUrl: string }>;
+  },
+) {
+  if (!Number.isInteger(input.version) || input.version <= 0) {
+    throw new Error("Invalid target variant.");
+  }
+
+  if (input.uploads.length === 0) {
+    throw new Error("Select at least one image.");
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data: projectData, error: projectError } = await supabase
+    .from("projects")
+    .select("id, name")
+    .eq("id", projectId)
+    .maybeSingle();
+
+  if (projectError) throw projectError;
+  const project = projectData as { id: string; name: string } | null;
+  if (!project) throw new Error("Project not found.");
+
+  const rowsToInsert = input.uploads.map((upload) => ({
+    project_id: projectId,
+    project_name: project.name,
+    url: upload.publicUrl,
+    status: "in_review" as ProjectStatus,
+    version: input.version,
+  }));
+
+  const { error: insertError } = await supabase.from("images").insert(rowsToInsert);
+  if (insertError) {
+    if (!isMissingImageStatusColumnError(insertError)) throw insertError;
+
+    const fallbackRowsToInsert = rowsToInsert.map((row) => ({
+      project_id: row.project_id,
+      project_name: row.project_name,
+      url: row.url,
+      version: row.version,
+    }));
+    const { error: fallbackInsertError } = await supabase
+      .from("images")
+      .insert(fallbackRowsToInsert);
+
+    if (fallbackInsertError) throw fallbackInsertError;
+  }
+
+  const nextProject = await getProjectFeedbackProject(projectId);
+  if (!nextProject) throw new Error("Project not found.");
+  return {
+    project: nextProject,
+    version: input.version,
+  };
+}
+
 export async function deleteProjectImage(projectId: string, imageId: string) {
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
@@ -1372,6 +1537,87 @@ export async function replaceProjectImage(
     .update({
       url: publicUrlData.publicUrl,
     })
+    .eq("id", imageId)
+    .eq("project_id", projectId);
+
+  if (updateError) throw updateError;
+
+  if (oldStoragePath) {
+    const { error: storageError } = await supabase.storage
+      .from(PROJECT_IMAGE_BUCKET)
+      .remove([oldStoragePath]);
+
+    if (storageError) {
+      console.warn("Failed to remove replaced image asset from storage:", storageError.message);
+    }
+  }
+
+  const nextProject = await getProjectFeedbackProject(projectId);
+  if (!nextProject) throw new Error("Project not found.");
+  return nextProject;
+}
+
+export async function prepareProjectImageReplacement(
+  projectId: string,
+  imageId: string,
+  input: { name: string; type: string },
+) {
+  if (!input.type.toLowerCase().startsWith("image/")) {
+    throw new Error("Only image files are allowed.");
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("images")
+    .select("id, project_id, version")
+    .eq("id", imageId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  if (error) throw error;
+  const image = data as Pick<ImageRow, "id" | "project_id" | "version"> | null;
+  if (!image) throw new Error("Image not found.");
+
+  const nextPath = createImagePathFromUploadInput(projectId, image.version, input);
+  const { data: signedUploadData, error: signedUploadError } = await supabase.storage
+    .from(PROJECT_IMAGE_BUCKET)
+    .createSignedUploadUrl(nextPath);
+
+  if (signedUploadError) throw signedUploadError;
+
+  const { data: publicUrlData } = supabase.storage
+    .from(PROJECT_IMAGE_BUCKET)
+    .getPublicUrl(nextPath);
+
+  return {
+    path: signedUploadData.path,
+    signedUrl: signedUploadData.signedUrl,
+    token: signedUploadData.token,
+    publicUrl: publicUrlData.publicUrl,
+  } satisfies PreparedProjectImageUpload;
+}
+
+export async function commitProjectImageReplacement(
+  projectId: string,
+  imageId: string,
+  input: { publicUrl: string },
+) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("images")
+    .select("id, project_id, url")
+    .eq("id", imageId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  if (error) throw error;
+  const image = data as Pick<ImageRow, "id" | "project_id" | "url"> | null;
+  if (!image) throw new Error("Image not found.");
+
+  const oldStoragePath = getStoragePathFromPublicUrl(image.url);
+  const { error: updateError } = await supabase
+    .from("images")
+    .update({ url: input.publicUrl })
     .eq("id", imageId)
     .eq("project_id", projectId);
 

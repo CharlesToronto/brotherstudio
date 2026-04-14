@@ -31,7 +31,10 @@ export function SiteFooter({ locale }: { locale: Locale }) {
     { label: messages.nav.about, href: withLocalePath(locale, "/about") },
     { label: messages.nav.contact, href: withLocalePath(locale, "/contact") },
   ];
-  const accessLinks = [{ label: "myStudio", href: "/mystudio" }];
+  const accessLinks = [
+    { label: "myStudio", href: "/mystudio" },
+    { label: "myBrochure", href: "/mybrochure" },
+  ];
   const adminLinks = [
     { label: "Team", href: withLocalePath(locale, "/team/call") },
     { label: "myStudio Admin", href: "/admin/client-projects" },

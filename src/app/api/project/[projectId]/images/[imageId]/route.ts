@@ -2,10 +2,12 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import {
+  commitProjectImageReplacement,
   deleteProjectImage,
   getProjectAccessCookieName,
   isProjectAccessAuthorized,
   isProjectFeedbackConfigured,
+  prepareProjectImageReplacement,
   replaceProjectImage,
 } from "@/lib/projectFeedbackStore";
 
@@ -78,17 +80,57 @@ export async function POST(
     );
   }
 
-  const formData = await request.formData();
-  const file = formData.get("file");
-
-  if (!(file instanceof File)) {
-    return NextResponse.json(
-      { error: "Select one image to replace the existing file." },
-      { status: 400 },
-    );
-  }
+  const contentType = request.headers.get("content-type") ?? "";
 
   try {
+    if (contentType.includes("application/json")) {
+      const payload = (await request.json()) as
+        | {
+            action?: "prepare-replace" | "commit-replace";
+            file?: { name: string; type: string };
+            publicUrl?: string;
+          }
+        | null;
+
+      if (payload?.action === "prepare-replace") {
+        if (!payload.file) {
+          return NextResponse.json(
+            { error: "Select one image to replace the existing file." },
+            { status: 400 },
+          );
+        }
+
+        const result = await prepareProjectImageReplacement(
+          projectId,
+          imageId,
+          payload.file,
+        );
+        return NextResponse.json(result);
+      }
+
+      if (payload?.action === "commit-replace") {
+        const project = await commitProjectImageReplacement(projectId, imageId, {
+          publicUrl: payload.publicUrl?.trim() ?? "",
+        });
+        return NextResponse.json({ project });
+      }
+
+      return NextResponse.json(
+        { error: "Invalid replace action." },
+        { status: 400 },
+      );
+    }
+
+    const formData = await request.formData();
+    const file = formData.get("file");
+
+    if (!(file instanceof File)) {
+      return NextResponse.json(
+        { error: "Select one image to replace the existing file." },
+        { status: 400 },
+      );
+    }
+
     const project = await replaceProjectImage(projectId, imageId, file);
     return NextResponse.json({ project });
   } catch (error) {
