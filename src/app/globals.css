@@ -1915,6 +1915,17 @@ html[data-theme="dark"] .contactForm {
   border-color: var(--foreground);
 }
 
+.clientAdminButtonDanger {
+  border-color: #d94a3a;
+  color: #d94a3a;
+}
+
+.clientAdminButtonDanger:hover {
+  border-color: #d94a3a;
+  background: #fff2ef;
+  color: #d94a3a;
+}
+
 .clientAdminButtonGhost[data-copied="true"],
 .projectFeedbackActionGhost[data-copied="true"] {
   border-color: #6a95ff;
@@ -1949,6 +1960,46 @@ html[data-theme="dark"] .contactForm {
   display: grid;
   gap: 14px;
   align-items: start;
+}
+
+.clientAdminArchive {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgb(127 127 127 / 0.35);
+}
+
+.clientAdminArchiveSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.clientAdminArchiveSummary::-webkit-details-marker {
+  display: none;
+}
+
+.clientAdminArchiveSummary::before {
+  content: "+";
+  margin-right: 8px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.clientAdminArchive[open] .clientAdminArchiveSummary::before {
+  content: "-";
+}
+
+.clientAdminArchiveBody {
+  display: grid;
+  gap: 14px;
 }
 
 .clientAdminProjects[data-layout="grid"] {
@@ -2136,6 +2187,11 @@ html[data-theme="dark"] .contactForm {
 .clientProjectCardSettings .clientAdminButton {
   padding: 10px 12px;
   white-space: nowrap;
+}
+
+.clientProjectDangerZone {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .clientProjectSettingsDisclosure .clientAdminCode {
@@ -3001,14 +3057,15 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .brochureDirectoryShell,
 .brochureStudioShell {
   display: grid;
-  gap: 18px;
+  gap: 20px;
   padding: 0 var(--page-padding) var(--page-padding);
 }
 
 .brochureDirectoryHeader,
 .brochureStudioHeader,
 .brochureStudioSection,
-.brochurePreviewShell {
+.brochurePreviewShell,
+.brochurePublicCanvas {
   border: 1px solid rgb(127 127 127 / 0.35);
   padding: 16px;
 }
@@ -3016,15 +3073,16 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .brochureDirectoryGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
   align-items: start;
 }
 
 .brochureDirectoryCard {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   border: 1px solid rgb(127 127 127 / 0.35);
   padding: 14px;
+  background: #fff;
 }
 
 .brochureDirectoryMedia {
@@ -3062,27 +3120,55 @@ html[data-theme="dark"] .myStudioGuideArrow {
   gap: 10px;
 }
 
+.brochureStudioSection {
+  background: #eef5ff;
+  border-color: rgb(112 148 214 / 0.24);
+}
+
 .brochureStudioHeader {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 14px;
+  gap: 18px;
   align-items: flex-start;
 }
 
-.brochureStudioToolbar,
-.brochureStudioUploads,
-.brochureStudioActionRow {
+.brochureStudioToolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
 }
 
+.brochureStudioAutosave {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgb(127 127 127 / 0.2);
+  color: #666;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.brochureStudioAutosave[data-status="saving"] {
+  color: #111;
+}
+
+.brochureStudioAutosave[data-status="saved"] {
+  color: #2b6d46;
+}
+
+.brochureStudioAutosave[data-status="error"] {
+  color: #c43b2f;
+}
+
 .brochureStudioLayout {
   display: grid;
-  grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  gap: 20px;
   align-items: start;
 }
 
@@ -3090,21 +3176,71 @@ html[data-theme="dark"] .myStudioGuideArrow {
   align-content: start;
 }
 
+.brochureBuilderPanel {
+  position: sticky;
+  top: 84px;
+}
+
+.brochureSidebarPanel {
+  gap: 0;
+}
+
+.brochureSidebarPanelToggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.brochureSidebarPanelBody {
+  display: grid;
+  gap: 12px;
+  padding-top: 14px;
+}
+
+.brochureSidebarPanelSymbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgb(112 148 214 / 0.26);
+  background: rgb(255 255 255 / 0.72);
+  color: #5a86d8;
+  font-size: 22px;
+  line-height: 1;
+}
+
 .brochureTemplateGrid {
   display: grid;
   gap: 10px;
 }
 
+.brochureTemplateGridCompact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .brochureTemplateCard {
   display: grid;
   gap: 6px;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid rgb(127 127 127 / 0.28);
-  background: #fafafa;
+  background: #f7fbff;
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .brochureTemplateCard strong,
@@ -3126,15 +3262,14 @@ html[data-theme="dark"] .myStudioGuideArrow {
   color: #717171;
 }
 
-.brochureTemplateCard[data-active="true"] {
+.brochureTemplateCard:hover {
   border-color: #111;
-  background: #f1f1f1;
+  transform: translateY(-1px);
 }
 
-.brochureColorGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+.brochureTemplateCard[data-active="true"] {
+  border-color: #7aa5f7;
+  background: #dfeeff;
 }
 
 .brochureColorInput {
@@ -3142,86 +3277,187 @@ html[data-theme="dark"] .myStudioGuideArrow {
   min-height: 40px;
   box-sizing: border-box;
   border: 1px solid rgb(127 127 127 / 0.35);
-  background: transparent;
-  padding: 4px;
+  background: #fff;
+  padding: 2px;
 }
 
 .brochureStudioTextarea {
-  min-height: 120px;
+  min-height: 140px;
 }
 
-.brochureAssetGrid {
+.brochureImageList {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.brochureAssetCard {
+.brochureImageRow {
   display: grid;
-  gap: 8px;
-  padding: 10px;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
   border: 1px solid rgb(127 127 127 / 0.22);
-  background: #fff;
-  color: inherit;
-  text-align: left;
+  background: #f7fbff;
   cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
-.brochureAssetCard[data-active="true"] {
+.brochureImageRow[data-active="false"] {
+  opacity: 0.58;
+}
+
+.brochureImageRow:hover {
   border-color: #111;
-  background: #f6f6f6;
 }
 
-.brochureAssetImage {
+.brochureImageRowMedia {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 1;
+}
+
+.brochureImageRowMedia img {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1;
   object-fit: cover;
   background: #f3f3f3;
 }
 
-.brochureAssetCardMeta {
+.brochureImageRowBody {
+  display: grid;
+  gap: 10px;
+}
+
+.brochureImageRowCopy {
+  display: grid;
+  gap: 3px;
+}
+
+.brochureImageRowCopy strong {
   font-size: 11px;
-  line-height: 1.4;
-  color: #666;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brochureImageRowCopy span {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #6f6f6f;
+}
+
+.brochureImageRowActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.brochureImageSelect {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brochureImageSelect input {
+  margin: 0;
+}
+
+.brochureImageOrderBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: 34px;
+  border: 1px solid rgb(127 127 127 / 0.25);
+  background: #f3f3f3;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .brochureStudioUpload {
   min-width: 0;
 }
 
-.brochureStudioLogoPreview {
-  display: inline-flex;
+.brochureSectionAddRow,
+.brochureSectionEditorActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   align-items: center;
-  justify-content: center;
-  max-width: 180px;
-  padding: 12px;
-  border: 1px solid rgb(127 127 127 / 0.22);
-  background: #fff;
 }
 
-.brochureStudioLogoPreview img {
-  display: block;
-  max-width: 100%;
-  max-height: 64px;
-  object-fit: contain;
+.brochureSectionAddRow .projectFeedbackInput {
+  flex: 1 1 220px;
 }
 
-.brochureStudioExtraAssets {
+.brochureSectionList {
+  display: grid;
+  gap: 8px;
+}
+
+.brochureSectionTab {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgb(127 127 127 / 0.24);
+  background: #f7fbff;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.brochureSectionTab strong {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brochureSectionTab span {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #7a7a7a;
+}
+
+.brochureSectionTab[data-active="true"] {
+  border-color: #7aa5f7;
+  background: #dfeeff;
+}
+
+.brochureSectionPicker {
+  display: grid;
+  gap: 10px;
+}
+
+.brochureSectionImageGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.brochureStudioExtraAsset {
+.brochureSectionImageCard {
   display: grid;
   gap: 8px;
   padding: 10px;
-  border: 1px solid rgb(127 127 127 / 0.2);
-  background: #fff;
+  border: 1px solid rgb(127 127 127 / 0.22);
+  background: #f7fbff;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
 }
 
-.brochureStudioExtraAsset img {
+.brochureSectionImageCard img {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -3229,63 +3465,728 @@ html[data-theme="dark"] .myStudioGuideArrow {
   background: #f3f3f3;
 }
 
-.brochureStudioExtraAsset span {
+.brochureSectionImageCard span {
   font-size: 10px;
   line-height: 1.4;
-  color: #666;
-  overflow-wrap: anywhere;
+  color: #6f6f6f;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.brochureStudioControlsFooter .projectFeedbackAction {
-  width: 100%;
+.brochureSectionImageCard[data-active="true"] {
+  border-color: var(--brochure-accent-color, #111);
+  background: #dfeeff;
 }
 
-.brochurePreviewShell {
+.brochureBuilderPreview {
   background: #f7f7f7;
 }
 
-.brochurePreviewPage {
-  --brochure-heading-color: #111111;
-  --brochure-body-color: #5f5f5f;
-  --brochure-accent-color: #c40018;
-  --brochure-font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+.brochurePreviewSurface {
+  position: sticky;
+  top: 84px;
   display: grid;
-  gap: 22px;
-  min-height: calc(100vh - 220px);
-  padding: clamp(20px, 3vw, 36px);
-  border: 1px solid rgb(127 127 127 / 0.25);
-  background: #fff;
+  gap: 14px;
+  padding: clamp(8px, 1.2vw, 14px);
+  background: linear-gradient(180deg, #fafafa 0%, #f3f3f3 100%);
 }
 
-.brochurePreviewPage[data-template="modern"] {
-  background: linear-gradient(180deg, #f7f7f5 0%, #ffffff 100%);
+.brochurePublicShell {
+  display: grid;
+  gap: 16px;
+  padding: 0 var(--page-padding) var(--page-padding);
+}
+
+.brochurePublicCanvas {
+  max-width: 1180px;
+  margin: 0 auto;
+  width: 100%;
+  background: #f7f7f7;
+}
+
+.projectFeedbackActionDark {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
+.brochureRenderDocument {
+  --brochure-font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --brochure-accent-color: #c40018;
+  display: grid;
+  gap: 16px;
+  color: #111;
+  font-family: var(--brochure-font-family);
+}
+
+.brochurePreviewToolbar,
+.brochurePreviewToolbarGroup,
+.brochurePreviewSelectionBar,
+.brochurePreviewColorControl,
+.brochureCanvasPopover,
+.brochureCanvasPopoverGrid,
+.brochureCanvasCopy,
+.brochureCanvasMeta,
+.brochureCanvasSocial,
+.brochureCanvasSocialList,
+.brochureCanvasMediaFigure figcaption {
+  display: grid;
+  gap: 8px;
+}
+
+.brochurePreviewToolbar {
+  position: sticky;
+  top: 84px;
+  z-index: 12;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgb(127 127 127 / 0.2);
+  background: rgb(255 255 255 / 0.92);
+  backdrop-filter: blur(14px);
+}
+
+.brochureCanvasPopover {
+  position: fixed;
+  z-index: 22;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgb(127 127 127 / 0.2);
+  background: rgb(255 255 255 / 0.96);
+  box-shadow: 0 28px 80px rgb(17 17 17 / 0.14);
+  backdrop-filter: blur(18px);
+  transform: translate(-50%, var(--brochure-popover-shift, -100%));
+}
+
+.brochureCanvasPopoverHeader,
+.brochureCanvasPopoverButtonRow,
+.brochureCanvasPopoverIconRow,
+.brochureCanvasPopoverFooter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.brochureCanvasPopoverHeader {
+  justify-content: space-between;
+}
+
+.brochureCanvasPopoverTitleWrap {
+  display: grid;
+  gap: 4px;
+}
+
+.brochureCanvasPopoverTitle {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: capitalize;
+}
+
+.brochureCanvasPopoverClose {
+  border: 1px solid rgb(127 127 127 / 0.2);
+  background: #fff;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.brochureCanvasPopoverGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.brochureCanvasPopoverField {
+  display: grid;
+  gap: 8px;
+}
+
+.brochureCanvasPopoverFieldWide,
+.brochureCanvasPopoverFooter {
+  grid-column: 1 / -1;
+}
+
+.brochureCanvasPopoverColor {
+  width: 48px;
+  height: 40px;
+  padding: 4px;
+  border: 1px solid rgb(127 127 127 / 0.24);
+  background: #fff;
+  cursor: pointer;
+}
+
+.brochureCanvasPopoverTextarea,
+.brochureCanvasPopoverNumber {
+  border: 1px solid rgb(127 127 127 / 0.24);
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.brochureCanvasPopoverTextarea {
+  min-height: 88px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.brochureCanvasPopoverNumber {
+  width: 76px;
+  min-height: 38px;
+  padding: 0 10px;
+}
+
+.brochurePreviewToolbarGroup {
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.brochurePreviewToolbarLabel {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6c6c6c;
+}
+
+.brochurePreviewColorControl {
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  align-items: center;
+  gap: 10px;
+}
+
+.brochurePreviewColorControl input {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgb(127 127 127 / 0.24);
+  background: #fff;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.brochurePreviewToolbarButton {
+  border: 1px solid rgb(127 127 127 / 0.3);
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.brochurePreviewToolbarButton[data-active="true"] {
+  border-color: #7aa5f7;
+  background: #dfeeff;
+}
+
+.brochurePreviewToolbarButton:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.brochurePreviewToolbarButtonDanger {
+  color: #c43b2f;
+}
+
+.brochurePreviewSelectionBar {
+  display: none;
+}
+
+.brochureRenderPageList {
+  display: grid;
+  gap: 16px;
+}
+
+.brochureRenderPageShell {
+  display: grid;
+  gap: 8px;
+}
+
+.brochureRenderPageHeader {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.brochureRenderPage {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 210 / 297;
+  width: 100%;
+  padding: 0;
+  background: #fff;
+  border: 1px solid rgb(127 127 127 / 0.16);
+}
+
+.brochureRenderPage[data-template="modern"] {
   border-top: 4px solid var(--brochure-accent-color);
 }
 
-.brochurePreviewPage[data-template="minimal"] {
-  background: #ffffff;
+.brochureRenderPage[data-template="minimal"] {
+  border-top: 1px solid rgb(127 127 127 / 0.16);
 }
 
-.brochurePreviewPage[data-template="luxury"] {
-  background: linear-gradient(180deg, #f8f1e9 0%, #fffaf3 100%);
+.brochureRenderPage[data-template="luxury"] {
   border-top: 2px solid var(--brochure-accent-color);
+  background: linear-gradient(180deg, #f8f4ee 0%, #fffdfa 100%);
 }
 
-.brochurePreviewHero {
+.brochureRenderPageShell[data-active="true"] .brochureRenderPage {
+  box-shadow: 0 0 0 1px var(--brochure-accent-color);
+}
+
+.brochureRenderPage[data-drop-target="true"] {
+  box-shadow:
+    0 0 0 2px #1f5eff,
+    inset 0 0 0 2px rgb(31 94 255 / 0.16);
+  background:
+    linear-gradient(180deg, rgb(31 94 255 / 0.04), rgb(31 94 255 / 0.04)),
+    #fff;
+}
+
+.brochureCanvasItem {
+  position: absolute;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+.brochureCanvasItem[data-selected="true"] {
+  cursor: grabbing;
+}
+
+.brochureRenderDocument[data-editable="true"] .brochureCanvasItem[data-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 1px solid var(--brochure-item-color, var(--brochure-accent-color));
+  pointer-events: none;
+}
+
+.brochureCanvasItem[data-kind="copy"],
+.brochureCanvasItem[data-kind="projectMeta"],
+.brochureCanvasItem[data-kind="socialLinks"],
+.brochureCanvasItem[data-kind="text"] {
+  padding: clamp(14px, 1.8vw, 22px);
+  background: rgb(255 255 255 / 0.94);
+  box-shadow: 0 16px 40px rgb(17 17 17 / 0.08);
+  border: 1px solid color-mix(in srgb, var(--brochure-item-color, var(--brochure-accent-color)) 18%, transparent);
+}
+
+.brochureCanvasItem[data-kind="media"] {
+  overflow: hidden;
+  background: #f3f3f3;
+  box-shadow: 0 18px 42px rgb(17 17 17 / 0.08);
+  border: 1px solid color-mix(in srgb, var(--brochure-item-color, var(--brochure-accent-color)) 16%, transparent);
+}
+
+.brochureCanvasItem[data-kind="logo"] {
+  padding: 10px 14px;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: 0 14px 34px rgb(17 17 17 / 0.05);
+  border: 1px solid color-mix(in srgb, var(--brochure-item-color, var(--brochure-accent-color)) 16%, transparent);
+}
+
+.brochureCanvasItem[data-kind="shape"] {
+  background: transparent;
+}
+
+.brochureCanvasPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 72px;
+  border: 1px dashed rgb(127 127 127 / 0.25);
+  color: #7f7f7f;
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.brochureRenderEyebrow,
+.brochureRenderProjectName,
+.brochureRenderTitle,
+.brochureRenderSubtitle,
+.brochureRenderSectionTitle,
+.brochureRenderSectionSubtitle,
+.brochureRenderSectionBody {
+  margin: 0;
+}
+
+.brochureRenderEyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brochure-item-color, var(--brochure-accent-color));
+}
+
+.brochureRenderProjectName {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #6b6b6b;
+}
+
+.brochureRenderTitle {
+  font-size: clamp(30px, 4vw, 54px);
+  line-height: 0.96;
+  letter-spacing: -0.05em;
+  color: var(--brochure-item-color, #111);
+}
+
+.brochureRenderPage[data-template="luxury"] .brochureRenderTitle {
+  letter-spacing: -0.03em;
+}
+
+.brochureRenderSubtitle {
+  max-width: 28ch;
+  font-size: clamp(14px, 1.5vw, 20px);
+  line-height: 1.5;
+  color: #4f4f4f;
+}
+
+.brochureRenderSectionLabel {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brochure-item-color, var(--brochure-accent-color));
+}
+
+.brochureRenderSectionTitle {
+  font-size: clamp(20px, 2.2vw, 30px);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: var(--brochure-item-color, #111);
+}
+
+.brochureRenderSectionSubtitle {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #5f5f5f;
+}
+
+.brochureRenderSectionBody {
+  font-size: 12px;
+  line-height: 1.85;
+  color: #6a6a6a;
+}
+
+.brochureRenderSectionBodyLead {
+  max-width: 30ch;
+}
+
+.brochureCanvasLogo,
+.brochureCanvasLogo img {
+  width: 100%;
+  height: 100%;
+}
+
+.brochureCanvasLogo img {
+  display: block;
+  object-fit: contain;
+}
+
+.brochureCanvasMediaGrid {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.brochureCanvasMediaGrid[data-count="1"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.brochureCanvasMediaFigure {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px;
+  min-height: 0;
+  margin: 0;
+}
+
+.brochureCanvasMediaFigure img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #ececec;
+}
+
+.brochureCanvasMediaFigure figcaption strong {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #111;
+}
+
+.brochureCanvasMediaFigure figcaption span {
+  font-size: 10px;
+  line-height: 1.45;
+  color: #717171;
+}
+
+.brochureCanvasSocialList {
+  gap: 10px;
+}
+
+.brochureCanvasSocialList a {
+  display: grid;
+  gap: 2px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brochureCanvasSocialList strong {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brochure-item-color, var(--brochure-accent-color));
+}
+
+.brochureCanvasSocialList span {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #666;
+}
+
+.brochureCanvasShape,
+.brochureCanvasShapeFill,
+.brochureCanvasShapeSvg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.brochureCanvasShapeFill {
+  border: var(--brochure-shape-stroke-width, 3px) solid color-mix(in srgb, var(--brochure-item-color, var(--brochure-accent-color)) 74%, transparent);
+  background: color-mix(in srgb, var(--brochure-item-color, var(--brochure-accent-color)) 12%, transparent);
+  box-sizing: border-box;
+}
+
+.brochureCanvasItem[data-shape="circle"] .brochureCanvasShapeFill {
+  border-radius: 999px;
+}
+
+.brochureCanvasShapeSvg {
+  overflow: visible;
+}
+
+.brochureCanvasShapeSvg line,
+.brochureCanvasShapeSvg polyline,
+.brochureCanvasShapeSvg path {
+  stroke: var(--brochure-item-color, var(--brochure-accent-color));
+  fill: var(--brochure-item-color, var(--brochure-accent-color));
+  stroke-width: var(--brochure-shape-stroke-width, 3px);
+}
+
+.brochureCanvasTextBlock {
+  width: 100%;
+  height: 100%;
+}
+
+.brochureCanvasTextContent {
+  margin: 0;
+  color: var(--brochure-item-color, #111);
+  font-size: var(--brochure-text-size, 24px);
+  font-weight: var(--brochure-text-font-weight, 500);
+  font-style: var(--brochure-text-font-style, normal);
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  text-align: var(--brochure-text-align, left);
+  white-space: pre-wrap;
+}
+
+.brochureCanvasResizeHandle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #fff;
+  border-radius: 999px;
+  background: var(--brochure-accent-color);
+  box-shadow: 0 0 0 1px rgb(17 17 17 / 0.16);
+  padding: 0;
+  cursor: pointer;
+}
+
+.brochureCanvasResizeHandle[data-handle="nw"] {
+  top: -6px;
+  left: -6px;
+}
+
+.brochureCanvasResizeHandle[data-handle="ne"] {
+  top: -6px;
+  right: -6px;
+}
+
+.brochureCanvasResizeHandle[data-handle="sw"] {
+  bottom: -6px;
+  left: -6px;
+}
+
+.brochureCanvasResizeHandle[data-handle="se"] {
+  right: -6px;
+  bottom: -6px;
+}
+
+.brochureCanvasResizeHandle[data-handle="start"] {
+  top: -6px;
+  left: -6px;
+}
+
+.brochureCanvasResizeHandle[data-handle="end"] {
+  right: -6px;
+  bottom: -6px;
+}
+
+.brochureSectionSocialGrid,
+.brochureSectionSocialFields {
+  display: grid;
+  gap: 10px;
+}
+
+.brochureSectionSocialFields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.projectFeedbackImageCardHeader,
+.projectFeedbackImageActions,
+.projectFeedbackImageCardCopy {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.brochureRenderPage[data-template="modern"] {
+  border-top: 4px solid var(--brochure-accent-color);
+}
+
+.brochureRenderPage[data-template="minimal"] {
+  border-top: 1px solid rgb(127 127 127 / 0.16);
+}
+
+.brochureRenderPage[data-template="luxury"] {
+  border-top: 2px solid var(--brochure-accent-color);
+  background: linear-gradient(180deg, #f8f4ee 0%, #fffdfa 100%);
+}
+
+.brochureRenderSection,
+.brochureRenderHeader,
+.brochureRenderHeaderCopy,
+.brochureRenderHeroCopy,
+.brochureRenderSectionIntro,
+.brochureRenderGalleryItem figcaption {
+  display: grid;
+  gap: 8px;
+}
+
+.brochureRenderSection {
+  gap: 18px;
+}
+
+.brochureRenderSection:not([data-kind="cover"]) {
+  padding-top: 24px;
+  border-top: 1px solid rgb(127 127 127 / 0.14);
+}
+
+.brochureRenderHeader {
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 20px;
   align-items: start;
-  padding-bottom: 18px;
-  border-bottom: 1px solid rgb(127 127 127 / 0.18);
+  gap: 18px;
 }
 
-.brochurePreviewHeroCopy {
+.brochureRenderEyebrow,
+.brochureRenderProjectName {
+  margin: 0;
+}
+
+.brochureRenderEyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brochure-accent-color);
+}
+
+.brochureRenderProjectName {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #6b6b6b;
+}
+
+.brochureRenderLogo {
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.brochureRenderLogo img {
+  display: block;
+  max-width: 180px;
+  max-height: 74px;
+  object-fit: contain;
+}
+
+.brochureRenderHero {
   display: grid;
-  gap: 12px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 28px;
+  align-items: start;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgb(127 127 127 / 0.16);
 }
 
-.brochurePreviewEyebrow {
+.brochureRenderPage[data-template="minimal"] .brochureRenderHero {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.brochureRenderTitle,
+.brochureRenderSubtitle,
+.brochureRenderSectionTitle,
+.brochureRenderSectionSubtitle,
+.brochureRenderSectionBody {
+  margin: 0;
+}
+
+.brochureRenderTitle {
+  font-size: clamp(36px, 4.8vw, 72px);
+  line-height: 0.96;
+  letter-spacing: -0.05em;
+}
+
+.brochureRenderPage[data-template="luxury"] .brochureRenderTitle {
+  letter-spacing: -0.03em;
+}
+
+.brochureRenderSubtitle {
+  max-width: 62ch;
+  font-size: clamp(15px, 1.6vw, 22px);
+  line-height: 1.5;
+  color: #4f4f4f;
+}
+
+.brochureRenderSectionLabel {
   margin: 0;
   font-size: 10px;
   font-weight: 700;
@@ -3294,108 +4195,107 @@ html[data-theme="dark"] .myStudioGuideArrow {
   color: var(--brochure-accent-color);
 }
 
-.brochurePreviewTitle,
-.brochurePreviewSubtitle,
-.brochurePreviewBody {
-  margin: 0;
+.brochureRenderSectionTitle {
+  font-size: clamp(22px, 2.4vw, 36px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
 }
 
-.brochurePreviewTitle {
-  font-family: var(--brochure-font-family);
-  font-size: clamp(28px, 4vw, 56px);
-  line-height: 0.98;
-  color: var(--brochure-heading-color);
+.brochureRenderSectionSubtitle {
+  max-width: 72ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #5f5f5f;
 }
 
-.brochurePreviewPage[data-template="luxury"] .brochurePreviewTitle {
-  letter-spacing: 0.02em;
-}
-
-.brochurePreviewSubtitle {
-  max-width: 62ch;
-  font-size: clamp(14px, 1.5vw, 20px);
-  line-height: 1.5;
-  color: var(--brochure-heading-color);
-}
-
-.brochurePreviewBody {
-  max-width: 62ch;
+.brochureRenderSectionBody {
+  max-width: 74ch;
   font-size: 13px;
-  line-height: 1.7;
-  color: var(--brochure-body-color);
+  line-height: 1.85;
+  color: #6a6a6a;
 }
 
-.brochurePreviewLogo {
-  display: inline-flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  min-width: 120px;
+.brochureRenderSectionBodyLead {
+  max-width: 62ch;
 }
 
-.brochurePreviewLogo img {
-  display: block;
-  max-width: 160px;
-  max-height: 78px;
-  object-fit: contain;
-}
-
-.brochurePreviewGrid {
+.brochureRenderHeroMedia,
+.brochureRenderGalleryItem {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 10px;
 }
 
-.brochurePreviewPage[data-count="1"] .brochurePreviewGrid {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.brochurePreviewPage[data-count="1"] .brochurePreviewFigure img {
-  aspect-ratio: 16 / 9;
-}
-
-.brochurePreviewFigure {
-  display: grid;
-  gap: 8px;
-}
-
-.brochurePreviewFigure img {
+.brochureRenderHeroMedia img,
+.brochureRenderGalleryItem img {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
   object-fit: cover;
   background: #f3f3f3;
 }
 
-.brochurePreviewFigure figcaption {
-  display: grid;
-  gap: 2px;
+.brochureRenderHeroMedia img {
+  aspect-ratio: 16 / 10;
 }
 
-.brochurePreviewFigure figcaption strong {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--brochure-heading-color);
-}
-
-.brochurePreviewFigure figcaption span {
-  font-size: 11px;
-  line-height: 1.45;
-  color: var(--brochure-body-color);
-}
-
-.brochurePreviewEmpty {
+.brochureRenderEmptyHero {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 220px;
-  border: 1px dashed rgb(127 127 127 / 0.3);
+  min-height: 420px;
+  border: 1px dashed rgb(127 127 127 / 0.28);
   color: #7a7a7a;
   font-size: 12px;
   line-height: 1.5;
   text-align: center;
   padding: 20px;
+}
+
+.brochureRenderSectionIntroCentered {
+  justify-items: center;
+  text-align: center;
+}
+
+.brochureRenderSectionMediaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.brochureRenderSectionMediaGrid[data-count="1"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.brochureRenderFinalLogo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  padding-top: 10px;
+}
+
+.brochureRenderFinalLogo img {
+  display: block;
+  max-width: 180px;
+  max-height: 82px;
+  object-fit: contain;
+}
+
+.brochureRenderGalleryItem img {
+  aspect-ratio: 4 / 3;
+}
+
+.brochureRenderGalleryItem figcaption strong {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #111;
+}
+
+.brochureRenderGalleryItem figcaption span {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #717171;
 }
 
 .projectFeedbackImageCardHeader,
@@ -4351,6 +5251,11 @@ html[data-theme="dark"] .myStudioGuideArrow {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .brochureBuilderPanel,
+  .brochurePreviewSurface {
+    position: static;
+  }
+
   .myStudioGuideSteps {
     grid-template-columns: minmax(0, 1fr);
     aspect-ratio: auto;
@@ -4407,30 +5312,69 @@ html[data-theme="dark"] .myStudioGuideArrow {
 
 @media (max-width: 640px) {
   .brochureDirectoryGrid,
-  .brochureAssetGrid,
-  .brochureColorGrid,
-  .brochurePreviewGrid {
+  .brochureTemplateGridCompact,
+  .brochureSectionImageGrid,
+  .brochureCanvasMediaGrid,
+  .brochureSectionSocialFields {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .brochureStudioExtraAssets {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .brochureStudioHeader,
-  .brochureStudioToolbar,
-  .brochureStudioUploads,
-  .brochureStudioActionRow {
+  .brochureStudioToolbar {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .brochurePreviewHero {
-    grid-template-columns: minmax(0, 1fr);
+  .brochureSectionAddRow,
+  .brochureSectionEditorActions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .brochurePreviewLogo {
+  .brochureImageRow {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .brochurePreviewToolbar {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .brochurePreviewColorControl {
     justify-content: flex-start;
+  }
+
+  .brochurePreviewSelectionBar {
+    position: sticky;
+    bottom: 0;
+    z-index: 14;
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid rgb(127 127 127 / 0.18);
+    background: rgb(255 255 255 / 0.96);
+    backdrop-filter: blur(16px);
+  }
+
+  .brochureRenderPage {
+    aspect-ratio: auto;
+    min-height: 520px;
+  }
+
+  .brochureCanvasItem[data-kind="copy"],
+  .brochureCanvasItem[data-kind="projectMeta"],
+  .brochureCanvasItem[data-kind="socialLinks"],
+  .brochureCanvasItem[data-kind="logo"],
+  .brochureCanvasItem[data-kind="text"] {
+    padding: 12px;
+  }
+
+  .brochureRenderTitle {
+    font-size: 26px;
+  }
+
+  .brochureRenderSectionTitle {
+    font-size: 18px;
   }
 
   .projectFeedbackMarker[data-active="true"] {
@@ -4857,15 +5801,28 @@ html[data-theme="dark"] .myStudioGuideArrow {
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
   .siteHeader,
   .siteFooter,
   .brochureStudioHeader,
   .brochureStudioControls,
-  .projectFeedbackMessage {
+  .projectFeedbackMessage,
+  .brochureDirectoryShell,
+  .brochurePreviewToolbar,
+  .brochureCanvasPopover,
+  .brochurePreviewSelectionBar,
+  .brochureCanvasResizeHandles,
+  .brochureRenderPageHeader {
     display: none !important;
   }
 
   .siteMain,
+  .brochurePublicShell,
+  .brochurePublicCanvas,
   .brochureStudioShell,
   .brochureStudioLayout,
   .brochurePreviewShell {
@@ -4876,9 +5833,32 @@ html[data-theme="dark"] .myStudioGuideArrow {
     background: #fff !important;
   }
 
-  .brochurePreviewPage {
-    min-height: auto !important;
+  .brochurePreviewSurface,
+  .brochureRenderDocument,
+  .brochureRenderPageList,
+  .brochureRenderPageShell,
+  .brochureRenderPage {
+    padding: 0 !important;
+    margin: 0 !important;
     border: 0 !important;
     box-shadow: none !important;
+    min-height: auto !important;
+  }
+
+  .brochurePreviewSurface {
+    background: #fff !important;
+  }
+
+  .brochureRenderPage {
+    aspect-ratio: auto !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .brochureRenderPageShell:last-child .brochureRenderPage {
+    page-break-after: auto;
+    break-after: auto;
   }
 }

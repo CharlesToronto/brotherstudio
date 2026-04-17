@@ -44,6 +44,7 @@ export function ClientProjectsAdmin({
   const [savingPasswordProjectId, setSavingPasswordProjectId] = useState<
     string | null
   >(null);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
   const [copiedProjectId, setCopiedProjectId] = useState<string | null>(null);
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [isComposerOpen, setIsComposerOpen] = useState(
@@ -87,6 +88,14 @@ export function ClientProjectsAdmin({
         b.createdAt.localeCompare(a.createdAt),
       ),
     [projects],
+  );
+  const activeProjects = useMemo(
+    () => sortedProjects.filter((project) => project.status !== "approved"),
+    [sortedProjects],
+  );
+  const archivedProjects = useMemo(
+    () => sortedProjects.filter((project) => project.status === "approved"),
+    [sortedProjects],
   );
 
   const handleCreateProject = async (event: FormEvent<HTMLFormElement>) => {
@@ -249,6 +258,192 @@ export function ClientProjectsAdmin({
     setErrorMessage("");
   };
 
+  const handleDeleteProject = async (project: ProjectSummary) => {
+    if (typeof window !== "undefined") {
+      const confirmed = window.confirm(
+        `Delete "${project.name}" permanently? This cannot be undone.`,
+      );
+      if (!confirmed) return;
+    }
+
+    setDeletingProjectId(project.id);
+    setStatusMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(`/api/projects/${project.id}`, {
+        method: "DELETE",
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | {
+            projectId?: string;
+            error?: string;
+          }
+        | null;
+
+      if (!response.ok || payload?.projectId !== project.id) {
+        throw new Error(payload?.error ?? "Failed to delete project.");
+      }
+
+      setProjects((current) =>
+        current.filter((currentProject) => currentProject.id !== project.id),
+      );
+      setNameDrafts((current) => {
+        const next = { ...current };
+        delete next[project.id];
+        return next;
+      });
+      setPasswordDrafts((current) => {
+        const next = { ...current };
+        delete next[project.id];
+        return next;
+      });
+      setStatusMessage("Project deleted.");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to delete project.",
+      );
+    } finally {
+      setDeletingProjectId(null);
+    }
+  };
+
+  const renderProjectCard = (project: ProjectSummary) => (
+    <article key={project.id} className="clientProjectCard" data-layout={layout}>
+      <div className="clientProjectCardMedia">
+        {project.coverImageUrl ? (
+          <img
+            className="clientProjectCardPreview"
+            src={project.coverImageUrl}
+            alt={project.name}
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <div className="clientProjectCardPlaceholder">
+            <span>{project.name.slice(0, 1).toUpperCase()}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="clientProjectCardBody">
+        <div className="clientProjectCardTop">
+          <div>
+            <div className="clientProjectCardTitleRow">
+              <h2 className="clientProjectCardTitle">{project.name}</h2>
+              <span className="clientProjectCardStatus" data-status={project.status}>
+                {project.status === "approved" ? "Approved" : "In review"}
+              </span>
+            </div>
+            <p className="clientProjectCardMeta">
+              Created {formatProjectDate(project.createdAt)}
+            </p>
+            <p className="clientProjectCardMeta">
+              {project.latestVersion > 0
+                ? `Latest variant: V${project.latestVersion}`
+                : "No variants yet"}
+            </p>
+          </div>
+        </div>
+
+        <div className="clientProjectCardStats">
+          <span>{project.imageCount} image(s)</span>
+          <span>
+            {project.commentCount} edit request{project.commentCount === 1 ? "" : "s"}
+          </span>
+          <span>{project.viewerCount} viewer(s)</span>
+        </div>
+
+        <div className="clientProjectCardActions">
+          <a
+            className="clientAdminButton clientAdminButtonGhost"
+            href={`/admin/client-projects/${project.id}`}
+          >
+            Manage variants
+          </a>
+          <button
+            className="clientAdminButton clientAdminButtonGhost"
+            type="button"
+            data-copied={copiedProjectId === project.id ? "true" : "false"}
+            onClick={() => void handleCopyLink(project.id)}
+          >
+            {copiedProjectId === project.id ? "Copied" : "Copy link"}
+          </button>
+        </div>
+
+        <details className="clientProjectSettingsDisclosure">
+          <summary className="clientProjectSettingsSummary">Project settings</summary>
+          <div className="clientProjectCardSettings">
+            <div className="clientAdminPasswordRow">
+              <label className="clientAdminField">
+                <span className="clientAdminLabel">Project name</span>
+                <input
+                  className="clientAdminInput"
+                  type="text"
+                  value={nameDrafts[project.id] ?? ""}
+                  onChange={(event) =>
+                    setNameDrafts((current) => ({
+                      ...current,
+                      [project.id]: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <button
+                className="clientAdminButton clientAdminButtonGhost"
+                type="button"
+                disabled={savingNameProjectId === project.id}
+                onClick={() => void handleSaveName(project.id)}
+              >
+                {savingNameProjectId === project.id ? "Saving..." : "Save name"}
+              </button>
+            </div>
+            <div className="clientAdminPasswordRow">
+              <label className="clientAdminField">
+                <span className="clientAdminLabel">Parcel Number</span>
+                <input
+                  className="clientAdminInput"
+                  type="text"
+                  value={passwordDrafts[project.id] ?? ""}
+                  onChange={(event) =>
+                    setPasswordDrafts((current) => ({
+                      ...current,
+                      [project.id]: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <button
+                className="clientAdminButton clientAdminButtonGhost"
+                type="button"
+                disabled={savingPasswordProjectId === project.id}
+                onClick={() => void handleSavePassword(project.id)}
+              >
+                {savingPasswordProjectId === project.id
+                  ? "Saving..."
+                  : "Save parcel number"}
+              </button>
+            </div>
+          </div>
+          <p className="clientAdminText clientAdminCode">
+            {getProjectUrl(project.id, origin)}
+          </p>
+          <div className="clientProjectDangerZone">
+            <button
+              className="clientAdminButton clientAdminButtonGhost clientAdminButtonDanger"
+              type="button"
+              disabled={deletingProjectId === project.id}
+              onClick={() => void handleDeleteProject(project)}
+            >
+              {deletingProjectId === project.id ? "Deleting..." : "Delete project"}
+            </button>
+          </div>
+        </details>
+      </div>
+    </article>
+  );
+
   if (!isConfigured || setupError) {
     return (
       <section className="clientAdminLayout" aria-labelledby="clientAdminTitle">
@@ -319,7 +514,7 @@ export function ClientProjectsAdmin({
             >
               {isComposerOpen ? "Masquer le formulaire" : "Nouveau projet"}
             </button>
-            <p className="clientAdminText">{sortedProjects.length} project(s)</p>
+            <p className="clientAdminText">{activeProjects.length} active project(s)</p>
           </div>
 
           <div className="clientAdminToolbarGroup">
@@ -392,148 +587,35 @@ export function ClientProjectsAdmin({
       </div>
 
       <div className="clientAdminProjects" data-layout={layout}>
-        {sortedProjects.length > 0 ? (
-          sortedProjects.map((project) => (
-            <article
-              key={project.id}
-              className="clientProjectCard"
-              data-layout={layout}
-            >
-              <div className="clientProjectCardMedia">
-                {project.coverImageUrl ? (
-                  <img
-                    className="clientProjectCardPreview"
-                    src={project.coverImageUrl}
-                    alt={project.name}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <div className="clientProjectCardPlaceholder">
-                    <span>{project.name.slice(0, 1).toUpperCase()}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="clientProjectCardBody">
-                <div className="clientProjectCardTop">
-                  <div>
-                    <div className="clientProjectCardTitleRow">
-                      <h2 className="clientProjectCardTitle">{project.name}</h2>
-                      <span
-                        className="clientProjectCardStatus"
-                        data-status={project.status}
-                      >
-                        {project.status === "approved" ? "Approved" : "In review"}
-                      </span>
-                    </div>
-                    <p className="clientProjectCardMeta">
-                      Created {formatProjectDate(project.createdAt)}
-                    </p>
-                    <p className="clientProjectCardMeta">
-                      {project.latestVersion > 0
-                        ? `Latest variant: V${project.latestVersion}`
-                        : "No variants yet"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="clientProjectCardStats">
-                  <span>{project.imageCount} image(s)</span>
-                  <span>
-                    {project.commentCount} edit request{project.commentCount === 1 ? "" : "s"}
-                  </span>
-                  <span>{project.viewerCount} viewer(s)</span>
-                </div>
-
-                <div className="clientProjectCardActions">
-                  <a
-                    className="clientAdminButton clientAdminButtonGhost"
-                    href={`/admin/client-projects/${project.id}`}
-                  >
-                    Manage variants
-                  </a>
-                  <button
-                    className="clientAdminButton clientAdminButtonGhost"
-                    type="button"
-                    data-copied={copiedProjectId === project.id ? "true" : "false"}
-                    onClick={() => void handleCopyLink(project.id)}
-                  >
-                    {copiedProjectId === project.id ? "Copied" : "Copy link"}
-                  </button>
-                </div>
-
-                <details className="clientProjectSettingsDisclosure">
-                  <summary className="clientProjectSettingsSummary">
-                    Project settings
-                  </summary>
-                  <div className="clientProjectCardSettings">
-                    <div className="clientAdminPasswordRow">
-                      <label className="clientAdminField">
-                        <span className="clientAdminLabel">Project name</span>
-                        <input
-                          className="clientAdminInput"
-                          type="text"
-                          value={nameDrafts[project.id] ?? ""}
-                          onChange={(event) =>
-                            setNameDrafts((current) => ({
-                              ...current,
-                              [project.id]: event.target.value,
-                            }))
-                          }
-                        />
-                      </label>
-                      <button
-                        className="clientAdminButton clientAdminButtonGhost"
-                        type="button"
-                        disabled={savingNameProjectId === project.id}
-                        onClick={() => void handleSaveName(project.id)}
-                      >
-                        {savingNameProjectId === project.id
-                          ? "Saving..."
-                          : "Save name"}
-                      </button>
-                    </div>
-                    <div className="clientAdminPasswordRow">
-                      <label className="clientAdminField">
-                        <span className="clientAdminLabel">Parcel Number</span>
-                        <input
-                          className="clientAdminInput"
-                          type="text"
-                          value={passwordDrafts[project.id] ?? ""}
-                          onChange={(event) =>
-                            setPasswordDrafts((current) => ({
-                              ...current,
-                              [project.id]: event.target.value,
-                            }))
-                          }
-                        />
-                      </label>
-                      <button
-                        className="clientAdminButton clientAdminButtonGhost"
-                        type="button"
-                        disabled={savingPasswordProjectId === project.id}
-                        onClick={() => void handleSavePassword(project.id)}
-                      >
-                        {savingPasswordProjectId === project.id
-                          ? "Saving..."
-                          : "Save parcel number"}
-                      </button>
-                    </div>
-                  </div>
-                  <p className="clientAdminText clientAdminCode">
-                    {getProjectUrl(project.id, origin)}
-                  </p>
-                </details>
-              </div>
-            </article>
-          ))
+        {activeProjects.length > 0 ? (
+          activeProjects.map((project) => renderProjectCard(project))
         ) : (
           <div className="clientAdminSection">
-            <p className="clientAdminText">No client projects yet.</p>
+            <p className="clientAdminText">No active projects.</p>
           </div>
         )}
       </div>
+
+      <details className="clientAdminArchive">
+        <summary className="clientAdminArchiveSummary">
+          <span>Archived projects</span>
+          <span>{archivedProjects.length} project(s)</span>
+        </summary>
+        <div className="clientAdminArchiveBody">
+          <p className="clientAdminText">
+            Approved projects move here automatically.
+          </p>
+          <div className="clientAdminProjects" data-layout={layout}>
+            {archivedProjects.length > 0 ? (
+              archivedProjects.map((project) => renderProjectCard(project))
+            ) : (
+              <div className="clientAdminSection">
+                <p className="clientAdminText">No archived projects yet.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </details>
     </section>
   );
 }

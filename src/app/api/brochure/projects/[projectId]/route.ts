@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getErrorMessage } from "@/lib/errorMessage";
+import type { BrochureSection } from "@/lib/brochureTypes";
 import { saveBrochureSettings } from "@/lib/brochureStore";
 
 type RouteContext = {
@@ -15,11 +16,11 @@ export async function PATCH(request: Request, context: RouteContext) {
       title?: string;
       subtitle?: string;
       body?: string;
-      headingColor?: string;
-      bodyColor?: string;
       accentColor?: string;
       fontFamily?: "helvetica" | "garamond" | "georgia" | "times";
+      imageOrder?: string[];
       selectedImageIds?: string[];
+      sections?: BrochureSection[];
     };
 
     const project = await saveBrochureSettings(projectId, payload);

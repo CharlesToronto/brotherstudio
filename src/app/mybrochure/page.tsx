@@ -5,6 +5,7 @@ import {
   isBrochureConfigured,
   listBrochureProjectSummaries,
 } from "@/lib/brochureStore";
+import type { BrochureProjectSummary } from "@/lib/brochureTypes";
 
 export const metadata: Metadata = {
   title: "myBrochure",
@@ -31,7 +32,24 @@ export default async function MyBrochurePage() {
     );
   }
 
-  const projects = await listBrochureProjectSummaries();
+  let projects: BrochureProjectSummary[] = [];
+
+  try {
+    projects = await listBrochureProjectSummaries();
+  } catch (error) {
+    return (
+      <main className="siteMain">
+        <section className="projectConfigNotice">
+          <h1 className="projectFeedbackTitle">myBrochure Setup Is Incomplete</h1>
+          <p className="projectFeedbackVersionMeta">
+            {error instanceof Error
+              ? error.message
+              : "The brochure builder could not be loaded."}
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="siteMain">

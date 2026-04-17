@@ -20,6 +20,7 @@ import type {
 } from "@/lib/projectFeedbackTypes";
 
 const PROJECT_IMAGE_BUCKET = "project-images";
+const BROCHURE_ASSET_BUCKET = "brochure-assets";
 const PROJECT_ASSET_BROWSER_CACHE_TTL_SECONDS = "31536000";
 const DEFAULT_COMMENT_COLOR = "#d88fa2";
 
@@ -251,6 +252,30 @@ function buildDrawingLayerMigrationError() {
   );
 }
 
+function isMissingOptionalRelationError(error: unknown, relation: string) {
+  if (!error || typeof error !== "object") return false;
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+
+  const code = typeof candidate.code === "string" ? candidate.code.trim() : "";
+  const combined = [candidate.message, candidate.details, candidate.hint]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    code === "42P01" ||
+    code === "PGRST205" ||
+    combined.includes(relation.toLowerCase()) ||
+    combined.includes("schema cache")
+  );
+}
+
 function isMissingImageStatusColumnError(error: unknown) {
   if (!error || typeof error !== "object") return false;
 
@@ -349,8 +374,11 @@ export function getProjectAccessCookieName(projectId: string) {
 
 export { getProjectViewerCookieName, getProjectViewerRoleCookieName };
 
-function getStoragePathFromPublicUrl(url: string) {
-  const marker = `/storage/v1/object/public/${PROJECT_IMAGE_BUCKET}/`;
+function getStoragePathFromPublicUrl(
+  url: string,
+  bucket: string = PROJECT_IMAGE_BUCKET,
+) {
+  const marker = `/storage/v1/object/public/${bucket}/`;
   const index = url.indexOf(marker);
   if (index === -1) return null;
 
@@ -856,6 +884,83 @@ export async function updateProjectSettings(
 
   if (!project) throw new Error("Project not found.");
   return project;
+}
+
+export async function deleteProject(projectId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  const { data: projectData, error: projectError } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", projectId)
+    .maybeSingle();
+
+  if (projectError) throw projectError;
+  if (!projectData) throw new Error("Project not found.");
+
+  const { data: imageRows, error: imagesError } = await supabase
+    .from("images")
+    .select("url")
+    .eq("project_id", projectId);
+
+  if (imagesError) throw imagesError;
+
+  const imageStoragePaths = ((imageRows as Array<{ url: string }> | null) ?? [])
+    .map((image) => getStoragePathFromPublicUrl(image.url))
+    .filter((path): path is string => Boolean(path));
+
+  const { data: brochureAssetRows, error: brochureAssetsError } = await supabase
+    .from("brochure_assets")
+    .select("url")
+    .eq("project_id", projectId);
+
+  if (
+    brochureAssetsError &&
+    !isMissingOptionalRelationError(brochureAssetsError, "brochure_assets")
+  ) {
+    throw brochureAssetsError;
+  }
+
+  const brochureStoragePaths = (
+    (brochureAssetRows as Array<{ url: string }> | null) ?? []
+  )
+    .map((asset) => getStoragePathFromPublicUrl(asset.url, BROCHURE_ASSET_BUCKET))
+    .filter((path): path is string => Boolean(path));
+
+  const { error: deleteError } = await supabase
+    .from("projects")
+    .delete()
+    .eq("id", projectId);
+
+  if (deleteError) throw deleteError;
+
+  if (imageStoragePaths.length > 0) {
+    const { error: imageStorageError } = await supabase.storage
+      .from(PROJECT_IMAGE_BUCKET)
+      .remove(imageStoragePaths);
+
+    if (imageStorageError) {
+      console.warn(
+        "Failed to delete project image assets from storage:",
+        imageStorageError.message,
+      );
+    }
+  }
+
+  if (brochureStoragePaths.length > 0) {
+    const { error: brochureStorageError } = await supabase.storage
+      .from(BROCHURE_ASSET_BUCKET)
+      .remove(brochureStoragePaths);
+
+    if (brochureStorageError) {
+      console.warn(
+        "Failed to delete brochure assets from storage:",
+        brochureStorageError.message,
+      );
+    }
+  }
+
+  return { id: projectId };
 }
 
 export async function createProjectComment(input: {

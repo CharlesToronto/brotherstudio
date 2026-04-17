@@ -1,17 +1,31 @@
 import { getSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import {
+  BROCHURE_SECTION_DEFINITIONS,
+  createBrochureSection,
+  getBrochureSectionDefinition,
+} from "@/lib/brochureSections";
+import {
+  normalizeSocialLinks,
+  sanitizeCanvasItems,
+} from "@/lib/brochureCanvas";
 import type {
   BrochureApprovedImage,
   BrochureAsset,
+  BrochureContent,
   BrochureFontFamily,
   BrochureProject,
   BrochureProjectSummary,
-  BrochureSettings,
+  BrochureSection,
+  BrochureSectionKind,
+  BrochureSocialLinks,
+  BrochureStyleSettings,
   BrochureTemplate,
 } from "@/lib/brochureTypes";
 import type { ProjectStatus } from "@/lib/projectFeedbackTypes";
 
 const BROCHURE_ASSET_BUCKET = "brochure-assets";
 const BROCHURE_BROWSER_CACHE_TTL_SECONDS = "31536000";
+const DEFAULT_ACCENT_COLOR = "#c40018";
 
 type ProjectRow = {
   id: string;
@@ -28,18 +42,17 @@ type ImageRow = {
   created_at: string;
 };
 
-type BrochureSettingsRow = {
+type BrochureRow = {
+  id: string;
   project_id: string;
-  template: string | null;
+  user_id: string | null;
   title: string | null;
   subtitle: string | null;
   body: string | null;
-  heading_color: string | null;
-  body_color: string | null;
-  accent_color: string | null;
-  font_family: string | null;
-  selected_image_ids: unknown;
-  logo_url: string | null;
+  template: string | null;
+  style_settings: unknown;
+  content_json: unknown;
+  created_at: string;
   updated_at: string | null;
 };
 
@@ -53,6 +66,8 @@ type BrochureAssetRow = {
 };
 
 const IMAGE_SELECT_WITH_STATUS = "id, project_id, url, status, version, created_at";
+const BROCHURE_SELECT =
+  "id, project_id, user_id, title, subtitle, body, template, style_settings, content_json, created_at, updated_at";
 
 function normalizeTemplate(value: string | null | undefined): BrochureTemplate {
   return value === "minimal" || value === "luxury" ? value : "modern";
@@ -73,10 +88,22 @@ function normalizeColor(value: string | null | undefined, fallback: string) {
   return /^#[0-9a-f]{6}$/.test(color) ? color : fallback;
 }
 
-function normalizeSelectedImageIds(value: unknown) {
+function normalizeString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeStringArray(value: unknown) {
   if (!Array.isArray(value)) return [];
 
   return value.filter((entry): entry is string => typeof entry === "string");
+}
+
+function normalizeSectionKind(value: unknown): BrochureSectionKind | null {
+  if (typeof value !== "string") return null;
+
+  return BROCHURE_SECTION_DEFINITIONS.some((definition) => definition.kind === value)
+    ? (value as BrochureSectionKind)
+    : null;
 }
 
 function isMissingImageStatusColumnError(error: unknown) {
@@ -121,7 +148,7 @@ function isMissingBrochureTableError(error: unknown) {
   return (
     code === "42P01" ||
     code === "PGRST205" ||
-    combined.includes("brochure_settings") ||
+    combined.includes("brochures") ||
     combined.includes("brochure_assets")
   );
 }
@@ -173,80 +200,345 @@ function getStoragePathFromPublicUrl(url: string) {
   return decodeURIComponent(url.slice(index + marker.length).split("?")[0] ?? "");
 }
 
-function buildApprovedImage(image: ImageRow): BrochureApprovedImage {
+function canonicalApprovedImageId(refId: string) {
+  return `approved:${refId}`;
+}
+
+function canonicalExtraAssetId(refId: string) {
+  return `asset:${refId}`;
+}
+
+function stripFileExtension(fileName: string) {
+  return fileName.replace(/\.[^.]+$/, "");
+}
+
+function buildApprovedImage(row: ImageRow, index: number): BrochureApprovedImage {
   return {
-    id: image.id,
-    projectId: image.project_id,
-    url: image.url,
-    version: image.version,
-    createdAt: image.created_at,
+    id: canonicalApprovedImageId(row.id),
+    refId: row.id,
+    source: "approved",
+    projectId: row.project_id,
+    url: row.url,
+    label: `Render ${String(index + 1).padStart(2, "0")}`,
+    meta: `Approved • Variant V${row.version}`,
+    createdAt: row.created_at,
+    version: row.version,
   };
 }
 
-function buildDefaultSettings(
-  projectId: string,
-  projectName: string,
-  approvedImages: BrochureApprovedImage[],
-): BrochureSettings {
+function buildExtraAsset(row: BrochureAssetRow, index: number): BrochureAsset {
+  const fileName = row.file_name?.trim() || `Extra image ${index + 1}`;
+
   return {
-    projectId,
-    template: "modern",
-    title: projectName,
-    subtitle: "High-end visualizations ready for marketing use.",
-    body:
-      "Select your approved renders, adjust the style, then export a brochure-ready presentation for your next client share or sales package.",
-    headingColor: "#111111",
-    bodyColor: "#5f5f5f",
-    accentColor: "#c40018",
+    id: canonicalExtraAssetId(row.id),
+    refId: row.id,
+    source: "extra",
+    projectId: row.project_id,
+    url: row.url,
+    label: stripFileExtension(fileName),
+    meta: "Additional upload",
+    createdAt: row.created_at,
+    fileName,
+  };
+}
+
+function buildDefaultSubtitle(template: BrochureTemplate, projectName: string) {
+  switch (template) {
+    case "minimal":
+      return `${projectName} presented through a calm, editorial brochure layout.`;
+    case "luxury":
+      return `${projectName} prepared as a premium sales brochure for presentation and marketing use.`;
+    default:
+      return `${projectName} organized into a clean brochure ready to share with clients and buyers.`;
+  }
+}
+
+function buildDefaultBody(projectName: string) {
+  return `${projectName} is presented here through a concise sequence of approved visuals, giving your team a brochure-ready document for sales, client meetings, and high-end project presentation.`;
+}
+
+function buildDefaultStyleSettings(): BrochureStyleSettings {
+  return {
     fontFamily: "helvetica",
-    selectedImageIds: approvedImages.map((image) => image.id),
+    accentColor: DEFAULT_ACCENT_COLOR,
     logoUrl: null,
-    updatedAt: null,
   };
 }
 
-function buildSettings(
-  row: BrochureSettingsRow | null,
-  projectId: string,
+function buildDefaultSections(
   projectName: string,
-  approvedImages: BrochureApprovedImage[],
-): BrochureSettings {
-  if (!row) {
-    return buildDefaultSettings(projectId, projectName, approvedImages);
+  title: string,
+  subtitle: string,
+  body: string,
+  imageIds: string[],
+): BrochureSection[] {
+  const cover = createBrochureSection("cover");
+  cover.title = title || projectName;
+  cover.subtitle = subtitle;
+  cover.body = body;
+  cover.imageIds = imageIds.slice(0, 1);
+  return [cover];
+}
+
+function sanitizeSectionImageIds(imageIds: unknown, availableImageIds: string[]) {
+  const allowedIds = new Set(availableImageIds);
+  return normalizeStringArray(imageIds).filter(
+    (id, index, source) => allowedIds.has(id) && source.indexOf(id) === index,
+  );
+}
+
+function sanitizeSocialLinks(value: unknown): BrochureSocialLinks | undefined {
+  if (!value || typeof value !== "object") return undefined;
+
+  const candidate = value as Record<string, unknown>;
+  const links: BrochureSocialLinks = {};
+
+  if (typeof candidate.website === "string" && candidate.website.trim()) {
+    links.website = candidate.website.trim();
+  }
+  if (typeof candidate.instagram === "string" && candidate.instagram.trim()) {
+    links.instagram = candidate.instagram.trim();
+  }
+  if (typeof candidate.linkedin === "string" && candidate.linkedin.trim()) {
+    links.linkedin = candidate.linkedin.trim();
+  }
+  if (typeof candidate.facebook === "string" && candidate.facebook.trim()) {
+    links.facebook = candidate.facebook.trim();
+  }
+  if (typeof candidate.x === "string" && candidate.x.trim()) {
+    links.x = candidate.x.trim();
   }
 
-  const allowedImageIds = new Set(approvedImages.map((image) => image.id));
-  const selectedImageIds = normalizeSelectedImageIds(row.selected_image_ids).filter((id) =>
-    allowedImageIds.has(id),
+  return normalizeSocialLinks(links);
+}
+
+function sanitizeSections(
+  value: unknown,
+  availableImageIds: string[],
+  projectName: string,
+  title: string,
+  subtitle: string,
+  body: string,
+): BrochureSection[] {
+  const fallbackSections = buildDefaultSections(
+    projectName,
+    title,
+    subtitle,
+    body,
+    availableImageIds,
   );
 
+  if (!Array.isArray(value)) {
+    return fallbackSections;
+  }
+
+  const nextSections = value
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") return null;
+
+      const candidate = entry as Record<string, unknown>;
+      const kind = normalizeSectionKind(candidate.kind);
+      if (!kind) return null;
+
+      const definition = getBrochureSectionDefinition(kind);
+
+      return {
+        id: normalizeString(candidate.id) || crypto.randomUUID(),
+        kind,
+        title:
+          normalizeString(candidate.title) ||
+          (kind === "cover" ? title : definition?.defaultTitle) ||
+          "Section",
+        subtitle:
+          normalizeString(candidate.subtitle) ||
+          (kind === "cover" ? subtitle : definition?.defaultSubtitle) ||
+          "",
+        body:
+          normalizeString(candidate.body) ||
+          (kind === "cover" ? body : definition?.defaultBody) ||
+          "",
+        imageIds: sanitizeSectionImageIds(candidate.imageIds, availableImageIds),
+        layoutItems: sanitizeCanvasItems(kind, candidate.layoutItems),
+        socialLinks:
+          kind === "final"
+            ? sanitizeSocialLinks(candidate.socialLinks)
+            : undefined,
+      } satisfies BrochureSection;
+    })
+    .filter(Boolean) as BrochureSection[];
+
+  if (nextSections.length === 0) {
+    return fallbackSections;
+  }
+
+  if (!nextSections.some((section) => section.kind === "cover")) {
+    nextSections.unshift(fallbackSections[0]);
+  }
+
+  return nextSections.map((section) => {
+    if (section.kind !== "cover") {
+      return {
+        ...section,
+        layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems),
+        socialLinks:
+          section.kind === "final"
+            ? normalizeSocialLinks(section.socialLinks)
+            : undefined,
+      };
+    }
+
+    return {
+      ...section,
+      title: section.title || title || projectName,
+      subtitle: section.subtitle || subtitle,
+      body: section.body || body,
+      imageIds: section.imageIds.length > 0 ? section.imageIds : availableImageIds.slice(0, 1),
+      layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems),
+      socialLinks: undefined,
+    };
+  });
+}
+
+function buildDefaultContent(
+  allImageIds: string[],
+  projectName: string,
+  title: string,
+  subtitle: string,
+  body: string,
+): BrochureContent {
   return {
-    projectId,
-    template: normalizeTemplate(row.template),
-    title: row.title?.trim() || projectName,
-    subtitle:
-      row.subtitle?.trim() || "High-end visualizations ready for marketing use.",
-    body:
-      row.body?.trim() ||
-      "Select your approved renders, adjust the style, then export a brochure-ready presentation for your next client share or sales package.",
-    headingColor: normalizeColor(row.heading_color, "#111111"),
-    bodyColor: normalizeColor(row.body_color, "#5f5f5f"),
-    accentColor: normalizeColor(row.accent_color, "#c40018"),
-    fontFamily: normalizeFontFamily(row.font_family),
-    selectedImageIds,
-    logoUrl: row.logo_url?.trim() || null,
-    updatedAt: row.updated_at ?? null,
+    imageOrder: allImageIds,
+    selectedImageIds: allImageIds,
+    sections: buildDefaultSections(projectName, title, subtitle, body, allImageIds),
   };
 }
 
-function buildAsset(row: BrochureAssetRow): BrochureAsset {
+function normalizeStyleSettings(value: unknown): BrochureStyleSettings {
+  if (!value || typeof value !== "object") {
+    return buildDefaultStyleSettings();
+  }
+
+  const candidate = value as Record<string, unknown>;
+
   return {
-    id: row.id,
-    projectId: row.project_id,
-    kind: "extra",
-    url: row.url,
-    fileName: row.file_name?.trim() || "asset",
-    createdAt: row.created_at,
+    fontFamily: normalizeFontFamily(
+      typeof candidate.fontFamily === "string" ? candidate.fontFamily : null,
+    ),
+    accentColor: normalizeColor(
+      typeof candidate.accentColor === "string" ? candidate.accentColor : null,
+      DEFAULT_ACCENT_COLOR,
+    ),
+    logoUrl: normalizeString(candidate.logoUrl) || null,
+  };
+}
+
+function normalizeContentJson(
+  value: unknown,
+  availableImageIds: string[],
+  projectName: string,
+  title: string,
+  subtitle: string,
+  body: string,
+): BrochureContent {
+  const availableSet = new Set(availableImageIds);
+  const allOrderedIds = normalizeStringArray(
+    value && typeof value === "object" ? (value as Record<string, unknown>).imageOrder : null,
+  ).filter((id, index, source) => availableSet.has(id) && source.indexOf(id) === index);
+
+  const imageOrder = [...allOrderedIds];
+
+  for (const imageId of availableImageIds) {
+    if (!imageOrder.includes(imageId)) {
+      imageOrder.push(imageId);
+    }
+  }
+
+  const selectedFromValue = normalizeStringArray(
+    value && typeof value === "object"
+      ? (value as Record<string, unknown>).selectedImageIds
+      : null,
+  ).filter((id) => imageOrder.includes(id));
+
+  const selectedImageIds = selectedFromValue.length > 0
+    ? imageOrder.filter((id) => selectedFromValue.includes(id))
+    : [...imageOrder];
+
+  const rawSections =
+    value && typeof value === "object" ? (value as Record<string, unknown>).sections : null;
+
+  if (Array.isArray(rawSections)) {
+    const legacyHero = rawSections.find(
+      (section) =>
+        section &&
+        typeof section === "object" &&
+        (section as Record<string, unknown>).type === "hero",
+    ) as Record<string, unknown> | undefined;
+    const legacyGallery = rawSections.find(
+      (section) =>
+        section &&
+        typeof section === "object" &&
+        (section as Record<string, unknown>).type === "gallery",
+    ) as Record<string, unknown> | undefined;
+
+    if (
+      rawSections.some(
+        (section) =>
+          section &&
+          typeof section === "object" &&
+          typeof (section as Record<string, unknown>).kind === "string",
+      )
+    ) {
+      const sections = sanitizeSections(
+        rawSections,
+        imageOrder,
+        projectName,
+        title,
+        subtitle,
+        body,
+      );
+      const usedImageIds = new Set(sections.flatMap((section) => section.imageIds));
+
+      return {
+        imageOrder,
+        selectedImageIds:
+          selectedFromValue.length > 0
+            ? imageOrder.filter((id) => selectedFromValue.includes(id) || usedImageIds.has(id))
+            : imageOrder,
+        sections,
+      };
+    }
+
+    if (legacyHero || legacyGallery) {
+      const cover = createBrochureSection("cover");
+      cover.title = title || projectName;
+      cover.subtitle = subtitle;
+      cover.body = body;
+      cover.imageIds = sanitizeSectionImageIds(
+        legacyHero ? [(legacyHero.imageId as string | null) ?? ""] : [],
+        imageOrder,
+      );
+
+      const sections: BrochureSection[] = [cover];
+      const galleryIds = sanitizeSectionImageIds(legacyGallery?.imageIds, imageOrder);
+
+      if (galleryIds.length > 0) {
+        const interiors = createBrochureSection("interiors");
+        interiors.imageIds = galleryIds;
+        sections.push(interiors);
+      }
+
+      return {
+        imageOrder,
+        selectedImageIds: selectedImageIds.length > 0 ? selectedImageIds : imageOrder,
+        sections,
+      };
+    }
+  }
+
+  return {
+    imageOrder,
+    selectedImageIds,
+    sections: buildDefaultSections(projectName, title, subtitle, body, imageOrder),
   };
 }
 
@@ -276,6 +568,197 @@ async function listApprovedProjectImages(projectId?: string) {
   return (data as ImageRow[] | null) ?? [];
 }
 
+async function listBrochureAssetRows(projectId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("brochure_assets")
+    .select("id, project_id, kind, url, file_name, created_at")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    if (isMissingBrochureTableError(error)) {
+      throw buildBrochureSetupError();
+    }
+    throw error;
+  }
+
+  return (data as BrochureAssetRow[] | null) ?? [];
+}
+
+async function ensureBrochureRowsForProjects(
+  projects: ProjectRow[],
+  approvedImages: ImageRow[],
+) {
+  const approvedProjectIds = [...new Set(approvedImages.map((image) => image.project_id))];
+  if (approvedProjectIds.length === 0) {
+    return new Map<string, BrochureRow>();
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data: brochuresData, error: brochuresError } = await supabase
+    .from("brochures")
+    .select(BROCHURE_SELECT)
+    .in("project_id", approvedProjectIds);
+
+  if (brochuresError) {
+    if (isMissingBrochureTableError(brochuresError)) {
+      throw buildBrochureSetupError();
+    }
+    throw brochuresError;
+  }
+
+  const brochureRows = (brochuresData as BrochureRow[] | null) ?? [];
+  const brochureMap = new Map(brochureRows.map((row) => [row.project_id, row]));
+  const approvedImagesByProject = new Map<string, ImageRow[]>();
+
+  for (const image of approvedImages) {
+    const projectImages = approvedImagesByProject.get(image.project_id) ?? [];
+    projectImages.push(image);
+    approvedImagesByProject.set(image.project_id, projectImages);
+  }
+
+  const rowsToInsert = projects
+    .filter((project) => approvedProjectIds.includes(project.id) && !brochureMap.has(project.id))
+    .map((project) => {
+      const projectImages = approvedImagesByProject.get(project.id) ?? [];
+      const canonicalImageIds = projectImages.map((image) => canonicalApprovedImageId(image.id));
+      const template: BrochureTemplate = "modern";
+      const body = buildDefaultBody(project.name);
+
+      return {
+        project_id: project.id,
+        user_id: null,
+        title: project.name,
+        subtitle: buildDefaultSubtitle(template, project.name),
+        body,
+        template,
+        style_settings: buildDefaultStyleSettings(),
+        content_json: buildDefaultContent(
+          canonicalImageIds,
+          project.name,
+          project.name,
+          buildDefaultSubtitle(template, project.name),
+          body,
+        ),
+      };
+    });
+
+  if (rowsToInsert.length === 0) {
+    return brochureMap;
+  }
+
+  const { error: insertError } = await supabase.from("brochures").upsert(rowsToInsert, {
+    onConflict: "project_id",
+  });
+
+  if (insertError) {
+    if (isMissingBrochureTableError(insertError)) {
+      throw buildBrochureSetupError();
+    }
+    throw insertError;
+  }
+
+  const { data: refreshedData, error: refreshedError } = await supabase
+    .from("brochures")
+    .select(BROCHURE_SELECT)
+    .in("project_id", approvedProjectIds);
+
+  if (refreshedError) {
+    if (isMissingBrochureTableError(refreshedError)) {
+      throw buildBrochureSetupError();
+    }
+    throw refreshedError;
+  }
+
+  return new Map(
+    ((refreshedData as BrochureRow[] | null) ?? []).map((row) => [row.project_id, row]),
+  );
+}
+
+async function resolveBrochureRow(identifier: string) {
+  const supabase = getSupabaseAdminClient();
+
+  const { data: byBrochureId, error: byBrochureIdError } = await supabase
+    .from("brochures")
+    .select(BROCHURE_SELECT)
+    .eq("id", identifier)
+    .maybeSingle();
+
+  if (byBrochureIdError) {
+    if (isMissingBrochureTableError(byBrochureIdError)) {
+      throw buildBrochureSetupError();
+    }
+    throw byBrochureIdError;
+  }
+
+  if (byBrochureId) {
+    return byBrochureId as BrochureRow;
+  }
+
+  const { data: byProjectId, error: byProjectIdError } = await supabase
+    .from("brochures")
+    .select(BROCHURE_SELECT)
+    .eq("project_id", identifier)
+    .maybeSingle();
+
+  if (byProjectIdError) {
+    if (isMissingBrochureTableError(byProjectIdError)) {
+      throw buildBrochureSetupError();
+    }
+    throw byProjectIdError;
+  }
+
+  return (byProjectId as BrochureRow | null) ?? null;
+}
+
+async function ensureBrochureRowForProject(project: ProjectRow, approvedImages: ImageRow[]) {
+  const existing = await resolveBrochureRow(project.id);
+  if (existing) {
+    return existing;
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const canonicalImageIds = approvedImages.map((image) => canonicalApprovedImageId(image.id));
+  const template: BrochureTemplate = "modern";
+  const body = buildDefaultBody(project.name);
+
+  const { data, error } = await supabase
+    .from("brochures")
+    .upsert(
+      {
+        project_id: project.id,
+        user_id: null,
+        title: project.name,
+        subtitle: buildDefaultSubtitle(template, project.name),
+        body,
+        template,
+        style_settings: buildDefaultStyleSettings(),
+        content_json: buildDefaultContent(
+          canonicalImageIds,
+          project.name,
+          project.name,
+          buildDefaultSubtitle(template, project.name),
+          body,
+        ),
+      },
+      {
+        onConflict: "project_id",
+      },
+    )
+    .select(BROCHURE_SELECT)
+    .single();
+
+  if (error) {
+    if (isMissingBrochureTableError(error)) {
+      throw buildBrochureSetupError();
+    }
+    throw error;
+  }
+
+  return data as BrochureRow;
+}
+
 export function isBrochureConfigured() {
   return isSupabaseConfigured();
 }
@@ -296,6 +779,7 @@ export async function listBrochureProjectSummaries(): Promise<BrochureProjectSum
   if (projectsError) throw projectsError;
 
   const projects = (projectsData as ProjectRow[] | null) ?? [];
+  const brochureMap = await ensureBrochureRowsForProjects(projects, approvedImages);
   const imageCountByProject = new Map<string, number>();
   const latestVersionByProject = new Map<string, number>();
   const coverImageUrlByProject = new Map<string, string>();
@@ -329,7 +813,8 @@ export async function listBrochureProjectSummaries(): Promise<BrochureProjectSum
   return projects
     .filter((project) => (imageCountByProject.get(project.id) ?? 0) > 0)
     .map((project) => ({
-      id: project.id,
+      projectId: project.id,
+      brochureId: brochureMap.get(project.id)?.id ?? null,
       name: project.name,
       createdAt: project.created_at,
       coverImageUrl: coverImageUrlByProject.get(project.id) ?? null,
@@ -339,12 +824,15 @@ export async function listBrochureProjectSummaries(): Promise<BrochureProjectSum
 }
 
 export async function getBrochureProject(
-  projectId: string,
+  identifier: string,
 ): Promise<BrochureProject | null> {
   if (!isBrochureConfigured()) return null;
 
   const supabase = getSupabaseAdminClient();
-  const [{ data: projectData, error: projectError }, approvedImages] =
+  let brochureRow = await resolveBrochureRow(identifier);
+  const projectId = brochureRow?.project_id ?? identifier;
+
+  const [{ data: projectData, error: projectError }, approvedImageRows] =
     await Promise.all([
       supabase
         .from("projects")
@@ -355,130 +843,142 @@ export async function getBrochureProject(
     ]);
 
   if (projectError) throw projectError;
+
   const project = (projectData as ProjectRow | null) ?? null;
   if (!project) return null;
 
-  let settingsData: BrochureSettingsRow | null = null;
-  let assetsData: BrochureAssetRow[] = [];
-
-  try {
-    const [
-      { data: brochureSettingsData, error: brochureSettingsError },
-      { data: brochureAssetsData, error: brochureAssetsError },
-    ] = await Promise.all([
-      supabase
-        .from("brochure_settings")
-        .select(
-          "project_id, template, title, subtitle, body, heading_color, body_color, accent_color, font_family, selected_image_ids, logo_url, updated_at",
-        )
-        .eq("project_id", projectId)
-        .maybeSingle(),
-      supabase
-        .from("brochure_assets")
-        .select("id, project_id, kind, url, file_name, created_at")
-        .eq("project_id", projectId)
-        .order("created_at", { ascending: false }),
-    ]);
-
-    if (brochureSettingsError) throw brochureSettingsError;
-    if (brochureAssetsError) throw brochureAssetsError;
-
-    settingsData = (brochureSettingsData as BrochureSettingsRow | null) ?? null;
-    assetsData = (brochureAssetsData as BrochureAssetRow[] | null) ?? [];
-  } catch (error) {
-    if (isMissingBrochureTableError(error)) {
-      throw buildBrochureSetupError();
-    }
-    throw error;
+  if (!brochureRow) {
+    brochureRow = await ensureBrochureRowForProject(project, approvedImageRows);
   }
 
-  const mappedImages = approvedImages.map(buildApprovedImage);
-  const settings = buildSettings(settingsData, project.id, project.name, mappedImages);
-  const summary = (
-    await listBrochureProjectSummaries()
-  ).find((entry) => entry.id === projectId);
+  const assetRows = await listBrochureAssetRows(project.id);
+  const approvedImages = approvedImageRows.map(buildApprovedImage);
+  const extraAssets = assetRows
+    .filter((asset) => asset.kind === "extra" || asset.kind === null)
+    .map(buildExtraAsset);
+  const allImages = [...approvedImages, ...extraAssets];
+  const template = normalizeTemplate(brochureRow.template);
+  const title = brochureRow.title?.trim() || project.name;
+  const subtitle =
+    brochureRow.subtitle?.trim() || buildDefaultSubtitle(template, project.name);
+  const body = brochureRow.body?.trim() || buildDefaultBody(project.name);
+  const styleSettings = normalizeStyleSettings(brochureRow.style_settings);
+  const content = normalizeContentJson(
+    brochureRow.content_json,
+    allImages.map((image) => image.id),
+    project.name,
+    title,
+    subtitle,
+    body,
+  );
+  const latestApprovedVersion = approvedImages.reduce(
+    (max, image) => Math.max(max, image.version),
+    0,
+  );
 
   return {
-    id: project.id,
+    projectId: project.id,
+    brochureId: brochureRow.id,
     name: project.name,
     createdAt: project.created_at,
-    coverImageUrl: summary?.coverImageUrl ?? mappedImages[0]?.url ?? null,
-    approvedImageCount: mappedImages.length,
-    latestApprovedVersion:
-      summary?.latestApprovedVersion ??
-      mappedImages.reduce((max, image) => Math.max(max, image.version), 0),
-    settings,
-    approvedImages: mappedImages,
-    assets: assetsData
-      .filter((asset) => asset.kind === "extra" || asset.kind === null)
-      .map(buildAsset),
+    coverImageUrl: approvedImages[0]?.url ?? extraAssets[0]?.url ?? null,
+    approvedImageCount: approvedImages.length,
+    latestApprovedVersion,
+    template,
+    title,
+    subtitle,
+    body,
+    styleSettings,
+    content,
+    approvedImages,
+    extraAssets,
   };
 }
 
-function normalizeSelectedImageIdsForSave(
-  value: string[] | null | undefined,
-  approvedImages: BrochureApprovedImage[],
-) {
-  const allowedImageIds = new Set(approvedImages.map((image) => image.id));
-  const selected = Array.isArray(value) ? value : [];
+function normalizeImageIdsForSave(imageIds: string[] | undefined, availableIds: string[]) {
+  if (!Array.isArray(imageIds)) return [];
 
-  return selected.filter((id) => allowedImageIds.has(id));
+  const allowedIds = new Set(availableIds);
+  return imageIds.filter((id, index, source) => allowedIds.has(id) && source.indexOf(id) === index);
 }
 
 export async function saveBrochureSettings(
-  projectId: string,
+  identifier: string,
   input: {
     template?: BrochureTemplate;
     title?: string;
     subtitle?: string;
     body?: string;
-    headingColor?: string;
-    bodyColor?: string;
-    accentColor?: string;
     fontFamily?: BrochureFontFamily;
+    accentColor?: string;
+    imageOrder?: string[];
     selectedImageIds?: string[];
+    sections?: BrochureSection[];
   },
 ) {
-  const project = await getBrochureProject(projectId);
+  const project = await getBrochureProject(identifier);
   if (!project) throw new Error("Project not found.");
 
-  const nextTemplate = normalizeTemplate(input.template ?? project.settings.template);
-  const nextFontFamily = normalizeFontFamily(
-    input.fontFamily ?? project.settings.fontFamily,
+  const allImageIds = [...project.approvedImages, ...project.extraAssets].map((image) => image.id);
+  const template = normalizeTemplate(input.template ?? project.template);
+  const imageOrder = normalizeImageIdsForSave(
+    input.imageOrder ?? project.content.imageOrder,
+    allImageIds,
   );
-  const nextSelectedImageIds = normalizeSelectedImageIdsForSave(
-    input.selectedImageIds ?? project.settings.selectedImageIds,
-    project.approvedImages,
+  const fallbackImageOrder = imageOrder.length > 0 ? imageOrder : allImageIds;
+  const draftTitle = input.title?.trim() || project.title || project.name;
+  const draftSubtitle =
+    input.subtitle?.trim() || project.subtitle || buildDefaultSubtitle(template, project.name);
+  const draftBody = input.body?.trim() || project.body || buildDefaultBody(project.name);
+  const sections = sanitizeSections(
+    input.sections ?? project.content.sections,
+    fallbackImageOrder,
+    project.name,
+    draftTitle,
+    draftSubtitle,
+    draftBody,
   );
+  const coverSection = sections.find((section) => section.kind === "cover") ?? sections[0];
+  const title = coverSection?.title?.trim() || draftTitle;
+  const subtitle = coverSection?.subtitle?.trim() || draftSubtitle;
+  const body = coverSection?.body?.trim() || draftBody;
+  const selectedBySections = new Set(sections.flatMap((section) => section.imageIds));
+  const selectedImageIds = normalizeImageIdsForSave(
+    input.selectedImageIds ??
+      (selectedBySections.size > 0 ? [...selectedBySections] : project.content.selectedImageIds),
+    fallbackImageOrder,
+  );
+  const finalSelectedImageIds =
+    selectedImageIds.length > 0 ? selectedImageIds : [...fallbackImageOrder];
 
-  const payload = {
-    project_id: projectId,
-    template: nextTemplate,
-    title: input.title?.trim() ?? project.settings.title,
-    subtitle: input.subtitle?.trim() ?? project.settings.subtitle,
-    body: input.body?.trim() ?? project.settings.body,
-    heading_color: normalizeColor(
-      input.headingColor ?? project.settings.headingColor,
-      "#111111",
+  const content = {
+    imageOrder: fallbackImageOrder,
+    selectedImageIds: finalSelectedImageIds,
+    sections,
+  } satisfies BrochureContent;
+
+  const styleSettings: BrochureStyleSettings = {
+    ...project.styleSettings,
+    fontFamily: normalizeFontFamily(input.fontFamily ?? project.styleSettings.fontFamily),
+    accentColor: normalizeColor(
+      input.accentColor ?? project.styleSettings.accentColor,
+      DEFAULT_ACCENT_COLOR,
     ),
-    body_color: normalizeColor(
-      input.bodyColor ?? project.settings.bodyColor,
-      "#5f5f5f",
-    ),
-    accent_color: normalizeColor(
-      input.accentColor ?? project.settings.accentColor,
-      "#c40018",
-    ),
-    font_family: nextFontFamily,
-    selected_image_ids: nextSelectedImageIds,
-    logo_url: project.settings.logoUrl,
-    updated_at: new Date().toISOString(),
   };
 
   const supabase = getSupabaseAdminClient();
-  const { error } = await supabase.from("brochure_settings").upsert(payload, {
-    onConflict: "project_id",
-  });
+  const { error } = await supabase
+    .from("brochures")
+    .update({
+      title,
+      subtitle,
+      body,
+      template,
+      style_settings: styleSettings,
+      content_json: content,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", project.brochureId);
 
   if (error) {
     if (isMissingBrochureTableError(error)) {
@@ -487,7 +987,7 @@ export async function saveBrochureSettings(
     throw error;
   }
 
-  const nextProject = await getBrochureProject(projectId);
+  const nextProject = await getBrochureProject(project.brochureId);
   if (!nextProject) throw new Error("Project not found.");
   return nextProject;
 }
@@ -520,33 +1020,25 @@ async function uploadBrochureFile(
   return data.publicUrl;
 }
 
-export async function uploadBrochureLogo(projectId: string, file: File) {
-  const project = await getBrochureProject(projectId);
+export async function uploadBrochureLogo(identifier: string, file: File) {
+  const project = await getBrochureProject(identifier);
   if (!project) throw new Error("Project not found.");
 
-  const nextLogoUrl = await uploadBrochureFile(projectId, file, "logo");
-  const previousLogoUrl = project.settings.logoUrl;
+  const nextLogoUrl = await uploadBrochureFile(project.projectId, file, "logo");
+  const previousLogoUrl = project.styleSettings.logoUrl;
+  const styleSettings = {
+    ...project.styleSettings,
+    logoUrl: nextLogoUrl,
+  } satisfies BrochureStyleSettings;
 
   const supabase = getSupabaseAdminClient();
-  const { error } = await supabase.from("brochure_settings").upsert(
-    {
-      project_id: projectId,
-      template: project.settings.template,
-      title: project.settings.title,
-      subtitle: project.settings.subtitle,
-      body: project.settings.body,
-      heading_color: project.settings.headingColor,
-      body_color: project.settings.bodyColor,
-      accent_color: project.settings.accentColor,
-      font_family: project.settings.fontFamily,
-      selected_image_ids: project.settings.selectedImageIds,
-      logo_url: nextLogoUrl,
+  const { error } = await supabase
+    .from("brochures")
+    .update({
+      style_settings: styleSettings,
       updated_at: new Date().toISOString(),
-    },
-    {
-      onConflict: "project_id",
-    },
-  );
+    })
+    .eq("id", project.brochureId);
 
   if (error) {
     if (isMissingBrochureTableError(error)) {
@@ -569,15 +1061,15 @@ export async function uploadBrochureLogo(projectId: string, file: File) {
     }
   }
 
-  const nextProject = await getBrochureProject(projectId);
+  const nextProject = await getBrochureProject(project.brochureId);
   if (!nextProject) throw new Error("Project not found.");
   return nextProject;
 }
 
-export async function uploadBrochureAssets(projectId: string, files: File[]) {
+export async function uploadBrochureAssets(identifier: string, files: File[]) {
   if (files.length === 0) throw new Error("Select at least one image.");
 
-  const project = await getBrochureProject(projectId);
+  const project = await getBrochureProject(identifier);
   if (!project) throw new Error("Project not found.");
 
   const supabase = getSupabaseAdminClient();
@@ -589,9 +1081,9 @@ export async function uploadBrochureAssets(projectId: string, files: File[]) {
   }> = [];
 
   for (const file of files) {
-    const publicUrl = await uploadBrochureFile(projectId, file, "extra");
+    const publicUrl = await uploadBrochureFile(project.projectId, file, "extra");
     rowsToInsert.push({
-      project_id: projectId,
+      project_id: project.projectId,
       kind: "extra",
       url: publicUrl,
       file_name: file.name.trim() || "asset",
@@ -606,22 +1098,41 @@ export async function uploadBrochureAssets(projectId: string, files: File[]) {
     throw error;
   }
 
-  const nextProject = await getBrochureProject(projectId);
+  const nextProject = await getBrochureProject(project.brochureId);
   if (!nextProject) throw new Error("Project not found.");
-  return nextProject;
+
+  const mergedImageOrder = [...nextProject.content.imageOrder];
+  const mergedSelectedImageIds = [...nextProject.content.selectedImageIds];
+
+  for (const image of nextProject.extraAssets) {
+    if (!mergedImageOrder.includes(image.id)) {
+      mergedImageOrder.push(image.id);
+    }
+    if (!mergedSelectedImageIds.includes(image.id)) {
+      mergedSelectedImageIds.push(image.id);
+    }
+  }
+
+  return saveBrochureSettings(nextProject.brochureId, {
+    imageOrder: mergedImageOrder,
+    selectedImageIds: mergedSelectedImageIds,
+  });
 }
 
 export async function updateBrochureProjectStatus(
-  projectId: string,
+  identifier: string,
   status: ProjectStatus,
 ) {
+  const project = await getBrochureProject(identifier);
+  if (!project) throw new Error("Project not found.");
+
   const supabase = getSupabaseAdminClient();
   const { error } = await supabase
     .from("projects")
     .update({ status })
-    .eq("id", projectId);
+    .eq("id", project.projectId);
 
   if (error) throw error;
 
-  return getBrochureProject(projectId);
+  return getBrochureProject(project.brochureId);
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { BrochurePreview } from "@/components/BrochurePreview";
 import { BrochureStudio } from "@/components/BrochureStudio";
 import { getBrochureProject, isBrochureConfigured } from "@/lib/brochureStore";
 
@@ -9,6 +10,7 @@ export const revalidate = 0;
 
 type MyBrochureProjectPageProps = {
   params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ edit?: string }>;
 };
 
 export async function generateMetadata({
@@ -16,20 +18,46 @@ export async function generateMetadata({
 }: MyBrochureProjectPageProps): Promise<Metadata> {
   const { projectId } = await params;
 
-  return {
-    title: `myBrochure ${projectId.slice(0, 8)}`,
-    robots: {
-      index: false,
-      follow: false,
-      nocache: true,
-    },
-  };
+  if (!isBrochureConfigured()) {
+    return {
+      title: `myBrochure ${projectId.slice(0, 8)}`,
+      robots: {
+        index: false,
+        follow: false,
+        nocache: true,
+      },
+    };
+  }
+
+  try {
+    const project = await getBrochureProject(projectId);
+
+    return {
+      title: project ? `${project.title} | myBrochure` : `myBrochure ${projectId.slice(0, 8)}`,
+      robots: {
+        index: false,
+        follow: false,
+        nocache: true,
+      },
+    };
+  } catch {
+    return {
+      title: `myBrochure ${projectId.slice(0, 8)}`,
+      robots: {
+        index: false,
+        follow: false,
+        nocache: true,
+      },
+    };
+  }
 }
 
 export default async function MyBrochureProjectPage({
   params,
+  searchParams,
 }: MyBrochureProjectPageProps) {
-  const { projectId } = await params;
+  const [{ projectId }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const editMode = resolvedSearchParams.edit === "1";
 
   if (!isBrochureConfigured()) {
     return (
@@ -68,9 +96,25 @@ export default async function MyBrochureProjectPage({
     notFound();
   }
 
+  const allImages = [...project.approvedImages, ...project.extraAssets];
+
   return (
     <main className="siteMain">
-      <BrochureStudio initialProject={project} />
+      {editMode ? (
+        <BrochureStudio initialProject={project} />
+      ) : (
+        <section className="brochurePublicShell">
+          <div className="brochurePublicCanvas">
+            <BrochurePreview
+              projectName={project.name}
+              template={project.template}
+              styleSettings={project.styleSettings}
+              sections={project.content.sections}
+              images={allImages}
+            />
+          </div>
+        </section>
+      )}
     </main>
   );
 }

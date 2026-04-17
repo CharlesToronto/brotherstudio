@@ -16,10 +16,11 @@ export function BrochureDirectory({ projects }: BrochureDirectoryProps) {
       <header className="brochureDirectoryHeader">
         <div className="projectFeedbackIntro">
           <p className="projectFeedbackEyebrow">myBrochure</p>
-          <h1 className="projectFeedbackTitle">Marketing brochure builder</h1>
+          <h1 className="projectFeedbackTitle">Luxury brochure generator</h1>
           <p className="projectFeedbackVersionMeta">
-            Approved myStudio images open a ready-to-style brochure workspace. Add
-            branding, text, extra visuals, then export a web preview or PDF.
+            Approved myStudio visuals open a brochure builder automatically. Select
+            the images, add a title, generate, then share the web page or export the
+            PDF.
           </p>
         </div>
       </header>
@@ -27,7 +28,7 @@ export function BrochureDirectory({ projects }: BrochureDirectoryProps) {
       {projects.length > 0 ? (
         <div className="brochureDirectoryGrid">
           {projects.map((project) => (
-            <article key={project.id} className="brochureDirectoryCard">
+            <article key={project.projectId} className="brochureDirectoryCard">
               <div className="brochureDirectoryMedia">
                 {project.coverImageUrl ? (
                   <img
@@ -48,18 +49,22 @@ export function BrochureDirectory({ projects }: BrochureDirectoryProps) {
                 <div className="brochureDirectoryMeta">
                   <h2 className="projectFeedbackVersionTitle">{project.name}</h2>
                   <p className="projectFeedbackVersionMeta">
-                    Variant V{project.latestApprovedVersion}
+                    {project.approvedImageCount} approved image(s) • Variant V
+                    {project.latestApprovedVersion}
                   </p>
                 </div>
 
                 <div className="projectFeedbackSummary">
-                  <span>{project.approvedImageCount} approved image(s)</span>
-                  <span>Dynamic web preview</span>
-                  <span>PDF-ready export</span>
+                  <span>Web brochure</span>
+                  <span>Print-ready PDF</span>
+                  <span>2-minute workflow</span>
                 </div>
 
-                <Link className="projectFeedbackAction" href={`/mybrochure/${project.id}`}>
-                  Open brochure
+                <Link
+                  className="projectFeedbackAction projectFeedbackActionDark"
+                  href={`/mybrochure/${project.brochureId ?? project.projectId}?edit=1`}
+                >
+                  Open builder
                 </Link>
               </div>
             </article>
@@ -69,8 +74,8 @@ export function BrochureDirectory({ projects }: BrochureDirectoryProps) {
         <section className="projectFeedbackEmpty">
           <h2 className="projectFeedbackVersionTitle">No approved images yet</h2>
           <p className="projectFeedbackVersionMeta">
-            myBrochure folders appear automatically when a project has at least one
-            approved image in myStudio.
+            myBrochure becomes available automatically as soon as a myStudio project
+            contains approved visuals.
           </p>
         </section>
       )}
