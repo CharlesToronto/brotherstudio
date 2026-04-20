@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type {
   BrochureProject,
@@ -65,25 +64,22 @@ function CinematicSectionBlock({
       {layout === "hero" && images[0] && (
         <>
           <div className="cinematicBg">
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={images[0].url}
               alt={images[0].label || section.title}
-              fill
-              sizes="100vw"
               className="cinematicBgImg"
-              priority={isCover}
             />
           </div>
           <div className="cinematicOverlay" data-cover={isCover ? "true" : "false"} />
           <div className="cinematicHeroContent">
             {isCover && logoUrl && (
               <div className="cinematicCoverLogo cine-up-0">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={logoUrl}
                   alt="Studio logo"
-                  width={110}
-                  height={44}
-                  style={{ objectFit: "contain", objectPosition: "left bottom" }}
+                  className="cinematicLogoImg"
                 />
               </div>
             )}
@@ -125,17 +121,9 @@ function CinematicSectionBlock({
             data-count={String(Math.min(images.length, 4))}
           >
             {images.slice(0, 4).map((img, i) => (
-              <div
-                key={img.id}
-                className={`cinematicGalleryCell cine-up-${i}`}
-              >
-                <Image
-                  src={img.url}
-                  alt={img.label || section.title}
-                  fill
-                  sizes="50vw"
-                  className="cinematicBgImg"
-                />
+              <div key={img.id} className={`cinematicGalleryCell cine-up-${i}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.url} alt={img.label || section.title} className="cinematicBgImg" />
               </div>
             ))}
           </div>
@@ -150,20 +138,12 @@ function CinematicSectionBlock({
         <div className="cinematicSplitLayout">
           {images[0] && (
             <div className="cinematicSplitImage cine-up-0">
-              <Image
-                src={images[0].url}
-                alt={images[0].label || section.title}
-                fill
-                sizes="50vw"
-                className="cinematicBgImg"
-              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={images[0].url} alt={images[0].label || section.title} className="cinematicBgImg" />
             </div>
           )}
           <div className="cinematicSplitText">
-            <span
-              className="cinematicEyebrow cine-up-1"
-              style={{ color: accentColor }}
-            >
+            <span className="cinematicEyebrow cine-up-1" style={{ color: accentColor }}>
               {section.subtitle}
             </span>
             <h2 className="cinematicSplitTitle cine-up-2">{section.title}</h2>
@@ -178,13 +158,8 @@ function CinematicSectionBlock({
         <div className="cinematicTextContent" data-layout={layout}>
           {layout === "dark" && section.kind === "final" && logoUrl && (
             <div className="cinematicFinalLogo cine-up-0">
-              <Image
-                src={logoUrl}
-                alt="Studio logo"
-                width={140}
-                height={56}
-                style={{ objectFit: "contain" }}
-              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={logoUrl} alt="Studio logo" className="cinematicLogoImg" />
             </div>
           )}
           <span className="cinematicEyebrow cine-up-1">{section.subtitle}</span>
@@ -240,6 +215,7 @@ export function BrochureCinematicViewer({ project }: { project: BrochureProject 
   const sections = project.content.sections;
   const { accentColor, logoUrl } = project.styleSettings;
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const [visibleSections, setVisibleSections] = useState<Set<string>>(
     () => new Set(sections[0] ? [sections[0].id] : []),
   );
@@ -270,9 +246,7 @@ export function BrochureCinematicViewer({ project }: { project: BrochureProject 
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const idx = Number(
-              entry.target.getAttribute("data-section-index"),
-            );
+            const idx = Number(entry.target.getAttribute("data-section-index"));
             if (!Number.isNaN(idx)) setActiveIndex(idx);
           }
         });
@@ -293,12 +267,13 @@ export function BrochureCinematicViewer({ project }: { project: BrochureProject 
   }, [sections.length]);
 
   const scrollToSection = (index: number) => {
-    const el = document.querySelector(`[data-section-index="${index}"]`);
+    const el = containerRef.current?.querySelector(`[data-section-index="${index}"]`);
     el?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <div
+      ref={containerRef}
       className="cinematicViewer"
       style={{ "--cine-accent": accentColor } as React.CSSProperties}
     >

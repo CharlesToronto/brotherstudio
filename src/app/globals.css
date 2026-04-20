@@ -5998,8 +5998,23 @@ html[data-theme="dark"] .myStudioGuideArrow {
 }
 
 .cinematicBgImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: center;
+  display: block;
+}
+
+.cinematicLogoImg {
+  display: block;
+  max-width: 120px;
+  max-height: 48px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .cinematicOverlay {
