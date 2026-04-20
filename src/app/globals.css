@@ -6283,7 +6283,10 @@ html[data-theme="dark"] .myStudioGuideArrow {
 [data-visible="true"] .cine-up-3 { opacity: 1; transform: none; transition-delay: 360ms; }
 [data-visible="true"] .cine-up-4 { opacity: 1; transform: none; transition-delay: 480ms; }
 
-.cinematicGalleryCell {
+.cine-cell-0,
+.cine-cell-1,
+.cine-cell-2,
+.cine-cell-3 {
   transform: scale(1.04);
   opacity: 0;
   transition:
@@ -6291,10 +6294,19 @@ html[data-theme="dark"] .myStudioGuideArrow {
     transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-visible="true"] .cinematicGalleryCell:nth-child(1) { opacity: 1; transform: none; transition-delay: 0ms; }
-[data-visible="true"] .cinematicGalleryCell:nth-child(2) { opacity: 1; transform: none; transition-delay: 100ms; }
-[data-visible="true"] .cinematicGalleryCell:nth-child(3) { opacity: 1; transform: none; transition-delay: 200ms; }
-[data-visible="true"] .cinematicGalleryCell:nth-child(4) { opacity: 1; transform: none; transition-delay: 300ms; }
+[data-visible="true"] .cine-cell-0 { opacity: 1; transform: none; transition-delay: 0ms; }
+[data-visible="true"] .cine-cell-1 { opacity: 1; transform: none; transition-delay: 120ms; }
+[data-visible="true"] .cine-cell-2 { opacity: 1; transform: none; transition-delay: 240ms; }
+[data-visible="true"] .cine-cell-3 { opacity: 1; transform: none; transition-delay: 360ms; }
+
+.cinematicGalleryBody {
+  font-size: clamp(13px, 1.1vw, 16px);
+  font-weight: 300;
+  line-height: 1.75;
+  color: rgb(255 255 255 / 0.55);
+  margin: 0;
+  max-width: 52ch;
+}
 
 @media (max-width: 768px) {
   .cinematicSplitLayout {

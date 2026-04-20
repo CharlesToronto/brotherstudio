@@ -6,6 +6,7 @@ import type {
   BrochureProject,
   BrochureSection,
   BrochureImageItem,
+  BrochureCanvasItem,
 } from "@/lib/brochureTypes";
 
 type CinematicLayout = "hero" | "gallery" | "split" | "dark" | "light";
@@ -30,6 +31,14 @@ function getCinematicLayout(section: BrochureSection, imageCount: number): Cinem
   return "hero";
 }
 
+function getCanvasTexts(layoutItems: BrochureCanvasItem[]): string[] {
+  return layoutItems
+    .filter((item): item is Extract<BrochureCanvasItem, { kind: "text" }> => item.kind === "text")
+    .sort((a, b) => (b.fontSize ?? 16) - (a.fontSize ?? 16))
+    .map((item) => item.textContent.trim())
+    .filter(Boolean);
+}
+
 type SectionProps = {
   section: BrochureSection;
   images: BrochureImageItem[];
@@ -52,6 +61,12 @@ function CinematicSectionBlock({
   const layout = getCinematicLayout(section, images.length);
   const isCover = index === 0;
 
+  const canvasTexts = getCanvasTexts(section.layoutItems);
+  const effectiveTitle = section.title || canvasTexts[0] || "";
+  const effectiveSubtitle = section.subtitle || (canvasTexts.length > 1 ? canvasTexts[1] : "") || "";
+  const effectiveBody =
+    section.body || (canvasTexts.length > 2 ? canvasTexts.slice(2).join(" — ") : "") || "";
+
   return (
     <section
       className="cinematicSection"
@@ -67,7 +82,7 @@ function CinematicSectionBlock({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={images[0].url}
-              alt={images[0].label || section.title}
+              alt={images[0].label || effectiveTitle}
               className="cinematicBgImg"
             />
           </div>
@@ -84,13 +99,13 @@ function CinematicSectionBlock({
               </div>
             )}
             <span className="cinematicEyebrow cine-up-1">
-              {section.subtitle || ""}
+              {effectiveSubtitle}
             </span>
             <h2 className={isCover ? "cinematicCoverTitle cine-up-2" : "cinematicHeroTitle cine-up-2"}>
-              {section.title}
+              {effectiveTitle}
             </h2>
-            {section.body && !isCover && (
-              <p className="cinematicHeroBody cine-up-3">{section.body}</p>
+            {effectiveBody && !isCover && (
+              <p className="cinematicHeroBody cine-up-3">{effectiveBody}</p>
             )}
             {isCover && (
               <button
@@ -121,15 +136,18 @@ function CinematicSectionBlock({
             data-count={String(Math.min(images.length, 4))}
           >
             {images.slice(0, 4).map((img, i) => (
-              <div key={img.id} className={`cinematicGalleryCell cine-up-${i}`}>
+              <div key={img.id} className={`cinematicGalleryCell cine-cell-${i}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img.url} alt={img.label || section.title} className="cinematicBgImg" />
+                <img src={img.url} alt={img.label || effectiveTitle} className="cinematicBgImg" />
               </div>
             ))}
           </div>
           <div className="cinematicGalleryCaption">
-            <span className="cinematicEyebrow cine-up-0">{section.subtitle}</span>
-            <h2 className="cinematicGalleryTitle cine-up-1">{section.title}</h2>
+            <span className="cinematicEyebrow cine-up-0">{effectiveSubtitle}</span>
+            <h2 className="cinematicGalleryTitle cine-up-1">{effectiveTitle}</h2>
+            {effectiveBody && (
+              <p className="cinematicGalleryBody cine-up-2">{effectiveBody}</p>
+            )}
           </div>
         </div>
       )}
@@ -137,18 +155,18 @@ function CinematicSectionBlock({
       {layout === "split" && (
         <div className="cinematicSplitLayout">
           {images[0] && (
-            <div className="cinematicSplitImage cine-up-0">
+            <div className="cinematicSplitImage cine-cell-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={images[0].url} alt={images[0].label || section.title} className="cinematicBgImg" />
+              <img src={images[0].url} alt={images[0].label || effectiveTitle} className="cinematicBgImg" />
             </div>
           )}
           <div className="cinematicSplitText">
             <span className="cinematicEyebrow cine-up-1" style={{ color: accentColor }}>
-              {section.subtitle}
+              {effectiveSubtitle}
             </span>
-            <h2 className="cinematicSplitTitle cine-up-2">{section.title}</h2>
-            {section.body && (
-              <p className="cinematicSplitBody cine-up-3">{section.body}</p>
+            <h2 className="cinematicSplitTitle cine-up-2">{effectiveTitle}</h2>
+            {effectiveBody && (
+              <p className="cinematicSplitBody cine-up-3">{effectiveBody}</p>
             )}
           </div>
         </div>
@@ -162,7 +180,7 @@ function CinematicSectionBlock({
               <img src={logoUrl} alt="Studio logo" className="cinematicLogoImg" />
             </div>
           )}
-          <span className="cinematicEyebrow cine-up-1">{section.subtitle}</span>
+          <span className="cinematicEyebrow cine-up-1">{effectiveSubtitle}</span>
           <h2
             className={
               layout === "dark"
@@ -170,9 +188,9 @@ function CinematicSectionBlock({
                 : "cinematicLightTitle cine-up-2"
             }
           >
-            {section.title}
+            {effectiveTitle}
           </h2>
-          {section.body && (
+          {effectiveBody && (
             <p
               className={
                 layout === "dark"
@@ -180,7 +198,7 @@ function CinematicSectionBlock({
                   : "cinematicLightBody cine-up-3"
               }
             >
-              {section.body}
+              {effectiveBody}
             </p>
           )}
           {section.socialLinks &&
@@ -207,6 +225,43 @@ function CinematicSectionBlock({
   );
 }
 
+function distributeImages(
+  sections: BrochureSection[],
+  allImages: BrochureImageItem[],
+): Map<string, BrochureImageItem[]> {
+  const imageMap = new Map<string, BrochureImageItem>(
+    allImages.map((img) => [img.id, img]),
+  );
+
+  const result = new Map<string, BrochureImageItem[]>();
+  const used = new Set<string>();
+
+  for (const section of sections) {
+    const found = section.imageIds
+      .map((id) => imageMap.get(id))
+      .filter((img): img is BrochureImageItem => !!img);
+    result.set(section.id, found);
+    for (const img of found) used.add(img.id);
+  }
+
+  const remaining = allImages.filter((img) => !used.has(img.id));
+  let ri = 0;
+
+  for (const section of sections) {
+    if (result.get(section.id)!.length > 0) continue;
+    if (section.kind === "final" || section.kind === "cta" || section.kind === "advantages") continue;
+
+    const count = section.kind === "cover" ? 1 : section.kind === "plans" || section.kind === "typologies" ? 1 : 3;
+    const assigned = remaining.slice(ri, ri + count);
+    if (assigned.length > 0) {
+      result.set(section.id, assigned);
+      ri += assigned.length;
+    }
+  }
+
+  return result;
+}
+
 export function BrochureCinematicViewer({ project }: { project: BrochureProject }) {
   const allImages: BrochureImageItem[] = [
     ...project.approvedImages,
@@ -217,14 +272,11 @@ export function BrochureCinematicViewer({ project }: { project: BrochureProject 
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [visibleSections, setVisibleSections] = useState<Set<string>>(
-    () => new Set(sections[0] ? [sections[0].id] : []),
+    () => new Set(sections.map((s) => s.id)),
   );
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const getSectionImages = (section: BrochureSection): BrochureImageItem[] =>
-    section.imageIds
-      .map((id) => allImages.find((img) => img.id === id))
-      .filter((img): img is BrochureImageItem => !!img);
+  const sectionImages = distributeImages(sections, allImages);
 
   useEffect(() => {
     const root = containerRef.current;
@@ -239,7 +291,7 @@ export function BrochureCinematicViewer({ project }: { project: BrochureProject 
           }
         });
       },
-      { root, threshold: 0.1 },
+      { root, threshold: 0.05 },
     );
 
     const activeObserver = new IntersectionObserver(
@@ -301,7 +353,7 @@ export function BrochureCinematicViewer({ project }: { project: BrochureProject 
       </nav>
 
       {sections.map((section, index) => {
-        const images = getSectionImages(section);
+        const images = sectionImages.get(section.id) ?? [];
         const isVisible = visibleSections.has(section.id);
 
         return (
