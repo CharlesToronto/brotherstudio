@@ -61,6 +61,7 @@ export type BrochureCanvasItem =
       kind: "shape";
       shapeType: BrochureCanvasShapeType;
       strokeWidth?: number;
+      isFilled?: boolean;
     });
 
 export type BrochureImageSource = "approved" | "extra";
@@ -124,6 +125,7 @@ export type BrochureSection = {
   imageIds: string[];
   layoutItems: BrochureCanvasItem[];
   socialLinks?: BrochureSocialLinks;
+  bgColor?: string;
 };
 
 export type BrochureContent = {

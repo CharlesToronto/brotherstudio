@@ -363,6 +363,7 @@ function sanitizeSections(
           kind === "final"
             ? sanitizeSocialLinks(candidate.socialLinks)
             : undefined,
+        bgColor: typeof candidate.bgColor === "string" && /^#[0-9a-fA-F]{6}$/.test(candidate.bgColor) ? candidate.bgColor : undefined,
       } satisfies BrochureSection;
     })
     .filter(Boolean) as BrochureSection[];

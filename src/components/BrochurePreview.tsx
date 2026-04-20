@@ -48,6 +48,7 @@ type BrochurePreviewProps = {
     itemId: string,
     action: "forward" | "backward" | "front" | "back",
   ) => void;
+  orientation?: "landscape" | "portrait";
 };
 
 type SelectedCanvasItem = {
@@ -389,10 +390,6 @@ function renderMediaGrid(
       {sectionImages.map((image) => (
         <figure key={image.id} className="brochureCanvasMediaFigure">
           <img src={image.url} alt={image.label} />
-          <figcaption>
-            <strong>{image.label}</strong>
-            <span>{image.meta}</span>
-          </figcaption>
         </figure>
       ))}
     </div>
@@ -431,7 +428,7 @@ function renderShape(item: Extract<BrochureCanvasItem, { kind: "shape" }>) {
     );
   }
 
-  return <div className="brochureCanvasShapeFill" data-shape={shapeType} />;
+  return <div className="brochureCanvasShapeFill" data-shape={shapeType} data-filled={item.isFilled ? "true" : "false"} />;
 }
 
 function renderCanvasItemContent(
@@ -555,6 +552,7 @@ export function BrochurePreview({
   onAssignImageToSection,
   onDeleteCanvasItem,
   onMoveCanvasItemLayer,
+  orientation = "landscape",
 }: BrochurePreviewProps) {
   const imageMap = useMemo(() => buildImageMap(images), [images]);
   const artboardRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -565,6 +563,7 @@ export function BrochurePreview({
     null,
   );
   const [dropSectionId, setDropSectionId] = useState<string | null>(null);
+  const [editingItemKey, setEditingItemKey] = useState<string | null>(null);
   const resolvedSelectedItem = editable
     ? getDefaultSelectedItem(sections, selectedItem)
     : null;
@@ -863,8 +862,21 @@ export function BrochurePreview({
         item.kind === "shape"
           ? {
               ...item,
-              strokeWidth: Math.max(1, Math.min(16, Math.round(strokeWidth))),
+              strokeWidth: Math.max(0, Math.min(16, Math.round(strokeWidth))),
             }
+          : item,
+    );
+  };
+
+  const toggleSelectedShapeIsFilled = () => {
+    if (!selectedShapeItem || !selectedCanvasItem || !onUpdateCanvasItem) return;
+
+    onUpdateCanvasItem(
+      selectedCanvasItem.section.id,
+      selectedCanvasItem.item.id,
+      (item) =>
+        item.kind === "shape"
+          ? { ...item, isFilled: !item.isFilled }
           : item,
     );
   };
@@ -1021,13 +1033,42 @@ export function BrochurePreview({
                   {alignment === "left" ? "L" : alignment === "center" ? "C" : "R"}
                 </button>
               ))}
+              <span className="brochurePopBarDivider" />
+              <button
+                className="brochurePopBarBtn"
+                type="button"
+                data-active={selectedTextItem?.textContent?.startsWith("• ") ? "true" : "false"}
+                title="Bullet list"
+                onClick={() => {
+                  const current = selectedTextItem?.textContent ?? "";
+                  updateSelectedTextContent(
+                    current.startsWith("• ") ? current.slice(2) : `• ${current}`,
+                  );
+                }}
+              >
+                • List
+              </button>
+              <button
+                className="brochurePopBarBtn"
+                type="button"
+                data-active={selectedTextItem?.textContent?.startsWith("1. ") ? "true" : "false"}
+                title="Numbered list"
+                onClick={() => {
+                  const current = selectedTextItem?.textContent ?? "";
+                  updateSelectedTextContent(
+                    current.startsWith("1. ") ? current.slice(3) : `1. ${current}`,
+                  );
+                }}
+              >
+                1. List
+              </button>
             </>
           ) : null}
 
           {selectedShapeItem ? (
             <>
               <span className="brochurePopBarDivider" />
-              {[2, 4, 6, 8].map((strokeWidth) => (
+              {[0, 2, 4, 6, 8].map((strokeWidth) => (
                 <button
                   key={strokeWidth}
                   className="brochurePopBarBtn"
@@ -1036,9 +1077,19 @@ export function BrochurePreview({
                   title={`Stroke ${strokeWidth}px`}
                   onClick={() => updateSelectedShapeStrokeWidth(strokeWidth)}
                 >
-                  {strokeWidth}
+                  {strokeWidth === 0 ? "None" : strokeWidth}
                 </button>
               ))}
+              <span className="brochurePopBarDivider" />
+              <button
+                className="brochurePopBarBtn"
+                type="button"
+                data-active={selectedShapeItem.isFilled ? "true" : "false"}
+                title="Fill shape"
+                onClick={toggleSelectedShapeIsFilled}
+              >
+                Fill
+              </button>
             </>
           ) : null}
 
@@ -1093,6 +1144,8 @@ export function BrochurePreview({
                 data-template={template}
                 data-editable={editable ? "true" : "false"}
                 data-drop-target={dropSectionId === section.id ? "true" : "false"}
+                data-orientation={orientation}
+                style={{ backgroundColor: section.bgColor || "transparent" }}
                 onDragOver={(event) => handleSectionDragOver(event, section.id)}
                 onDragLeave={(event) => handleSectionDragLeave(event, section.id)}
                 onDrop={(event) => handleSectionDrop(event, section.id)}
@@ -1128,16 +1181,20 @@ export function BrochurePreview({
                           ? BOX_RESIZE_HANDLES
                           : [];
 
+                  const itemRefKey = getCanvasItemRefKey(section.id, item.id);
+                  const isEditing = editingItemKey === itemRefKey && item.kind === "text";
+
                   return (
                     <div
                       key={item.id}
                       ref={(node) => {
-                        itemRefs.current[getCanvasItemRefKey(section.id, item.id)] = node;
+                        itemRefs.current[itemRefKey] = node;
                       }}
                       className="brochureCanvasItem"
                       data-kind={item.kind}
                       data-selected={isSelected ? "true" : "false"}
                       data-shape={item.kind === "shape" ? item.shapeType : undefined}
+                      data-no-stroke={item.kind === "shape" && item.strokeWidth === 0 ? "true" : undefined}
                       style={getCanvasItemStyle(item)}
                       onPointerDown={(event) =>
                         beginInteraction(event, section.id, item, "move")
@@ -1148,8 +1205,32 @@ export function BrochurePreview({
                         setSelectedItem({ sectionId: section.id, itemId: item.id });
                         onActiveSectionChange?.(section.id);
                       }}
+                      onDoubleClick={(event) => {
+                        if (!editable || item.kind !== "text") return;
+                        event.stopPropagation();
+                        setEditingItemKey(itemRefKey);
+                      }}
                     >
-                      {renderCanvasItemContent(
+                      {isEditing && item.kind === "text" ? (
+                        <textarea
+                          className="brochureCanvasTextEdit"
+                          autoFocus
+                          value={item.textContent}
+                          style={{
+                            fontWeight: item.isBold ? 700 : 500,
+                            fontStyle: item.isItalic ? "italic" : "normal",
+                            fontSize: `${item.fontSize}px`,
+                            textAlign: item.textAlign,
+                          }}
+                          onChange={(event) => updateSelectedTextContent(event.target.value)}
+                          onBlur={() => setEditingItemKey(null)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Escape") {
+                              setEditingItemKey(null);
+                            }
+                          }}
+                        />
+                      ) : renderCanvasItemContent(
                         item,
                         section,
                         projectName,

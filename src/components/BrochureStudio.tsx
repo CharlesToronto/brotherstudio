@@ -41,7 +41,8 @@ type BrochureSidebarPanelId =
   | "sections"
   | "edit"
   | "library"
-  | "style";
+  | "style"
+  | "elements";
 
 const templateDescriptions: Record<BrochureTemplate, string> = {
   minimal: "Quiet editorial layout with restrained hierarchy.",
@@ -63,13 +64,12 @@ const socialLinkLabels: Array<{
 
 function BrochureSidebarPanel({
   title,
-  description,
   isOpen,
   onToggle,
   children,
 }: {
   title: string;
-  description: string;
+  description?: string;
   isOpen: boolean;
   onToggle: () => void;
   children: ReactNode;
@@ -82,10 +82,7 @@ function BrochureSidebarPanel({
         onClick={onToggle}
         aria-expanded={isOpen}
       >
-        <div className="brochureStudioSectionHeader">
-          <h2 className="projectFeedbackVersionTitle">{title}</h2>
-          <p className="projectFeedbackVersionMeta">{description}</p>
-        </div>
+        <h2 className="projectFeedbackVersionTitle">{title}</h2>
         <span className="brochureSidebarPanelSymbol">{isOpen ? "−" : "+"}</span>
       </button>
 
@@ -266,6 +263,7 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
   const [autosaveStatus, setAutosaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
+  const [orientation, setOrientation] = useState<"landscape" | "portrait">("landscape");
   const autosaveTimerRef = useRef<number | null>(null);
   const autosaveRequestIdRef = useRef(0);
   const skipNextAutosaveRef = useRef(true);
@@ -545,6 +543,30 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
       ...section,
       layoutItems: moveCanvasItemLayer(section.layoutItems, itemId, action),
     }));
+  };
+
+  const handleAddIconItem = (emoji: string) => {
+    const targetSectionId = activeSectionId || sections[0]?.id;
+    if (!targetSectionId) return;
+
+    const nextItem = createCanvasTextItem(
+      getMaxCanvasLayer(
+        sections.find((section) => section.id === targetSectionId)?.layoutItems ?? [],
+      ) + 1,
+    );
+
+    const iconItem = {
+      ...nextItem,
+      textContent: emoji,
+      fontSize: 32,
+    };
+
+    updateSectionById(targetSectionId, (section) => ({
+      ...section,
+      layoutItems: [...section.layoutItems, iconItem],
+    }));
+
+    setActiveSectionId(targetSectionId);
   };
 
   const handleUpdateSocialLink = (
@@ -829,7 +851,6 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
         <aside className="brochureStudioControls brochureBuilderPanel">
           <BrochureSidebarPanel
             title="Template"
-            description="Keep one clear visual direction for the whole brochure."
             isOpen={openPanelId === "template"}
             onToggle={() => togglePanel("template")}
           >
@@ -847,11 +868,28 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
                 </button>
               ))}
             </div>
+            <div className="brochureStudioToolbar">
+              <button
+                className="projectFeedbackAction"
+                type="button"
+                data-active={orientation === "landscape" ? "true" : "false"}
+                onClick={() => setOrientation("landscape")}
+              >
+                Landscape
+              </button>
+              <button
+                className="projectFeedbackAction"
+                type="button"
+                data-active={orientation === "portrait" ? "true" : "false"}
+                onClick={() => setOrientation("portrait")}
+              >
+                Portrait
+              </button>
+            </div>
           </BrochureSidebarPanel>
 
           <BrochureSidebarPanel
             title="Sections"
-            description="Add only the pages you need. One click selects the active page."
             isOpen={openPanelId === "sections"}
             onToggle={() => togglePanel("sections")}
           >
@@ -907,9 +945,6 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
           {activeSection ? (
             <BrochureSidebarPanel
               title="Edit section"
-              description={
-                getBrochureSectionDefinition(activeSection.kind)?.label ?? "Section"
-              }
               isOpen={openPanelId === "edit"}
               onToggle={() => togglePanel("edit")}
             >
@@ -983,6 +1018,21 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
                 />
               </label>
 
+              <label className="projectFeedbackField">
+                <span>Background color</span>
+                <input
+                  className="brochureColorInput"
+                  type="color"
+                  value={activeSection.bgColor || "#ffffff"}
+                  onChange={(event) =>
+                    updateActiveSection((section) => ({
+                      ...section,
+                      bgColor: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
               <div className="brochureSectionPicker">
                 <p className="projectFeedbackVersionMeta">Images for this section</p>
                 <div className="brochureSectionImageGrid">
@@ -1035,7 +1085,6 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
 
           <BrochureSidebarPanel
             title="Image library"
-            description="Reorder the global image sequence and upload extra visuals."
             isOpen={openPanelId === "library"}
             onToggle={() => togglePanel("library")}
           >
@@ -1096,7 +1145,6 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
 
           <BrochureSidebarPanel
             title="Style"
-            description="Keep typography and color tight. The brochure should feel immediate."
             isOpen={openPanelId === "style"}
             onToggle={() => togglePanel("style")}
           >
@@ -1127,6 +1175,72 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
               />
             </label>
           </BrochureSidebarPanel>
+
+          <BrochureSidebarPanel
+            title="Éléments"
+            isOpen={openPanelId === "elements"}
+            onToggle={() => togglePanel("elements")}
+          >
+            <div className="brochureElementsRow">
+              <span className="brochureElementsLabel">Shapes</span>
+              <div className="brochureElementsButtonRow">
+                {(["rectangle", "square", "circle", "line", "arrow"] as const).map((shapeType) => (
+                  <button
+                    key={shapeType}
+                    className="brochureElementsBtn"
+                    type="button"
+                    onClick={() => {
+                      const targetSectionId = activeSectionId || sections[0]?.id;
+                      if (!targetSectionId) return;
+                      handleAddDecorativeShape(targetSectionId, shapeType);
+                    }}
+                  >
+                    {shapeType.charAt(0).toUpperCase() + shapeType.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="brochureElementsRow">
+              <span className="brochureElementsLabel">Text</span>
+              <div className="brochureElementsButtonRow">
+                <button
+                  className="brochureElementsBtn"
+                  type="button"
+                  onClick={() => {
+                    const targetSectionId = activeSectionId || sections[0]?.id;
+                    if (!targetSectionId) return;
+                    handleAddCanvasText(targetSectionId);
+                  }}
+                >
+                  + Text
+                </button>
+                <button
+                  className="brochureElementsBtn"
+                  type="button"
+                  onClick={() => handleAddIconItem("📍")}
+                >
+                  📍 Pin
+                </button>
+              </div>
+            </div>
+
+            <div className="brochureElementsRow">
+              <span className="brochureElementsLabel">Icons</span>
+              <div className="brochureElementsButtonRow">
+                {["🏠", "🌳", "📚", "🚗", "⚓", "🏫", "⚽"].map((emoji) => (
+                  <button
+                    key={emoji}
+                    className="brochureElementsBtn brochureElementsBtnIcon"
+                    type="button"
+                    onClick={() => handleAddIconItem(emoji)}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </BrochureSidebarPanel>
         </aside>
 
         <section className="brochurePreviewShell brochureBuilderPreview">
@@ -1151,6 +1265,7 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
               onAddTextItem={handleAddCanvasText}
               onDeleteCanvasItem={handleDeleteCanvasItem}
               onMoveCanvasItemLayer={handleMoveCanvasItemLayer}
+              orientation={orientation}
             />
           </div>
         </section>
