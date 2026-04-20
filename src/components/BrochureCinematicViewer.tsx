@@ -241,7 +241,7 @@ export function BrochureCinematicViewer({ project }: { project: BrochureProject 
   const { accentColor, logoUrl } = project.styleSettings;
 
   const [visibleSections, setVisibleSections] = useState<Set<string>>(
-    new Set(),
+    () => new Set(sections[0] ? [sections[0].id] : []),
   );
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -251,6 +251,9 @@ export function BrochureCinematicViewer({ project }: { project: BrochureProject 
       .filter((img): img is BrochureImageItem => !!img);
 
   useEffect(() => {
+    const root = containerRef.current;
+    if (!root) return;
+
     const visibilityObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -260,7 +263,7 @@ export function BrochureCinematicViewer({ project }: { project: BrochureProject 
           }
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -5% 0px" },
+      { root, threshold: 0.1 },
     );
 
     const activeObserver = new IntersectionObserver(
@@ -274,10 +277,10 @@ export function BrochureCinematicViewer({ project }: { project: BrochureProject 
           }
         });
       },
-      { threshold: 0.45 },
+      { root, threshold: 0.45 },
     );
 
-    const els = document.querySelectorAll("[data-section-id]");
+    const els = root.querySelectorAll("[data-section-id]");
     els.forEach((el) => {
       visibilityObserver.observe(el);
       activeObserver.observe(el);
