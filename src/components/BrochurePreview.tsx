@@ -944,204 +944,125 @@ export function BrochurePreview({
 
       {editable && selectedCanvasItem && selectedPopoverStyle ? (
         <div className="brochureCanvasPopover" style={selectedPopoverStyle}>
-          <div className="brochureCanvasPopoverHeader">
-            <div className="brochureCanvasPopoverTitleWrap">
-              <span className="brochurePreviewToolbarLabel">Selected element</span>
-              <strong className="brochureCanvasPopoverTitle">
-                {selectedCanvasItem.item.kind === "text"
-                  ? "Text block"
-                  : selectedCanvasItem.item.kind === "shape"
-                    ? selectedCanvasItem.item.shapeType
-                    : selectedCanvasItem.item.kind}
-              </strong>
-            </div>
-            <button
-              className="brochureCanvasPopoverClose"
-              type="button"
-              onClick={() => setSelectedItem(null)}
-              aria-label="Close element editor"
-            >
-              ×
-            </button>
-          </div>
+          <span className="brochurePopBarKind">
+            {selectedCanvasItem.item.kind === "text"
+              ? "Text"
+              : selectedCanvasItem.item.kind === "shape"
+                ? selectedCanvasItem.item.shapeType
+                : selectedCanvasItem.item.kind}
+          </span>
 
-          <div className="brochureCanvasPopoverGrid">
-            <label className="brochureCanvasPopoverField">
-              <span className="brochurePreviewToolbarLabel">Color</span>
-              <input
-                className="brochureCanvasPopoverColor"
-                type="color"
-                value={selectedItemColor}
-                onChange={(event) => updateSelectedItemColor(event.target.value)}
-              />
-            </label>
+          <span className="brochurePopBarDivider" />
 
-            <div className="brochureCanvasPopoverField">
-              <span className="brochurePreviewToolbarLabel">Position</span>
-              <div className="brochureCanvasPopoverIconRow">
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => nudgeSelected(0, -0.01)}
-                >
-                  ↑
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => nudgeSelected(-0.01, 0)}
-                >
-                  ←
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => nudgeSelected(0.01, 0)}
-                >
-                  →
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => nudgeSelected(0, 0.01)}
-                >
-                  ↓
-                </button>
-              </div>
-            </div>
+          <input
+            className="brochurePopBarColor"
+            type="color"
+            value={selectedItemColor}
+            title="Color"
+            onChange={(event) => updateSelectedItemColor(event.target.value)}
+          />
 
-            <div className="brochureCanvasPopoverField">
-              <span className="brochurePreviewToolbarLabel">Layers</span>
-              <div className="brochureCanvasPopoverButtonRow">
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => moveSelectedLayer("back")}
-                >
-                  Back
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => moveSelectedLayer("backward")}
-                >
-                  -1
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => moveSelectedLayer("forward")}
-                >
-                  +1
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => moveSelectedLayer("front")}
-                >
-                  Front
-                </button>
-              </div>
-            </div>
+          <span className="brochurePopBarDivider" />
 
-            {selectedIsText ? (
-              <>
-                <label className="brochureCanvasPopoverField brochureCanvasPopoverFieldWide">
-                  <span className="brochurePreviewToolbarLabel">Text</span>
-                  <textarea
-                    className="brochureCanvasPopoverTextarea"
-                    value={selectedTextItem?.textContent ?? ""}
-                    onChange={(event) => updateSelectedTextContent(event.target.value)}
-                  />
-                </label>
+          <button className="brochurePopBarBtn" type="button" title="Up" onClick={() => nudgeSelected(0, -0.01)}>↑</button>
+          <button className="brochurePopBarBtn" type="button" title="Down" onClick={() => nudgeSelected(0, 0.01)}>↓</button>
+          <button className="brochurePopBarBtn" type="button" title="Left" onClick={() => nudgeSelected(-0.01, 0)}>←</button>
+          <button className="brochurePopBarBtn" type="button" title="Right" onClick={() => nudgeSelected(0.01, 0)}>→</button>
 
-                <div className="brochureCanvasPopoverField">
-                  <span className="brochurePreviewToolbarLabel">Typography</span>
-                  <div className="brochureCanvasPopoverButtonRow">
-                    <button
-                      className="brochurePreviewToolbarButton"
-                      type="button"
-                      data-active={selectedTextItem?.isBold ? "true" : "false"}
-                      onClick={toggleSelectedTextBold}
-                    >
-                      Bold
-                    </button>
-                    <button
-                      className="brochurePreviewToolbarButton"
-                      type="button"
-                      data-active={selectedTextItem?.isItalic ? "true" : "false"}
-                      onClick={toggleSelectedTextItalic}
-                    >
-                      Italic
-                    </button>
-                    <input
-                      className="brochureCanvasPopoverNumber"
-                      type="number"
-                      min={12}
-                      max={96}
-                      value={selectedTextItem?.fontSize ?? 24}
-                      onChange={(event) =>
-                        updateSelectedTextSize(Number(event.target.value || 24))
-                      }
-                    />
-                  </div>
-                </div>
+          <span className="brochurePopBarDivider" />
 
-                <div className="brochureCanvasPopoverField">
-                  <span className="brochurePreviewToolbarLabel">Alignment</span>
-                  <div className="brochureCanvasPopoverButtonRow">
-                    {(["left", "center", "right"] as BrochureCanvasTextAlign[]).map(
-                      (alignment) => (
-                        <button
-                          key={alignment}
-                          className="brochurePreviewToolbarButton"
-                          type="button"
-                          data-active={
-                            selectedTextItem?.textAlign === alignment ? "true" : "false"
-                          }
-                          onClick={() => updateSelectedTextAlign(alignment)}
-                        >
-                          {alignment}
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </div>
-              </>
-            ) : null}
+          <button className="brochurePopBarBtn" type="button" title="Send to back" onClick={() => moveSelectedLayer("back")}>↓↓</button>
+          <button className="brochurePopBarBtn" type="button" title="Send backward" onClick={() => moveSelectedLayer("backward")}>↓</button>
+          <button className="brochurePopBarBtn" type="button" title="Bring forward" onClick={() => moveSelectedLayer("forward")}>↑</button>
+          <button className="brochurePopBarBtn" type="button" title="Bring to front" onClick={() => moveSelectedLayer("front")}>↑↑</button>
 
-            {selectedShapeItem ? (
-              <div className="brochureCanvasPopoverField">
-                <span className="brochurePreviewToolbarLabel">Stroke</span>
-                <div className="brochureCanvasPopoverButtonRow">
-                  {[2, 4, 6, 8].map((strokeWidth) => (
-                    <button
-                      key={strokeWidth}
-                      className="brochurePreviewToolbarButton"
-                      type="button"
-                      data-active={
-                        (selectedShapeItem.strokeWidth ?? 3) === strokeWidth ? "true" : "false"
-                      }
-                      onClick={() => updateSelectedShapeStrokeWidth(strokeWidth)}
-                    >
-                      {strokeWidth}px
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            <div className="brochureCanvasPopoverFooter">
+          {selectedIsText ? (
+            <>
+              <span className="brochurePopBarDivider" />
               <button
-                className="brochurePreviewToolbarButton brochurePreviewToolbarButtonDanger"
+                className="brochurePopBarBtn"
                 type="button"
-                disabled={!selectedCanDelete || (!selectedIsShape && !selectedIsText)}
-                onClick={deleteSelectedItem}
+                data-active={selectedTextItem?.isBold ? "true" : "false"}
+                title="Bold"
+                style={{ fontWeight: 700 }}
+                onClick={toggleSelectedTextBold}
               >
-                Delete
+                B
               </button>
-            </div>
-          </div>
+              <button
+                className="brochurePopBarBtn"
+                type="button"
+                data-active={selectedTextItem?.isItalic ? "true" : "false"}
+                title="Italic"
+                style={{ fontStyle: "italic" }}
+                onClick={toggleSelectedTextItalic}
+              >
+                I
+              </button>
+              <input
+                className="brochurePopBarSize"
+                type="number"
+                min={12}
+                max={96}
+                value={selectedTextItem?.fontSize ?? 24}
+                title="Font size"
+                onChange={(event) => updateSelectedTextSize(Number(event.target.value || 24))}
+              />
+              <span className="brochurePopBarDivider" />
+              {(["left", "center", "right"] as BrochureCanvasTextAlign[]).map((alignment) => (
+                <button
+                  key={alignment}
+                  className="brochurePopBarBtn"
+                  type="button"
+                  data-active={selectedTextItem?.textAlign === alignment ? "true" : "false"}
+                  title={`Align ${alignment}`}
+                  onClick={() => updateSelectedTextAlign(alignment)}
+                >
+                  {alignment === "left" ? "L" : alignment === "center" ? "C" : "R"}
+                </button>
+              ))}
+            </>
+          ) : null}
+
+          {selectedShapeItem ? (
+            <>
+              <span className="brochurePopBarDivider" />
+              {[2, 4, 6, 8].map((strokeWidth) => (
+                <button
+                  key={strokeWidth}
+                  className="brochurePopBarBtn"
+                  type="button"
+                  data-active={(selectedShapeItem.strokeWidth ?? 3) === strokeWidth ? "true" : "false"}
+                  title={`Stroke ${strokeWidth}px`}
+                  onClick={() => updateSelectedShapeStrokeWidth(strokeWidth)}
+                >
+                  {strokeWidth}
+                </button>
+              ))}
+            </>
+          ) : null}
+
+          <span className="brochurePopBarDivider" />
+
+          <button
+            className="brochurePopBarBtn"
+            type="button"
+            data-danger="true"
+            disabled={!selectedCanDelete || (!selectedIsShape && !selectedIsText)}
+            title="Delete element"
+            onClick={deleteSelectedItem}
+          >
+            ✕
+          </button>
+          <button
+            className="brochurePopBarBtn"
+            type="button"
+            title="Close"
+            style={{ color: "rgb(255 255 255 / 0.32)" }}
+            onClick={() => setSelectedItem(null)}
+          >
+            ×
+          </button>
         </div>
       ) : null}
 

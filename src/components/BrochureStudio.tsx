@@ -796,6 +796,14 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
           >
             {isCopying ? "Copied" : "Copy link"}
           </button>
+          <a
+            className="projectFeedbackAction"
+            href={`/mybrochure/${project.projectId}/view`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Present →
+          </a>
           <button
             className="projectFeedbackAction"
             type="button"

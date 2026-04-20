@@ -3550,13 +3550,103 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .brochureCanvasPopover {
   position: fixed;
   z-index: 22;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid rgb(127 127 127 / 0.2);
-  background: rgb(255 255 255 / 0.96);
-  box-shadow: 0 28px 80px rgb(17 17 17 / 0.14);
-  backdrop-filter: blur(18px);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px;
+  height: 44px;
+  background: #1c1c1e;
+  color: rgb(255 255 255 / 0.85);
+  border-radius: 12px;
+  box-shadow:
+    0 8px 28px rgb(0 0 0 / 0.32),
+    0 2px 8px rgb(0 0 0 / 0.18),
+    0 0 0 1px rgb(255 255 255 / 0.06);
   transform: translate(-50%, var(--brochure-popover-shift, -100%));
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.brochurePopBarKind {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.38);
+  padding: 0 8px 0 4px;
+  flex-shrink: 0;
+}
+
+.brochurePopBarDivider {
+  width: 1px;
+  height: 18px;
+  background: rgb(255 255 255 / 0.1);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.brochurePopBarBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  min-width: 30px;
+  padding: 0 7px;
+  border: none;
+  background: transparent;
+  color: rgb(255 255 255 / 0.72);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+  font-family: inherit;
+}
+
+.brochurePopBarBtn:hover {
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+
+.brochurePopBarBtn[data-active="true"] {
+  background: rgb(255 255 255 / 0.13);
+  color: #fff;
+}
+
+.brochurePopBarBtn[data-danger="true"]:hover {
+  background: rgb(239 68 68 / 0.22);
+  color: rgb(252 165 165);
+}
+
+.brochurePopBarBtn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.brochurePopBarColor {
+  width: 26px;
+  height: 26px;
+  padding: 2px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  background: transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.brochurePopBarSize {
+  width: 46px;
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  background: rgb(255 255 255 / 0.07);
+  color: rgb(255 255 255 / 0.85);
+  font: inherit;
+  font-size: 11px;
+  border-radius: 5px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .brochureCanvasPopoverHeader,
@@ -5800,6 +5890,417 @@ html[data-theme="dark"] .myStudioGuideArrow {
   }
 }
 
+/* ==========================================
+   CINEMATIC VIEWER
+   ========================================== */
+
+.cinematicViewer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #0c0c0c;
+  color: #f2f2f0;
+  scroll-behavior: smooth;
+}
+
+.cinematicHeader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px clamp(24px, 5vw, 64px);
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgb(12 12 12 / 0.6) 0%, transparent 100%);
+}
+
+.cinematicHeaderTitle {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.45);
+}
+
+.cinematicHeaderEdit {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgb(255 255 255 / 0.45);
+  text-decoration: none;
+  pointer-events: auto;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  padding: 6px 14px;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 6px;
+}
+
+.cinematicHeaderEdit:hover {
+  color: #fff;
+  border-color: rgb(255 255 255 / 0.28);
+}
+
+.cinematicNav {
+  position: fixed;
+  right: clamp(16px, 2.5vw, 28px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 210;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cinematicNavDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.22);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.cinematicNavDot[data-active="true"] {
+  background: var(--cine-accent, #c9a96e);
+  transform: scale(1.6);
+}
+
+.cinematicSection {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.cinematicSection[data-layout="split"],
+.cinematicSection[data-layout="light"] {
+  justify-content: center;
+  min-height: 80svh;
+}
+
+.cinematicSection[data-kind="cover"] {
+  min-height: 100svh;
+}
+
+.cinematicBg {
+  position: absolute;
+  inset: -8%;
+  z-index: 0;
+}
+
+.cinematicBgImg {
+  object-fit: cover;
+  object-position: center;
+}
+
+.cinematicOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgb(12 12 12 / 0.88) 0%,
+    rgb(12 12 12 / 0.38) 35%,
+    rgb(12 12 12 / 0.08) 70%,
+    transparent 100%
+  );
+}
+
+.cinematicOverlay[data-cover="true"] {
+  background: linear-gradient(
+    to top,
+    rgb(12 12 12 / 0.92) 0%,
+    rgb(12 12 12 / 0.52) 45%,
+    rgb(12 12 12 / 0.18) 100%
+  );
+}
+
+.cinematicHeroContent {
+  position: relative;
+  z-index: 2;
+  padding: clamp(32px, 5vw, 80px);
+  padding-bottom: clamp(56px, 8vw, 110px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cinematicCoverLogo {
+  opacity: 0.82;
+  margin-bottom: 28px;
+}
+
+.cinematicGalleryLayout {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 100svh;
+}
+
+.cinematicGalleryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.cinematicGalleryGrid[data-count="1"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cinematicGalleryGrid[data-count="3"] > :first-child {
+  grid-column: 1 / -1;
+}
+
+.cinematicGalleryCell {
+  position: relative;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+
+.cinematicGalleryCaption {
+  padding: clamp(20px, 3.5vw, 52px);
+  background: #0c0c0c;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cinematicSplitLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 80svh;
+}
+
+.cinematicSplitImage {
+  position: relative;
+  overflow: hidden;
+  background: #1a1a1a;
+  min-height: 50svh;
+}
+
+.cinematicSplitText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  padding: clamp(40px, 6vw, 96px);
+  background: #f6f5f2;
+}
+
+.cinematicTextContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  padding: clamp(80px, 12vw, 160px) clamp(24px, 8vw, 120px);
+  min-height: 70svh;
+}
+
+.cinematicTextContent[data-layout="light"] {
+  background: #f6f5f2;
+  min-height: 60svh;
+}
+
+.cinematicFinalLogo {
+  opacity: 0.88;
+  margin-bottom: 8px;
+}
+
+.cinematicEyebrow {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cine-accent, #c9a96e);
+}
+
+.cinematicCoverTitle {
+  font-size: clamp(52px, 9vw, 136px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: #f2f2f0;
+  margin: 0;
+}
+
+.cinematicHeroTitle {
+  font-size: clamp(34px, 5vw, 78px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.94;
+  color: #f2f2f0;
+  margin: 0;
+}
+
+.cinematicHeroBody {
+  font-size: clamp(13px, 1.3vw, 17px);
+  font-weight: 300;
+  line-height: 1.72;
+  color: rgb(242 242 240 / 0.62);
+  max-width: 48ch;
+  margin: 0;
+}
+
+.cinematicGalleryTitle,
+.cinematicDarkTitle {
+  font-size: clamp(30px, 4vw, 62px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.96;
+  color: #f2f2f0;
+  margin: 0;
+}
+
+.cinematicLightTitle {
+  font-size: clamp(26px, 3.5vw, 52px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.96;
+  color: #111;
+  margin: 0;
+}
+
+.cinematicSplitTitle {
+  font-size: clamp(24px, 2.8vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.96;
+  color: #111;
+  margin: 0;
+}
+
+.cinematicDarkBody {
+  font-size: clamp(13px, 1.2vw, 17px);
+  font-weight: 300;
+  line-height: 1.78;
+  color: rgb(242 242 240 / 0.58);
+  max-width: 52ch;
+  margin: 0;
+}
+
+.cinematicLightBody,
+.cinematicSplitBody {
+  font-size: clamp(13px, 1.1vw, 16px);
+  font-weight: 400;
+  line-height: 1.78;
+  color: #5a5a5a;
+  max-width: 52ch;
+  margin: 0;
+}
+
+.cinematicScrollHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 32px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(242 242 240 / 0.38);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+  font-family: inherit;
+}
+
+.cinematicScrollHint:hover {
+  color: rgb(242 242 240 / 0.65);
+}
+
+.cinematicSocials {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cinematicSocialLink {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(242 242 240 / 0.42);
+  text-decoration: none;
+  padding: 8px 16px;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 4px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.cinematicSocialLink:hover {
+  color: #f2f2f0;
+  border-color: rgb(255 255 255 / 0.26);
+}
+
+/* Scroll-triggered animation system */
+.cine-up-0,
+.cine-up-1,
+.cine-up-2,
+.cine-up-3,
+.cine-up-4 {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-visible="true"] .cine-up-0 { opacity: 1; transform: none; transition-delay: 0ms; }
+[data-visible="true"] .cine-up-1 { opacity: 1; transform: none; transition-delay: 120ms; }
+[data-visible="true"] .cine-up-2 { opacity: 1; transform: none; transition-delay: 240ms; }
+[data-visible="true"] .cine-up-3 { opacity: 1; transform: none; transition-delay: 360ms; }
+[data-visible="true"] .cine-up-4 { opacity: 1; transform: none; transition-delay: 480ms; }
+
+.cinematicGalleryCell {
+  transform: scale(1.04);
+  opacity: 0;
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-visible="true"] .cinematicGalleryCell:nth-child(1) { opacity: 1; transform: none; transition-delay: 0ms; }
+[data-visible="true"] .cinematicGalleryCell:nth-child(2) { opacity: 1; transform: none; transition-delay: 100ms; }
+[data-visible="true"] .cinematicGalleryCell:nth-child(3) { opacity: 1; transform: none; transition-delay: 200ms; }
+[data-visible="true"] .cinematicGalleryCell:nth-child(4) { opacity: 1; transform: none; transition-delay: 300ms; }
+
+@media (max-width: 768px) {
+  .cinematicSplitLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cinematicSplitImage {
+    aspect-ratio: 4/3;
+  }
+
+  .cinematicNav {
+    display: none;
+  }
+
+  .cinematicGalleryGrid,
+  .cinematicGalleryGrid[data-count="3"] > :first-child {
+    grid-template-columns: minmax(0, 1fr);
+    grid-column: auto;
+  }
+}
+
 @media print {
   @page {
     size: A4;
@@ -5811,6 +6312,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   .brochureStudioHeader,
   .brochureStudioControls,
   .projectFeedbackMessage,
+  .cinematicViewer,
   .brochureDirectoryShell,
   .brochurePreviewToolbar,
   .brochureCanvasPopover,
