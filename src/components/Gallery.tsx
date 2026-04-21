@@ -26,7 +26,7 @@ type GalleryProps = {
 
 const GALLERY_IMAGE_SIZES =
   "(max-width: 640px) calc(100vw - 36px), (max-width: 1100px) calc((100vw - 84px) / 2), calc((100vw - 112px) / 3)";
-const ALWAYS_VISIBLE_PROJECT_KEYS = new Set<GalleryProjectKey>(["flanthey"]);
+const ALWAYS_VISIBLE_PROJECT_KEYS = new Set<GalleryProjectKey>(["flanthey", "arbaz"]);
 
 function arraysEqual(a: string[], b: string[]) {
   if (a.length !== b.length) return false;

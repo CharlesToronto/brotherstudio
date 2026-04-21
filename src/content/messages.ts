@@ -34,6 +34,7 @@ export type SiteMessages = {
       gallery: string;
       instagram: string;
       services: string;
+      price: string;
       about: string;
       contact: string;
     };
@@ -61,6 +62,48 @@ export type SiteMessages = {
     includedTitle: string;
     services: string[];
     pricingIncludes: string[];
+    ctaText: string;
+    ctaLinkLabel: string;
+  };
+  price: {
+    title: string;
+    metadataDescription: string;
+    openGraphDescription: string;
+    intro: string;
+    accessTitle: string;
+    accessText: string;
+    accessPlaceholder: string;
+    accessButton: string;
+    accessLegal: string;
+    invalidEmail: string;
+    imagesTitle: string;
+    videosTitle: string;
+    packagesTitle: string;
+    partnershipTitle: string;
+    workflowTitle: string;
+    includedTitle: string;
+    imageNote: string;
+    images: Array<{
+      name: string;
+      price: string;
+    }>;
+    videos: Array<{
+      name: string;
+      price?: string;
+      options?: Array<{
+        name: string;
+        price: string;
+      }>;
+    }>;
+    packages: Array<{
+      name: string;
+      price: string;
+      details?: string[];
+    }>;
+    partnerships: string[];
+    workflowIncludesLabel: string;
+    workflowLinkLabel: string;
+    workflowComingSoon: string;
     ctaText: string;
     ctaLinkLabel: string;
   };
@@ -215,6 +258,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         gallery: "Gallery",
         instagram: "Instagram",
         services: "Services",
+        price: "Price",
         about: "About",
         contact: "Contact",
       },
@@ -263,6 +307,111 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Premium renderings: high-definition outputs optimized for real estate marketing (brochures, portals, digital marketing)",
       ],
       ctaText: "For inquiries, contact BrotherStudio.",
+      ctaLinkLabel: "Contact",
+    },
+    price: {
+      title: "Price",
+      metadataDescription:
+        "Minimal pricing overview for BrotherStudio architectural visualization services.",
+      openGraphDescription:
+        "Minimal pricing overview for BrotherStudio photorealistic architectural images and videos.",
+      intro:
+        "We help architects and developers budget high-end visualizations with clear starting prices.",
+      accessTitle: "Private access",
+      accessText:
+        "Enter your email address to view the pricing page.",
+      accessPlaceholder: "Email address",
+      accessButton: "Enter",
+      accessLegal:
+        "Your email is only used to unlock this page on your device.",
+      invalidEmail: "Please enter a valid email address.",
+      imagesTitle: "Image",
+      videosTitle: "Video",
+      packagesTitle: "Packages",
+      partnershipTitle: "Partnership",
+      workflowTitle: "Workflow",
+      includedTitle: "Included in pricing",
+      imageNote:
+        "Focus images offered from 3 ordered images. Selection at BrotherStudio's discretion.",
+      images: [
+        {
+          name: "3D Photorealistic Interior Images",
+          price: "CHF 800",
+        },
+        {
+          name: "3D Photorealistic Exterior Images",
+          price: "CHF 900",
+        },
+        {
+          name: "3D Floor Plans",
+          price: "CHF 400",
+        },
+        {
+          name: "Sales plan for brochure",
+          price: "CHF 290",
+        },
+        {
+          name: "Photo (Drone View)",
+          price: "CHF 350",
+        },
+      ],
+      videos: [
+        {
+          name: "Video Walkthrough",
+          options: [
+            { name: "1-4 rooms", price: "CHF 1700" },
+            { name: "5-9 rooms", price: "CHF 3200" },
+            { name: "10+ rooms", price: "On request" },
+          ],
+        },
+        {
+          name: "Walkthrough Classic (click & walk)",
+          options: [
+            { name: "1-4 rooms", price: "CHF 1200" },
+            { name: "5-9 rooms", price: "CHF 2200" },
+          ],
+        },
+        {
+          name: "Marketing Video (emotional / cinematic)",
+          options: [
+            { name: "1-30 seconds", price: "CHF 2000" },
+            { name: "31-60 seconds", price: "CHF 3500" },
+            { name: "61-90 seconds", price: "CHF 4800" },
+          ],
+        },
+        {
+          name: "Photorealistic 3D Video (Drone View)",
+          price: "CHF 1400",
+        },
+      ],
+      packages: [
+        {
+          name: "Villa package",
+          price: "CHF 7000",
+          details: [
+            "4-6 interior images",
+            "2-3 exterior images",
+            '1-3 style images (rain, dust, snow)',
+            "1-3 focus images included",
+            "1x marketing video, 31-60 seconds",
+          ],
+        },
+        {
+          name: "Building package",
+          price: "On request",
+          details: ["Project size review required before pricing."],
+        },
+      ],
+      partnerships: [
+        "10% discount for 5+ projects per year",
+        "15% discount for 8+ projects per year",
+      ],
+      workflowIncludesLabel:
+        "Includes: interactive review platform to validate and comment on visuals in real time >",
+      workflowLinkLabel: "myBrochure",
+      workflowComingSoon:
+        "Coming soon: immersive and cinematic digital experience to present and promote the project online.",
+      ctaText: "For a custom quote, contact BrotherStudio.",
       ctaLinkLabel: "Contact",
     },
     about: {
@@ -337,6 +486,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         gallery: "Galerie",
         instagram: "Instagram",
         services: "Services",
+        price: "Price",
         about: "A propos",
         contact: "Contact",
       },
@@ -385,6 +535,111 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Rendus premium : haute definition optimises pour commercialisation immobiliere (brochures, portails, marketing digital).",
       ],
       ctaText: "Pour toute demande, contactez BrotherStudio.",
+      ctaLinkLabel: "Contact",
+    },
+    price: {
+      title: "Price",
+      metadataDescription:
+        "Vue minimaliste des prix de BrotherStudio pour les visualisations architecturales.",
+      openGraphDescription:
+        "Vue minimaliste des prix BrotherStudio pour images et videos architecturales photorealistes.",
+      intro: "",
+      accessTitle: "Acces prive",
+      accessText:
+        "Entrez votre adresse email pour acceder a la page de prix.",
+      accessPlaceholder: "Adresse email",
+      accessButton: "Entrer",
+      accessLegal:
+        "Votre email sert uniquement a debloquer cette page sur votre appareil.",
+      invalidEmail: "Veuillez entrer une adresse email valide.",
+      imagesTitle: "Images",
+      videosTitle: "Videos",
+      packagesTitle: "Forfait",
+      partnershipTitle: "Partenariat",
+      workflowTitle: "Workflow",
+      includedTitle: "Inclus dans mes prix",
+      imageNote:
+        "Images focus offertes a partir de 3 images commandees. Choix selon BrotherStudio.",
+      images: [
+        {
+          name: "Images 3D photorealistes interieures",
+          price: "CHF 800",
+        },
+        {
+          name: "Images 3D photorealistes exterieures",
+          price: "CHF 900",
+        },
+        {
+          name: "3D FloorPlan",
+          price: "CHF 400",
+        },
+        {
+          name: "Plan de vente pour brochure",
+          price: "CHF 290",
+        },
+        {
+          name: "Photo (Drone View)",
+          price: "CHF 350",
+        },
+      ],
+      videos: [
+        {
+          name: "Video Walkthrough",
+          options: [
+            { name: "1-4 pieces", price: "CHF 1700" },
+            { name: "5-9 pieces", price: "CHF 3200" },
+            { name: "10+", price: "Sur demande" },
+          ],
+        },
+        {
+          name: "Walkthrough Classic (clic & walk)",
+          options: [
+            { name: "1-4 pieces", price: "CHF 1200" },
+            { name: "5-9 pieces", price: "CHF 2200" },
+          ],
+        },
+        {
+          name: "Video Marketing (emotionnelle / cinematique)",
+          options: [
+            { name: "1-30 secondes", price: "CHF 2000" },
+            { name: "31-60 secondes", price: "CHF 3500" },
+            { name: "61-90 secondes", price: "CHF 4800" },
+          ],
+        },
+        {
+          name: "Videorealistes 3D (Drone View)",
+          price: "CHF 1400",
+        },
+      ],
+      packages: [
+        {
+          name: "Villa forfait",
+          price: "CHF 7700",
+          details: [
+            "4-6 images interieures",
+            "2-3 images exterieures",
+            '1-3 image style (pluie, poussiere, neige)',
+            "1-3 images focus offertes",
+            "1x Video marketing, 31-60 secondes",
+          ],
+        },
+        {
+          name: "Immeuble forfait",
+          price: "Sur demande",
+          details: ["Besoin de voir la taille du projet."],
+        },
+      ],
+      partnerships: [
+        "10% des 5 images commandees par projet",
+        "10% si il y a 5+ projet par annee",
+        "15% si il y a 8+ projet par annee",
+      ],
+      workflowIncludesLabel:
+        "Inclut : plateforme de review interactive pour valider et commenter les visuels en temps reel >",
+      workflowLinkLabel: "myBrochure",
+      workflowComingSoon:
+        "Coming soon : experience digitale immersive et cinematique pour presenter et promouvoir le projet en ligne",
+      ctaText: "Pour un devis sur mesure, contactez BrotherStudio.",
       ctaLinkLabel: "Contact",
     },
     about: {

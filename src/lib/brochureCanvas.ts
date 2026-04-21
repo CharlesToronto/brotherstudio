@@ -18,6 +18,14 @@ export const BROCHURE_SOCIAL_LINK_KEYS: BrochureSocialLinkKey[] = [
   "x",
 ];
 
+const SINGLETON_CANVAS_KINDS: BrochureCanvasItemKind[] = [
+  "copy",
+  "media",
+  "logo",
+  "projectMeta",
+  "socialLinks",
+];
+
 type CanvasItemSeed = Omit<BrochureCanvasItem, "id">;
 
 const STANDARD_LAYOUT_SEEDS: CanvasItemSeed[] = [
@@ -40,6 +48,7 @@ const STANDARD_LAYOUT_SEEDS: CanvasItemSeed[] = [
 ];
 
 const SECTION_LAYOUT_SEEDS: Record<BrochureSectionKind, CanvasItemSeed[]> = {
+  blank: [],
   cover: [
     {
       kind: "projectMeta",
@@ -151,7 +160,9 @@ function normalizeItemColor(value: unknown) {
 }
 
 function normalizeTextAlign(value: unknown): BrochureCanvasTextAlign {
-  return value === "center" || value === "right" ? value : "left";
+  return value === "center" || value === "right" || value === "justify"
+    ? value
+    : "left";
 }
 
 function normalizeStrokeWidth(value: unknown) {
@@ -162,6 +173,24 @@ function normalizeStrokeWidth(value: unknown) {
       1,
       16,
     ),
+  );
+}
+
+function normalizeLatitude(value: unknown) {
+  return normalizeNumber(
+    typeof value === "number" ? value : Number.NaN,
+    45.5017,
+    -85,
+    85,
+  );
+}
+
+function normalizeLongitude(value: unknown) {
+  return normalizeNumber(
+    typeof value === "number" ? value : Number.NaN,
+    -73.5673,
+    -180,
+    180,
   );
 }
 
@@ -201,17 +230,17 @@ export function hasSocialLinks(links: BrochureSocialLinks | null | undefined) {
 export function sanitizeCanvasItems(
   kind: BrochureSectionKind,
   items: unknown,
+  options?: {
+    availableImageIds?: string[];
+  },
 ): BrochureCanvasItem[] {
   const seeds = createDefaultLayoutItemsForSection(kind);
   if (!Array.isArray(items)) {
     return seeds;
   }
 
-  const requiredKinds = new Set(
-    seeds
-      .filter((item) => item.kind !== "shape" && item.kind !== "text")
-      .map((item) => item.kind as Exclude<BrochureCanvasItemKind, "shape" | "text">),
-  );
+  const availableImageIds = new Set(options?.availableImageIds ?? []);
+
   const seenKinds = new Set<BrochureCanvasItemKind>();
   const nextItems: BrochureCanvasItem[] = [];
 
@@ -224,6 +253,8 @@ export function sanitizeCanvasItems(
     const kindValue = (
       rawKind === "copy" ||
       rawKind === "media" ||
+      rawKind === "photo" ||
+      rawKind === "map" ||
       rawKind === "logo" ||
       rawKind === "projectMeta" ||
       rawKind === "socialLinks" ||
@@ -235,8 +266,7 @@ export function sanitizeCanvasItems(
 
     if (!kindValue) continue;
 
-    if (kindValue !== "shape" && kindValue !== "text") {
-      if (!requiredKinds.has(kindValue)) continue;
+    if (SINGLETON_CANVAS_KINDS.includes(kindValue)) {
       if (seenKinds.has(kindValue)) continue;
       seenKinds.add(kindValue);
     }
@@ -319,6 +349,57 @@ export function sanitizeCanvasItems(
         ),
         isBold: candidate.isBold === true,
         isItalic: candidate.isItalic === true,
+        showBackground: candidate.showBackground !== false,
+        showBorder: candidate.showBorder !== false,
+      });
+      continue;
+    }
+
+    if (kindValue === "photo") {
+      const imageId =
+        typeof candidate.imageId === "string" ? candidate.imageId.trim() : "";
+
+      if (!imageId) continue;
+      if (availableImageIds.size > 0 && !availableImageIds.has(imageId)) continue;
+
+      nextItems.push({
+        ...normalizedBase,
+        kind: "photo",
+        imageId,
+      });
+      continue;
+    }
+
+    if (kindValue === "map") {
+      const address =
+        typeof candidate.address === "string" && candidate.address.trim().length > 0
+          ? candidate.address.trim()
+          : "Montreal, QC";
+      const rawMapStyle =
+        candidate.mapStyle === "minimalWarm" ||
+        candidate.mapStyle === "minimalBlue" ||
+        candidate.mapStyle === "color" ||
+        candidate.mapStyle === "dark"
+          ? candidate.mapStyle
+          : "minimalMono";
+
+      nextItems.push({
+        ...normalizedBase,
+        kind: "map",
+        address,
+        latitude: normalizeLatitude(candidate.latitude),
+        longitude: normalizeLongitude(candidate.longitude),
+        zoom: Math.round(
+          normalizeNumber(
+            typeof candidate.zoom === "number" ? candidate.zoom : Number.NaN,
+            14,
+            1,
+            20,
+          ),
+        ),
+        mapStyle: rawMapStyle,
+        isInteractive: candidate.isInteractive !== false,
+        showAddressLabel: candidate.showAddressLabel === true,
       });
       continue;
     }
@@ -329,14 +410,7 @@ export function sanitizeCanvasItems(
     });
   }
 
-  const missingDefaults = seeds.filter(
-    (seed) => !nextItems.some((item) => item.kind === seed.kind),
-  );
-
-  return normalizeCanvasItemLayers([
-    ...nextItems,
-    ...missingDefaults.map((seed) => cloneSeed(seed)),
-  ]);
+  return normalizeCanvasItemLayers(nextItems);
 }
 
 export function normalizeCanvasItemLayers(
@@ -380,10 +454,59 @@ export function createCanvasTextItem(zIndex: number): BrochureCanvasItem {
     fontSize: 24,
     isBold: false,
     isItalic: false,
+    showBackground: true,
+    showBorder: true,
     x: 0.14,
     y: 0.16,
     width: 0.28,
     height: 0.14,
+    zIndex,
+  };
+}
+
+export function createCanvasPhotoItem(
+  imageId: string,
+  zIndex: number,
+): BrochureCanvasItem {
+  return {
+    id: crypto.randomUUID(),
+    kind: "photo",
+    imageId,
+    x: 0.12,
+    y: 0.16,
+    width: 0.34,
+    height: 0.28,
+    zIndex,
+  };
+}
+
+export function createCanvasMapItem(zIndex: number): BrochureCanvasItem {
+  return {
+    id: crypto.randomUUID(),
+    kind: "map",
+    address: "Montreal, QC",
+    latitude: 45.5017,
+    longitude: -73.5673,
+    zoom: 14,
+    mapStyle: "minimalMono",
+    isInteractive: false,
+    showAddressLabel: false,
+    x: 0.12,
+    y: 0.18,
+    width: 0.34,
+    height: 0.26,
+    zIndex,
+  };
+}
+
+export function createCanvasLogoItem(zIndex: number): BrochureCanvasItem {
+  return {
+    id: crypto.randomUUID(),
+    kind: "logo",
+    x: 0.08,
+    y: 0.08,
+    width: 0.18,
+    height: 0.09,
     zIndex,
   };
 }

@@ -35,6 +35,8 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     ? "gallery"
     : subpath === "/services"
       ? "services"
+      : subpath === "/price"
+        ? "price"
       : subpath === "/mystudio" || subpath === "/myproject"
         ? "mystudio"
       : subpath === "/about"
@@ -119,6 +121,13 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
       label: messages.nav.services,
       href: localizedHref("/services"),
       isCurrent: subpath === "/services",
+      kind: "link" as const,
+    },
+    {
+      key: "price",
+      label: messages.nav.price,
+      href: localizedHref("/price"),
+      isCurrent: subpath === "/price",
       kind: "link" as const,
     },
     {

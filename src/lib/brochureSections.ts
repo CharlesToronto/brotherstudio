@@ -10,6 +10,13 @@ import {
 
 export const BROCHURE_SECTION_DEFINITIONS: BrochureSectionDefinition[] = [
   {
+    kind: "blank",
+    label: "Section vierge",
+    defaultTitle: "",
+    defaultSubtitle: "",
+    defaultBody: "",
+  },
+  {
     kind: "cover",
     label: "Page de couverture",
     defaultTitle: "Project brochure",

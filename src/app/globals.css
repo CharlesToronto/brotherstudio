@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
 
 :root {
   --background: #ffffff;
@@ -58,6 +59,18 @@ input:focus-visible,
 select:focus-visible {
   outline: 2px solid var(--foreground);
   outline-offset: 2px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .siteHeader {
@@ -129,6 +142,10 @@ select:focus-visible {
 
 .siteNavLink[data-nav-key="services"] {
   --nav-hover-color: #be5c1f;
+}
+
+.siteNavLink[data-nav-key="price"] {
+  --nav-hover-color: #2f6df6;
 }
 
 .siteNavLink[data-nav-key="about"] {
@@ -1221,9 +1238,74 @@ html[data-theme="dark"] .contactForm {
   border-top: 1px solid var(--foreground);
 }
 
+.servicesItemPriceRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.servicesItemPriceRow:hover,
+.servicesItemPriceRow:hover .servicesItemPriceValue,
+.servicesItem:hover,
+.servicesItem:hover .servicesItemPriceValue,
+.servicesItem:hover .servicesItemPriceRow,
+.servicesNestedItem:hover,
+.servicesNestedItem:hover .servicesItemPriceValue,
+.servicesNestedItem:hover .servicesItemPriceRow {
+  color: #2f6df6;
+}
+
+.servicesItemPriceValue {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.servicesNestedList {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.servicesNestedItem {
+  position: relative;
+  margin-left: 18px;
+  padding-left: 18px;
+  line-height: 1.5;
+}
+
+.servicesNestedItem::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 8px;
+  border-top: 1px solid rgb(127 127 127 / 0.7);
+}
+
+.workflowCard {
+  border: 1px solid rgb(127 127 127 / 0.18);
+  background: rgb(127 127 127 / 0.06);
+}
+
+.workflowLink {
+  color: #2f6df6;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
 .servicesNote {
   margin: 0;
   font-style: normal;
+}
+
+@media (max-width: 640px) {
+  .servicesItemPriceRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
 }
 
 .teamPage {
@@ -3114,15 +3196,20 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .brochureDirectoryBody,
 .brochureDirectoryMeta,
 .brochureStudioControls,
-.brochureStudioSection,
-.brochureStudioSectionHeader {
+.brochureStudioSection {
   display: grid;
   gap: 10px;
 }
 
+.brochureStudioSectionHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .brochureStudioSection {
-  background: #eef5ff;
-  border-color: rgb(112 148 214 / 0.24);
+  background: #fff0f0;
+  border-color: rgb(214 112 112 / 0.24);
 }
 
 .brochureStudioHeader {
@@ -3166,19 +3253,65 @@ html[data-theme="dark"] .myStudioGuideArrow {
 }
 
 .brochureStudioLayout {
+  --brochure-sidebar-width: clamp(320px, 24vw, 380px);
   display: grid;
-  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  grid-template-columns: var(--brochure-sidebar-width) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
+  overflow: visible;
 }
 
 .brochureStudioControls {
   align-content: start;
+  align-self: start;
+  overflow: visible;
+  min-width: 0;
+  min-height: calc(100vh - 48px);
 }
 
 .brochureBuilderPanel {
-  position: sticky;
-  top: 84px;
+  display: grid;
+  gap: 10px;
+  position: relative;
+  width: 100%;
+  max-height: calc(100vh - 48px);
+  overflow-x: visible;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  scrollbar-width: thin;
+}
+
+.brochureSidebarTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.brochureSidebarTabButton {
+  min-height: 44px;
+  border: 1px solid rgb(214 112 112 / 0.26);
+  background: rgb(255 255 255 / 0.72);
+  color: #7b5252;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.brochureSidebarTabButton[data-active="true"] {
+  border-color: #d85a5a;
+  background: rgb(216 90 90 / 0.12);
+  color: #111;
+}
+
+.brochureSidebarDivider {
+  height: 1px;
+  margin: 2px 0 6px;
+  background: rgb(214 112 112 / 0.32);
 }
 
 .brochureSidebarPanel {
@@ -3189,7 +3322,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
-  align-items: start;
+  align-items: center;
   border: 0;
   padding: 0;
   background: transparent;
@@ -3205,15 +3338,28 @@ html[data-theme="dark"] .myStudioGuideArrow {
   padding-top: 14px;
 }
 
+.brochureSidebarPanelIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgb(214 112 112 / 0.24);
+  background: rgb(255 255 255 / 0.72);
+  color: #d85a5a;
+  font-size: 14px;
+  line-height: 1;
+}
+
 .brochureSidebarPanelSymbol {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: 1px solid rgb(112 148 214 / 0.26);
+  border: 1px solid rgb(214 112 112 / 0.26);
   background: rgb(255 255 255 / 0.72);
-  color: #5a86d8;
+  color: #d85a5a;
   font-size: 22px;
   line-height: 1;
 }
@@ -3232,7 +3378,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   gap: 6px;
   padding: 14px;
   border: 1px solid rgb(127 127 127 / 0.28);
-  background: #f7fbff;
+  background: #fff7f7;
   color: inherit;
   font: inherit;
   text-align: left;
@@ -3268,8 +3414,8 @@ html[data-theme="dark"] .myStudioGuideArrow {
 }
 
 .brochureTemplateCard[data-active="true"] {
-  border-color: #7aa5f7;
-  background: #dfeeff;
+  border-color: #f77a7a;
+  background: #ffdfe0;
 }
 
 .brochureColorInput {
@@ -3297,7 +3443,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   align-items: center;
   padding: 12px;
   border: 1px solid rgb(127 127 127 / 0.22);
-  background: #f7fbff;
+  background: #fff7f7;
   cursor: pointer;
   transition:
     border-color 0.2s ease,
@@ -3356,6 +3502,12 @@ html[data-theme="dark"] .myStudioGuideArrow {
   gap: 10px;
 }
 
+.brochureImageActionGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .brochureImageSelect {
   display: inline-flex;
   align-items: center;
@@ -3383,6 +3535,38 @@ html[data-theme="dark"] .myStudioGuideArrow {
   letter-spacing: 0.08em;
 }
 
+.brochureImageDeleteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgb(196 59 47 / 0.18);
+  background: #fff;
+  color: #c43b2f;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.brochureImageDeleteButton:hover:not(:disabled) {
+  border-color: #c43b2f;
+  background: rgb(196 59 47 / 0.08);
+}
+
+.brochureImageDeleteButton:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
+.brochureImageDeleteButton svg {
+  width: 14px;
+  height: 14px;
+}
+
 .brochureStudioUpload {
   min-width: 0;
 }
@@ -3401,15 +3585,120 @@ html[data-theme="dark"] .myStudioGuideArrow {
 
 .brochureSectionList {
   display: grid;
-  gap: 8px;
+  gap: 10px;
+}
+
+.brochureElementMeta {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgb(127 127 127 / 0.22);
+  background: #f7fbff;
+}
+
+.brochureElementMeta strong {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brochureElementGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.brochureElementAssetTools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.brochureElementAssetButton {
+  width: 100%;
+  justify-content: center;
+}
+
+.brochureElementButton {
+  border: 1px solid rgb(127 127 127 / 0.28);
+  background: #f7fbff;
+  color: inherit;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 12px 10px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.brochureElementButton:hover:not(:disabled) {
+  border-color: #7aa5f7;
+  background: #dfeeff;
+}
+
+.brochureElementButton:disabled {
+  opacity: 0.42;
+  cursor: default;
 }
 
 .brochureSectionTab {
   display: grid;
-  gap: 4px;
-  padding: 12px 14px;
+  grid-template-columns: 34px minmax(0, 1fr) 40px;
+  gap: 0;
+  align-items: stretch;
   border: 1px solid rgb(127 127 127 / 0.24);
   background: #f7fbff;
+  color: inherit;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.brochureSectionTab[data-dragging="true"] {
+  opacity: 0.56;
+  border-color: #7aa5f7;
+}
+
+.brochureSectionTabDragHandle,
+.brochureSectionTabDragSpacer,
+.brochureSectionTabDeleteSpacer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brochureSectionTabDragHandle,
+.brochureSectionTabDragSpacer {
+  border-right: 1px solid rgb(127 127 127 / 0.12);
+}
+
+.brochureSectionTabDragHandle {
+  color: #6f89b9;
+  cursor: grab;
+}
+
+.brochureSectionTabDragHandle:active {
+  cursor: grabbing;
+}
+
+.brochureSectionTabDragHandle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.brochureSectionTabMain {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 0;
+  background: transparent;
   color: inherit;
   text-align: left;
   font: inherit;
@@ -3432,6 +3721,32 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .brochureSectionTab[data-active="true"] {
   border-color: #7aa5f7;
   background: #dfeeff;
+}
+
+.brochureSectionTabDelete {
+  align-self: center;
+  justify-self: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgb(196 59 47 / 0.18);
+  background: #fff;
+  color: #c43b2f;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.brochureSectionTabDelete:hover {
+  border-color: #c43b2f;
+  background: rgb(196 59 47 / 0.08);
+}
+
+.brochureSectionTabDelete svg {
+  width: 14px;
+  height: 14px;
 }
 
 .brochureSectionPicker {
@@ -3487,6 +3802,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   position: sticky;
   top: 84px;
   display: grid;
+  min-width: 0;
   gap: 14px;
   padding: clamp(8px, 1.2vw, 14px);
   background: linear-gradient(180deg, #fafafa 0%, #f3f3f3 100%);
@@ -3514,7 +3830,9 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .brochureRenderDocument {
   --brochure-font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --brochure-accent-color: #c40018;
+  position: relative;
   display: grid;
+  min-width: 0;
   gap: 16px;
   color: #111;
   font-family: var(--brochure-font-family);
@@ -3548,15 +3866,36 @@ html[data-theme="dark"] .myStudioGuideArrow {
 }
 
 .brochureCanvasPopover {
-  position: fixed;
-  z-index: 22;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 18;
+  display: grid;
+  width: min(420px, calc(100% - 16px));
+  max-width: min(420px, calc(100% - 16px));
   gap: 12px;
-  padding: 14px;
+  padding: 12px 14px;
   border: 1px solid rgb(127 127 127 / 0.2);
-  background: rgb(255 255 255 / 0.96);
-  box-shadow: 0 28px 80px rgb(17 17 17 / 0.14);
+  background: rgb(255 255 255 / 0.98);
+  box-shadow: 0 18px 48px rgb(17 17 17 / 0.12);
   backdrop-filter: blur(18px);
-  transform: translate(-50%, var(--brochure-popover-shift, -100%));
+  max-height: min(72vh, 720px);
+  overflow: auto;
+}
+
+.brochureCanvasPopoverSidebar {
+  position: static;
+  top: auto;
+  right: auto;
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  max-height: none;
+  overflow: visible;
 }
 
 .brochureCanvasPopoverHeader,
@@ -3573,16 +3912,21 @@ html[data-theme="dark"] .myStudioGuideArrow {
   justify-content: space-between;
 }
 
+.brochureCanvasPopoverFooter {
+  justify-content: flex-end;
+}
+
 .brochureCanvasPopoverTitleWrap {
-  display: grid;
-  gap: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .brochureCanvasPopoverTitle {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: capitalize;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .brochureCanvasPopoverClose {
@@ -3597,17 +3941,31 @@ html[data-theme="dark"] .myStudioGuideArrow {
 }
 
 .brochureCanvasPopoverGrid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 12px;
+  align-items: end;
 }
 
 .brochureCanvasPopoverField {
   display: grid;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.brochureCanvasPopoverAutosuggest {
+  display: grid;
+  gap: 6px;
 }
 
 .brochureCanvasPopoverFieldWide,
+.brochureCanvasPopoverFieldHint,
 .brochureCanvasPopoverFooter {
   grid-column: 1 / -1;
+}
+
+.brochureCanvasPopoverFieldHint {
+  min-width: 0;
 }
 
 .brochureCanvasPopoverColor {
@@ -3637,6 +3995,62 @@ html[data-theme="dark"] .myStudioGuideArrow {
   width: 76px;
   min-height: 38px;
   padding: 0 10px;
+}
+
+.brochureCanvasPopoverToggleRow {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.brochureCanvasPopoverCheckbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgb(127 127 127 / 0.2);
+  background: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.brochureCanvasPopoverCheckbox input {
+  margin: 0;
+}
+
+.brochureCanvasPopoverHint {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #6d6d6d;
+}
+
+.brochureCanvasPopoverSuggestList {
+  display: grid;
+  gap: 6px;
+}
+
+.brochureCanvasPopoverSuggestButton {
+  border: 1px solid rgb(127 127 127 / 0.2);
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: left;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.brochureElementEditorMount {
+  min-height: 1px;
+}
+
+.brochureSidebarEmptyState {
+  margin: 0;
+  padding: 8px 0;
 }
 
 .brochurePreviewToolbarGroup {
@@ -3722,10 +4136,10 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .brochureRenderPage {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 210 / 297;
+  aspect-ratio: var(--brochure-page-ratio, 210 / 297);
   width: 100%;
   padding: 0;
-  background: #fff;
+  background: var(--brochure-page-background, #fff);
   border: 1px solid rgb(127 127 127 / 0.16);
 }
 
@@ -3752,7 +4166,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
     inset 0 0 0 2px rgb(31 94 255 / 0.16);
   background:
     linear-gradient(180deg, rgb(31 94 255 / 0.04), rgb(31 94 255 / 0.04)),
-    #fff;
+    var(--brochure-page-background, #fff);
 }
 
 .brochureCanvasItem {
@@ -3776,7 +4190,13 @@ html[data-theme="dark"] .myStudioGuideArrow {
 
 .brochureCanvasItem[data-kind="copy"],
 .brochureCanvasItem[data-kind="projectMeta"],
-.brochureCanvasItem[data-kind="socialLinks"],
+.brochureCanvasItem[data-kind="socialLinks"] {
+  padding: clamp(14px, 1.8vw, 22px);
+  background: rgb(255 255 255 / 0.94);
+  box-shadow: 0 16px 40px rgb(17 17 17 / 0.08);
+  border: 1px solid color-mix(in srgb, var(--brochure-item-color, var(--brochure-accent-color)) 18%, transparent);
+}
+
 .brochureCanvasItem[data-kind="text"] {
   padding: clamp(14px, 1.8vw, 22px);
   background: rgb(255 255 255 / 0.94);
@@ -3784,11 +4204,35 @@ html[data-theme="dark"] .myStudioGuideArrow {
   border: 1px solid color-mix(in srgb, var(--brochure-item-color, var(--brochure-accent-color)) 18%, transparent);
 }
 
+.brochureCanvasItem[data-kind="text"][data-text-background="false"] {
+  background: transparent;
+  box-shadow: none;
+}
+
+.brochureCanvasItem[data-kind="text"][data-text-border="false"] {
+  border-color: transparent;
+}
+
 .brochureCanvasItem[data-kind="media"] {
   overflow: hidden;
   background: #f3f3f3;
   box-shadow: 0 18px 42px rgb(17 17 17 / 0.08);
   border: 1px solid color-mix(in srgb, var(--brochure-item-color, var(--brochure-accent-color)) 16%, transparent);
+}
+
+.brochureCanvasItem[data-kind="photo"] {
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.brochureCanvasItem[data-kind="map"] {
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
 }
 
 .brochureCanvasItem[data-kind="logo"] {
@@ -3893,14 +4337,83 @@ html[data-theme="dark"] .myStudioGuideArrow {
 }
 
 .brochureCanvasLogo,
-.brochureCanvasLogo img {
+.brochureCanvasLogo img,
+.brochureCanvasPhoto,
+.brochureCanvasPhoto img {
   width: 100%;
   height: 100%;
 }
 
-.brochureCanvasLogo img {
+.brochureCanvasLogo img,
+.brochureCanvasPhoto img {
   display: block;
+}
+
+.brochureCanvasMap {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+}
+
+.brochureCanvasMapFrame {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  background: #ececec;
+}
+
+.brochureCanvasMapSurface {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+}
+
+.brochureCanvasMapSurface[data-map-style="minimalWarm"] .maplibregl-canvas {
+  filter: grayscale(1) sepia(0.2) hue-rotate(-18deg) saturate(0.72) brightness(1.02);
+}
+
+.brochureCanvasMapSurface[data-map-style="minimalBlue"] .maplibregl-canvas {
+  filter: grayscale(0.92) sepia(0.16) hue-rotate(155deg) saturate(0.92) brightness(1.01);
+}
+
+.brochureCanvasMapSurface[data-map-style="minimalMono"] .maplibregl-canvas {
+  filter: grayscale(1) brightness(1.04) contrast(0.96);
+}
+
+.brochureCanvasMapSurface .maplibregl-map,
+.brochureCanvasMapSurface .maplibregl-canvas-container,
+.brochureCanvasMapSurface .maplibregl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.brochureCanvasMapSurface .maplibregl-control-container {
+  display: none;
+}
+
+.brochureCanvasMapLabel {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--brochure-item-color, #555);
+}
+
+.brochureCanvasMapAttribution {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.4;
+  color: #8a8a8a;
+}
+
+.brochureCanvasLogo img {
   object-fit: contain;
+}
+
+.brochureCanvasPhoto img {
+  object-fit: cover;
 }
 
 .brochureCanvasMediaGrid {
@@ -4007,6 +4520,12 @@ html[data-theme="dark"] .myStudioGuideArrow {
   height: 100%;
 }
 
+.brochureCanvasTextBlockEditing {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
 .brochureCanvasTextContent {
   margin: 0;
   color: var(--brochure-item-color, #111);
@@ -4017,6 +4536,26 @@ html[data-theme="dark"] .myStudioGuideArrow {
   letter-spacing: -0.02em;
   text-align: var(--brochure-text-align, left);
   white-space: pre-wrap;
+}
+
+.brochureCanvasTextEditor {
+  width: 100%;
+  height: 100%;
+  min-height: 96px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--brochure-item-color, #111);
+  font: inherit;
+  font-size: var(--brochure-text-size, 24px);
+  font-weight: var(--brochure-text-font-weight, 500);
+  font-style: var(--brochure-text-font-style, normal);
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  text-align: var(--brochure-text-align, left);
+  resize: none;
+  outline: none;
+  cursor: text;
 }
 
 .brochureCanvasResizeHandle {
@@ -4088,7 +4627,11 @@ html[data-theme="dark"] .myStudioGuideArrow {
 
 .brochureRenderPage[data-template="luxury"] {
   border-top: 2px solid var(--brochure-accent-color);
-  background: linear-gradient(180deg, #f8f4ee 0%, #fffdfa 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brochure-page-background, #fff) 90%, #efe4d2 10%) 0%,
+    var(--brochure-page-background, #fff) 100%
+  );
 }
 
 .brochureRenderSection,
@@ -5256,6 +5799,19 @@ html[data-theme="dark"] .myStudioGuideArrow {
     position: static;
   }
 
+  .brochureCanvasPopover {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+
+  .brochureBuilderPanel {
+    width: auto;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
   .myStudioGuideSteps {
     grid-template-columns: minmax(0, 1fr);
     aspect-ratio: auto;
@@ -5313,6 +5869,8 @@ html[data-theme="dark"] .myStudioGuideArrow {
 @media (max-width: 640px) {
   .brochureDirectoryGrid,
   .brochureTemplateGridCompact,
+  .brochureElementGrid,
+  .brochureElementAssetTools,
   .brochureSectionImageGrid,
   .brochureCanvasMediaGrid,
   .brochureSectionSocialFields {

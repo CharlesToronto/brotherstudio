@@ -6,6 +6,8 @@ export type BrochureFontFamily =
   | "georgia"
   | "times";
 
+export type BrochureOrientation = "portrait" | "landscape";
+
 export type BrochureSocialLinkKey =
   | "website"
   | "instagram"
@@ -24,11 +26,13 @@ export type BrochureCanvasShapeType =
   | "line"
   | "arrow";
 
-export type BrochureCanvasTextAlign = "left" | "center" | "right";
+export type BrochureCanvasTextAlign = "left" | "center" | "right" | "justify";
 
 export type BrochureCanvasItemKind =
   | "copy"
   | "media"
+  | "photo"
+  | "map"
   | "logo"
   | "projectMeta"
   | "socialLinks"
@@ -50,12 +54,33 @@ export type BrochureCanvasItem =
       kind: "copy" | "media" | "logo" | "projectMeta" | "socialLinks";
     })
   | (BrochureCanvasItemBase & {
+      kind: "photo";
+      imageId: string;
+    })
+  | (BrochureCanvasItemBase & {
+      kind: "map";
+      address: string;
+      latitude: number;
+      longitude: number;
+      zoom: number;
+      mapStyle?:
+        | "minimalMono"
+        | "minimalWarm"
+        | "minimalBlue"
+        | "color"
+        | "dark";
+      isInteractive?: boolean;
+      showAddressLabel?: boolean;
+    })
+  | (BrochureCanvasItemBase & {
       kind: "text";
       textContent: string;
       textAlign: BrochureCanvasTextAlign;
       fontSize: number;
       isBold?: boolean;
       isItalic?: boolean;
+      showBackground?: boolean;
+      showBorder?: boolean;
     })
   | (BrochureCanvasItemBase & {
       kind: "shape";
@@ -88,11 +113,14 @@ export type BrochureAsset = BrochureImageItem & {
 
 export type BrochureStyleSettings = {
   fontFamily: BrochureFontFamily;
+  orientation: BrochureOrientation;
   accentColor: string;
+  backgroundColor: string;
   logoUrl?: string | null;
 };
 
 export type BrochureSectionKind =
+  | "blank"
   | "cover"
   | "introduction"
   | "location"

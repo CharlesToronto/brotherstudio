@@ -23,6 +23,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
 
     entries.push({
+      url: toAbsoluteUrl(withLocalePath(locale, "/price")),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.75,
+    });
+
+    entries.push({
       url: toAbsoluteUrl(withLocalePath(locale, "/about")),
       lastModified: now,
       changeFrequency: "monthly",

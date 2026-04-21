@@ -28,6 +28,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   const navigationLinks = [
     { label: messages.nav.gallery, href: withLocalePath(locale, "/") },
     { label: messages.nav.services, href: withLocalePath(locale, "/services") },
+    { label: messages.nav.price, href: withLocalePath(locale, "/price") },
     { label: messages.nav.about, href: withLocalePath(locale, "/about") },
     { label: messages.nav.contact, href: withLocalePath(locale, "/contact") },
   ];

@@ -17,7 +17,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       subtitle?: string;
       body?: string;
       accentColor?: string;
+      backgroundColor?: string;
       fontFamily?: "helvetica" | "garamond" | "georgia" | "times";
+      orientation?: "portrait" | "landscape";
       imageOrder?: string[];
       selectedImageIds?: string[];
       sections?: BrochureSection[];

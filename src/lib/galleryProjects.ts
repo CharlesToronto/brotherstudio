@@ -1,5 +1,6 @@
 export const PROJECT_OPTIONS = [
   { key: "flanthey", label: "Flanthey" },
+  { key: "arbaz", label: "Arbaz" },
   { key: "come", label: "Come" },
   { key: "boe", label: "Boè" },
   { key: "mesange", label: "Mésange" },
@@ -17,26 +18,44 @@ export type GalleryProjectValue = GalleryProjectKey | null;
 export const DEFAULT_GALLERY_PROJECT: GalleryProjectKey = "others";
 
 function normalizeGalleryProjectCandidate(value: unknown) {
-  return typeof value === "string" ? value.trim().toLowerCase() : value;
+  if (typeof value !== "string") return value;
+
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function resolveGalleryProjectKey(value: unknown): GalleryProjectKey | null {
+  const normalizedValue = normalizeGalleryProjectCandidate(value);
+  if (typeof normalizedValue !== "string" || normalizedValue.length === 0) {
+    return null;
+  }
+
+  const match = PROJECT_OPTIONS.find((option) => {
+    const normalizedKey = normalizeGalleryProjectCandidate(option.key);
+    const normalizedLabel = normalizeGalleryProjectCandidate(option.label);
+    return normalizedValue === normalizedKey || normalizedValue === normalizedLabel;
+  });
+
+  return match?.key ?? null;
 }
 
 export function isGalleryProjectKey(value: unknown): value is GalleryProjectKey {
-  const normalizedValue = normalizeGalleryProjectCandidate(value);
-  return PROJECT_OPTIONS.some((option) => option.key === normalizedValue);
+  return resolveGalleryProjectKey(value) !== null;
 }
 
 export function normalizeGalleryProject(value: unknown): GalleryProjectKey {
-  const normalizedValue = normalizeGalleryProjectCandidate(value);
-  return isGalleryProjectKey(normalizedValue)
-    ? normalizedValue
-    : DEFAULT_GALLERY_PROJECT;
+  return resolveGalleryProjectKey(value) ?? DEFAULT_GALLERY_PROJECT;
 }
 
 export function normalizeOptionalGalleryProject(value: unknown): GalleryProjectValue {
   if (value === null || value === undefined) return null;
   if (typeof value === "string" && value.trim() === "") return null;
-  const normalizedValue = normalizeGalleryProjectCandidate(value);
-  return isGalleryProjectKey(normalizedValue) ? normalizedValue : null;
+  return resolveGalleryProjectKey(value);
 }
 
 export function getGalleryProjectLabel(project: GalleryProjectValue) {

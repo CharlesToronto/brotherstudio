@@ -13,6 +13,7 @@ import type {
   BrochureAsset,
   BrochureContent,
   BrochureFontFamily,
+  BrochureOrientation,
   BrochureProject,
   BrochureProjectSummary,
   BrochureSection,
@@ -81,6 +82,12 @@ function normalizeFontFamily(
     value === "times"
     ? value
     : "helvetica";
+}
+
+function normalizeOrientation(
+  value: string | null | undefined,
+): BrochureOrientation {
+  return value === "landscape" ? "landscape" : "portrait";
 }
 
 function normalizeColor(value: string | null | undefined, fallback: string) {
@@ -260,7 +267,9 @@ function buildDefaultBody(projectName: string) {
 function buildDefaultStyleSettings(): BrochureStyleSettings {
   return {
     fontFamily: "helvetica",
+    orientation: "portrait",
     accentColor: DEFAULT_ACCENT_COLOR,
+    backgroundColor: "#ffffff",
     logoUrl: null,
   };
 }
@@ -341,24 +350,33 @@ function sanitizeSections(
       if (!kind) return null;
 
       const definition = getBrochureSectionDefinition(kind);
+      const isBlankSection = kind === "blank";
 
       return {
         id: normalizeString(candidate.id) || crypto.randomUUID(),
         kind,
         title:
-          normalizeString(candidate.title) ||
-          (kind === "cover" ? title : definition?.defaultTitle) ||
-          "Section",
+          isBlankSection
+            ? normalizeString(candidate.title)
+            : normalizeString(candidate.title) ||
+              (kind === "cover" ? title : definition?.defaultTitle) ||
+              "Section",
         subtitle:
-          normalizeString(candidate.subtitle) ||
-          (kind === "cover" ? subtitle : definition?.defaultSubtitle) ||
-          "",
+          isBlankSection
+            ? normalizeString(candidate.subtitle)
+            : normalizeString(candidate.subtitle) ||
+              (kind === "cover" ? subtitle : definition?.defaultSubtitle) ||
+              "",
         body:
-          normalizeString(candidate.body) ||
-          (kind === "cover" ? body : definition?.defaultBody) ||
-          "",
+          isBlankSection
+            ? normalizeString(candidate.body)
+            : normalizeString(candidate.body) ||
+              (kind === "cover" ? body : definition?.defaultBody) ||
+              "",
         imageIds: sanitizeSectionImageIds(candidate.imageIds, availableImageIds),
-        layoutItems: sanitizeCanvasItems(kind, candidate.layoutItems),
+        layoutItems: sanitizeCanvasItems(kind, candidate.layoutItems, {
+          availableImageIds,
+        }),
         socialLinks:
           kind === "final"
             ? sanitizeSocialLinks(candidate.socialLinks)
@@ -379,7 +397,10 @@ function sanitizeSections(
     if (section.kind !== "cover") {
       return {
         ...section,
-        layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems),
+        layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems, {
+          availableImageIds,
+        }),
+        title: section.kind === "blank" ? section.title : section.title || "Section",
         socialLinks:
           section.kind === "final"
             ? normalizeSocialLinks(section.socialLinks)
@@ -393,7 +414,9 @@ function sanitizeSections(
       subtitle: section.subtitle || subtitle,
       body: section.body || body,
       imageIds: section.imageIds.length > 0 ? section.imageIds : availableImageIds.slice(0, 1),
-      layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems),
+      layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems, {
+        availableImageIds,
+      }),
       socialLinks: undefined,
     };
   });
@@ -424,9 +447,16 @@ function normalizeStyleSettings(value: unknown): BrochureStyleSettings {
     fontFamily: normalizeFontFamily(
       typeof candidate.fontFamily === "string" ? candidate.fontFamily : null,
     ),
+    orientation: normalizeOrientation(
+      typeof candidate.orientation === "string" ? candidate.orientation : null,
+    ),
     accentColor: normalizeColor(
       typeof candidate.accentColor === "string" ? candidate.accentColor : null,
       DEFAULT_ACCENT_COLOR,
+    ),
+    backgroundColor: normalizeColor(
+      typeof candidate.backgroundColor === "string" ? candidate.backgroundColor : null,
+      "#ffffff",
     ),
     logoUrl: normalizeString(candidate.logoUrl) || null,
   };
@@ -910,7 +940,9 @@ export async function saveBrochureSettings(
     subtitle?: string;
     body?: string;
     fontFamily?: BrochureFontFamily;
+    orientation?: BrochureOrientation;
     accentColor?: string;
+    backgroundColor?: string;
     imageOrder?: string[];
     selectedImageIds?: string[];
     sections?: BrochureSection[];
@@ -960,9 +992,16 @@ export async function saveBrochureSettings(
   const styleSettings: BrochureStyleSettings = {
     ...project.styleSettings,
     fontFamily: normalizeFontFamily(input.fontFamily ?? project.styleSettings.fontFamily),
+    orientation: normalizeOrientation(
+      input.orientation ?? project.styleSettings.orientation,
+    ),
     accentColor: normalizeColor(
       input.accentColor ?? project.styleSettings.accentColor,
       DEFAULT_ACCENT_COLOR,
+    ),
+    backgroundColor: normalizeColor(
+      input.backgroundColor ?? project.styleSettings.backgroundColor,
+      "#ffffff",
     ),
   };
 
@@ -1066,6 +1105,51 @@ export async function uploadBrochureLogo(identifier: string, file: File) {
   return nextProject;
 }
 
+export async function deleteBrochureLogo(identifier: string) {
+  const project = await getBrochureProject(identifier);
+  if (!project) throw new Error("Project not found.");
+
+  const previousLogoUrl = project.styleSettings.logoUrl;
+  const styleSettings = {
+    ...project.styleSettings,
+    logoUrl: null,
+  } satisfies BrochureStyleSettings;
+
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("brochures")
+    .update({
+      style_settings: styleSettings,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", project.brochureId);
+
+  if (error) {
+    if (isMissingBrochureTableError(error)) {
+      throw buildBrochureSetupError();
+    }
+    throw error;
+  }
+
+  const oldStoragePath = previousLogoUrl
+    ? getStoragePathFromPublicUrl(previousLogoUrl)
+    : null;
+
+  if (oldStoragePath) {
+    const { error: removeError } = await supabase.storage
+      .from(BROCHURE_ASSET_BUCKET)
+      .remove([oldStoragePath]);
+
+    if (removeError) {
+      console.warn("Failed to remove brochure logo:", removeError.message);
+    }
+  }
+
+  const nextProject = await getBrochureProject(project.brochureId);
+  if (!nextProject) throw new Error("Project not found.");
+  return nextProject;
+}
+
 export async function uploadBrochureAssets(identifier: string, files: File[]) {
   if (files.length === 0) throw new Error("Select at least one image.");
 
@@ -1116,6 +1200,61 @@ export async function uploadBrochureAssets(identifier: string, files: File[]) {
   return saveBrochureSettings(nextProject.brochureId, {
     imageOrder: mergedImageOrder,
     selectedImageIds: mergedSelectedImageIds,
+  });
+}
+
+export async function deleteBrochureAsset(identifier: string, assetId: string) {
+  const project = await getBrochureProject(identifier);
+  if (!project) throw new Error("Project not found.");
+
+  const targetAsset = project.extraAssets.find(
+    (asset) => asset.id === assetId || asset.refId === assetId,
+  );
+  if (!targetAsset) {
+    throw new Error("Image not found.");
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("brochure_assets")
+    .delete()
+    .eq("id", targetAsset.refId)
+    .eq("project_id", project.projectId);
+
+  if (error) {
+    if (isMissingBrochureTableError(error)) {
+      throw buildBrochureSetupError();
+    }
+    throw error;
+  }
+
+  const storagePath = getStoragePathFromPublicUrl(targetAsset.url);
+  if (storagePath) {
+    const { error: removeError } = await supabase.storage
+      .from(BROCHURE_ASSET_BUCKET)
+      .remove([storagePath]);
+
+    if (removeError) {
+      console.warn("Failed to remove brochure asset:", removeError.message);
+    }
+  }
+
+  const cleanedImageOrder = project.content.imageOrder.filter((id) => id !== targetAsset.id);
+  const cleanedSelectedImageIds = project.content.selectedImageIds.filter(
+    (id) => id !== targetAsset.id,
+  );
+  const cleanedSections = project.content.sections.map((section) => ({
+    ...section,
+    imageIds: section.imageIds.filter((id) => id !== targetAsset.id),
+    layoutItems: section.layoutItems.filter(
+      (item) => item.kind !== "photo" || item.imageId !== targetAsset.id,
+    ),
+  }));
+
+  return saveBrochureSettings(project.brochureId, {
+    imageOrder: cleanedImageOrder,
+    selectedImageIds: cleanedSelectedImageIds,
+    sections: cleanedSections,
   });
 }
 

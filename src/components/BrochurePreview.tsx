@@ -2,23 +2,25 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type {
   CSSProperties,
   DragEvent as ReactDragEvent,
+  KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
+import { createPortal } from "react-dom";
 
+import { BrochureMapCanvas } from "@/components/BrochureMapCanvas";
 import { getBrochureSectionDefinition } from "@/lib/brochureSections";
 import type {
   BrochureCanvasItem,
-  BrochureCanvasShapeType,
+  BrochureCanvasTextAlign,
   BrochureFontFamily,
   BrochureImageItem,
   BrochureSection,
   BrochureStyleSettings,
   BrochureTemplate,
-  BrochureCanvasTextAlign,
 } from "@/lib/brochureTypes";
 
 type BrochurePreviewProps = {
@@ -35,13 +37,14 @@ type BrochurePreviewProps = {
     itemId: string,
     updater: (item: BrochureCanvasItem) => BrochureCanvasItem,
   ) => void;
-  onAddDecorativeShape?: (
+  onUpdateCanvasItems?: (
     sectionId: string,
-    shapeType: BrochureCanvasShapeType,
-  ) => string;
-  onAddTextItem?: (sectionId: string) => string;
+    updater: (items: BrochureCanvasItem[]) => BrochureCanvasItem[],
+  ) => void;
   draggedImageId?: string;
-  onAssignImageToSection?: (sectionId: string, imageId: string) => void;
+  selectionPanelTarget?: HTMLElement | null;
+  onSelectionStateChange?: (hasSelection: boolean) => void;
+  onAddImageToCanvas?: (sectionId: string, imageId: string) => string | null;
   onDeleteCanvasItem?: (sectionId: string, itemId: string) => void;
   onMoveCanvasItemLayer?: (
     sectionId: string,
@@ -54,7 +57,11 @@ type SelectedCanvasItem = {
   sectionId: string;
   itemId: string;
 };
-
+type MapSearchSuggestion = {
+  label: string;
+  latitude: number;
+  longitude: number;
+};
 type ResizeHandle = "nw" | "ne" | "sw" | "se" | "start" | "end";
 
 type InteractionState = {
@@ -65,6 +72,7 @@ type InteractionState = {
   startX: number;
   startY: number;
   startItem: BrochureCanvasItem;
+  startItems: BrochureCanvasItem[];
   artboardWidth: number;
   artboardHeight: number;
 };
@@ -76,28 +84,92 @@ const fontFamilyMap: Record<BrochureFontFamily, string> = {
   times: '"Times New Roman", Times, serif',
 };
 
-const SHAPE_TOOL_OPTIONS: Array<{
-  key: BrochureCanvasShapeType;
-  label: string;
-}> = [
-  { key: "rectangle", label: "Rectangle" },
-  { key: "square", label: "Square" },
-  { key: "circle", label: "Circle" },
-  { key: "line", label: "Line" },
-  { key: "arrow", label: "Arrow" },
-];
-
 const BOX_RESIZE_HANDLES: ResizeHandle[] = ["nw", "ne", "sw", "se"];
 const LINEAR_RESIZE_HANDLES: ResizeHandle[] = ["start", "end"];
+const BULLET_PREFIX_PATTERN = /^\s*(?:•|-)\s+/;
+const NUMBER_PREFIX_PATTERN = /^\s*\d+\.\s+/;
 
 function clamp(value: number, minimum: number, maximum: number) {
   return Math.min(maximum, Math.max(minimum, value));
+}
+
+function getSelectedLineRange(
+  value: string,
+  selectionStart: number,
+  selectionEnd: number,
+) {
+  const safeStart = clamp(selectionStart, 0, value.length);
+  const safeEnd = clamp(selectionEnd, safeStart, value.length);
+  const lineStart = value.lastIndexOf("\n", Math.max(0, safeStart - 1)) + 1;
+  const nextLineBreak = value.indexOf("\n", safeEnd);
+  const lineEnd = nextLineBreak === -1 ? value.length : nextLineBreak;
+
+  return {
+    lineStart,
+    lineEnd,
+    text: value.slice(lineStart, lineEnd),
+  };
+}
+
+function stripListPrefix(line: string) {
+  return line.replace(BULLET_PREFIX_PATTERN, "").replace(NUMBER_PREFIX_PATTERN, "");
+}
+
+function formatSelectedLines(
+  value: string,
+  selectionStart: number,
+  selectionEnd: number,
+  style: "bullets" | "numbers",
+) {
+  const { lineStart, lineEnd, text } = getSelectedLineRange(
+    value,
+    selectionStart,
+    selectionEnd,
+  );
+  const lines = text.split("\n");
+  const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+  const shouldClearFormatting =
+    nonEmptyLines.length > 0 &&
+    nonEmptyLines.every((line) =>
+      style === "bullets"
+        ? BULLET_PREFIX_PATTERN.test(line)
+        : NUMBER_PREFIX_PATTERN.test(line),
+    );
+
+  let visibleLineIndex = 1;
+  const nextText = lines
+    .map((line) => {
+      if (!line.trim()) return line;
+
+      const normalizedLine = stripListPrefix(line);
+      if (shouldClearFormatting) {
+        return normalizedLine;
+      }
+
+      if (style === "bullets") {
+        return `• ${normalizedLine}`;
+      }
+
+      const numberedLine = `${visibleLineIndex}. ${normalizedLine}`;
+      visibleLineIndex += 1;
+      return numberedLine;
+    })
+    .join("\n");
+
+  return {
+    value: `${value.slice(0, lineStart)}${nextText}${value.slice(lineEnd)}`,
+    selectionStart: lineStart,
+    selectionEnd: lineStart + nextText.length,
+  };
 }
 
 function buildPageStyle(styleSettings: BrochureStyleSettings) {
   return {
     "--brochure-font-family": fontFamilyMap[styleSettings.fontFamily],
     "--brochure-accent-color": styleSettings.accentColor,
+    "--brochure-page-background": styleSettings.backgroundColor,
+    "--brochure-page-ratio":
+      styleSettings.orientation === "landscape" ? "297 / 210" : "210 / 297",
   } as CSSProperties;
 }
 
@@ -164,6 +236,10 @@ function isEditableItemVisible(
     return editable || getSectionImages(section, imageMap).length > 0;
   }
 
+  if (item.kind === "photo") {
+    return editable || imageMap.has(item.imageId);
+  }
+
   if (item.kind === "socialLinks") {
     return editable || getSocialEntries(section).length > 0;
   }
@@ -195,12 +271,8 @@ function getCanvasItemStyle(item: BrochureCanvasItem) {
   } as CSSProperties;
 }
 
-function getCanvasItemRefKey(sectionId: string, itemId: string) {
-  return `${sectionId}:${itemId}`;
-}
-
 function canDeleteCanvasItem(item: BrochureCanvasItem) {
-  return item.kind === "shape" || item.kind === "text";
+  return Boolean(item);
 }
 
 function nudgeCanvasItem(item: BrochureCanvasItem, deltaX: number, deltaY: number) {
@@ -211,32 +283,51 @@ function nudgeCanvasItem(item: BrochureCanvasItem, deltaX: number, deltaY: numbe
   };
 }
 
-function getDefaultSelectedItem(
+function getResolvedSelectedItems(
   sections: BrochureSection[],
-  selectedItem: SelectedCanvasItem | null,
+  selectedItems: SelectedCanvasItem[],
 ) {
-  if (!selectedItem) return null;
+  const nextSelections: SelectedCanvasItem[] = [];
 
-  const section = sections.find((entry) => entry.id === selectedItem.sectionId);
-  if (!section) return null;
-  if (!section.layoutItems.some((item) => item.id === selectedItem.itemId)) return null;
-  return selectedItem;
+  for (const selectedItem of selectedItems) {
+    const section = sections.find((entry) => entry.id === selectedItem.sectionId);
+    if (!section) continue;
+    if (!section.layoutItems.some((item) => item.id === selectedItem.itemId)) continue;
+    nextSelections.push(selectedItem);
+  }
+
+  return nextSelections;
 }
 
 function getSelectedCanvasItem(
   sections: BrochureSection[],
   selectedItem: SelectedCanvasItem | null,
 ) {
-  const nextSelection = getDefaultSelectedItem(sections, selectedItem);
-  if (!nextSelection) return null;
+  if (!selectedItem) return null;
 
-  const section = sections.find((entry) => entry.id === nextSelection.sectionId);
-  const item = section?.layoutItems.find((entry) => entry.id === nextSelection.itemId);
+  const section = sections.find((entry) => entry.id === selectedItem.sectionId);
+  const item = section?.layoutItems.find((entry) => entry.id === selectedItem.itemId);
   if (!section || !item) return null;
 
   return {
     section,
     item,
+  };
+}
+
+function clampGroupDelta(
+  items: BrochureCanvasItem[],
+  deltaX: number,
+  deltaY: number,
+) {
+  const minDeltaX = Math.max(...items.map((item) => -item.x));
+  const maxDeltaX = Math.min(...items.map((item) => 1 - item.x - item.width));
+  const minDeltaY = Math.max(...items.map((item) => -item.y));
+  const maxDeltaY = Math.min(...items.map((item) => 1 - item.y - item.height));
+
+  return {
+    deltaX: clamp(deltaX, minDeltaX, maxDeltaX),
+    deltaY: clamp(deltaY, minDeltaY, maxDeltaY),
   };
 }
 
@@ -399,6 +490,58 @@ function renderMediaGrid(
   );
 }
 
+function renderPhotoItem(
+  item: Extract<BrochureCanvasItem, { kind: "photo" }>,
+  imageMap: Map<string, BrochureImageItem>,
+  editable: boolean,
+) {
+  const image = imageMap.get(item.imageId);
+
+  if (!image) {
+    return editable ? (
+      <div className="brochureCanvasPlaceholder">Drop an image here.</div>
+    ) : null;
+  }
+
+  return (
+    <div className="brochureCanvasPhoto">
+      <img src={image.url} alt={image.label} />
+    </div>
+  );
+}
+
+function renderMapItem(
+  item: Extract<BrochureCanvasItem, { kind: "map" }>,
+  isSelected: boolean,
+) {
+  const hasAddress = item.address.trim().length > 0;
+
+  if (!hasAddress) {
+    return <div className="brochureCanvasPlaceholder">Add an address to display a map.</div>;
+  }
+
+  return (
+    <div className="brochureCanvasMap">
+      <div className="brochureCanvasMapFrame">
+        <BrochureMapCanvas
+          latitude={item.latitude}
+          longitude={item.longitude}
+          zoom={item.zoom}
+          mapStyle={item.mapStyle ?? "minimalMono"}
+          interactive={item.isInteractive !== false}
+          capturePointerEvents={isSelected && item.isInteractive !== false}
+        />
+      </div>
+      {item.showAddressLabel !== false ? (
+        <p className="brochureCanvasMapLabel">{item.address}</p>
+      ) : null}
+      <p className="brochureCanvasMapAttribution">
+        Map data © OpenStreetMap contributors, basemap © CARTO
+      </p>
+    </div>
+  );
+}
+
 function renderShape(item: Extract<BrochureCanvasItem, { kind: "shape" }>) {
   const { shapeType } = item;
 
@@ -442,6 +585,7 @@ function renderCanvasItemContent(
   imageMap: Map<string, BrochureImageItem>,
   editable: boolean,
   pageIndex: number,
+  isSelected: boolean,
 ) {
   const label = getBrochureSectionDefinition(section.kind)?.label ?? "Section";
 
@@ -481,6 +625,14 @@ function renderCanvasItemContent(
 
   if (item.kind === "media") {
     return renderMediaGrid(section, imageMap);
+  }
+
+  if (item.kind === "photo") {
+    return renderPhotoItem(item, imageMap, editable);
+  }
+
+  if (item.kind === "map") {
+    return renderMapItem(item, isSelected);
   }
 
   if (item.kind === "logo") {
@@ -549,33 +701,40 @@ export function BrochurePreview({
   activeSectionId,
   onActiveSectionChange,
   onUpdateCanvasItem,
-  onAddDecorativeShape,
-  onAddTextItem,
+  onUpdateCanvasItems,
   draggedImageId,
-  onAssignImageToSection,
+  selectionPanelTarget,
+  onSelectionStateChange,
+  onAddImageToCanvas,
   onDeleteCanvasItem,
   onMoveCanvasItemLayer,
 }: BrochurePreviewProps) {
   const imageMap = useMemo(() => buildImageMap(images), [images]);
   const artboardRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const interactionRef = useRef<InteractionState | null>(null);
-  const [selectedItem, setSelectedItem] = useState<SelectedCanvasItem | null>(null);
-  const [selectedPopoverStyle, setSelectedPopoverStyle] = useState<CSSProperties | null>(
-    null,
-  );
+  const textEditorRef = useRef<HTMLTextAreaElement | null>(null);
+  const [selectedItems, setSelectedItems] = useState<SelectedCanvasItem[]>([]);
+  const [editingTextItem, setEditingTextItem] = useState<SelectedCanvasItem | null>(null);
   const [dropSectionId, setDropSectionId] = useState<string | null>(null);
-  const resolvedSelectedItem = editable
-    ? getDefaultSelectedItem(sections, selectedItem)
+  const [mapSuggestions, setMapSuggestions] = useState<MapSearchSuggestion[]>([]);
+  const [mapSuggestionsQuery, setMapSuggestionsQuery] = useState("");
+  const resolvedSelectedItems = editable
+    ? getResolvedSelectedItems(sections, selectedItems)
+    : [];
+  const resolvedSelectedItem =
+    resolvedSelectedItems[resolvedSelectedItems.length - 1] ?? null;
+  const selectedCanvasItem = editable
+    ? getSelectedCanvasItem(sections, resolvedSelectedItem)
     : null;
-
-  const selectedCanvasItem = useMemo(
-    () => (editable ? getSelectedCanvasItem(sections, resolvedSelectedItem) : null),
-    [editable, resolvedSelectedItem, sections],
-  );
+  const activeEditingTextItem =
+    editable && editingTextItem
+      ? getSelectedCanvasItem(sections, editingTextItem)
+      : null;
+  const activeEditingTextItemId =
+    activeEditingTextItem?.item.kind === "text" ? activeEditingTextItem.item.id : null;
 
   useEffect(() => {
-    if (!editable || !onUpdateCanvasItem) return undefined;
+    if (!editable || (!onUpdateCanvasItem && !onUpdateCanvasItems)) return undefined;
 
     const handlePointerMove = (event: PointerEvent) => {
       const interaction = interactionRef.current;
@@ -585,12 +744,44 @@ export function BrochurePreview({
       const deltaY = event.clientY - interaction.startY;
 
       if (interaction.mode === "move") {
-        onUpdateCanvasItem(interaction.sectionId, interaction.itemId, (item) =>
+        const nextDeltaX = deltaX / interaction.artboardWidth;
+        const nextDeltaY = deltaY / interaction.artboardHeight;
+        const clampedDelta = clampGroupDelta(
+          interaction.startItems,
+          nextDeltaX,
+          nextDeltaY,
+        );
+
+        if (onUpdateCanvasItems) {
+          const startItemsById = new Map(
+            interaction.startItems.map((item) => [item.id, item]),
+          );
+
+          onUpdateCanvasItems(interaction.sectionId, (items) =>
+            items.map((item) => {
+              const startItem = startItemsById.get(item.id);
+              if (!startItem) return item;
+
+              return clampCanvasItem(
+                {
+                  ...item,
+                  x: startItem.x + clampedDelta.deltaX,
+                  y: startItem.y + clampedDelta.deltaY,
+                },
+                interaction.artboardWidth,
+                interaction.artboardHeight,
+              );
+            }),
+          );
+          return;
+        }
+
+        onUpdateCanvasItem?.(interaction.sectionId, interaction.itemId, (item) =>
           clampCanvasItem(
             {
               ...item,
-              x: interaction.startItem.x + deltaX / interaction.artboardWidth,
-              y: interaction.startItem.y + deltaY / interaction.artboardHeight,
+              x: interaction.startItem.x + clampedDelta.deltaX,
+              y: interaction.startItem.y + clampedDelta.deltaY,
             },
             interaction.artboardWidth,
             interaction.artboardHeight,
@@ -599,7 +790,7 @@ export function BrochurePreview({
         return;
       }
 
-      onUpdateCanvasItem(interaction.sectionId, interaction.itemId, (item) => {
+      onUpdateCanvasItem?.(interaction.sectionId, interaction.itemId, (item) => {
         if (
           item.kind === "shape" &&
           (item.shapeType === "line" || item.shapeType === "arrow")
@@ -638,58 +829,54 @@ export function BrochurePreview({
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [editable, onUpdateCanvasItem]);
+  }, [editable, onUpdateCanvasItem, onUpdateCanvasItems]);
 
   useEffect(() => {
-    if (!editable || !selectedCanvasItem) {
-      const clearFrame = window.requestAnimationFrame(() => {
-        setSelectedPopoverStyle(null);
-      });
+    if (!activeEditingTextItemId) return;
 
-      return () => {
-        window.cancelAnimationFrame(clearFrame);
-      };
-    }
+    const frameId = window.requestAnimationFrame(() => {
+      textEditorRef.current?.focus({ preventScroll: true });
+    });
 
-    const updatePopoverPosition = () => {
-      const anchor =
-        itemRefs.current[
-          getCanvasItemRefKey(
-            selectedCanvasItem.section.id,
-            selectedCanvasItem.item.id,
-          )
-        ];
+    return () => window.cancelAnimationFrame(frameId);
+  }, [activeEditingTextItemId]);
 
-      if (!anchor) return;
+  useEffect(() => {
+    onSelectionStateChange?.(editable && Boolean(selectedCanvasItem));
+  }, [editable, onSelectionStateChange, selectedCanvasItem]);
 
-      const rect = anchor.getBoundingClientRect();
-      const popoverWidth = Math.min(window.innerWidth - 24, 360);
-      const placeBelow = rect.top < 220;
-      const centerX = rect.left + rect.width / 2;
-      const safeLeft = clamp(
-        centerX,
-        popoverWidth / 2 + 16,
-        window.innerWidth - popoverWidth / 2 - 16,
+  useEffect(() => {
+    return () => onSelectionStateChange?.(false);
+  }, [onSelectionStateChange]);
+
+  const setSingleSelection = (sectionId: string, itemId: string) => {
+    setSelectedItems([{ sectionId, itemId }]);
+  };
+
+  const toggleSelection = (sectionId: string, itemId: string) => {
+    setSelectedItems((current) => {
+      const sameSectionSelections = current.filter(
+        (selection) => selection.sectionId === sectionId,
       );
 
-      setSelectedPopoverStyle({
-        top: `${placeBelow ? rect.bottom + 14 : rect.top - 14}px`,
-        left: `${safeLeft}px`,
-        width: `${popoverWidth}px`,
-        "--brochure-popover-shift": placeBelow ? "0%" : "-100%",
-      } as CSSProperties);
-    };
+      if (sameSectionSelections.length !== current.length) {
+        return [{ sectionId, itemId }];
+      }
 
-    const initialFrame = window.requestAnimationFrame(updatePopoverPosition);
-    window.addEventListener("resize", updatePopoverPosition);
-    window.addEventListener("scroll", updatePopoverPosition, true);
+      const alreadySelected = sameSectionSelections.some(
+        (selection) => selection.itemId === itemId,
+      );
 
-    return () => {
-      window.cancelAnimationFrame(initialFrame);
-      window.removeEventListener("resize", updatePopoverPosition);
-      window.removeEventListener("scroll", updatePopoverPosition, true);
-    };
-  }, [editable, selectedCanvasItem, sections]);
+      if (alreadySelected) {
+        const nextSelections = sameSectionSelections.filter(
+          (selection) => selection.itemId !== itemId,
+        );
+        return nextSelections.length > 0 ? nextSelections : [{ sectionId, itemId }];
+      }
+
+      return [...sameSectionSelections, { sectionId, itemId }];
+    });
+  };
 
   const beginInteraction = (
     event: ReactPointerEvent<HTMLElement>,
@@ -699,6 +886,9 @@ export function BrochurePreview({
     handle?: ResizeHandle,
   ) => {
     if (!editable) return;
+    if (mode === "move" && (event.shiftKey || event.metaKey || event.ctrlKey)) {
+      return;
+    }
 
     const artboard = artboardRefs.current[sectionId];
     if (!artboard) return;
@@ -708,7 +898,26 @@ export function BrochurePreview({
 
     event.preventDefault();
     event.stopPropagation();
-    setSelectedItem({ sectionId, itemId: item.id });
+
+    const selectedItemIds = resolvedSelectedItems
+      .filter((selection) => selection.sectionId === sectionId)
+      .map((selection) => selection.itemId);
+    const shouldMoveGroup =
+      mode === "move" &&
+      selectedItemIds.includes(item.id) &&
+      selectedItemIds.length > 1;
+    const startItems =
+      shouldMoveGroup
+        ? sections
+            .find((section) => section.id === sectionId)
+            ?.layoutItems.filter((entry) => selectedItemIds.includes(entry.id)) ?? [item]
+        : [item];
+
+    if (!selectedItemIds.includes(item.id) || !shouldMoveGroup) {
+      setSingleSelection(sectionId, item.id);
+    }
+
+    setEditingTextItem(null);
     onActiveSectionChange?.(sectionId);
     interactionRef.current = {
       sectionId,
@@ -718,57 +927,102 @@ export function BrochurePreview({
       startX: event.clientX,
       startY: event.clientY,
       startItem: item,
+      startItems,
       artboardWidth: artboardRect.width,
       artboardHeight: artboardRect.height,
     };
     document.body.style.setProperty("user-select", "none");
   };
 
-  const handleAddShape = (shapeType: BrochureCanvasShapeType) => {
-    if (!editable || !onAddDecorativeShape) return;
-
-    const targetSectionId = activeSectionId ?? sections[0]?.id;
-    if (!targetSectionId) return;
-
-    const nextItemId = onAddDecorativeShape(targetSectionId, shapeType);
-    setSelectedItem({ sectionId: targetSectionId, itemId: nextItemId });
-    onActiveSectionChange?.(targetSectionId);
-  };
-
-  const handleAddText = () => {
-    if (!editable || !onAddTextItem) return;
-
-    const targetSectionId = activeSectionId ?? sections[0]?.id;
-    if (!targetSectionId) return;
-
-    const nextItemId = onAddTextItem(targetSectionId);
-    setSelectedItem({ sectionId: targetSectionId, itemId: nextItemId });
-    onActiveSectionChange?.(targetSectionId);
-  };
-
-  const selectedIsShape = selectedCanvasItem?.item.kind === "shape";
   const selectedIsText = selectedCanvasItem?.item.kind === "text";
   const selectedShapeItem =
     selectedCanvasItem?.item.kind === "shape" ? selectedCanvasItem.item : null;
   const selectedTextItem =
     selectedCanvasItem?.item.kind === "text" ? selectedCanvasItem.item : null;
+  const selectedMapItem =
+    selectedCanvasItem?.item.kind === "map" ? selectedCanvasItem.item : null;
+  const deferredMapAddress = useDeferredValue(selectedMapItem?.address ?? "");
+  const trimmedDeferredMapAddress = deferredMapAddress.trim();
+  const canFetchMapSuggestions =
+    Boolean(selectedMapItem) && trimmedDeferredMapAddress.length >= 3;
+  const visibleMapSuggestions =
+    canFetchMapSuggestions && mapSuggestionsQuery === trimmedDeferredMapAddress
+      ? mapSuggestions
+      : [];
+  const selectedCount = resolvedSelectedItems.length;
+  const selectedIdsInActiveSection = new Set(
+    selectedCanvasItem
+      ? resolvedSelectedItems
+          .filter((selection) => selection.sectionId === selectedCanvasItem.section.id)
+          .map((selection) => selection.itemId)
+      : [],
+  );
   const selectedCanDelete = selectedCanvasItem
     ? canDeleteCanvasItem(selectedCanvasItem.item)
     : false;
   const selectedItemColor =
     selectedCanvasItem?.item.color ?? styleSettings.accentColor;
 
-  const updateSelectedItemColor = (nextColor: string) => {
-    if (!selectedCanvasItem || !onUpdateCanvasItem) return;
+  useEffect(() => {
+    if (!canFetchMapSuggestions) return;
 
-    onUpdateCanvasItem(
+    const controller = new AbortController();
+
+    const timeoutId = window.setTimeout(() => {
+      void fetch(`/api/maps/search?q=${encodeURIComponent(trimmedDeferredMapAddress)}`, {
+        signal: controller.signal,
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error("Failed to load map suggestions.");
+          }
+
+          return response.json() as Promise<{ suggestions?: MapSearchSuggestion[] }>;
+        })
+        .then((payload) => {
+          setMapSuggestions(payload.suggestions ?? []);
+          setMapSuggestionsQuery(trimmedDeferredMapAddress);
+        })
+        .catch((error) => {
+          if (controller.signal.aborted) return;
+          console.error(error);
+          setMapSuggestions([]);
+          setMapSuggestionsQuery(trimmedDeferredMapAddress);
+        });
+    }, 220);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [canFetchMapSuggestions, selectedMapItem, trimmedDeferredMapAddress]);
+
+  const applySelectionUpdate = (
+    updater: (item: BrochureCanvasItem) => BrochureCanvasItem,
+  ) => {
+    if (!selectedCanvasItem) return;
+
+    if (onUpdateCanvasItems && selectedIdsInActiveSection.size > 1) {
+      onUpdateCanvasItems(selectedCanvasItem.section.id, (items) =>
+        items.map((item) =>
+          selectedIdsInActiveSection.has(item.id) ? updater(item) : item,
+        ),
+      );
+      return;
+    }
+
+    onUpdateCanvasItem?.(
       selectedCanvasItem.section.id,
       selectedCanvasItem.item.id,
-      (item) => ({
-        ...item,
-        color: nextColor,
-      }),
+      updater,
     );
+  };
+
+  const updateSelectedItemColor = (nextColor: string) => {
+    applySelectionUpdate((item) => ({
+      ...item,
+      color: nextColor,
+    }));
   };
 
   const updateSelectedTextItem = (
@@ -799,9 +1053,33 @@ export function BrochurePreview({
   };
 
   const nudgeSelected = (deltaX: number, deltaY: number) => {
-    if (!selectedCanvasItem || !onUpdateCanvasItem) return;
+    if (!selectedCanvasItem) return;
 
-    onUpdateCanvasItem(
+    if (onUpdateCanvasItems && selectedIdsInActiveSection.size > 1) {
+      const selectedItemsForSection = selectedCanvasItem.section.layoutItems.filter((item) =>
+        selectedIdsInActiveSection.has(item.id),
+      );
+      const clampedDelta = clampGroupDelta(
+        selectedItemsForSection,
+        deltaX,
+        deltaY,
+      );
+
+      onUpdateCanvasItems(selectedCanvasItem.section.id, (items) =>
+        items.map((item) =>
+          selectedIdsInActiveSection.has(item.id)
+            ? {
+                ...item,
+                x: item.x + clampedDelta.deltaX,
+                y: item.y + clampedDelta.deltaY,
+              }
+            : item,
+        ),
+      );
+      return;
+    }
+
+    onUpdateCanvasItem?.(
       selectedCanvasItem.section.id,
       selectedCanvasItem.item.id,
       (item) => nudgeCanvasItem(item, deltaX, deltaY),
@@ -811,11 +1089,18 @@ export function BrochurePreview({
   const deleteSelectedItem = () => {
     if (!selectedCanvasItem || !selectedCanDelete) return;
 
-    onDeleteCanvasItem?.(
-      selectedCanvasItem.section.id,
-      selectedCanvasItem.item.id,
-    );
-    setSelectedItem(null);
+    if (onUpdateCanvasItems && selectedIdsInActiveSection.size > 1) {
+      onUpdateCanvasItems(selectedCanvasItem.section.id, (items) =>
+        items.filter((item) => !selectedIdsInActiveSection.has(item.id)),
+      );
+      setSelectedItems([]);
+      setEditingTextItem(null);
+      return;
+    }
+
+    onDeleteCanvasItem?.(selectedCanvasItem.section.id, selectedCanvasItem.item.id);
+    setSelectedItems([]);
+    setEditingTextItem(null);
   };
 
   const updateSelectedTextAlign = (textAlign: BrochureCanvasTextAlign) => {
@@ -829,6 +1114,73 @@ export function BrochurePreview({
     updateSelectedTextItem((item) => ({
       ...item,
       textContent,
+    }));
+  };
+
+  const updateSelectedMapItem = (
+    updater: (item: Extract<BrochureCanvasItem, { kind: "map" }>) => BrochureCanvasItem,
+  ) => {
+    if (!selectedCanvasItem || selectedCanvasItem.item.kind !== "map" || !onUpdateCanvasItem) {
+      return;
+    }
+
+    onUpdateCanvasItem(
+      selectedCanvasItem.section.id,
+      selectedCanvasItem.item.id,
+      (item) => (item.kind === "map" ? updater(item) : item),
+    );
+  };
+
+  const updateSelectedMapAddress = (address: string) => {
+    if (address.trim().length < 3) {
+      setMapSuggestions([]);
+      setMapSuggestionsQuery("");
+    }
+
+    updateSelectedMapItem((item) => ({
+      ...item,
+      address,
+    }));
+  };
+
+  const applySelectedMapSuggestion = (suggestion: MapSearchSuggestion) => {
+    updateSelectedMapItem((item) => ({
+      ...item,
+      address: suggestion.label,
+      latitude: suggestion.latitude,
+      longitude: suggestion.longitude,
+    }));
+    setMapSuggestions([]);
+    setMapSuggestionsQuery("");
+  };
+
+  const updateSelectedMapZoom = (zoom: number) => {
+    updateSelectedMapItem((item) => ({
+      ...item,
+      zoom: Math.max(1, Math.min(20, Math.round(zoom))),
+    }));
+  };
+
+  const updateSelectedMapType = (
+    mapStyle: Extract<BrochureCanvasItem, { kind: "map" }>["mapStyle"],
+  ) => {
+    updateSelectedMapItem((item) => ({
+      ...item,
+      mapStyle,
+    }));
+  };
+
+  const toggleSelectedMapInteractive = () => {
+    updateSelectedMapItem((item) => ({
+      ...item,
+      isInteractive: item.isInteractive === false,
+    }));
+  };
+
+  const toggleSelectedMapAddressLabel = () => {
+    updateSelectedMapItem((item) => ({
+      ...item,
+      showAddressLabel: item.showAddressLabel === false,
     }));
   };
 
@@ -853,6 +1205,80 @@ export function BrochurePreview({
     }));
   };
 
+  const toggleSelectedTextBackground = () => {
+    updateSelectedTextItem((item) => ({
+      ...item,
+      showBackground: item.showBackground === false,
+    }));
+  };
+
+  const toggleSelectedTextBorder = () => {
+    updateSelectedTextItem((item) => ({
+      ...item,
+      showBorder: item.showBorder === false,
+    }));
+  };
+
+  const focusTextEditor = (selection?: { start: number; end: number }) => {
+    window.requestAnimationFrame(() => {
+      const editor = textEditorRef.current;
+      if (!editor) return;
+
+      editor.focus({ preventScroll: true });
+      if (selection) {
+        editor.setSelectionRange(selection.start, selection.end);
+      }
+    });
+  };
+
+  const updateTextSelection = (
+    transformer: (
+      value: string,
+      selectionStart: number,
+      selectionEnd: number,
+    ) => {
+      value: string;
+      selectionStart: number;
+      selectionEnd: number;
+    },
+  ) => {
+    const editor = textEditorRef.current;
+    if (!editor || !selectedTextItem) return;
+
+    const nextValue = transformer(
+      editor.value,
+      editor.selectionStart,
+      editor.selectionEnd,
+    );
+    updateSelectedTextContent(nextValue.value);
+    focusTextEditor({
+      start: nextValue.selectionStart,
+      end: nextValue.selectionEnd,
+    });
+  };
+
+  const toggleSelectedTextBullets = () => {
+    updateTextSelection((value, selectionStart, selectionEnd) =>
+      formatSelectedLines(value, selectionStart, selectionEnd, "bullets"),
+    );
+  };
+
+  const toggleSelectedTextNumbers = () => {
+    updateTextSelection((value, selectionStart, selectionEnd) =>
+      formatSelectedLines(value, selectionStart, selectionEnd, "numbers"),
+    );
+  };
+
+  const finishTextEditing = () => {
+    setEditingTextItem(null);
+  };
+
+  const handleTextEditorKeyDown = (event: ReactKeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    finishTextEditing();
+  };
+
   const updateSelectedShapeStrokeWidth = (strokeWidth: number) => {
     if (!selectedShapeItem || !selectedCanvasItem || !onUpdateCanvasItem) return;
 
@@ -873,7 +1299,7 @@ export function BrochurePreview({
     event: ReactDragEvent<HTMLElement>,
     sectionId: string,
   ) => {
-    if (!draggedImageId || !onAssignImageToSection) return;
+    if (!draggedImageId || !onAddImageToCanvas) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
     setDropSectionId(sectionId);
@@ -884,10 +1310,13 @@ export function BrochurePreview({
     event: ReactDragEvent<HTMLElement>,
     sectionId: string,
   ) => {
-    if (!draggedImageId || !onAssignImageToSection) return;
+    if (!draggedImageId || !onAddImageToCanvas) return;
     event.preventDefault();
     setDropSectionId(null);
-    onAssignImageToSection(sectionId, draggedImageId);
+    const nextItemId = onAddImageToCanvas(sectionId, draggedImageId);
+    if (nextItemId) {
+      setSingleSelection(sectionId, nextItemId);
+    }
   };
 
   const handleSectionDragLeave = (
@@ -902,6 +1331,345 @@ export function BrochurePreview({
     }
   };
 
+  const showSelectionPopover = editable && selectedCanvasItem;
+  const selectionPopover = showSelectionPopover ? (
+    <div
+      className={`brochureCanvasPopover${
+        selectionPanelTarget ? " brochureCanvasPopoverSidebar" : ""
+      }`}
+    >
+      <div className="brochureCanvasPopoverHeader">
+        <div className="brochureCanvasPopoverTitleWrap">
+          <strong className="brochureCanvasPopoverTitle">
+            {selectedCount > 1
+              ? `${selectedCount} elements`
+              : selectedCanvasItem.item.kind === "text"
+                ? "Text"
+                : selectedCanvasItem.item.kind === "shape"
+                  ? selectedCanvasItem.item.shapeType
+                  : selectedCanvasItem.item.kind}
+          </strong>
+        </div>
+        <button
+          className="brochureCanvasPopoverClose"
+          type="button"
+          onClick={() => {
+            setSelectedItems([]);
+            setEditingTextItem(null);
+          }}
+          aria-label="Close element editor"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="brochureCanvasPopoverGrid">
+        <label className="brochureCanvasPopoverField">
+          <span className="brochurePreviewToolbarLabel">Color</span>
+          <input
+            className="brochureCanvasPopoverColor"
+            type="color"
+            value={selectedItemColor}
+            onChange={(event) => updateSelectedItemColor(event.target.value)}
+          />
+        </label>
+
+        <div className="brochureCanvasPopoverField">
+          <span className="brochurePreviewToolbarLabel">Position</span>
+          <div className="brochureCanvasPopoverIconRow">
+            <button
+              className="brochurePreviewToolbarButton"
+              type="button"
+              onClick={() => nudgeSelected(0, -0.01)}
+            >
+              ↑
+            </button>
+            <button
+              className="brochurePreviewToolbarButton"
+              type="button"
+              onClick={() => nudgeSelected(-0.01, 0)}
+            >
+              ←
+            </button>
+            <button
+              className="brochurePreviewToolbarButton"
+              type="button"
+              onClick={() => nudgeSelected(0.01, 0)}
+            >
+              →
+            </button>
+            <button
+              className="brochurePreviewToolbarButton"
+              type="button"
+              onClick={() => nudgeSelected(0, 0.01)}
+            >
+              ↓
+            </button>
+          </div>
+        </div>
+
+        <div className="brochureCanvasPopoverField">
+          <span className="brochurePreviewToolbarLabel">Layers</span>
+          <div className="brochureCanvasPopoverButtonRow">
+            <button
+              className="brochurePreviewToolbarButton"
+              type="button"
+              onClick={() => moveSelectedLayer("back")}
+            >
+              Back
+            </button>
+            <button
+              className="brochurePreviewToolbarButton"
+              type="button"
+              onClick={() => moveSelectedLayer("backward")}
+            >
+              -1
+            </button>
+            <button
+              className="brochurePreviewToolbarButton"
+              type="button"
+              onClick={() => moveSelectedLayer("forward")}
+            >
+              +1
+            </button>
+            <button
+              className="brochurePreviewToolbarButton"
+              type="button"
+              onClick={() => moveSelectedLayer("front")}
+            >
+              Front
+            </button>
+          </div>
+        </div>
+
+        {selectedIsText ? (
+          <>
+            <div className="brochureCanvasPopoverField">
+              <span className="brochurePreviewToolbarLabel">Typography</span>
+              <div className="brochureCanvasPopoverButtonRow">
+                <button
+                  className="brochurePreviewToolbarButton"
+                  type="button"
+                  data-active={selectedTextItem?.isBold ? "true" : "false"}
+                  onClick={toggleSelectedTextBold}
+                >
+                  Bold
+                </button>
+                <button
+                  className="brochurePreviewToolbarButton"
+                  type="button"
+                  data-active={selectedTextItem?.isItalic ? "true" : "false"}
+                  onClick={toggleSelectedTextItalic}
+                >
+                  Italic
+                </button>
+                <button
+                  className="brochurePreviewToolbarButton"
+                  type="button"
+                  onClick={toggleSelectedTextBullets}
+                >
+                  Bullets
+                </button>
+                <button
+                  className="brochurePreviewToolbarButton"
+                  type="button"
+                  onClick={toggleSelectedTextNumbers}
+                >
+                  Numbers
+                </button>
+              </div>
+            </div>
+
+            <label className="brochureCanvasPopoverField">
+              <span className="brochurePreviewToolbarLabel">Size</span>
+              <input
+                className="brochureCanvasPopoverNumber"
+                type="number"
+                min={12}
+                max={96}
+                value={selectedTextItem?.fontSize ?? 24}
+                onChange={(event) =>
+                  updateSelectedTextSize(Number(event.target.value || 24))
+                }
+              />
+            </label>
+
+            <div className="brochureCanvasPopoverField">
+              <span className="brochurePreviewToolbarLabel">Alignment</span>
+              <div className="brochureCanvasPopoverButtonRow">
+                {(["left", "center", "right", "justify"] as BrochureCanvasTextAlign[]).map(
+                  (alignment) => (
+                    <button
+                      key={alignment}
+                      className="brochurePreviewToolbarButton"
+                      type="button"
+                      data-active={
+                        selectedTextItem?.textAlign === alignment ? "true" : "false"
+                      }
+                      onClick={() => updateSelectedTextAlign(alignment)}
+                    >
+                      {alignment === "justify" ? "Justify" : alignment}
+                    </button>
+                  ),
+                )}
+              </div>
+            </div>
+
+            <div className="brochureCanvasPopoverField">
+              <span className="brochurePreviewToolbarLabel">Box</span>
+              <div className="brochureCanvasPopoverToggleRow">
+                <label className="brochureCanvasPopoverCheckbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedTextItem?.showBackground !== false}
+                    onChange={toggleSelectedTextBackground}
+                  />
+                  <span>Background</span>
+                </label>
+                <label className="brochureCanvasPopoverCheckbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedTextItem?.showBorder !== false}
+                    onChange={toggleSelectedTextBorder}
+                  />
+                  <span>Border</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="brochureCanvasPopoverField brochureCanvasPopoverFieldHint">
+              <span className="brochurePreviewToolbarLabel">Text</span>
+              <span className="brochureCanvasPopoverHint">
+                Double-click the text to edit it.
+              </span>
+            </div>
+          </>
+        ) : null}
+
+        {selectedMapItem ? (
+          <>
+            <label className="brochureCanvasPopoverField brochureCanvasPopoverFieldWide">
+              <span className="brochurePreviewToolbarLabel">Address</span>
+              <div className="brochureCanvasPopoverAutosuggest">
+                <input
+                  className="projectFeedbackInput"
+                  type="text"
+                  value={selectedMapItem.address}
+                  onChange={(event) => updateSelectedMapAddress(event.target.value)}
+                  placeholder="1600 Amphitheatre Parkway, Mountain View, CA"
+                />
+                {visibleMapSuggestions.length > 0 ? (
+                  <div className="brochureCanvasPopoverSuggestList">
+                    {visibleMapSuggestions.map((suggestion) => (
+                      <button
+                        key={`${suggestion.latitude}:${suggestion.longitude}:${suggestion.label}`}
+                        className="brochureCanvasPopoverSuggestButton"
+                        type="button"
+                        onClick={() => applySelectedMapSuggestion(suggestion)}
+                      >
+                        {suggestion.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </label>
+
+            <label className="brochureCanvasPopoverField">
+              <span className="brochurePreviewToolbarLabel">Zoom</span>
+              <input
+                className="brochureCanvasPopoverNumber"
+                type="number"
+                min={1}
+                max={20}
+                value={selectedMapItem.zoom}
+                onChange={(event) =>
+                  updateSelectedMapZoom(Number(event.target.value || selectedMapItem.zoom))
+                }
+              />
+            </label>
+
+            <label className="brochureCanvasPopoverField">
+              <span className="brochurePreviewToolbarLabel">Layer</span>
+              <select
+                className="projectFeedbackInput"
+                value={selectedMapItem.mapStyle ?? "minimalMono"}
+                onChange={(event) =>
+                  updateSelectedMapType(
+                    event.target.value as Extract<
+                      BrochureCanvasItem,
+                      { kind: "map" }
+                    >["mapStyle"],
+                  )
+                }
+              >
+                <option value="minimalMono">Minimal Mono</option>
+                <option value="minimalWarm">Minimal Warm</option>
+                <option value="minimalBlue">Minimal Blue</option>
+                <option value="color">Color</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+
+            <div className="brochureCanvasPopoverField brochureCanvasPopoverFieldWide">
+              <span className="brochurePreviewToolbarLabel">Display</span>
+              <div className="brochureCanvasPopoverToggleRow">
+                <label className="brochureCanvasPopoverCheckbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedMapItem.isInteractive !== false}
+                    onChange={toggleSelectedMapInteractive}
+                  />
+                  <span>Allow drag</span>
+                </label>
+                <label className="brochureCanvasPopoverCheckbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedMapItem.showAddressLabel !== false}
+                    onChange={toggleSelectedMapAddressLabel}
+                  />
+                  <span>Show address</span>
+                </label>
+              </div>
+            </div>
+          </>
+        ) : null}
+
+        {selectedShapeItem ? (
+          <div className="brochureCanvasPopoverField">
+            <span className="brochurePreviewToolbarLabel">Stroke</span>
+            <div className="brochureCanvasPopoverButtonRow">
+              {[2, 4, 6, 8].map((strokeWidth) => (
+                <button
+                  key={strokeWidth}
+                  className="brochurePreviewToolbarButton"
+                  type="button"
+                  data-active={
+                    (selectedShapeItem.strokeWidth ?? 3) === strokeWidth ? "true" : "false"
+                  }
+                  onClick={() => updateSelectedShapeStrokeWidth(strokeWidth)}
+                >
+                  {strokeWidth}px
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="brochureCanvasPopoverFooter">
+          <button
+            className="brochurePreviewToolbarButton brochurePreviewToolbarButtonDanger"
+            type="button"
+            disabled={!selectedCanDelete}
+            onClick={deleteSelectedItem}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <article
       className="brochureRenderDocument"
@@ -909,241 +1677,11 @@ export function BrochurePreview({
       data-editable={editable ? "true" : "false"}
       style={buildPageStyle(styleSettings)}
     >
-      {editable ? (
-        <div className="brochurePreviewToolbar">
-          <div className="brochurePreviewToolbarGroup brochurePreviewToolbarGroupShapes">
-            <span className="brochurePreviewToolbarLabel">
-              {activeSectionId
-                ? getBrochureSectionDefinition(
-                    sections.find((section) => section.id === activeSectionId)?.kind ??
-                      sections[0]?.kind ??
-                      "cover",
-                  )?.label ?? "Canvas"
-                : "Canvas"}
-            </span>
-            <button
-              className="brochurePreviewToolbarButton"
-              type="button"
-              onClick={handleAddText}
-            >
-              Text
-            </button>
-            {SHAPE_TOOL_OPTIONS.map((option) => (
-              <button
-                key={option.key}
-                className="brochurePreviewToolbarButton"
-                type="button"
-                onClick={() => handleAddShape(option.key)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {editable && selectedCanvasItem && selectedPopoverStyle ? (
-        <div className="brochureCanvasPopover" style={selectedPopoverStyle}>
-          <div className="brochureCanvasPopoverHeader">
-            <div className="brochureCanvasPopoverTitleWrap">
-              <span className="brochurePreviewToolbarLabel">Selected element</span>
-              <strong className="brochureCanvasPopoverTitle">
-                {selectedCanvasItem.item.kind === "text"
-                  ? "Text block"
-                  : selectedCanvasItem.item.kind === "shape"
-                    ? selectedCanvasItem.item.shapeType
-                    : selectedCanvasItem.item.kind}
-              </strong>
-            </div>
-            <button
-              className="brochureCanvasPopoverClose"
-              type="button"
-              onClick={() => setSelectedItem(null)}
-              aria-label="Close element editor"
-            >
-              ×
-            </button>
-          </div>
-
-          <div className="brochureCanvasPopoverGrid">
-            <label className="brochureCanvasPopoverField">
-              <span className="brochurePreviewToolbarLabel">Color</span>
-              <input
-                className="brochureCanvasPopoverColor"
-                type="color"
-                value={selectedItemColor}
-                onChange={(event) => updateSelectedItemColor(event.target.value)}
-              />
-            </label>
-
-            <div className="brochureCanvasPopoverField">
-              <span className="brochurePreviewToolbarLabel">Position</span>
-              <div className="brochureCanvasPopoverIconRow">
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => nudgeSelected(0, -0.01)}
-                >
-                  ↑
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => nudgeSelected(-0.01, 0)}
-                >
-                  ←
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => nudgeSelected(0.01, 0)}
-                >
-                  →
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => nudgeSelected(0, 0.01)}
-                >
-                  ↓
-                </button>
-              </div>
-            </div>
-
-            <div className="brochureCanvasPopoverField">
-              <span className="brochurePreviewToolbarLabel">Layers</span>
-              <div className="brochureCanvasPopoverButtonRow">
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => moveSelectedLayer("back")}
-                >
-                  Back
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => moveSelectedLayer("backward")}
-                >
-                  -1
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => moveSelectedLayer("forward")}
-                >
-                  +1
-                </button>
-                <button
-                  className="brochurePreviewToolbarButton"
-                  type="button"
-                  onClick={() => moveSelectedLayer("front")}
-                >
-                  Front
-                </button>
-              </div>
-            </div>
-
-            {selectedIsText ? (
-              <>
-                <label className="brochureCanvasPopoverField brochureCanvasPopoverFieldWide">
-                  <span className="brochurePreviewToolbarLabel">Text</span>
-                  <textarea
-                    className="brochureCanvasPopoverTextarea"
-                    value={selectedTextItem?.textContent ?? ""}
-                    onChange={(event) => updateSelectedTextContent(event.target.value)}
-                  />
-                </label>
-
-                <div className="brochureCanvasPopoverField">
-                  <span className="brochurePreviewToolbarLabel">Typography</span>
-                  <div className="brochureCanvasPopoverButtonRow">
-                    <button
-                      className="brochurePreviewToolbarButton"
-                      type="button"
-                      data-active={selectedTextItem?.isBold ? "true" : "false"}
-                      onClick={toggleSelectedTextBold}
-                    >
-                      Bold
-                    </button>
-                    <button
-                      className="brochurePreviewToolbarButton"
-                      type="button"
-                      data-active={selectedTextItem?.isItalic ? "true" : "false"}
-                      onClick={toggleSelectedTextItalic}
-                    >
-                      Italic
-                    </button>
-                    <input
-                      className="brochureCanvasPopoverNumber"
-                      type="number"
-                      min={12}
-                      max={96}
-                      value={selectedTextItem?.fontSize ?? 24}
-                      onChange={(event) =>
-                        updateSelectedTextSize(Number(event.target.value || 24))
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="brochureCanvasPopoverField">
-                  <span className="brochurePreviewToolbarLabel">Alignment</span>
-                  <div className="brochureCanvasPopoverButtonRow">
-                    {(["left", "center", "right"] as BrochureCanvasTextAlign[]).map(
-                      (alignment) => (
-                        <button
-                          key={alignment}
-                          className="brochurePreviewToolbarButton"
-                          type="button"
-                          data-active={
-                            selectedTextItem?.textAlign === alignment ? "true" : "false"
-                          }
-                          onClick={() => updateSelectedTextAlign(alignment)}
-                        >
-                          {alignment}
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </div>
-              </>
-            ) : null}
-
-            {selectedShapeItem ? (
-              <div className="brochureCanvasPopoverField">
-                <span className="brochurePreviewToolbarLabel">Stroke</span>
-                <div className="brochureCanvasPopoverButtonRow">
-                  {[2, 4, 6, 8].map((strokeWidth) => (
-                    <button
-                      key={strokeWidth}
-                      className="brochurePreviewToolbarButton"
-                      type="button"
-                      data-active={
-                        (selectedShapeItem.strokeWidth ?? 3) === strokeWidth ? "true" : "false"
-                      }
-                      onClick={() => updateSelectedShapeStrokeWidth(strokeWidth)}
-                    >
-                      {strokeWidth}px
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            <div className="brochureCanvasPopoverFooter">
-              <button
-                className="brochurePreviewToolbarButton brochurePreviewToolbarButtonDanger"
-                type="button"
-                disabled={!selectedCanDelete || (!selectedIsShape && !selectedIsText)}
-                onClick={deleteSelectedItem}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {selectionPanelTarget !== undefined
+        ? selectionPopover && selectionPanelTarget
+          ? createPortal(selectionPopover, selectionPanelTarget)
+          : null
+        : selectionPopover}
 
       <div className="brochureRenderPageList">
         {sections.map((section, index) => {
@@ -1177,7 +1715,8 @@ export function BrochurePreview({
                 onDrop={(event) => handleSectionDrop(event, section.id)}
                 onPointerDown={() => {
                   if (!editable) return;
-                  setSelectedItem(null);
+                  setSelectedItems([]);
+                  setEditingTextItem(null);
                   onActiveSectionChange?.(section.id);
                 }}
               >
@@ -1195,10 +1734,23 @@ export function BrochurePreview({
                   }
 
                   const isSelected =
+                    resolvedSelectedItems.some(
+                      (selection) =>
+                        selection.sectionId === section.id && selection.itemId === item.id,
+                    );
+                  const isAnchorSelection =
                     resolvedSelectedItem?.sectionId === section.id &&
                     resolvedSelectedItem?.itemId === item.id;
+                  const isEditingText =
+                    activeEditingTextItem?.section.id === section.id &&
+                    activeEditingTextItem?.item.id === item.id &&
+                    item.kind === "text";
                   const resizeHandles =
-                    item.kind === "media" || item.kind === "text"
+                    item.kind === "media" ||
+                    item.kind === "photo" ||
+                    item.kind === "logo" ||
+                    item.kind === "map" ||
+                    (item.kind === "text" && !isEditingText)
                       ? BOX_RESIZE_HANDLES
                       : item.kind === "shape" &&
                           (item.shapeType === "line" || item.shapeType === "arrow")
@@ -1210,35 +1762,71 @@ export function BrochurePreview({
                   return (
                     <div
                       key={item.id}
-                      ref={(node) => {
-                        itemRefs.current[getCanvasItemRefKey(section.id, item.id)] = node;
-                      }}
                       className="brochureCanvasItem"
                       data-kind={item.kind}
                       data-selected={isSelected ? "true" : "false"}
                       data-shape={item.kind === "shape" ? item.shapeType : undefined}
-                      style={getCanvasItemStyle(item)}
-                      onPointerDown={(event) =>
-                        beginInteraction(event, section.id, item, "move")
+                      data-text-background={
+                        item.kind === "text" ? (item.showBackground === false ? "false" : "true") : undefined
                       }
+                      data-text-border={
+                        item.kind === "text" ? (item.showBorder === false ? "false" : "true") : undefined
+                      }
+                      style={getCanvasItemStyle(item)}
+                      onPointerDown={(event) => {
+                        if (isEditingText) return;
+                        beginInteraction(event, section.id, item, "move");
+                      }}
                       onClick={(event) => {
                         if (!editable) return;
+                        if (isEditingText) return;
                         event.stopPropagation();
-                        setSelectedItem({ sectionId: section.id, itemId: item.id });
+                        if (event.shiftKey || event.metaKey || event.ctrlKey) {
+                          toggleSelection(section.id, item.id);
+                        } else {
+                          setSingleSelection(section.id, item.id);
+                        }
+                        setEditingTextItem(null);
+                        onActiveSectionChange?.(section.id);
+                      }}
+                      onDoubleClick={(event) => {
+                        if (!editable || item.kind !== "text") return;
+                        event.stopPropagation();
+                        setSingleSelection(section.id, item.id);
+                        setEditingTextItem({ sectionId: section.id, itemId: item.id });
                         onActiveSectionChange?.(section.id);
                       }}
                     >
-                      {renderCanvasItemContent(
-                        item,
-                        section,
-                        projectName,
-                        styleSettings,
-                        imageMap,
-                        editable,
-                        index,
+                      {isEditingText && item.kind === "text" ? (
+                        <div
+                          className="brochureCanvasTextBlock brochureCanvasTextBlockEditing"
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <textarea
+                            ref={textEditorRef}
+                            className="brochureCanvasTextEditor"
+                            value={item.textContent}
+                            onChange={(event) => updateSelectedTextContent(event.target.value)}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onClick={(event) => event.stopPropagation()}
+                            onKeyDown={handleTextEditorKeyDown}
+                          />
+                        </div>
+                      ) : (
+                        renderCanvasItemContent(
+                          item,
+                          section,
+                          projectName,
+                          styleSettings,
+                          imageMap,
+                          editable,
+                          index,
+                          isSelected,
+                        )
                       )}
 
-                      {editable && isSelected && resizeHandles.length > 0 ? (
+                      {editable && isAnchorSelection && resizeHandles.length > 0 ? (
                         <div className="brochureCanvasResizeHandles">
                           {resizeHandles.map((handle) => (
                             <button
@@ -1272,7 +1860,7 @@ export function BrochurePreview({
       {editable && selectedCanvasItem ? (
         <div className="brochurePreviewSelectionBar">
           <span className="brochurePreviewToolbarLabel">
-            Selected: {selectedCanvasItem.item.kind}
+            Selected: {selectedCount > 1 ? `${selectedCount} elements` : selectedCanvasItem.item.kind}
           </span>
           <label className="brochurePreviewColorControl">
             <span className="brochurePreviewToolbarLabel">Color</span>

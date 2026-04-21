@@ -3,9 +3,12 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ChangeEvent, DragEvent, ReactNode } from "react";
+import type { CSSProperties, ChangeEvent, DragEvent, ReactNode } from "react";
 
 import {
+  createCanvasLogoItem,
+  createCanvasMapItem,
+  createCanvasPhotoItem,
   createCanvasTextItem,
   createDecorativeShapeItem,
   getMaxCanvasLayer,
@@ -23,6 +26,7 @@ import type {
   BrochureCanvasItem,
   BrochureCanvasShapeType,
   BrochureFontFamily,
+  BrochureOrientation,
   BrochureProject,
   BrochureSection,
   BrochureSectionKind,
@@ -36,12 +40,27 @@ type BrochureStudioProps = {
 };
 
 type FeedbackTone = "neutral" | "error" | "success";
+type BrochureSidebarView = "menu" | "editions";
 type BrochureSidebarPanelId =
-  | "template"
+  | "design"
   | "sections"
+  | "elements"
   | "edit"
-  | "library"
-  | "style";
+  | "library";
+
+const elementToolOptions: Array<{
+  key: BrochureCanvasShapeType | "text" | "logo" | "map";
+  label: string;
+}> = [
+  { key: "text", label: "Text" },
+  { key: "map", label: "Map" },
+  { key: "logo", label: "Logo" },
+  { key: "rectangle", label: "Rectangle" },
+  { key: "square", label: "Square" },
+  { key: "circle", label: "Circle" },
+  { key: "line", label: "Line" },
+  { key: "arrow", label: "Arrow" },
+];
 
 const templateDescriptions: Record<BrochureTemplate, string> = {
   minimal: "Quiet editorial layout with restrained hierarchy.",
@@ -62,14 +81,14 @@ const socialLinkLabels: Array<{
 ];
 
 function BrochureSidebarPanel({
+  panelId,
   title,
-  description,
   isOpen,
   onToggle,
   children,
 }: {
+  panelId: BrochureSidebarPanelId;
   title: string;
-  description: string;
   isOpen: boolean;
   onToggle: () => void;
   children: ReactNode;
@@ -83,8 +102,14 @@ function BrochureSidebarPanel({
         aria-expanded={isOpen}
       >
         <div className="brochureStudioSectionHeader">
+          <span className="brochureSidebarPanelIcon" aria-hidden="true">
+            {panelId === "design" ? "◫" : null}
+            {panelId === "library" ? "◩" : null}
+            {panelId === "elements" ? "✦" : null}
+            {panelId === "sections" ? "☰" : null}
+            {panelId === "edit" ? "✎" : null}
+          </span>
           <h2 className="projectFeedbackVersionTitle">{title}</h2>
-          <p className="projectFeedbackVersionMeta">{description}</p>
         </div>
         <span className="brochureSidebarPanelSymbol">{isOpen ? "−" : "+"}</span>
       </button>
@@ -120,6 +145,8 @@ function ensureCoverFirst(sections: BrochureSection[]) {
 
 function imageCountSuggestion(kind: BrochureSectionKind) {
   switch (kind) {
+    case "blank":
+      return 0;
     case "cover":
       return 1;
     case "location":
@@ -150,13 +177,22 @@ function generateSectionContent(
 
   const preparedSections = ensureCoverFirst(sections).map((section) => {
     const definition = getBrochureSectionDefinition(section.kind);
+    const isBlankSection = section.kind === "blank";
     const nextSection: BrochureSection = {
       ...section,
-      title: section.title.trim() || definition?.defaultTitle || "Section",
-      subtitle: section.subtitle.trim() || definition?.defaultSubtitle || "",
-      body: section.body.trim() || definition?.defaultBody || "",
+      title: isBlankSection
+        ? section.title.trim()
+        : section.title.trim() || definition?.defaultTitle || "Section",
+      subtitle: isBlankSection
+        ? section.subtitle.trim()
+        : section.subtitle.trim() || definition?.defaultSubtitle || "",
+      body: isBlankSection
+        ? section.body.trim()
+        : section.body.trim() || definition?.defaultBody || "",
       imageIds: section.imageIds.filter((imageId) => orderedImageIds.includes(imageId)),
-      layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems),
+      layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems, {
+        availableImageIds: orderedImageIds,
+      }),
       socialLinks:
         section.kind === "final" ? normalizeSocialLinks(section.socialLinks) : undefined,
     };
@@ -183,34 +219,37 @@ function generateSectionContent(
     const suggestedCount = imageCountSuggestion(section.kind);
     const assignedImages = remainingImageIds.splice(0, suggestedCount);
 
-    return {
-      ...section,
-      imageIds: assignedImages,
-      layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems),
-      socialLinks:
-        section.kind === "final" ? normalizeSocialLinks(section.socialLinks) : undefined,
-    };
+      return {
+        ...section,
+        imageIds: assignedImages,
+        layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems, {
+          availableImageIds: orderedImageIds,
+        }),
+        socialLinks:
+          section.kind === "final" ? normalizeSocialLinks(section.socialLinks) : undefined,
+      };
   });
 }
 
 function getCoverSection(project: BrochureProject, sections: BrochureSection[]) {
-  return (
-    sections.find((section) => section.kind === "cover") ?? {
-      id: "cover-fallback",
-      kind: "cover" as const,
-      title: project.title || project.name,
-      subtitle: project.subtitle,
-      body: project.body,
-      imageIds: project.content.imageOrder.slice(0, 1),
-    }
-  );
+  const existingCover = sections.find((section) => section.kind === "cover");
+  if (existingCover) return existingCover;
+
+  const fallbackCover = createBrochureSection("cover");
+  fallbackCover.title = project.title || project.name;
+  fallbackCover.subtitle = project.subtitle;
+  fallbackCover.body = project.body;
+  fallbackCover.imageIds = project.content.imageOrder.slice(0, 1);
+  return fallbackCover;
 }
 
 function buildBrochureSavePayload(
   project: BrochureProject,
   template: BrochureTemplate,
   fontFamily: BrochureFontFamily,
+  orientation: BrochureOrientation,
   accentColor: string,
+  backgroundColor: string,
   imageOrder: string[],
   sections: BrochureSection[],
 ) {
@@ -232,7 +271,9 @@ function buildBrochureSavePayload(
       subtitle: coverSection.subtitle,
       body: coverSection.body,
       fontFamily,
+      orientation,
       accentColor,
+      backgroundColor,
       imageOrder: nextImageOrder,
       selectedImageIds,
       sections: nextSections,
@@ -241,13 +282,21 @@ function buildBrochureSavePayload(
 }
 
 export function BrochureStudio({ initialProject }: BrochureStudioProps) {
+  const controlsRef = useRef<HTMLElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const [project, setProject] = useState(initialProject);
   const [template, setTemplate] = useState<BrochureTemplate>(initialProject.template);
   const [fontFamily, setFontFamily] = useState<BrochureFontFamily>(
     initialProject.styleSettings.fontFamily,
   );
+  const [orientation, setOrientation] = useState<BrochureOrientation>(
+    initialProject.styleSettings.orientation,
+  );
   const [accentColor, setAccentColor] = useState(
     initialProject.styleSettings.accentColor,
+  );
+  const [backgroundColor, setBackgroundColor] = useState(
+    initialProject.styleSettings.backgroundColor,
   );
   const [imageOrder, setImageOrder] = useState(initialProject.content.imageOrder);
   const [sections, setSections] = useState(initialProject.content.sections);
@@ -256,13 +305,21 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
   );
   const [sectionKindToAdd, setSectionKindToAdd] = useState<BrochureSectionKind | "">("");
   const [draggedImageId, setDraggedImageId] = useState("");
+  const [draggedSectionId, setDraggedSectionId] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackTone, setFeedbackTone] = useState<FeedbackTone>("neutral");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploadingAssets, setIsUploadingAssets] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isDeletingLogo, setIsDeletingLogo] = useState(false);
+  const [deletingAssetId, setDeletingAssetId] = useState("");
   const [isCopying, setIsCopying] = useState(false);
+  const [hasCanvasSelection, setHasCanvasSelection] = useState(false);
+  const [sidebarView, setSidebarView] = useState<BrochureSidebarView>("menu");
   const [openPanelId, setOpenPanelId] = useState<BrochureSidebarPanelId | null>("sections");
+  const [elementEditorPortalTarget, setElementEditorPortalTarget] =
+    useState<HTMLDivElement | null>(null);
+  const [sidebarStyle, setSidebarStyle] = useState<CSSProperties | undefined>(undefined);
   const [autosaveStatus, setAutosaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
@@ -274,14 +331,22 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     setProject(initialProject);
     setTemplate(initialProject.template);
     setFontFamily(initialProject.styleSettings.fontFamily);
+    setOrientation(initialProject.styleSettings.orientation);
     setAccentColor(initialProject.styleSettings.accentColor);
+    setBackgroundColor(initialProject.styleSettings.backgroundColor);
     setImageOrder(initialProject.content.imageOrder);
     setSections(initialProject.content.sections);
     setActiveSectionId(initialProject.content.sections[0]?.id ?? "");
+    setHasCanvasSelection(false);
+    setSidebarView("menu");
     setOpenPanelId("sections");
     setAutosaveStatus("idle");
     skipNextAutosaveRef.current = true;
   }, [initialProject]);
+
+  useEffect(() => {
+    setSidebarView(hasCanvasSelection ? "editions" : "menu");
+  }, [hasCanvasSelection]);
 
   useEffect(() => {
     if (sections.length === 0) {
@@ -293,6 +358,57 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
       setActiveSectionId(sections[0].id);
     }
   }, [activeSectionId, sections]);
+
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return undefined;
+
+    let frameId = 0;
+
+    const updateSidebarStyle = () => {
+      if (typeof window === "undefined" || window.innerWidth <= 980) {
+        setSidebarStyle(undefined);
+        return;
+      }
+
+      const rect = controls.getBoundingClientRect();
+      const viewportGap = 24;
+      const nextTop = Math.max(rect.top, viewportGap);
+      const nextMaxHeight = Math.max(240, window.innerHeight - nextTop - viewportGap);
+
+      setSidebarStyle({
+        position: "fixed",
+        top: `${nextTop}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        maxHeight: `${nextMaxHeight}px`,
+        zIndex: 14,
+      });
+    };
+
+    const requestUpdate = () => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(updateSidebarStyle);
+    };
+
+    requestUpdate();
+
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => requestUpdate())
+        : null;
+    resizeObserver?.observe(controls);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+      resizeObserver?.disconnect();
+    };
+  }, [openPanelId, sections]);
 
   const allImagesById = useMemo(
     () => new Map(buildAllImages(project).map((image) => [image.id, image])),
@@ -324,7 +440,9 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
 
   const availableSectionDefinitions = useMemo(() => {
     const usedKinds = new Set(sections.map((section) => section.kind));
-    return BROCHURE_SECTION_DEFINITIONS.filter((definition) => !usedKinds.has(definition.kind));
+    return BROCHURE_SECTION_DEFINITIONS.filter(
+      (definition) => definition.kind === "blank" || !usedKinds.has(definition.kind),
+    );
   }, [sections]);
 
   const previewSections = useMemo(
@@ -342,7 +460,9 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     setProject(nextProject);
     setTemplate(nextProject.template);
     setFontFamily(nextProject.styleSettings.fontFamily);
+    setOrientation(nextProject.styleSettings.orientation);
     setAccentColor(nextProject.styleSettings.accentColor);
+    setBackgroundColor(nextProject.styleSettings.backgroundColor);
     setImageOrder(nextProject.content.imageOrder);
     setSections(nextProject.content.sections);
     setActiveSectionId(nextProject.content.sections[0]?.id ?? "");
@@ -368,7 +488,9 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
         project,
         template,
         fontFamily,
+        orientation,
         accentColor,
+        backgroundColor,
         imageOrder,
         sections,
       );
@@ -410,8 +532,10 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     };
   }, [
     accentColor,
+    backgroundColor,
     fontFamily,
     imageOrder,
+    orientation,
     project,
     sections,
     template,
@@ -465,23 +589,6 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     });
   };
 
-  const assignImageToSection = (sectionId: string, imageId: string) => {
-    updateSectionById(sectionId, (section) => {
-      if (section.imageIds.includes(imageId)) {
-        return section;
-      }
-
-      return {
-        ...section,
-        imageIds: orderedImageIds.filter(
-          (orderedId) => orderedId === imageId || section.imageIds.includes(orderedId),
-        ),
-      };
-    });
-
-    setActiveSectionId(sectionId);
-  };
-
   const handleUpdateCanvasItem = (
     sectionId: string,
     itemId: string,
@@ -492,6 +599,16 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
       layoutItems: section.layoutItems.map((item) =>
         item.id === itemId ? updater(item) : item,
       ),
+    }));
+  };
+
+  const handleUpdateCanvasItems = (
+    sectionId: string,
+    updater: (items: BrochureCanvasItem[]) => BrochureCanvasItem[],
+  ) => {
+    updateSectionById(sectionId, (section) => ({
+      ...section,
+      layoutItems: updater(section.layoutItems),
     }));
   };
 
@@ -529,6 +646,83 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     return nextItem.id;
   };
 
+  const handleAddLogoItem = (sectionId: string) => {
+    const targetSection = sections.find((section) => section.id === sectionId);
+    const existingLogo = targetSection?.layoutItems.find((item) => item.kind === "logo");
+    if (existingLogo) {
+      setActiveSectionId(sectionId);
+      return existingLogo.id;
+    }
+
+    const nextItem = createCanvasLogoItem(
+      getMaxCanvasLayer(targetSection?.layoutItems ?? []) + 1,
+    );
+
+    updateSectionById(sectionId, (section) => ({
+      ...section,
+      layoutItems: [...section.layoutItems, nextItem],
+    }));
+
+    setActiveSectionId(sectionId);
+    return nextItem.id;
+  };
+
+  const handleAddMapItem = (sectionId: string) => {
+    const nextItem = createCanvasMapItem(
+      getMaxCanvasLayer(
+        sections.find((section) => section.id === sectionId)?.layoutItems ?? [],
+      ) + 1,
+    );
+
+    updateSectionById(sectionId, (section) => ({
+      ...section,
+      layoutItems: [...section.layoutItems, nextItem],
+    }));
+
+    setActiveSectionId(sectionId);
+    return nextItem.id;
+  };
+
+  const handleAddImageToCanvas = (sectionId: string, imageId: string) => {
+    const targetSection = sections.find((section) => section.id === sectionId);
+    const nextItem = createCanvasPhotoItem(
+      imageId,
+      getMaxCanvasLayer(targetSection?.layoutItems ?? []) + 1,
+    );
+
+    updateSectionById(sectionId, (section) => ({
+      ...section,
+      layoutItems: [...section.layoutItems, nextItem],
+    }));
+
+    setActiveSectionId(sectionId);
+    return nextItem.id;
+  };
+
+  const handleAddElement = (
+    tool: BrochureCanvasShapeType | "text" | "logo" | "map",
+  ) => {
+    const targetSectionId = activeSectionId ?? sections[0]?.id;
+    if (!targetSectionId) return;
+
+    if (tool === "text") {
+      handleAddCanvasText(targetSectionId);
+      return;
+    }
+
+    if (tool === "map") {
+      handleAddMapItem(targetSectionId);
+      return;
+    }
+
+    if (tool === "logo") {
+      handleAddLogoItem(targetSectionId);
+      return;
+    }
+
+    handleAddDecorativeShape(targetSectionId, tool);
+  };
+
   const handleDeleteCanvasItem = (sectionId: string, itemId: string) => {
     updateSectionById(sectionId, (section) => ({
       ...section,
@@ -561,19 +755,106 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     }));
   };
 
-  const handleMoveSection = (sectionId: string, direction: -1 | 1) => {
-    setSections((current) => {
-      const index = current.findIndex((section) => section.id === sectionId);
-      if (index === -1) return current;
+  const handleDeleteAsset = async (assetId: string) => {
+    setDeletingAssetId(assetId);
+    setFeedbackMessage("");
 
-      const nextIndex = index + direction;
-      if (nextIndex < 0 || nextIndex >= current.length) return current;
+    try {
+      const response = await fetch(`/api/brochure/projects/${project.brochureId}/assets`, {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ assetId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          await getResponseErrorMessage(response, "Failed to delete image."),
+        );
+      }
+
+      const payload = (await response.json()) as { project?: BrochureProject };
+      if (!payload.project) {
+        throw new Error("Failed to delete image.");
+      }
+
+      hydrateFromProject(payload.project);
+      setFeedbackTone("success");
+      setFeedbackMessage("Image deleted.");
+    } catch (error) {
+      setFeedbackTone("error");
+      setFeedbackMessage(
+        error instanceof Error ? error.message : "Failed to delete image.",
+      );
+    } finally {
+      setDeletingAssetId("");
+    }
+  };
+
+  const handleDeleteLogo = async () => {
+    setIsDeletingLogo(true);
+    setFeedbackMessage("");
+
+    try {
+      const response = await fetch(`/api/brochure/projects/${project.brochureId}/logo`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          await getResponseErrorMessage(response, "Failed to delete logo."),
+        );
+      }
+
+      const payload = (await response.json()) as { project?: BrochureProject };
+      if (!payload.project) {
+        throw new Error("Failed to delete logo.");
+      }
+
+      hydrateFromProject(payload.project);
+      setFeedbackTone("success");
+      setFeedbackMessage("Logo deleted.");
+    } catch (error) {
+      setFeedbackTone("error");
+      setFeedbackMessage(
+        error instanceof Error ? error.message : "Failed to delete logo.",
+      );
+    } finally {
+      setIsDeletingLogo(false);
+    }
+  };
+
+  const handleDropSection = (targetSectionId: string) => {
+    if (!draggedSectionId || draggedSectionId === targetSectionId) {
+      setDraggedSectionId("");
+      return;
+    }
+
+    setSections((current) => {
+      const sourceIndex = current.findIndex(
+        (section) => section.id === draggedSectionId,
+      );
+      const targetIndex = current.findIndex(
+        (section) => section.id === targetSectionId,
+      );
+      if (sourceIndex === -1 || targetIndex === -1) return current;
+      if (current[sourceIndex]?.kind === "cover") return current;
 
       const next = [...current];
-      const [section] = next.splice(index, 1);
-      next.splice(nextIndex, 0, section);
-      return next;
+      const [section] = next.splice(sourceIndex, 1);
+      const resolvedTargetIndex = next.findIndex(
+        (candidate) => candidate.id === targetSectionId,
+      );
+
+      if (resolvedTargetIndex === -1) {
+        next.push(section);
+      } else {
+        next.splice(resolvedTargetIndex, 0, section);
+      }
+
+      return ensureCoverFirst(next);
     });
+
+    setDraggedSectionId("");
   };
 
   const handleRemoveSection = (sectionId: string) => {
@@ -606,7 +887,9 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
       project,
       template,
       fontFamily,
+      orientation,
       accentColor,
+      backgroundColor,
       imageOrder,
       sections,
     );
@@ -818,307 +1101,477 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
       ) : null}
 
       <div className="brochureStudioLayout">
-        <aside className="brochureStudioControls brochureBuilderPanel">
-          <BrochureSidebarPanel
-            title="Template"
-            description="Keep one clear visual direction for the whole brochure."
-            isOpen={openPanelId === "template"}
-            onToggle={() => togglePanel("template")}
-          >
-            <div className="brochureTemplateGrid brochureTemplateGridCompact">
-              {(Object.keys(templateDescriptions) as BrochureTemplate[]).map((key) => (
-                <button
-                  key={key}
-                  className="brochureTemplateCard"
-                  type="button"
-                  data-active={template === key ? "true" : "false"}
-                  onClick={() => setTemplate(key)}
-                >
-                  <strong>{key.charAt(0).toUpperCase() + key.slice(1)}</strong>
-                  <span>{templateDescriptions[key]}</span>
-                </button>
-              ))}
-            </div>
-          </BrochureSidebarPanel>
-
-          <BrochureSidebarPanel
-            title="Sections"
-            description="Add only the pages you need. One click selects the active page."
-            isOpen={openPanelId === "sections"}
-            onToggle={() => togglePanel("sections")}
-          >
-            <div className="brochureSectionAddRow">
-              <select
-                className="projectFeedbackInput"
-                value={sectionKindToAdd}
-                onChange={(event) =>
-                  setSectionKindToAdd(event.target.value as BrochureSectionKind | "")
-                }
-              >
-                <option value="">Add a section</option>
-                {availableSectionDefinitions.map((definition) => (
-                  <option key={definition.kind} value={definition.kind}>
-                    {definition.label}
-                  </option>
-                ))}
-              </select>
-
+        <aside ref={controlsRef} className="brochureStudioControls">
+          <div ref={panelRef} className="brochureBuilderPanel" style={sidebarStyle}>
+            <div className="brochureSidebarTabs" role="tablist" aria-label="Sidebar view">
               <button
-                className="projectFeedbackAction"
+                className="brochureSidebarTabButton"
                 type="button"
-                onClick={handleAddSection}
-                disabled={!sectionKindToAdd}
+                role="tab"
+                aria-selected={sidebarView === "menu"}
+                data-active={sidebarView === "menu" ? "true" : "false"}
+                onClick={() => setSidebarView("menu")}
               >
-                Add
+                Menu
+              </button>
+              <button
+                className="brochureSidebarTabButton"
+                type="button"
+                role="tab"
+                aria-selected={sidebarView === "editions"}
+                data-active={sidebarView === "editions" ? "true" : "false"}
+                onClick={() => setSidebarView("editions")}
+              >
+                Editions
               </button>
             </div>
 
-            <div className="brochureSectionList">
-              {sections.map((section) => {
-                const definition = getBrochureSectionDefinition(section.kind);
-
-                return (
-                  <button
-                    key={section.id}
-                    className="brochureSectionTab"
-                    type="button"
-                    data-active={activeSectionId === section.id ? "true" : "false"}
-                    onClick={() => {
-                      setActiveSectionId(section.id);
-                      setOpenPanelId("edit");
-                    }}
-                  >
-                    <strong>{definition?.label ?? "Section"}</strong>
-                    <span>{section.imageIds.length} image(s)</span>
-                  </button>
-                );
-              })}
-            </div>
-          </BrochureSidebarPanel>
-
-          {activeSection ? (
-            <BrochureSidebarPanel
-              title="Edit section"
-              description={
-                getBrochureSectionDefinition(activeSection.kind)?.label ?? "Section"
-              }
-              isOpen={openPanelId === "edit"}
-              onToggle={() => togglePanel("edit")}
-            >
-              <div className="brochureSectionEditorActions">
-                <button
-                  className="projectFeedbackAction"
-                  type="button"
-                  onClick={() => handleMoveSection(activeSection.id, -1)}
+            {sidebarView === "menu" ? (
+              <>
+                <BrochureSidebarPanel
+                  panelId="design"
+                  title="Design"
+                  isOpen={openPanelId === "design"}
+                  onToggle={() => togglePanel("design")}
                 >
-                  Up
-                </button>
-                <button
-                  className="projectFeedbackAction"
-                  type="button"
-                  onClick={() => handleMoveSection(activeSection.id, 1)}
-                >
-                  Down
-                </button>
-                {activeSection.kind !== "cover" ? (
-                  <button
-                    className="projectFeedbackAction"
-                    type="button"
-                    onClick={() => handleRemoveSection(activeSection.id)}
-                  >
-                    Remove
-                  </button>
-                ) : null}
-              </div>
-
-              <label className="projectFeedbackField">
-                <span>Title</span>
-                <input
-                  className="projectFeedbackInput"
-                  type="text"
-                  value={activeSection.title}
-                  onChange={(event) =>
-                    updateActiveSection((section) => ({
-                      ...section,
-                      title: event.target.value,
-                    }))
-                  }
-                />
-              </label>
-
-              <label className="projectFeedbackField">
-                <span>Subtitle</span>
-                <input
-                  className="projectFeedbackInput"
-                  type="text"
-                  value={activeSection.subtitle}
-                  onChange={(event) =>
-                    updateActiveSection((section) => ({
-                      ...section,
-                      subtitle: event.target.value,
-                    }))
-                  }
-                />
-              </label>
-
-              <label className="projectFeedbackField">
-                <span>Body text</span>
-                <textarea
-                  className="projectFeedbackTextarea brochureStudioTextarea"
-                  value={activeSection.body}
-                  onChange={(event) =>
-                    updateActiveSection((section) => ({
-                      ...section,
-                      body: event.target.value,
-                    }))
-                  }
-                />
-              </label>
-
-              <div className="brochureSectionPicker">
-                <p className="projectFeedbackVersionMeta">Images for this section</p>
-                <div className="brochureSectionImageGrid">
-                  {orderedImages.map((image) => {
-                    const isActive = activeSection.imageIds.includes(image.id);
-
-                    return (
+                  <div className="brochureTemplateGrid brochureTemplateGridCompact">
+                    {(Object.keys(templateDescriptions) as BrochureTemplate[]).map((key) => (
                       <button
-                        key={image.id}
-                        className="brochureSectionImageCard"
+                        key={key}
+                        className="brochureTemplateCard"
                         type="button"
-                        data-active={isActive ? "true" : "false"}
-                        onClick={() => toggleSectionImage(activeSection.id, image.id)}
+                        data-active={template === key ? "true" : "false"}
+                        onClick={() => setTemplate(key)}
                       >
-                        <img src={image.url} alt={image.label} loading="lazy" decoding="async" />
-                        <span>{image.label}</span>
+                        <strong>{key.charAt(0).toUpperCase() + key.slice(1)}</strong>
+                        <span>{templateDescriptions[key]}</span>
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {activeSection.kind === "final" ? (
-                <div className="brochureSectionSocialGrid">
-                  <p className="projectFeedbackVersionMeta">Social links</p>
-                  <div className="brochureSectionSocialFields">
-                    {socialLinkLabels.map((socialLink) => (
-                      <label key={socialLink.key} className="projectFeedbackField">
-                        <span>{socialLink.label}</span>
-                        <input
-                          className="projectFeedbackInput"
-                          type="url"
-                          value={activeSection.socialLinks?.[socialLink.key] ?? ""}
-                          placeholder={socialLink.placeholder}
-                          onChange={(event) =>
-                            handleUpdateSocialLink(
-                              activeSection.id,
-                              socialLink.key,
-                              event.target.value,
-                            )
-                          }
-                        />
-                      </label>
                     ))}
                   </div>
-                </div>
-              ) : null}
-            </BrochureSidebarPanel>
-          ) : null}
 
-          <BrochureSidebarPanel
-            title="Image library"
-            description="Reorder the global image sequence and upload extra visuals."
-            isOpen={openPanelId === "library"}
-            onToggle={() => togglePanel("library")}
-          >
-            <div className="brochureStudioToolbar">
-              <label className="projectFeedbackUpload brochureStudioUpload">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(event) => void handleAssetsUpload(event)}
-                  disabled={isUploadingAssets}
-                />
-                {isUploadingAssets ? "Uploading..." : "Upload images"}
-              </label>
+                  <label className="projectFeedbackField">
+                    <span>Font family</span>
+                    <select
+                      className="projectFeedbackInput"
+                      value={fontFamily}
+                      onChange={(event) =>
+                        setFontFamily(event.target.value as BrochureFontFamily)
+                      }
+                    >
+                      {brochureFontOptions.map((font) => (
+                        <option key={font.key} value={font.key}>
+                          {font.title}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
-              <label className="projectFeedbackUpload brochureStudioUpload">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => void handleLogoUpload(event)}
-                  disabled={isUploadingLogo}
-                />
-                {isUploadingLogo ? "Uploading..." : "Upload logo"}
-              </label>
-            </div>
+                  <label className="projectFeedbackField">
+                    <span>Accent color</span>
+                    <input
+                      className="brochureColorInput"
+                      type="color"
+                      value={accentColor}
+                      onChange={(event) => setAccentColor(event.target.value)}
+                    />
+                  </label>
 
-            <div className="brochureImageList">
-              {orderedImages.map((image, index) => (
-                <article
-                  key={image.id}
-                  className="brochureImageRow"
-                  draggable
-                  onDragStart={() => setDraggedImageId(image.id)}
-                  onDragOver={(event: DragEvent<HTMLElement>) => event.preventDefault()}
-                  onDrop={() => handleDropImage(image.id)}
-                  onDragEnd={() => setDraggedImageId("")}
+                  <label className="projectFeedbackField">
+                    <span>Background color</span>
+                    <input
+                      className="brochureColorInput"
+                      type="color"
+                      value={backgroundColor}
+                      onChange={(event) => setBackgroundColor(event.target.value)}
+                    />
+                  </label>
+
+                  <label className="projectFeedbackField">
+                    <span>Format</span>
+                    <select
+                      className="projectFeedbackInput"
+                      value={orientation}
+                      onChange={(event) =>
+                        setOrientation(event.target.value as BrochureOrientation)
+                      }
+                    >
+                      <option value="portrait">Portrait</option>
+                      <option value="landscape">Paysage</option>
+                    </select>
+                  </label>
+                </BrochureSidebarPanel>
+
+                <BrochureSidebarPanel
+                  panelId="library"
+                  title="Library"
+                  isOpen={openPanelId === "library"}
+                  onToggle={() => togglePanel("library")}
                 >
-                  <div className="brochureImageRowMedia">
-                    <img src={image.url} alt={image.label} loading="lazy" decoding="async" />
+                  <div className="brochureStudioToolbar">
+                    <label className="projectFeedbackUpload brochureStudioUpload">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(event) => void handleAssetsUpload(event)}
+                        disabled={isUploadingAssets}
+                      />
+                      {isUploadingAssets ? "Uploading..." : "Upload images"}
+                    </label>
                   </div>
 
-                  <div className="brochureImageRowBody">
-                    <div className="brochureImageRowCopy">
-                      <strong>{image.label}</strong>
-                      <span>{image.meta}</span>
-                    </div>
+                  <div className="brochureImageList">
+                    {orderedImages.map((image, index) => (
+                      <article
+                        key={image.id}
+                        className="brochureImageRow"
+                        draggable
+                        onDragStart={() => setDraggedImageId(image.id)}
+                        onDragOver={(event: DragEvent<HTMLElement>) => event.preventDefault()}
+                        onDrop={() => handleDropImage(image.id)}
+                        onDragEnd={() => setDraggedImageId("")}
+                      >
+                        <div className="brochureImageRowMedia">
+                          <img src={image.url} alt={image.label} loading="lazy" decoding="async" />
+                        </div>
 
-                    <div className="brochureImageRowActions">
-                      <span className="brochureImageOrderBadge">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                    </div>
+                        <div className="brochureImageRowBody">
+                          <div className="brochureImageRowCopy">
+                            <strong>{image.label}</strong>
+                            <span>{image.meta}</span>
+                          </div>
+
+                          <div className="brochureImageRowActions">
+                            <div className="brochureImageActionGroup">
+                              <span className="brochureImageOrderBadge">
+                                {String(index + 1).padStart(2, "0")}
+                              </span>
+                              {image.source === "extra" ? (
+                                <button
+                                  className="brochureImageDeleteButton"
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    void handleDeleteAsset(image.id);
+                                  }}
+                                  disabled={deletingAssetId === image.id}
+                                  aria-label={`Delete ${image.label}`}
+                                  title="Delete image"
+                                >
+                                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path
+                                      d="M3.5 4.5H12.5M6.25 2.5H9.75M5.25 6.25V11.25M8 6.25V11.25M10.75 6.25V11.25M4.5 4.5L5 13H11L11.5 4.5"
+                                      stroke="currentColor"
+                                      strokeWidth="1.2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </button>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
                   </div>
-                </article>
-              ))}
-            </div>
-          </BrochureSidebarPanel>
+                </BrochureSidebarPanel>
 
-          <BrochureSidebarPanel
-            title="Style"
-            description="Keep typography and color tight. The brochure should feel immediate."
-            isOpen={openPanelId === "style"}
-            onToggle={() => togglePanel("style")}
-          >
-            <label className="projectFeedbackField">
-              <span>Font family</span>
-              <select
-                className="projectFeedbackInput"
-                value={fontFamily}
-                onChange={(event) =>
-                  setFontFamily(event.target.value as BrochureFontFamily)
-                }
-              >
-                {brochureFontOptions.map((font) => (
-                  <option key={font.key} value={font.key}>
-                    {font.title}
-                  </option>
-                ))}
-              </select>
-            </label>
+                <div className="brochureSidebarDivider" aria-hidden="true" />
 
-            <label className="projectFeedbackField">
-              <span>Accent color</span>
-              <input
-                className="brochureColorInput"
-                type="color"
-                value={accentColor}
-                onChange={(event) => setAccentColor(event.target.value)}
-              />
-            </label>
-          </BrochureSidebarPanel>
+                <BrochureSidebarPanel
+                  panelId="elements"
+                  title="Elements"
+                  isOpen={openPanelId === "elements"}
+                  onToggle={() => togglePanel("elements")}
+                >
+                  <div className="brochureElementMeta">
+                    <span className="projectFeedbackVersionMeta">Active page</span>
+                    <strong>
+                      {activeSection
+                        ? getBrochureSectionDefinition(activeSection.kind)?.label ?? "Section"
+                        : "Select a section"}
+                    </strong>
+                  </div>
+
+                  <div className="brochureElementGrid">
+                    {elementToolOptions.map((tool) => (
+                      <button
+                        key={tool.key}
+                        className="brochureElementButton"
+                        type="button"
+                        onClick={() => handleAddElement(tool.key)}
+                        disabled={!activeSection}
+                      >
+                        {tool.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="brochureElementAssetTools">
+                    <label className="projectFeedbackUpload brochureStudioUpload brochureElementAssetButton">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(event) => void handleLogoUpload(event)}
+                        disabled={isUploadingLogo}
+                      />
+                      {isUploadingLogo ? "Uploading..." : "Add logo"}
+                    </label>
+
+                    <button
+                      className="projectFeedbackAction"
+                      type="button"
+                      onClick={() => void handleDeleteLogo()}
+                      disabled={isDeletingLogo || !project.styleSettings.logoUrl}
+                    >
+                      {isDeletingLogo ? "Deleting..." : "Delete logo"}
+                    </button>
+                  </div>
+                </BrochureSidebarPanel>
+
+                <BrochureSidebarPanel
+                  panelId="sections"
+                  title="Sections"
+                  isOpen={openPanelId === "sections"}
+                  onToggle={() => togglePanel("sections")}
+                >
+                  <div className="brochureSectionAddRow">
+                    <select
+                      className="projectFeedbackInput"
+                      value={sectionKindToAdd}
+                      onChange={(event) =>
+                        setSectionKindToAdd(event.target.value as BrochureSectionKind | "")
+                      }
+                    >
+                      <option value="">Add a section</option>
+                      {availableSectionDefinitions.map((definition) => (
+                        <option key={definition.kind} value={definition.kind}>
+                          {definition.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      className="projectFeedbackAction"
+                      type="button"
+                      onClick={handleAddSection}
+                      disabled={!sectionKindToAdd}
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  <div className="brochureSectionList">
+                    {sections.map((section) => {
+                      const definition = getBrochureSectionDefinition(section.kind);
+                      const canDeleteSection = section.kind !== "cover";
+                      const canReorderSection = section.kind !== "cover";
+
+                      return (
+                        <article
+                          key={section.id}
+                          className="brochureSectionTab"
+                          data-active={activeSectionId === section.id ? "true" : "false"}
+                          data-dragging={draggedSectionId === section.id ? "true" : "false"}
+                          onDragOver={(event: DragEvent<HTMLElement>) => {
+                            if (!draggedSectionId || draggedSectionId === section.id) return;
+                            event.preventDefault();
+                          }}
+                          onDrop={() => handleDropSection(section.id)}
+                        >
+                          {canReorderSection ? (
+                            <span
+                              className="brochureSectionTabDragHandle"
+                              draggable
+                              onDragStart={(event: DragEvent<HTMLSpanElement>) => {
+                                event.dataTransfer.effectAllowed = "move";
+                                event.dataTransfer.setData("text/plain", section.id);
+                                setDraggedSectionId(section.id);
+                              }}
+                              onDragEnd={() => setDraggedSectionId("")}
+                              aria-label={`Reorder ${definition?.label ?? "section"}`}
+                              title="Drag to reorder"
+                            >
+                              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <circle cx="5" cy="4" r="1.1" fill="currentColor" />
+                                <circle cx="11" cy="4" r="1.1" fill="currentColor" />
+                                <circle cx="5" cy="8" r="1.1" fill="currentColor" />
+                                <circle cx="11" cy="8" r="1.1" fill="currentColor" />
+                                <circle cx="5" cy="12" r="1.1" fill="currentColor" />
+                                <circle cx="11" cy="12" r="1.1" fill="currentColor" />
+                              </svg>
+                            </span>
+                          ) : (
+                            <span className="brochureSectionTabDragSpacer" aria-hidden="true" />
+                          )}
+
+                          <button
+                            className="brochureSectionTabMain"
+                            type="button"
+                            onClick={() => {
+                              setActiveSectionId(section.id);
+                              setOpenPanelId("edit");
+                            }}
+                          >
+                            <strong>{definition?.label ?? "Section"}</strong>
+                            <span>{section.imageIds.length} image(s)</span>
+                          </button>
+
+                          {canDeleteSection ? (
+                            <button
+                              className="brochureSectionTabDelete"
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleRemoveSection(section.id);
+                              }}
+                              aria-label={`Delete ${definition?.label ?? "section"}`}
+                              title="Delete section"
+                            >
+                              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <path
+                                  d="M3.5 4.5H12.5M6.25 2.5H9.75M5.25 6.25V11.25M8 6.25V11.25M10.75 6.25V11.25M4.5 4.5L5 13H11L11.5 4.5"
+                                  stroke="currentColor"
+                                  strokeWidth="1.2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+                          ) : (
+                            <span className="brochureSectionTabDeleteSpacer" aria-hidden="true" />
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                </BrochureSidebarPanel>
+
+                {activeSection ? (
+                  <BrochureSidebarPanel
+                    panelId="edit"
+                    title="Edition"
+                    isOpen={openPanelId === "edit"}
+                    onToggle={() => togglePanel("edit")}
+                  >
+                    <label className="projectFeedbackField">
+                      <span>Title</span>
+                      <input
+                        className="projectFeedbackInput"
+                        type="text"
+                        value={activeSection.title}
+                        onChange={(event) =>
+                          updateActiveSection((section) => ({
+                            ...section,
+                            title: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+
+                    <label className="projectFeedbackField">
+                      <span>Subtitle</span>
+                      <input
+                        className="projectFeedbackInput"
+                        type="text"
+                        value={activeSection.subtitle}
+                        onChange={(event) =>
+                          updateActiveSection((section) => ({
+                            ...section,
+                            subtitle: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+
+                    <label className="projectFeedbackField">
+                      <span>Body text</span>
+                      <textarea
+                        className="projectFeedbackTextarea brochureStudioTextarea"
+                        value={activeSection.body}
+                        onChange={(event) =>
+                          updateActiveSection((section) => ({
+                            ...section,
+                            body: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+
+                    <div className="brochureSectionPicker">
+                      <p className="projectFeedbackVersionMeta">Images for this section</p>
+                      <div className="brochureSectionImageGrid">
+                        {orderedImages.map((image) => {
+                          const isActive = activeSection.imageIds.includes(image.id);
+
+                          return (
+                            <button
+                              key={image.id}
+                              className="brochureSectionImageCard"
+                              type="button"
+                              data-active={isActive ? "true" : "false"}
+                              onClick={() => toggleSectionImage(activeSection.id, image.id)}
+                            >
+                              <img
+                                src={image.url}
+                                alt={image.label}
+                                loading="lazy"
+                                decoding="async"
+                              />
+                              <span>{image.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {activeSection.kind === "final" ? (
+                      <div className="brochureSectionSocialGrid">
+                        <p className="projectFeedbackVersionMeta">Social links</p>
+                        <div className="brochureSectionSocialFields">
+                          {socialLinkLabels.map((socialLink) => (
+                            <label key={socialLink.key} className="projectFeedbackField">
+                              <span>{socialLink.label}</span>
+                              <input
+                                className="projectFeedbackInput"
+                                type="url"
+                                value={activeSection.socialLinks?.[socialLink.key] ?? ""}
+                                placeholder={socialLink.placeholder}
+                                onChange={(event) =>
+                                  handleUpdateSocialLink(
+                                    activeSection.id,
+                                    socialLink.key,
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </BrochureSidebarPanel>
+                ) : null}
+              </>
+            ) : (
+              <section className="brochureStudioSection brochureSidebarPanel">
+                <div className="brochureSidebarPanelBody">
+                  {hasCanvasSelection ? (
+                    <div
+                      ref={setElementEditorPortalTarget}
+                      className="brochureElementEditorMount"
+                    />
+                  ) : (
+                    <p className="projectFeedbackVersionMeta brochureSidebarEmptyState">
+                      Select an element on the page to open its editing controls here.
+                    </p>
+                  )}
+                </div>
+              </section>
+            )}
+          </div>
         </aside>
 
         <section className="brochurePreviewShell brochureBuilderPreview">
@@ -1129,18 +1582,21 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
               styleSettings={{
                 ...project.styleSettings,
                 fontFamily,
+                orientation,
                 accentColor,
+                backgroundColor,
               }}
               sections={previewSections}
               images={previewImages}
               editable
               activeSectionId={activeSectionId}
               draggedImageId={draggedImageId}
+              selectionPanelTarget={elementEditorPortalTarget}
+              onSelectionStateChange={setHasCanvasSelection}
               onActiveSectionChange={setActiveSectionId}
-              onAssignImageToSection={assignImageToSection}
+              onAddImageToCanvas={handleAddImageToCanvas}
               onUpdateCanvasItem={handleUpdateCanvasItem}
-              onAddDecorativeShape={handleAddDecorativeShape}
-              onAddTextItem={handleAddCanvasText}
+              onUpdateCanvasItems={handleUpdateCanvasItems}
               onDeleteCanvasItem={handleDeleteCanvasItem}
               onMoveCanvasItemLayer={handleMoveCanvasItemLayer}
             />
