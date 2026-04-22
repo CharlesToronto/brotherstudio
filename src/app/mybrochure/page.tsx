@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { BrochureDirectory } from "@/components/BrochureDirectory";
+import { MyBrochureDevBanner } from "@/components/MyBrochureDevBanner";
 import {
   isBrochureConfigured,
   listBrochureProjectSummaries,
@@ -21,6 +22,7 @@ export default async function MyBrochurePage() {
   if (!isBrochureConfigured()) {
     return (
       <main className="siteMain">
+        <MyBrochureDevBanner />
         <section className="projectConfigNotice">
           <h1 className="projectFeedbackTitle">myBrochure Not Configured</h1>
           <p className="projectFeedbackVersionMeta">
@@ -39,6 +41,7 @@ export default async function MyBrochurePage() {
   } catch (error) {
     return (
       <main className="siteMain">
+        <MyBrochureDevBanner />
         <section className="projectConfigNotice">
           <h1 className="projectFeedbackTitle">myBrochure Setup Is Incomplete</h1>
           <p className="projectFeedbackVersionMeta">
@@ -53,6 +56,7 @@ export default async function MyBrochurePage() {
 
   return (
     <main className="siteMain">
+      <MyBrochureDevBanner />
       <BrochureDirectory projects={projects} />
     </main>
   );

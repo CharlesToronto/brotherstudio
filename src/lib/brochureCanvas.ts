@@ -334,10 +334,8 @@ export function sanitizeCanvasItems(
       nextItems.push({
         ...normalizedBase,
         kind: "text",
-        textContent:
-          typeof candidate.textContent === "string" && candidate.textContent.trim().length > 0
-            ? candidate.textContent
-            : "New text block",
+        // Preserve empty strings so users can clear a text block without it repopulating on reload.
+        textContent: typeof candidate.textContent === "string" ? candidate.textContent : "New text block",
         textAlign: normalizeTextAlign(candidate.textAlign),
         fontSize: Math.round(
           normalizeNumber(

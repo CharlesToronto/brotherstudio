@@ -275,7 +275,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       metadataDescription:
         "Images haut de gamme pour promouvoir et vendre vos projets immobiliers.",
       introLine:
-        "We help architects and developers present and sell their projects through high-end visualizations.",
+        "From image to sale: an end-to-end workflow to present and sell your projects with impact.",
       backToTopLabel: "Back to top",
       backToFooterLabel: "Go to footer",
       projectFilterAllLabel: "All",
@@ -295,6 +295,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "3D Floor Plans",
         "Marketing brochure floor plans",
         "Video Walkthrough",
+        "Walkthrough Classic (click & walk)",
         "Marketing Videos",
         "Drone View Videos",
       ],
@@ -317,7 +318,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       openGraphDescription:
         "Minimal pricing overview for BrotherStudio photorealistic architectural images and videos.",
       intro:
-        "We help architects and developers budget high-end visualizations with clear starting prices.",
+        "From image to sale: an end-to-end workflow to present and sell your projects with impact.",
       accessTitle: "Private access",
       accessText:
         "Enter your email address to view the pricing page.",
@@ -529,6 +530,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "3D FloorPlan",
         "Plan de vente pour brochure marketing",
         "Video Walkthrough",
+        "Walkthrough Classic (click & walk)",
         "Video Marketing",
         "Video (drone View)",
       ],

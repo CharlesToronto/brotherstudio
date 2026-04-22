@@ -10,6 +10,30 @@ export type BrochureOrientation = "portrait" | "landscape";
 export type BrochureExperienceMode = "brochure" | "immersive";
 export type BrochureImmersiveTheme = "light" | "dark" | "warm" | "editorial";
 export type BrochureImmersiveMotionPreset = "soft" | "cinematic" | "bold";
+export type BrochureImmersiveVisualStyle =
+  | "luxury-minimal"
+  | "modern-real-estate"
+  | "warm-lifestyle";
+export type BrochureImmersiveAnimationLevel = "minimal" | "subtle" | "cinematic";
+export type BrochureImmersiveSectionKey =
+  | "hero"
+  | "gallery"
+  | "video"
+  | "key-points"
+  | "description"
+  | "location"
+  | "lifestyle"
+  | "cta";
+export type BrochureImmersiveVideoMode = "background" | "section";
+export type BrochureImmersiveSectionVariant =
+  | "standard"
+  | "gallery"
+  | "video"
+  | "key-points"
+  | "location"
+  | "lifestyle"
+  | "cta";
+export type BrochureImmersiveMediaAspect = "portrait" | "square" | "landscape";
 
 export type BrochureSocialLinkKey =
   | "website"
@@ -155,6 +179,19 @@ export type BrochureSection = {
   imageIds: string[];
   layoutItems: BrochureCanvasItem[];
   socialLinks?: BrochureSocialLinks;
+  isHidden?: boolean;
+  immersiveVariant?: BrochureImmersiveSectionVariant;
+  immersiveLayout?: "media-left" | "media-right" | "full-bleed";
+  immersiveMediaAspect?: BrochureImmersiveMediaAspect;
+  immersiveMediaFocusX?: number;
+  immersiveMediaFocusY?: number;
+  immersiveKeyPoints?: string[];
+  immersiveVideoUrl?: string;
+  immersiveVideoMode?: BrochureImmersiveVideoMode;
+  immersiveMapLatitude?: number;
+  immersiveMapLongitude?: number;
+  immersiveMapZoom?: number;
+  immersiveMapStyle?: "minimalMono" | "minimalWarm" | "minimalBlue" | "color" | "dark";
 };
 
 export type BrochureContent = {
@@ -163,6 +200,7 @@ export type BrochureContent = {
   sections: BrochureSection[];
   experienceMode?: BrochureExperienceMode;
   immersiveSettings?: BrochureImmersiveSettings;
+  immersiveBuilder?: BrochureImmersiveBuilder;
 };
 
 export type BrochureImmersiveSettings = {
@@ -171,11 +209,39 @@ export type BrochureImmersiveSettings = {
   showProgressNav: boolean;
 };
 
+export type BrochureImmersiveBuilder = {
+  selectedSections: BrochureImmersiveSectionKey[];
+  visualStyle: BrochureImmersiveVisualStyle;
+  animationLevel: BrochureImmersiveAnimationLevel;
+  heroImageId: string;
+  galleryImageIds: string[];
+  videoUrl: string;
+  videoMode: BrochureImmersiveVideoMode;
+  keyPointsTitle: string;
+  keyPoints: string[];
+  descriptionTitle: string;
+  descriptionBody: string;
+  locationTitle: string;
+  locationAddress: string;
+  locationLatitude: number | null;
+  locationLongitude: number | null;
+  locationZoom: number;
+  locationMapStyle: "minimalMono" | "minimalWarm" | "minimalBlue" | "color" | "dark";
+  locationNeighborhood: string;
+  locationPoints: string[];
+  lifestyleTitle: string;
+  lifestyleBody: string;
+  ctaTitle: string;
+  ctaBody: string;
+  ctaButtonLabel: string;
+};
+
 export type BrochureProjectSummary = {
   projectId: string;
   brochureId: string | null;
   name: string;
   createdAt: string;
+  updatedAt: string | null;
   coverImageUrl: string | null;
   approvedImageCount: number;
   latestApprovedVersion: number;

@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { BrochureImmersive } from "@/components/BrochureImmersive";
+import { AutoPrintOnLoad } from "@/components/AutoPrintOnLoad";
 import { BrochurePreview } from "@/components/BrochurePreview";
 import { BrochureStudio } from "@/components/BrochureStudio";
+import { MyBrochureDevBanner } from "@/components/MyBrochureDevBanner";
 import { getBrochureProject, isBrochureConfigured } from "@/lib/brochureStore";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +13,7 @@ export const revalidate = 0;
 
 type MyBrochureProjectPageProps = {
   params: Promise<{ projectId: string }>;
-  searchParams: Promise<{ edit?: string }>;
+  searchParams: Promise<{ edit?: string; pdf?: string }>;
 };
 
 export async function generateMetadata({
@@ -59,10 +61,12 @@ export default async function MyBrochureProjectPage({
 }: MyBrochureProjectPageProps) {
   const [{ projectId }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const editMode = resolvedSearchParams.edit === "1";
+  const pdfMode = resolvedSearchParams.pdf === "1";
 
   if (!isBrochureConfigured()) {
     return (
       <main className="siteMain">
+        <MyBrochureDevBanner />
         <section className="projectConfigNotice">
           <h1 className="projectFeedbackTitle">myBrochure Not Configured</h1>
           <p className="projectFeedbackVersionMeta">
@@ -81,6 +85,7 @@ export default async function MyBrochureProjectPage({
   } catch (error) {
     return (
       <main className="siteMain">
+        <MyBrochureDevBanner />
         <section className="projectConfigNotice">
           <h1 className="projectFeedbackTitle">myBrochure Setup Is Incomplete</h1>
           <p className="projectFeedbackVersionMeta">
@@ -101,8 +106,22 @@ export default async function MyBrochureProjectPage({
 
   return (
     <main className="siteMain">
+      <MyBrochureDevBanner />
       {editMode ? (
         <BrochureStudio initialProject={project} />
+      ) : pdfMode ? (
+        <section className="brochurePublicShell">
+          <AutoPrintOnLoad />
+          <div className="brochurePublicCanvas brochurePublicCanvasPdf">
+            <BrochurePreview
+              projectName={project.name}
+              template={project.template}
+              styleSettings={project.styleSettings}
+              sections={project.content.sections}
+              images={allImages}
+            />
+          </div>
+        </section>
       ) : (
         <section className="brochurePublicShell">
           <div
@@ -120,6 +139,7 @@ export default async function MyBrochureProjectPage({
                 immersiveSettings={project.immersiveSettings}
                 sections={project.content.sections}
                 images={allImages}
+                pdfHref="?pdf=1"
               />
             ) : (
               <BrochurePreview

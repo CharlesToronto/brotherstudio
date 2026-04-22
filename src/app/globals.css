@@ -3140,6 +3140,18 @@ html[data-theme="dark"] .myStudioGuideArrow {
   gap: 10px;
 }
 
+.myBrochureDevBanner {
+  margin: 0 var(--page-padding);
+  border: 1px solid rgb(196 0 24 / 0.35);
+  background: #c40018;
+  color: #fff;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .brochureDirectoryShell,
 .brochureStudioShell {
   display: grid;
@@ -3231,6 +3243,44 @@ html[data-theme="dark"] .myStudioGuideArrow {
   align-items: center;
 }
 
+.brochureExperienceTabs {
+  flex: 0 0 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-self: stretch;
+}
+
+.brochureExperienceTab {
+  min-height: 54px;
+  padding: 0 18px;
+  border: 1px solid rgb(127 127 127 / 0.32);
+  background: rgb(255 255 255 / 0.65);
+  color: #333;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.brochureExperienceTab:hover {
+  transform: translateY(-1px);
+  border-color: rgb(214 112 112 / 0.55);
+}
+
+.brochureExperienceTab[data-active="true"] {
+  border-color: #d85a5a;
+  background: rgb(216 90 90 / 0.12);
+  color: #111;
+}
+
 .brochureStudioAutosave {
   display: inline-flex;
   align-items: center;
@@ -3286,11 +3336,20 @@ html[data-theme="dark"] .myStudioGuideArrow {
   scrollbar-width: thin;
 }
 
+.brochureStudioControls[data-density="compact"] .brochureBuilderPanel {
+  gap: 8px;
+}
+
 .brochureSidebarTabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 4px;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureSidebarTabs {
+  gap: 6px;
+  margin-bottom: 2px;
 }
 
 .brochureSidebarTabButton {
@@ -3306,6 +3365,12 @@ html[data-theme="dark"] .myStudioGuideArrow {
   cursor: pointer;
 }
 
+.brochureStudioControls[data-density="compact"] .brochureSidebarTabButton {
+  min-height: 36px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
 .brochureSidebarTabButton[data-active="true"] {
   border-color: #d85a5a;
   background: rgb(216 90 90 / 0.12);
@@ -3315,11 +3380,19 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .brochureSidebarDivider {
   height: 1px;
   margin: 2px 0 6px;
-  background: rgb(214 112 112 / 0.32);
+  background: linear-gradient(90deg, transparent, rgb(214 112 112 / 0.45), transparent);
+}
+
+.brochureStudioControls[data-density="compact"] .brochureSidebarDivider {
+  margin: 2px 0 4px;
 }
 
 .brochureSidebarPanel {
   gap: 0;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureSidebarPanel {
+  padding: 12px;
 }
 
 .brochureSidebarPanelToggle {
@@ -3336,10 +3409,19 @@ html[data-theme="dark"] .myStudioGuideArrow {
   cursor: pointer;
 }
 
+.brochureStudioControls[data-density="compact"] .brochureSidebarPanelToggle {
+  gap: 10px;
+}
+
 .brochureSidebarPanelBody {
   display: grid;
   gap: 12px;
   padding-top: 14px;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureSidebarPanelBody {
+  gap: 10px;
+  padding-top: 10px;
 }
 
 .brochureSidebarPanelIcon {
@@ -3355,6 +3437,12 @@ html[data-theme="dark"] .myStudioGuideArrow {
   line-height: 1;
 }
 
+.brochureStudioControls[data-density="compact"] .brochureSidebarPanelIcon {
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+}
+
 .brochureSidebarPanelSymbol {
   display: inline-flex;
   align-items: center;
@@ -3368,9 +3456,19 @@ html[data-theme="dark"] .myStudioGuideArrow {
   line-height: 1;
 }
 
+.brochureStudioControls[data-density="compact"] .brochureSidebarPanelSymbol {
+  width: 22px;
+  height: 22px;
+  font-size: 18px;
+}
+
 .brochureTemplateGrid {
   display: grid;
   gap: 10px;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureTemplateGrid {
+  gap: 8px;
 }
 
 .brochureTemplateGridCompact {
@@ -3393,6 +3491,11 @@ html[data-theme="dark"] .myStudioGuideArrow {
     transform 0.2s ease;
 }
 
+.brochureStudioControls[data-density="compact"] .brochureTemplateCard {
+  gap: 4px;
+  padding: 10px;
+}
+
 .brochureTemplateCard strong,
 .brochureTemplateCard span {
   min-width: 0;
@@ -3410,6 +3513,10 @@ html[data-theme="dark"] .myStudioGuideArrow {
   font-size: 11px;
   line-height: 1.5;
   color: #717171;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureTemplateCard span {
+  display: none;
 }
 
 .brochureTemplateCard:hover {
@@ -3431,13 +3538,25 @@ html[data-theme="dark"] .myStudioGuideArrow {
   padding: 2px;
 }
 
+.brochureStudioControls[data-density="compact"] .brochureColorInput {
+  min-height: 34px;
+}
+
 .brochureStudioTextarea {
   min-height: 140px;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureStudioTextarea {
+  min-height: 110px;
 }
 
 .brochureImageList {
   display: grid;
   gap: 10px;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureImageList {
+  gap: 8px;
 }
 
 .brochureImageListGrid {
@@ -3456,6 +3575,16 @@ html[data-theme="dark"] .myStudioGuideArrow {
   transition:
     border-color 0.2s ease,
     background-color 0.2s ease;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureImageRow {
+  gap: 10px;
+  padding: 10px;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureImageRowCopy strong,
+.brochureStudioControls[data-density="compact"] .brochureImageRowCopy span {
+  font-size: 10px;
 }
 
 .brochureImageListGrid .brochureImageRow {
@@ -3604,6 +3733,11 @@ html[data-theme="dark"] .myStudioGuideArrow {
   background: #f7fbff;
 }
 
+.brochureStudioControls[data-density="compact"] .brochureImmersiveControls {
+  gap: 8px;
+  padding: 10px;
+}
+
 .brochureImmersiveToggle {
   display: flex;
   align-items: center;
@@ -3614,6 +3748,164 @@ html[data-theme="dark"] .myStudioGuideArrow {
 
 .brochureImmersiveToggle input {
   margin: 0;
+}
+
+.brochureImmersiveBuilderGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.brochureImmersiveBuilderCard {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgb(127 127 127 / 0.18);
+  background: linear-gradient(180deg, #fff7f7 0%, #f9fbff 100%);
+}
+
+.brochureImmersiveBuilderRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.brochureImmersiveChecklist {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 10px;
+}
+
+.brochureImmersiveChecklistItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.brochureImmersiveChecklistItem input {
+  margin: 0;
+}
+
+.brochureImmersiveAddressField {
+  position: relative;
+  display: grid;
+  gap: 6px;
+}
+
+.brochureImmersiveAddressSuggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgb(127 127 127 / 0.18);
+  background: #fff;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.08);
+  max-height: 240px;
+  overflow: auto;
+}
+
+.brochureImmersiveAddressSuggestion {
+  border: 1px solid rgb(127 127 127 / 0.16);
+  background: #f7fbff;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 10px 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.brochureImmersiveAddressSuggestion:hover {
+  border-color: #7aa5f7;
+  background: #dfeeff;
+}
+
+.brochureImmersiveMapPreview {
+  height: 220px;
+  border: 1px solid rgb(127 127 127 / 0.18);
+  background: #fff;
+  overflow: hidden;
+}
+
+.brochureImmersiveMapFigure .brochureCanvasMapSurface {
+  width: 100%;
+  height: 100%;
+}
+
+.brochureImmersiveMapPreview .brochureCanvasMapSurface {
+  width: 100%;
+  height: 100%;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureImmersiveBuilderCard {
+  gap: 8px;
+  padding: 10px;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureImmersiveChecklistItem {
+  min-height: 28px;
+  font-size: 10px;
+}
+
+.brochureImmersiveImagePicker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.brochureImmersiveImagePickerOption {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgb(127 127 127 / 0.18);
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.brochureImmersiveImagePickerOption img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #f3f3f3;
+}
+
+.brochureImmersiveImagePickerOption span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #333;
+}
+
+.brochureImmersiveImagePickerOption[data-active="true"] {
+  border-color: #7aa5f7;
+  background: #dfeeff;
+}
+
+.brochureImmersiveImagePickerOption:hover {
+  border-color: rgb(122 165 247 / 0.8);
+}
+
+.brochureStudioControls[data-density="compact"] .brochureImmersiveImagePicker {
+  gap: 8px;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureImmersiveImagePickerOption {
+  padding: 8px;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureImmersiveImagePickerOption span {
+  font-size: 9px;
 }
 
 .brochureUnsplashSearch {
@@ -3644,12 +3936,20 @@ html[data-theme="dark"] .myStudioGuideArrow {
   gap: 10px;
 }
 
+.brochureStudioControls[data-density="compact"] .brochureSectionList {
+  gap: 8px;
+}
+
 .brochureElementMeta {
   display: grid;
   gap: 4px;
   padding: 12px 14px;
   border: 1px solid rgb(127 127 127 / 0.22);
   background: #f7fbff;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureElementMeta {
+  padding: 10px 12px;
 }
 
 .brochureElementMeta strong {
@@ -3663,6 +3963,10 @@ html[data-theme="dark"] .myStudioGuideArrow {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureElementGrid {
+  gap: 8px;
 }
 
 .brochureElementAssetTools {
@@ -3693,6 +3997,11 @@ html[data-theme="dark"] .myStudioGuideArrow {
     color 0.2s ease;
 }
 
+.brochureStudioControls[data-density="compact"] .brochureElementButton {
+  font-size: 9px;
+  padding: 10px 8px;
+}
+
 .brochureElementButton:hover:not(:disabled) {
   border-color: #7aa5f7;
   background: #dfeeff;
@@ -3715,6 +4024,10 @@ html[data-theme="dark"] .myStudioGuideArrow {
     border-color 0.2s ease,
     background-color 0.2s ease,
     opacity 0.2s ease;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureSectionTab {
+  grid-template-columns: 30px minmax(0, 1fr) 34px;
 }
 
 .brochureSectionTab[data-dragging="true"] {
@@ -3761,6 +4074,16 @@ html[data-theme="dark"] .myStudioGuideArrow {
   cursor: pointer;
 }
 
+.brochureStudioControls[data-density="compact"] .brochureSectionTabMain {
+  gap: 2px;
+  padding: 10px 12px;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureSectionTab strong,
+.brochureStudioControls[data-density="compact"] .brochureSectionTab span {
+  font-size: 10px;
+}
+
 .brochureSectionTab strong {
   font-size: 11px;
   font-weight: 700;
@@ -3793,6 +4116,11 @@ html[data-theme="dark"] .myStudioGuideArrow {
     border-color 0.2s ease,
     background-color 0.2s ease,
     color 0.2s ease;
+}
+
+.brochureStudioControls[data-density="compact"] .brochureSectionTabDelete {
+  width: 26px;
+  height: 26px;
 }
 
 .brochureSectionTabDelete:hover {
@@ -3879,6 +4207,10 @@ html[data-theme="dark"] .myStudioGuideArrow {
 
 .brochurePublicCanvasImmersive {
   max-width: none;
+  background: transparent;
+}
+
+.brochurePublicCanvasPdf {
   background: transparent;
 }
 
@@ -3985,6 +4317,13 @@ html[data-theme="dark"] .myStudioGuideArrow {
   inset: 0;
 }
 
+.brochureImmersiveHeroMedia video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .brochureImmersiveHeroMedia img {
   display: block;
   object-fit: cover;
@@ -4049,6 +4388,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   font-size: 14px;
   line-height: 1.75;
   color: rgb(255 255 255 / 0.78);
+  white-space: pre-line;
 }
 
 .brochureImmersiveSections {
@@ -4067,7 +4407,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   display: grid;
   grid-template-columns: minmax(280px, 0.9fr) minmax(340px, 1.1fr);
   gap: clamp(22px, 4vw, 56px);
-  align-items: center;
+  align-items: start;
   width: 100%;
   max-width: 1320px;
   margin: 0 auto;
@@ -4081,11 +4421,41 @@ html[data-theme="dark"] .myStudioGuideArrow {
   order: 2;
 }
 
+.brochureImmersiveSection[data-layout="full-bleed"] .brochureImmersiveSectionInner {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.brochureImmersiveSection[data-layout="full-bleed"] .brochureImmersiveSectionMedia {
+  position: relative;
+  top: auto;
+}
+
 .brochureImmersiveSectionCopy,
 .brochureImmersiveSectionMedia,
 .brochureImmersiveThumbGrid {
   display: grid;
   gap: 16px;
+}
+
+.brochureImmersiveSectionMedia {
+  position: sticky;
+  top: 120px;
+}
+
+.brochureImmersiveMediaButton {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.brochureImmersiveMediaButton img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .brochureImmersiveSectionTitle {
@@ -4106,6 +4476,33 @@ html[data-theme="dark"] .myStudioGuideArrow {
   font-size: 14px;
   line-height: 1.85;
   color: var(--immersive-muted-color);
+  white-space: pre-line;
+}
+
+.brochureImmersiveKeyPointList {
+  display: grid;
+  gap: 10px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.brochureImmersiveKeyPointList li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--immersive-muted-color);
+}
+
+.brochureImmersiveKeyPointList li::before {
+  content: "";
+  position: absolute;
+  top: 0.7em;
+  left: 0;
+  width: 8px;
+  height: 1px;
+  background: var(--immersive-accent-color);
 }
 
 .brochureImmersiveFigure,
@@ -4121,6 +4518,27 @@ html[data-theme="dark"] .myStudioGuideArrow {
 
 .brochureImmersiveThumbGrid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.brochureImmersiveGalleryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.brochureImmersiveThumbPlaceholder {
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgb(127 127 127 / 0.24);
+  background: rgb(127 127 127 / 0.06);
+}
+
+.brochureImmersiveThumbEmpty {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--immersive-muted-color);
 }
 
 .brochureImmersiveThumb {
@@ -4141,6 +4559,171 @@ html[data-theme="dark"] .myStudioGuideArrow {
   border: 1px dashed rgb(127 127 127 / 0.25);
   color: var(--immersive-muted-color);
   text-align: center;
+}
+
+.brochureImmersiveVideoFrame {
+  width: 100%;
+  height: 100%;
+}
+
+.brochureImmersiveVideoFrame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+.brochureImmersiveEditBar {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 6;
+  display: inline-flex;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid rgb(127 127 127 / 0.18);
+  background: rgb(255 255 255 / 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.brochureImmersiveEditButton {
+  border: 1px solid rgb(127 127 127 / 0.18);
+  background: #fff;
+  color: #111;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.brochureImmersiveEditButton:hover {
+  border-color: #7aa5f7;
+  background: #dfeeff;
+}
+
+.brochureImmersiveCta {
+  padding: clamp(56px, 7vw, 100px) clamp(24px, 5vw, 72px);
+  border-top: 1px solid rgb(127 127 127 / 0.14);
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--immersive-accent-color) 18%, transparent), transparent 52%),
+    linear-gradient(180deg, rgb(127 127 127 / 0.06), transparent);
+}
+
+.brochureImmersiveCtaInner {
+  max-width: 980px;
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+}
+
+.brochureImmersiveCtaEyebrow {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--immersive-accent-color);
+}
+
+.brochureImmersiveCtaTitle,
+.brochureImmersiveCtaText {
+  margin: 0;
+}
+
+.brochureImmersiveCtaTitle {
+  font-size: clamp(26px, 3.4vw, 52px);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.brochureImmersiveCtaText {
+  max-width: 70ch;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--immersive-muted-color);
+}
+
+.brochureImmersiveCtaButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid color-mix(in srgb, var(--immersive-accent-color) 55%, #111);
+  background: color-mix(in srgb, var(--immersive-accent-color) 92%, #111);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.brochureLightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) 68px;
+  align-items: center;
+  padding: 18px;
+  background: rgb(0 0 0 / 0.88);
+}
+
+.brochureLightboxFigure {
+  margin: 0;
+  width: 100%;
+  height: min(84vh, 980px);
+  display: grid;
+  place-items: center;
+}
+
+.brochureLightboxFigure img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.brochureLightboxClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.08);
+  color: #ffffff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.brochureLightboxArrow {
+  border: 1px solid rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.06);
+  color: #ffffff;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.brochureLightboxArrowLeft {
+  justify-self: start;
+}
+
+.brochureLightboxArrowRight {
+  justify-self: end;
 }
 
 .brochureImmersiveShell[data-motion="soft"] .brochureImmersiveHeroMedia img {
@@ -6128,6 +6711,13 @@ html[data-theme="dark"] .myStudioGuideArrow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .brochureImmersiveBuilderRow,
+  .brochureImmersiveChecklist,
+  .brochureImmersiveImagePicker,
+  .brochureImmersiveGalleryGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .brochureStudioLayout {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -6222,6 +6812,16 @@ html[data-theme="dark"] .myStudioGuideArrow {
   .brochureImmersiveSectionInner,
   .brochureImmersiveThumbGrid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .brochureImmersiveSectionMedia {
+    position: static;
+  }
+
+  .brochureLightbox {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 10px;
   }
 
   .brochureDirectoryGrid,

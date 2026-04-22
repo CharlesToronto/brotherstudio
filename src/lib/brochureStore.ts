@@ -14,9 +14,15 @@ import type {
   BrochureContent,
   BrochureExperienceMode,
   BrochureFontFamily,
+  BrochureImmersiveAnimationLevel,
+  BrochureImmersiveBuilder,
+  BrochureImmersiveMediaAspect,
   BrochureImmersiveMotionPreset,
+  BrochureImmersiveSectionKey,
   BrochureImmersiveSettings,
   BrochureImmersiveTheme,
+  BrochureImmersiveVideoMode,
+  BrochureImmersiveVisualStyle,
   BrochureOrientation,
   BrochureProject,
   BrochureProjectSummary,
@@ -103,10 +109,22 @@ function normalizeString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+// Like normalizeString, but preserves the distinction between "missing" and "present but empty".
+// We need this so users can intentionally clear copy (""), without the sanitizers re-injecting defaults.
+function normalizeOptionalString(value: unknown) {
+  return typeof value === "string" ? value.trim() : undefined;
+}
+
 function normalizeStringArray(value: unknown) {
   if (!Array.isArray(value)) return [];
 
   return value.filter((entry): entry is string => typeof entry === "string");
+}
+
+function normalizeTrimmedStringArray(value: unknown) {
+  return normalizeStringArray(value)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
 }
 
 function normalizeSectionKind(value: unknown): BrochureSectionKind | null {
@@ -298,11 +316,182 @@ function normalizeImmersiveMotionPreset(
   return value === "cinematic" || value === "bold" ? value : "soft";
 }
 
+function normalizeImmersiveVisualStyle(
+  value: string | null | undefined,
+): BrochureImmersiveVisualStyle {
+  return value === "luxury-minimal" ||
+    value === "warm-lifestyle"
+    ? value
+    : "modern-real-estate";
+}
+
+function normalizeImmersiveAnimationLevel(
+  value: string | null | undefined,
+): BrochureImmersiveAnimationLevel {
+  return value === "minimal" || value === "cinematic" ? value : "subtle";
+}
+
+function normalizeImmersiveSectionKey(
+  value: unknown,
+): BrochureImmersiveSectionKey | null {
+  return value === "hero" ||
+    value === "gallery" ||
+    value === "video" ||
+    value === "key-points" ||
+    value === "description" ||
+    value === "location" ||
+    value === "lifestyle" ||
+    value === "cta"
+    ? value
+    : null;
+}
+
+function normalizeImmersiveVideoMode(
+  value: string | null | undefined,
+): BrochureImmersiveVideoMode {
+  return value === "background" ? value : "section";
+}
+
+function normalizeImmersiveMediaAspect(
+  value: unknown,
+): BrochureImmersiveMediaAspect | undefined {
+  if (value === "portrait" || value === "square" || value === "landscape") return value;
+  return undefined;
+}
+
+function normalizeOptionalNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function normalizeLatitudeForSave(value: unknown) {
+  const next = normalizeOptionalNumber(value);
+  if (next === undefined) return undefined;
+  return Math.min(85, Math.max(-85, next));
+}
+
+function normalizeLongitudeForSave(value: unknown) {
+  const next = normalizeOptionalNumber(value);
+  if (next === undefined) return undefined;
+  return Math.min(180, Math.max(-180, next));
+}
+
+function normalizeZoomForSave(value: unknown, fallback: number) {
+  const next = normalizeOptionalNumber(value);
+  if (next === undefined) return fallback;
+  return Math.max(1, Math.min(20, Math.round(next)));
+}
+
+function normalizeMapStyle(value: unknown) {
+  return value === "minimalMono" ||
+    value === "minimalWarm" ||
+    value === "minimalBlue" ||
+    value === "color" ||
+    value === "dark"
+    ? value
+    : "minimalMono";
+}
+
 function buildDefaultImmersiveSettings(): BrochureImmersiveSettings {
   return {
     theme: "light",
     motionPreset: "soft",
     showProgressNav: true,
+  };
+}
+
+function buildDefaultImmersiveBuilder(): BrochureImmersiveBuilder {
+  return {
+    selectedSections: ["hero", "description", "gallery", "location", "cta"],
+    visualStyle: "modern-real-estate",
+    animationLevel: "subtle",
+    heroImageId: "",
+    galleryImageIds: [],
+    videoUrl: "",
+    videoMode: "section",
+    keyPointsTitle: "Key points",
+    keyPoints: [],
+    descriptionTitle: "Project overview",
+    descriptionBody: "",
+    locationTitle: "Location",
+    locationAddress: "",
+    locationLatitude: null,
+    locationLongitude: null,
+    locationZoom: 14,
+    locationMapStyle: "minimalMono",
+    locationNeighborhood: "",
+    locationPoints: [],
+    lifestyleTitle: "Lifestyle",
+    lifestyleBody: "",
+    ctaTitle: "Request the full dossier",
+    ctaBody: "Access the complete brochure and move the discussion forward with clients and buyers.",
+    ctaButtonLabel: "Download PDF",
+  };
+}
+
+function normalizeImmersiveBuilder(
+  value: unknown,
+  availableImageIds: string[],
+): BrochureImmersiveBuilder {
+  const defaults = buildDefaultImmersiveBuilder();
+  if (!value || typeof value !== "object") {
+    return defaults;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const availableSet = new Set(availableImageIds);
+  const selectedSections = normalizeStringArray(candidate.selectedSections)
+    .map((entry) => normalizeImmersiveSectionKey(entry))
+    .filter((entry): entry is BrochureImmersiveSectionKey => Boolean(entry))
+    .filter((entry, index, source) => source.indexOf(entry) === index);
+
+  const galleryImageIds = normalizeStringArray(candidate.galleryImageIds).filter(
+    (id, index, source) => availableSet.has(id) && source.indexOf(id) === index,
+  );
+  const heroImageId =
+    typeof candidate.heroImageId === "string" && availableSet.has(candidate.heroImageId.trim())
+      ? candidate.heroImageId.trim()
+      : defaults.heroImageId;
+
+  return {
+    selectedSections: selectedSections.length > 0 ? selectedSections : defaults.selectedSections,
+    visualStyle: normalizeImmersiveVisualStyle(
+      typeof candidate.visualStyle === "string" ? candidate.visualStyle : null,
+    ),
+    animationLevel: normalizeImmersiveAnimationLevel(
+      typeof candidate.animationLevel === "string" ? candidate.animationLevel : null,
+    ),
+    heroImageId,
+    galleryImageIds,
+    videoUrl: normalizeString(candidate.videoUrl),
+    videoMode: normalizeImmersiveVideoMode(
+      typeof candidate.videoMode === "string" ? candidate.videoMode : null,
+    ),
+    keyPointsTitle: normalizeOptionalString(candidate.keyPointsTitle) ?? defaults.keyPointsTitle,
+    keyPoints: normalizeTrimmedStringArray(candidate.keyPoints),
+    descriptionTitle:
+      normalizeOptionalString(candidate.descriptionTitle) ?? defaults.descriptionTitle,
+    descriptionBody: normalizeString(candidate.descriptionBody),
+    locationTitle: normalizeOptionalString(candidate.locationTitle) ?? defaults.locationTitle,
+    locationAddress: normalizeString(candidate.locationAddress),
+    locationLatitude:
+      normalizeLatitudeForSave(candidate.locationLatitude) ??
+      normalizeLatitudeForSave(candidate.locationLat) ??
+      null,
+    locationLongitude:
+      normalizeLongitudeForSave(candidate.locationLongitude) ??
+      normalizeLongitudeForSave(candidate.locationLon) ??
+      null,
+    locationZoom: normalizeZoomForSave(candidate.locationZoom, defaults.locationZoom),
+    locationMapStyle: normalizeMapStyle(candidate.locationMapStyle),
+    locationNeighborhood: normalizeString(candidate.locationNeighborhood),
+    locationPoints: normalizeTrimmedStringArray(candidate.locationPoints),
+    lifestyleTitle:
+      normalizeOptionalString(candidate.lifestyleTitle) ?? defaults.lifestyleTitle,
+    lifestyleBody: normalizeString(candidate.lifestyleBody),
+    ctaTitle: normalizeOptionalString(candidate.ctaTitle) ?? defaults.ctaTitle,
+    ctaBody: normalizeOptionalString(candidate.ctaBody) ?? defaults.ctaBody,
+    ctaButtonLabel:
+      normalizeOptionalString(candidate.ctaButtonLabel) ?? defaults.ctaButtonLabel,
   };
 }
 
@@ -383,28 +572,25 @@ function sanitizeSections(
 
       const definition = getBrochureSectionDefinition(kind);
       const isBlankSection = kind === "blank";
+      const titleValue = normalizeOptionalString(candidate.title);
+      const subtitleValue = normalizeOptionalString(candidate.subtitle);
+      const bodyValue = normalizeOptionalString(candidate.body);
 
       return {
         id: normalizeString(candidate.id) || crypto.randomUUID(),
         kind,
         title:
           isBlankSection
-            ? normalizeString(candidate.title)
-            : normalizeString(candidate.title) ||
-              (kind === "cover" ? title : definition?.defaultTitle) ||
-              "Section",
+            ? titleValue ?? ""
+            : titleValue ?? (kind === "cover" ? title : definition?.defaultTitle) ?? "Section",
         subtitle:
           isBlankSection
-            ? normalizeString(candidate.subtitle)
-            : normalizeString(candidate.subtitle) ||
-              (kind === "cover" ? subtitle : definition?.defaultSubtitle) ||
-              "",
+            ? subtitleValue ?? ""
+            : subtitleValue ?? (kind === "cover" ? subtitle : definition?.defaultSubtitle) ?? "",
         body:
           isBlankSection
-            ? normalizeString(candidate.body)
-            : normalizeString(candidate.body) ||
-              (kind === "cover" ? body : definition?.defaultBody) ||
-              "",
+            ? bodyValue ?? ""
+            : bodyValue ?? (kind === "cover" ? body : definition?.defaultBody) ?? "",
         imageIds: sanitizeSectionImageIds(candidate.imageIds, availableImageIds),
         layoutItems: sanitizeCanvasItems(kind, candidate.layoutItems, {
           availableImageIds,
@@ -413,6 +599,35 @@ function sanitizeSections(
           kind === "final"
             ? sanitizeSocialLinks(candidate.socialLinks)
             : undefined,
+        isHidden: candidate.isHidden === true,
+        immersiveVariant:
+          candidate.immersiveVariant === "gallery" ||
+          candidate.immersiveVariant === "video" ||
+          candidate.immersiveVariant === "key-points" ||
+          candidate.immersiveVariant === "location" ||
+          candidate.immersiveVariant === "lifestyle" ||
+          candidate.immersiveVariant === "cta"
+            ? candidate.immersiveVariant
+            : "standard",
+        immersiveLayout:
+          candidate.immersiveLayout === "media-right" ||
+          candidate.immersiveLayout === "full-bleed"
+            ? candidate.immersiveLayout
+            : "media-left",
+        immersiveMediaAspect: normalizeImmersiveMediaAspect(candidate.immersiveMediaAspect),
+        immersiveMediaFocusX: normalizeOptionalNumber(candidate.immersiveMediaFocusX),
+        immersiveMediaFocusY: normalizeOptionalNumber(candidate.immersiveMediaFocusY),
+        immersiveKeyPoints: normalizeTrimmedStringArray(candidate.immersiveKeyPoints),
+        immersiveVideoUrl: normalizeString(candidate.immersiveVideoUrl),
+        immersiveVideoMode: normalizeImmersiveVideoMode(
+          typeof candidate.immersiveVideoMode === "string"
+            ? candidate.immersiveVideoMode
+            : null,
+        ),
+        immersiveMapLatitude: normalizeLatitudeForSave(candidate.immersiveMapLatitude),
+        immersiveMapLongitude: normalizeLongitudeForSave(candidate.immersiveMapLongitude),
+        immersiveMapZoom: normalizeZoomForSave(candidate.immersiveMapZoom, 14),
+        immersiveMapStyle: normalizeMapStyle(candidate.immersiveMapStyle),
       } satisfies BrochureSection;
     })
     .filter(Boolean) as BrochureSection[];
@@ -432,7 +647,20 @@ function sanitizeSections(
         layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems, {
           availableImageIds,
         }),
-        title: section.kind === "blank" ? section.title : section.title || "Section",
+        title: section.title,
+        isHidden: section.isHidden === true,
+        immersiveVariant: section.immersiveVariant ?? "standard",
+        immersiveLayout: section.immersiveLayout ?? "media-left",
+        immersiveMediaAspect: section.immersiveMediaAspect,
+        immersiveMediaFocusX: section.immersiveMediaFocusX,
+        immersiveMediaFocusY: section.immersiveMediaFocusY,
+        immersiveKeyPoints: section.immersiveKeyPoints ?? [],
+        immersiveVideoUrl: section.immersiveVideoUrl ?? "",
+        immersiveVideoMode: section.immersiveVideoMode ?? "section",
+        immersiveMapLatitude: section.immersiveMapLatitude,
+        immersiveMapLongitude: section.immersiveMapLongitude,
+        immersiveMapZoom: section.immersiveMapZoom,
+        immersiveMapStyle: section.immersiveMapStyle,
         socialLinks:
           section.kind === "final"
             ? normalizeSocialLinks(section.socialLinks)
@@ -442,13 +670,26 @@ function sanitizeSections(
 
     return {
       ...section,
-      title: section.title || title || projectName,
-      subtitle: section.subtitle || subtitle,
-      body: section.body || body,
+      title: section.title,
+      subtitle: section.subtitle,
+      body: section.body,
       imageIds: section.imageIds.length > 0 ? section.imageIds : availableImageIds.slice(0, 1),
       layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems, {
         availableImageIds,
       }),
+      isHidden: section.isHidden === true,
+      immersiveVariant: section.immersiveVariant ?? "standard",
+      immersiveLayout: section.immersiveLayout ?? "media-left",
+      immersiveMediaAspect: section.immersiveMediaAspect,
+      immersiveMediaFocusX: section.immersiveMediaFocusX,
+      immersiveMediaFocusY: section.immersiveMediaFocusY,
+      immersiveKeyPoints: section.immersiveKeyPoints ?? [],
+      immersiveVideoUrl: section.immersiveVideoUrl ?? "",
+      immersiveVideoMode: section.immersiveVideoMode ?? "section",
+      immersiveMapLatitude: section.immersiveMapLatitude,
+      immersiveMapLongitude: section.immersiveMapLongitude,
+      immersiveMapZoom: section.immersiveMapZoom,
+      immersiveMapStyle: section.immersiveMapStyle,
       socialLinks: undefined,
     };
   });
@@ -467,6 +708,7 @@ function buildDefaultContent(
     sections: buildDefaultSections(projectName, title, subtitle, body, allImageIds),
     experienceMode: "brochure",
     immersiveSettings: buildDefaultImmersiveSettings(),
+    immersiveBuilder: buildDefaultImmersiveBuilder(),
   };
 }
 
@@ -551,6 +793,10 @@ function normalizeContentJson(
   const selectedImageIds = selectedFromValue.length > 0
     ? imageOrder.filter((id) => selectedFromValue.includes(id))
     : [...imageOrder];
+  const immersiveBuilder = normalizeImmersiveBuilder(
+    contentCandidate?.immersiveBuilder ?? null,
+    imageOrder,
+  );
 
   const rawSections = contentCandidate?.sections ?? null;
 
@@ -595,12 +841,13 @@ function normalizeContentJson(
         sections,
         experienceMode,
         immersiveSettings,
+        immersiveBuilder,
       };
     }
 
     if (legacyHero || legacyGallery) {
       const cover = createBrochureSection("cover");
-      cover.title = title || projectName;
+      cover.title = title;
       cover.subtitle = subtitle;
       cover.body = body;
       cover.imageIds = sanitizeSectionImageIds(
@@ -623,6 +870,7 @@ function normalizeContentJson(
         sections,
         experienceMode,
         immersiveSettings,
+        immersiveBuilder,
       };
     }
   }
@@ -633,6 +881,7 @@ function normalizeContentJson(
     sections: buildDefaultSections(projectName, title, subtitle, body, imageOrder),
     experienceMode,
     immersiveSettings,
+    immersiveBuilder,
   };
 }
 
@@ -911,6 +1160,7 @@ export async function listBrochureProjectSummaries(): Promise<BrochureProjectSum
       brochureId: brochureMap.get(project.id)?.id ?? null,
       name: project.name,
       createdAt: project.created_at,
+      updatedAt: brochureMap.get(project.id)?.updated_at ?? null,
       coverImageUrl: coverImageUrlByProject.get(project.id) ?? null,
       approvedImageCount: imageCountByProject.get(project.id) ?? 0,
       latestApprovedVersion: latestVersionByProject.get(project.id) ?? 0,
@@ -952,10 +1202,13 @@ export async function getBrochureProject(
     .map(buildExtraAsset);
   const allImages = [...approvedImages, ...extraAssets];
   const template = normalizeTemplate(brochureRow.template);
-  const title = brochureRow.title?.trim() || project.name;
+  const title = brochureRow.title != null ? brochureRow.title.trim() : project.name;
   const subtitle =
-    brochureRow.subtitle?.trim() || buildDefaultSubtitle(template, project.name);
-  const body = brochureRow.body?.trim() || buildDefaultBody(project.name);
+    brochureRow.subtitle != null
+      ? brochureRow.subtitle.trim()
+      : buildDefaultSubtitle(template, project.name);
+  const body =
+    brochureRow.body != null ? brochureRow.body.trim() : buildDefaultBody(project.name);
   const styleSettings = normalizeStyleSettings(brochureRow.style_settings);
   const content = normalizeContentJson(
     brochureRow.content_json,
@@ -975,6 +1228,7 @@ export async function getBrochureProject(
     brochureId: brochureRow.id,
     name: project.name,
     createdAt: project.created_at,
+    updatedAt: brochureRow.updated_at,
     coverImageUrl: approvedImages[0]?.url ?? extraAssets[0]?.url ?? null,
     approvedImageCount: approvedImages.length,
     latestApprovedVersion,
@@ -1014,6 +1268,7 @@ export async function saveBrochureSettings(
     imageOrder?: string[];
     selectedImageIds?: string[];
     sections?: BrochureSection[];
+    immersiveBuilder?: BrochureImmersiveBuilder;
   },
 ) {
   const project = await getBrochureProject(identifier);
@@ -1026,10 +1281,10 @@ export async function saveBrochureSettings(
     allImageIds,
   );
   const fallbackImageOrder = imageOrder.length > 0 ? imageOrder : allImageIds;
-  const draftTitle = input.title?.trim() || project.title || project.name;
+  const draftTitle = input.title !== undefined ? input.title.trim() : project.title;
   const draftSubtitle =
-    input.subtitle?.trim() || project.subtitle || buildDefaultSubtitle(template, project.name);
-  const draftBody = input.body?.trim() || project.body || buildDefaultBody(project.name);
+    input.subtitle !== undefined ? input.subtitle.trim() : project.subtitle;
+  const draftBody = input.body !== undefined ? input.body.trim() : project.body;
   const sections = sanitizeSections(
     input.sections ?? project.content.sections,
     fallbackImageOrder,
@@ -1039,9 +1294,9 @@ export async function saveBrochureSettings(
     draftBody,
   );
   const coverSection = sections.find((section) => section.kind === "cover") ?? sections[0];
-  const title = coverSection?.title?.trim() || draftTitle;
-  const subtitle = coverSection?.subtitle?.trim() || draftSubtitle;
-  const body = coverSection?.body?.trim() || draftBody;
+  const title = coverSection?.title?.trim() ?? draftTitle;
+  const subtitle = coverSection?.subtitle?.trim() ?? draftSubtitle;
+  const body = coverSection?.body?.trim() ?? draftBody;
   const selectedBySections = new Set(sections.flatMap((section) => section.imageIds));
   const selectedImageIds = normalizeImageIdsForSave(
     input.selectedImageIds ??
@@ -1073,6 +1328,10 @@ export async function saveBrochureSettings(
     sections,
     experienceMode,
     immersiveSettings,
+    immersiveBuilder: normalizeImmersiveBuilder(
+      input.immersiveBuilder ?? project.content.immersiveBuilder,
+      fallbackImageOrder,
+    ),
   } satisfies BrochureContent;
 
   const styleSettings: BrochureStyleSettings = {

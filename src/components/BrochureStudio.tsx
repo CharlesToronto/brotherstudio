@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ChangeEvent, DragEvent, ReactNode } from "react";
+import { useDeferredValue } from "react";
 
 import {
   createCanvasLogoItem,
@@ -22,14 +23,24 @@ import {
   getBrochureSectionDefinition,
 } from "@/lib/brochureSections";
 import { BrochureImmersive } from "@/components/BrochureImmersive";
+import { BrochureMapCanvas } from "@/components/BrochureMapCanvas";
 import { BrochurePreview } from "@/components/BrochurePreview";
+import {
+  createDefaultBrochureImmersiveBuilder,
+  generateBrochureImmersiveSections,
+  parseLines,
+  serializeLines,
+} from "@/lib/brochureImmersiveBuilder";
 import type {
   BrochureCanvasItem,
   BrochureCanvasShapeType,
   BrochureExperienceMode,
   BrochureFontFamily,
+  BrochureImmersiveBuilder,
   BrochureImmersiveMotionPreset,
+  BrochureImmersiveSectionKey,
   BrochureImmersiveTheme,
+  BrochureImmersiveVideoMode,
   BrochureOrientation,
   BrochureProject,
   BrochureSection,
@@ -52,7 +63,29 @@ type BrochureSidebarPanelId =
   | "elements"
   | "edit"
   | "library"
-  | "unsplash";
+  | "unsplash"
+  | "cinematic";
+
+type BrochureHistorySnapshot = {
+  template: BrochureTemplate;
+  experienceMode: BrochureExperienceMode;
+  immersiveTheme: BrochureImmersiveTheme;
+  immersiveMotionPreset: BrochureImmersiveMotionPreset;
+  showImmersiveProgressNav: boolean;
+  fontFamily: BrochureFontFamily;
+  orientation: BrochureOrientation;
+  accentColor: string;
+  backgroundColor: string;
+  imageOrder: string[];
+  sections: BrochureSection[];
+  immersiveBuilder: BrochureImmersiveBuilder;
+};
+
+type MapSearchSuggestion = {
+  label: string;
+  latitude: number;
+  longitude: number;
+};
 
 const elementToolOptions: Array<{
   key: BrochureCanvasShapeType | "text" | "logo" | "map";
@@ -86,6 +119,20 @@ const socialLinkLabels: Array<{
   { key: "x", label: "X", placeholder: "https://x.com/..." },
 ];
 
+const immersiveSectionOptions: Array<{
+  key: BrochureImmersiveSectionKey;
+  label: string;
+}> = [
+  { key: "hero", label: "Hero" },
+  { key: "gallery", label: "Galerie d'images" },
+  { key: "video", label: "Video immersive" },
+  { key: "key-points", label: "Points cles" },
+  { key: "description", label: "Description du projet" },
+  { key: "location", label: "Localisation" },
+  { key: "lifestyle", label: "Lifestyle / ambiance" },
+  { key: "cta", label: "Call-to-action" },
+];
+
 function BrochureSidebarPanel({
   panelId,
   title,
@@ -114,6 +161,7 @@ function BrochureSidebarPanel({
             {panelId === "elements" ? "✦" : null}
             {panelId === "sections" ? "☰" : null}
             {panelId === "edit" ? "✎" : null}
+            {panelId === "cinematic" ? "◇" : null}
           </span>
           <h2 className="projectFeedbackVersionTitle">{title}</h2>
         </div>
@@ -182,19 +230,12 @@ function generateSectionContent(
   const usedImages = new Set<string>();
 
   const preparedSections = ensureCoverFirst(sections).map((section) => {
-    const definition = getBrochureSectionDefinition(section.kind);
     const isBlankSection = section.kind === "blank";
     const nextSection: BrochureSection = {
       ...section,
-      title: isBlankSection
-        ? section.title.trim()
-        : section.title.trim() || definition?.defaultTitle || "Section",
-      subtitle: isBlankSection
-        ? section.subtitle.trim()
-        : section.subtitle.trim() || definition?.defaultSubtitle || "",
-      body: isBlankSection
-        ? section.body.trim()
-        : section.body.trim() || definition?.defaultBody || "",
+      title: isBlankSection ? section.title.trim() : section.title.trim(),
+      subtitle: isBlankSection ? section.subtitle.trim() : section.subtitle.trim(),
+      body: isBlankSection ? section.body.trim() : section.body.trim(),
       imageIds: section.imageIds.filter((imageId) => orderedImageIds.includes(imageId)),
       layoutItems: sanitizeCanvasItems(section.kind, section.layoutItems, {
         availableImageIds: orderedImageIds,
@@ -262,6 +303,7 @@ function buildBrochureSavePayload(
   backgroundColor: string,
   imageOrder: string[],
   sections: BrochureSection[],
+  immersiveBuilder: BrochureImmersiveBuilder,
 ) {
   const nextImageOrder = buildOrderedImageIds(project, imageOrder);
   const nextSections = generateSectionContent(project.name, sections, nextImageOrder);
@@ -286,6 +328,7 @@ function buildBrochureSavePayload(
         motionPreset: immersiveMotionPreset,
         showProgressNav: showImmersiveProgressNav,
       },
+      immersiveBuilder,
       fontFamily,
       orientation,
       accentColor,
@@ -294,6 +337,36 @@ function buildBrochureSavePayload(
       selectedImageIds,
       sections: nextSections,
     },
+  };
+}
+
+function createHistorySnapshot(
+  template: BrochureTemplate,
+  experienceMode: BrochureExperienceMode,
+  immersiveTheme: BrochureImmersiveTheme,
+  immersiveMotionPreset: BrochureImmersiveMotionPreset,
+  showImmersiveProgressNav: boolean,
+  fontFamily: BrochureFontFamily,
+  orientation: BrochureOrientation,
+  accentColor: string,
+  backgroundColor: string,
+  imageOrder: string[],
+  sections: BrochureSection[],
+  immersiveBuilder: BrochureImmersiveBuilder,
+): BrochureHistorySnapshot {
+  return {
+    template,
+    experienceMode,
+    immersiveTheme,
+    immersiveMotionPreset,
+    showImmersiveProgressNav,
+    fontFamily,
+    orientation,
+    accentColor,
+    backgroundColor,
+    imageOrder,
+    sections,
+    immersiveBuilder,
   };
 }
 
@@ -329,6 +402,9 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
   );
   const [imageOrder, setImageOrder] = useState(initialProject.content.imageOrder);
   const [sections, setSections] = useState(initialProject.content.sections);
+  const [immersiveBuilder, setImmersiveBuilder] = useState<BrochureImmersiveBuilder>(
+    initialProject.content.immersiveBuilder ?? createDefaultBrochureImmersiveBuilder(),
+  );
   const [activeSectionId, setActiveSectionId] = useState(
     initialProject.content.sections[0]?.id ?? "",
   );
@@ -363,6 +439,18 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
   const autosaveTimerRef = useRef<number | null>(null);
   const autosaveRequestIdRef = useRef(0);
   const skipNextAutosaveRef = useRef(true);
+  const historyRef = useRef<BrochureHistorySnapshot[]>([]);
+  const historyIndexRef = useRef(-1);
+  const applyingHistoryRef = useRef(false);
+  const [mapSuggestions, setMapSuggestions] = useState<MapSearchSuggestion[]>([]);
+  const [mapSuggestionsQuery, setMapSuggestionsQuery] = useState("");
+  const deferredLocationQuery = useDeferredValue(immersiveBuilder.locationAddress ?? "");
+  const trimmedDeferredLocationQuery = deferredLocationQuery.trim();
+  const canFetchLocationSuggestions = trimmedDeferredLocationQuery.length >= 3;
+  const visibleLocationSuggestions =
+    canFetchLocationSuggestions && mapSuggestionsQuery === trimmedDeferredLocationQuery
+      ? mapSuggestions
+      : [];
 
   useEffect(() => {
     setProject(initialProject);
@@ -377,6 +465,9 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     setBackgroundColor(initialProject.styleSettings.backgroundColor);
     setImageOrder(initialProject.content.imageOrder);
     setSections(initialProject.content.sections);
+    setImmersiveBuilder(
+      initialProject.content.immersiveBuilder ?? createDefaultBrochureImmersiveBuilder(),
+    );
     setActiveSectionId(initialProject.content.sections[0]?.id ?? "");
     setDraggedImageId("");
     setDraggedUnsplashPhoto(null);
@@ -386,6 +477,24 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     setOpenPanelId("sections");
     setAutosaveStatus("idle");
     skipNextAutosaveRef.current = true;
+    historyRef.current = [
+      createHistorySnapshot(
+        initialProject.template,
+        initialProject.experienceMode,
+        initialProject.immersiveSettings.theme,
+        initialProject.immersiveSettings.motionPreset,
+        initialProject.immersiveSettings.showProgressNav,
+        initialProject.styleSettings.fontFamily,
+        initialProject.styleSettings.orientation,
+        initialProject.styleSettings.accentColor,
+        initialProject.styleSettings.backgroundColor,
+        initialProject.content.imageOrder,
+        initialProject.content.sections,
+        initialProject.content.immersiveBuilder ?? createDefaultBrochureImmersiveBuilder(),
+      ),
+    ];
+    historyIndexRef.current = 0;
+    applyingHistoryRef.current = false;
   }, [initialProject]);
 
   useEffect(() => {
@@ -517,6 +626,72 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
       ? { source: "library", imageId: draggedImageId }
       : null;
 
+  const handleDropImageIntoImmersive = async (
+    sectionId: string,
+    image: BrochureDraggedImage,
+    imageIndex = 0,
+  ) => {
+    const addLibraryImage = (imageId: string) => {
+      updateSectionById(sectionId, (section) => {
+        const currentIds = [...section.imageIds];
+        const nextIds = currentIds.filter((id) => id !== imageId);
+        const index = Math.max(0, Math.min(imageIndex, 24));
+        while (nextIds.length <= index) nextIds.push("");
+        nextIds[index] = imageId;
+        const cleaned = nextIds.filter((id, idx) => idx === index || Boolean(id));
+        return { ...section, imageIds: cleaned };
+      });
+    };
+
+    if (image.source === "library") {
+      addLibraryImage(image.imageId);
+      return;
+    }
+
+    setImportingUnsplashPhotoId(image.photo.id);
+    setFeedbackTone("neutral");
+    setFeedbackMessage("Importing Unsplash image...");
+
+    try {
+      const response = await fetch(
+        `/api/brochure/projects/${project.brochureId}/assets/unsplash`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ photo: image.photo }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          await getResponseErrorMessage(response, "Failed to import Unsplash image."),
+        );
+      }
+
+      const payload = (await response.json()) as {
+        project?: BrochureProject;
+        assetId?: string;
+      };
+
+      if (!payload.project || !payload.assetId) {
+        throw new Error("Failed to import Unsplash image.");
+      }
+
+      hydrateFromProject(payload.project);
+      addLibraryImage(payload.assetId);
+      setFeedbackTone("success");
+      setFeedbackMessage("Unsplash image added to the library.");
+    } catch (error) {
+      setFeedbackTone("error");
+      setFeedbackMessage(
+        error instanceof Error ? error.message : "Failed to import Unsplash image.",
+      );
+    } finally {
+      setImportingUnsplashPhotoId("");
+      setDraggedUnsplashPhoto(null);
+    }
+  };
+
   const hydrateFromProject = (nextProject: BrochureProject) => {
     skipNextAutosaveRef.current = true;
     setProject(nextProject);
@@ -531,8 +706,145 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     setBackgroundColor(nextProject.styleSettings.backgroundColor);
     setImageOrder(nextProject.content.imageOrder);
     setSections(nextProject.content.sections);
+    setImmersiveBuilder(
+      nextProject.content.immersiveBuilder ?? createDefaultBrochureImmersiveBuilder(),
+    );
     setActiveSectionId(nextProject.content.sections[0]?.id ?? "");
   };
+
+  const applyHistorySnapshot = (snapshot: BrochureHistorySnapshot) => {
+    applyingHistoryRef.current = true;
+    skipNextAutosaveRef.current = false;
+    setTemplate(snapshot.template);
+    setExperienceMode(snapshot.experienceMode);
+    setImmersiveTheme(snapshot.immersiveTheme);
+    setImmersiveMotionPreset(snapshot.immersiveMotionPreset);
+    setShowImmersiveProgressNav(snapshot.showImmersiveProgressNav);
+    setFontFamily(snapshot.fontFamily);
+    setOrientation(snapshot.orientation);
+    setAccentColor(snapshot.accentColor);
+    setBackgroundColor(snapshot.backgroundColor);
+    setImageOrder(snapshot.imageOrder);
+    setSections(snapshot.sections);
+    setImmersiveBuilder(snapshot.immersiveBuilder);
+    setActiveSectionId(snapshot.sections[0]?.id ?? "");
+    window.setTimeout(() => {
+      applyingHistoryRef.current = false;
+    }, 0);
+  };
+
+  useEffect(() => {
+    const snapshot = createHistorySnapshot(
+      template,
+      experienceMode,
+      immersiveTheme,
+      immersiveMotionPreset,
+      showImmersiveProgressNav,
+      fontFamily,
+      orientation,
+      accentColor,
+      backgroundColor,
+      imageOrder,
+      sections,
+      immersiveBuilder,
+    );
+    const serializedSnapshot = JSON.stringify(snapshot);
+    const currentIndex = historyIndexRef.current;
+    const currentSnapshot = historyRef.current[currentIndex];
+    if (currentSnapshot && JSON.stringify(currentSnapshot) === serializedSnapshot) {
+      return;
+    }
+
+    if (applyingHistoryRef.current) {
+      return;
+    }
+
+    const nextHistory = historyRef.current.slice(0, currentIndex + 1);
+    nextHistory.push(snapshot);
+    historyRef.current = nextHistory.slice(-80);
+    historyIndexRef.current = historyRef.current.length - 1;
+  }, [
+    accentColor,
+    backgroundColor,
+    experienceMode,
+    fontFamily,
+    imageOrder,
+    immersiveBuilder,
+    immersiveMotionPreset,
+    immersiveTheme,
+    orientation,
+    sections,
+    showImmersiveProgressNav,
+    template,
+  ]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      if (autosaveStatus === "saving") return;
+
+      void fetch(`/api/brochure/projects/${project.brochureId}`)
+        .then(async (response) => {
+          if (!response.ok) return null;
+          return (await response.json()) as { project?: BrochureProject };
+        })
+        .then((payload) => {
+          if (!payload?.project || !payload.project.updatedAt) return;
+          if (project.updatedAt && payload.project.updatedAt <= project.updatedAt) return;
+          hydrateFromProject(payload.project);
+          setFeedbackTone("success");
+          setFeedbackMessage("Remote changes synced.");
+        })
+        .catch(() => {
+          // Silent polling failures keep the editor responsive.
+        });
+    }, 20000);
+
+    return () => window.clearInterval(intervalId);
+  }, [autosaveStatus, project]);
+
+  useEffect(() => {
+    if (experienceMode !== "immersive") return;
+    if (!canFetchLocationSuggestions) {
+      setMapSuggestions([]);
+      setMapSuggestionsQuery("");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      void fetch(`/api/maps/search?q=${encodeURIComponent(trimmedDeferredLocationQuery)}`, {
+        signal: controller.signal,
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error("Failed to load map suggestions.");
+          }
+          return response.json() as Promise<{ suggestions?: MapSearchSuggestion[] }>;
+        })
+        .then((payload) => {
+          setMapSuggestions(payload.suggestions ?? []);
+          setMapSuggestionsQuery(trimmedDeferredLocationQuery);
+        })
+        .catch((error) => {
+          if (controller.signal.aborted) return;
+          console.error(error);
+          setMapSuggestions([]);
+          setMapSuggestionsQuery(trimmedDeferredLocationQuery);
+        });
+    }, 240);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    canFetchLocationSuggestions,
+    experienceMode,
+    trimmedDeferredLocationQuery,
+  ]);
 
   useEffect(() => {
     if (skipNextAutosaveRef.current) {
@@ -563,6 +875,7 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
         backgroundColor,
         imageOrder,
         sections,
+        immersiveBuilder,
       );
 
       void fetch(`/api/brochure/projects/${project.brochureId}`, {
@@ -579,7 +892,10 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
 
           return response.json() as Promise<{ project?: BrochureProject }>;
         })
-        .then(() => {
+        .then((payload) => {
+          if (payload?.project) {
+            hydrateFromProject(payload.project);
+          }
           if (autosaveRequestIdRef.current !== nextRequestId) return;
           setAutosaveStatus("saved");
         })
@@ -613,6 +929,7 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     sections,
     showImmersiveProgressNav,
     template,
+    immersiveBuilder,
   ]);
 
   const handleDropImage = (targetImageId: string) => {
@@ -1052,6 +1369,85 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     setOpenPanelId((current) => (current === panelId ? null : panelId));
   };
 
+  const updateImmersiveBuilder = (
+    updater: (current: BrochureImmersiveBuilder) => BrochureImmersiveBuilder,
+  ) => {
+    setImmersiveBuilder((current) => updater(current));
+  };
+
+  const toggleImmersiveSection = (key: BrochureImmersiveSectionKey) => {
+    updateImmersiveBuilder((current) => {
+      const hasSection = current.selectedSections.includes(key);
+      const nextSelectedSections = hasSection
+        ? current.selectedSections.filter((entry) => entry !== key)
+        : [...current.selectedSections, key];
+
+      return {
+        ...current,
+        selectedSections: nextSelectedSections,
+      };
+    });
+  };
+
+  const handleGenerateImmersiveSections = () => {
+    const nextSections = generateBrochureImmersiveSections(
+      project.name,
+      immersiveBuilder,
+      orderedImageIds,
+    );
+    setImmersiveMotionPreset(
+      immersiveBuilder.animationLevel === "minimal"
+        ? "soft"
+        : immersiveBuilder.animationLevel === "cinematic"
+          ? "bold"
+          : "cinematic",
+    );
+    setImmersiveTheme(
+      immersiveBuilder.visualStyle === "luxury-minimal"
+        ? "editorial"
+        : immersiveBuilder.visualStyle === "warm-lifestyle"
+          ? "warm"
+          : "light",
+    );
+    setExperienceMode("immersive");
+    setSections(nextSections);
+    setActiveSectionId(nextSections[0]?.id ?? "");
+    setOpenPanelId("edit");
+    setFeedbackTone("success");
+    setFeedbackMessage("Cinematic page structure generated.");
+  };
+
+  const handleUndo = () => {
+    if (historyIndexRef.current <= 0) return;
+    historyIndexRef.current -= 1;
+    const snapshot = historyRef.current[historyIndexRef.current];
+    if (!snapshot) return;
+    applyHistorySnapshot(snapshot);
+    setFeedbackTone("success");
+    setFeedbackMessage("Undo applied.");
+  };
+
+  const handleRedo = () => {
+    if (historyIndexRef.current >= historyRef.current.length - 1) return;
+    historyIndexRef.current += 1;
+    const snapshot = historyRef.current[historyIndexRef.current];
+    if (!snapshot) return;
+    applyHistorySnapshot(snapshot);
+    setFeedbackTone("success");
+    setFeedbackMessage("Redo applied.");
+  };
+
+  const applyLocationSuggestion = (suggestion: MapSearchSuggestion) => {
+    updateImmersiveBuilder((current) => ({
+      ...current,
+      locationAddress: suggestion.label,
+      locationLatitude: suggestion.latitude,
+      locationLongitude: suggestion.longitude,
+    }));
+    setMapSuggestions([]);
+    setMapSuggestionsQuery("");
+  };
+
   const saveBrochure = async (printAfterSave = false) => {
     if (autosaveTimerRef.current) {
       window.clearTimeout(autosaveTimerRef.current);
@@ -1074,6 +1470,7 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
       backgroundColor,
       imageOrder,
       sections,
+      immersiveBuilder,
     );
 
     try {
@@ -1223,6 +1620,8 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     { key: "georgia", title: "Georgia" },
     { key: "times", title: "Times" },
   ];
+  const canUndo = historyIndexRef.current > 0;
+  const canRedo = historyIndexRef.current < historyRef.current.length - 1;
 
   return (
     <section className="brochureStudioShell">
@@ -1231,12 +1630,33 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
           <p className="projectFeedbackEyebrow">myBrochure</p>
           <h1 className="projectFeedbackTitle">{project.name}</h1>
           <p className="projectFeedbackVersionMeta">
-            Add structured sections, assign the right visuals, then generate a
-            polished brochure instantly.
+            {experienceMode === "immersive"
+              ? "Build a cinematic, scroll-driven teaser from your validated visuals."
+              : "Add structured sections, assign the right visuals, then generate a polished brochure instantly."}
           </p>
         </div>
 
         <div className="brochureStudioToolbar">
+          <button
+            className="projectFeedbackAction"
+            type="button"
+            onClick={handleUndo}
+            disabled={!canUndo}
+            aria-label="Undo"
+            title="Undo"
+          >
+            ← Undo
+          </button>
+          <button
+            className="projectFeedbackAction"
+            type="button"
+            onClick={handleRedo}
+            disabled={!canRedo}
+            aria-label="Redo"
+            title="Redo"
+          >
+            Redo →
+          </button>
           <span className="brochureStudioAutosave" data-status={autosaveStatus}>
             {autosaveStatus === "saving"
               ? "Saving changes..."
@@ -1270,6 +1690,41 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
             Save PDF
           </button>
         </div>
+
+        <div
+          className="brochureExperienceTabs"
+          role="tablist"
+          aria-label="myBrochure experience"
+        >
+          <button
+            className="brochureExperienceTab"
+            type="button"
+            role="tab"
+            aria-selected={experienceMode === "brochure"}
+            data-active={experienceMode === "brochure" ? "true" : "false"}
+            onClick={() => {
+              setHasCanvasSelection(false);
+              setSidebarView("menu");
+              setExperienceMode("brochure");
+            }}
+          >
+            myBrochure
+          </button>
+          <button
+            className="brochureExperienceTab"
+            type="button"
+            role="tab"
+            aria-selected={experienceMode === "immersive"}
+            data-active={experienceMode === "immersive" ? "true" : "false"}
+            onClick={() => {
+              setHasCanvasSelection(false);
+              setSidebarView("menu");
+              setExperienceMode("immersive");
+            }}
+          >
+            myBrochure Cinématique
+          </button>
+        </div>
       </header>
 
       {feedbackMessage ? (
@@ -1283,7 +1738,7 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
       ) : null}
 
       <div className="brochureStudioLayout">
-        <aside ref={controlsRef} className="brochureStudioControls">
+        <aside ref={controlsRef} className="brochureStudioControls" data-density="compact">
           <div ref={panelRef} className="brochureBuilderPanel" style={sidebarStyle}>
             <div className="brochureSidebarTabs" role="tablist" aria-label="Sidebar view">
               <button
@@ -1330,20 +1785,6 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
                       </button>
                     ))}
                   </div>
-
-                  <label className="projectFeedbackField">
-                    <span>Experience mode</span>
-                    <select
-                      className="projectFeedbackInput"
-                      value={experienceMode}
-                      onChange={(event) =>
-                        setExperienceMode(event.target.value as BrochureExperienceMode)
-                      }
-                    >
-                      <option value="brochure">Brochure</option>
-                      <option value="immersive">Immersive</option>
-                    </select>
-                  </label>
 
                   {experienceMode === "immersive" ? (
                     <div className="brochureImmersiveControls">
@@ -1446,6 +1887,474 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
                     </select>
                   </label>
                 </BrochureSidebarPanel>
+
+                {experienceMode === "immersive" ? (
+                  <BrochureSidebarPanel
+                    panelId="cinematic"
+                    title="myBrochure Cinematique"
+                    isOpen={openPanelId === "cinematic"}
+                    onToggle={() => togglePanel("cinematic")}
+                  >
+                    <div className="brochureImmersiveBuilderGrid">
+                      <div className="brochureImmersiveBuilderCard">
+                        <p className="projectFeedbackVersionMeta">Sections</p>
+                        <div className="brochureImmersiveChecklist">
+                          {immersiveSectionOptions.map((option) => (
+                            <label
+                              key={option.key}
+                              className="brochureImmersiveChecklistItem"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={immersiveBuilder.selectedSections.includes(option.key)}
+                                onChange={() => toggleImmersiveSection(option.key)}
+                              />
+                              <span>{option.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="brochureImmersiveBuilderCard">
+                        <div className="brochureStudioToolbar">
+                          <label className="projectFeedbackUpload brochureStudioUpload">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              onChange={(event) => void handleAssetsUpload(event)}
+                              disabled={isUploadingAssets}
+                            />
+                            {isUploadingAssets ? "Uploading..." : "Upload images"}
+                          </label>
+                        </div>
+
+                        <div className="brochureImmersiveBuilderRow">
+                          <label className="projectFeedbackField">
+                            <span>Visual direction</span>
+                            <select
+                              className="projectFeedbackInput"
+                              value={immersiveBuilder.visualStyle}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  visualStyle: event.target.value as BrochureImmersiveBuilder["visualStyle"],
+                                }))
+                              }
+                            >
+                              <option value="luxury-minimal">Luxury minimal</option>
+                              <option value="modern-real-estate">Modern real estate</option>
+                              <option value="warm-lifestyle">Lifestyle chaleureux</option>
+                            </select>
+                          </label>
+
+                          <label className="projectFeedbackField">
+                            <span>Animation</span>
+                            <select
+                              className="projectFeedbackInput"
+                              value={immersiveBuilder.animationLevel}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  animationLevel: event.target.value as BrochureImmersiveBuilder["animationLevel"],
+                                }))
+                              }
+                            >
+                              <option value="minimal">Minimal</option>
+                              <option value="subtle">Subtil</option>
+                              <option value="cinematic">Cinematique</option>
+                            </select>
+                          </label>
+                        </div>
+
+                        <label className="projectFeedbackField">
+                          <span>Hero image</span>
+                          <div className="brochureImmersiveImagePicker">
+                            <button
+                              className="brochureImmersiveImagePickerOption"
+                              type="button"
+                              data-active={immersiveBuilder.heroImageId === "" ? "true" : "false"}
+                              onClick={() =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  heroImageId: "",
+                                }))
+                              }
+                            >
+                              Auto
+                            </button>
+                            {orderedImages.map((image) => (
+                              <button
+                                key={image.id}
+                                className="brochureImmersiveImagePickerOption"
+                                type="button"
+                                data-active={immersiveBuilder.heroImageId === image.id ? "true" : "false"}
+                                onClick={() =>
+                                  updateImmersiveBuilder((current) => ({
+                                    ...current,
+                                    heroImageId: image.id,
+                                  }))
+                                }
+                              >
+                                <img src={image.url} alt={image.label} loading="lazy" decoding="async" />
+                                <span>{image.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </label>
+
+                        {immersiveBuilder.selectedSections.includes("gallery") ? (
+                          <label className="projectFeedbackField">
+                            <span>Gallery images</span>
+                            <div className="brochureImmersiveImagePicker brochureImmersiveImagePickerMulti">
+                              {orderedImages.map((image) => {
+                                const isSelected = immersiveBuilder.galleryImageIds.includes(image.id);
+                                return (
+                                  <button
+                                    key={image.id}
+                                    className="brochureImmersiveImagePickerOption"
+                                    type="button"
+                                    data-active={isSelected ? "true" : "false"}
+                                    onClick={() =>
+                                      updateImmersiveBuilder((current) => {
+                                        const next = isSelected
+                                          ? current.galleryImageIds.filter((id) => id !== image.id)
+                                          : [...current.galleryImageIds, image.id];
+                                        return { ...current, galleryImageIds: next };
+                                      })
+                                    }
+                                  >
+                                    <img src={image.url} alt={image.label} loading="lazy" decoding="async" />
+                                    <span>{image.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </label>
+                        ) : null}
+                      </div>
+
+                      {immersiveBuilder.selectedSections.includes("description") ? (
+                        <div className="brochureImmersiveBuilderCard">
+                          <label className="projectFeedbackField">
+                            <span>Description title</span>
+                            <input
+                              className="projectFeedbackInput"
+                              type="text"
+                              value={immersiveBuilder.descriptionTitle}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  descriptionTitle: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="projectFeedbackField">
+                            <span>Description</span>
+                            <textarea
+                              className="projectFeedbackTextarea brochureStudioTextarea"
+                              value={immersiveBuilder.descriptionBody}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  descriptionBody: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                        </div>
+                      ) : null}
+
+                      {immersiveBuilder.selectedSections.includes("key-points") ? (
+                        <div className="brochureImmersiveBuilderCard">
+                          <label className="projectFeedbackField">
+                            <span>Key points title</span>
+                            <input
+                              className="projectFeedbackInput"
+                              type="text"
+                              value={immersiveBuilder.keyPointsTitle}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  keyPointsTitle: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="projectFeedbackField">
+                            <span>Key points</span>
+                            <textarea
+                              className="projectFeedbackTextarea brochureStudioTextarea"
+                              value={serializeLines(immersiveBuilder.keyPoints)}
+                              placeholder="One point per line"
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  keyPoints: parseLines(event.target.value),
+                                }))
+                              }
+                            />
+                          </label>
+                        </div>
+                      ) : null}
+
+                      {immersiveBuilder.selectedSections.includes("video") ? (
+                        <div className="brochureImmersiveBuilderCard">
+                          <label className="projectFeedbackField">
+                            <span>Video URL</span>
+                            <input
+                              className="projectFeedbackInput"
+                              type="url"
+                              value={immersiveBuilder.videoUrl}
+                              placeholder="https://..."
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  videoUrl: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="projectFeedbackField">
+                            <span>Video integration</span>
+                            <select
+                              className="projectFeedbackInput"
+                              value={immersiveBuilder.videoMode}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  videoMode: event.target.value as BrochureImmersiveVideoMode,
+                                }))
+                              }
+                            >
+                              <option value="background">Background</option>
+                              <option value="section">Dedicated section</option>
+                            </select>
+                          </label>
+                        </div>
+                      ) : null}
+
+                      {immersiveBuilder.selectedSections.includes("location") ? (
+                        <div className="brochureImmersiveBuilderCard">
+                          <label className="projectFeedbackField">
+                            <span>Location title</span>
+                            <input
+                              className="projectFeedbackInput"
+                              type="text"
+                              value={immersiveBuilder.locationTitle}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  locationTitle: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="projectFeedbackField">
+                            <span>Address / city</span>
+                            <div className="brochureImmersiveAddressField">
+                              <input
+                                className="projectFeedbackInput"
+                                type="text"
+                                value={immersiveBuilder.locationAddress}
+                                placeholder="1600 Amphitheatre Parkway, Mountain View"
+                                onChange={(event) =>
+                                  updateImmersiveBuilder((current) => ({
+                                    ...current,
+                                    locationAddress: event.target.value,
+                                    locationLatitude: null,
+                                    locationLongitude: null,
+                                  }))
+                                }
+                              />
+                              {visibleLocationSuggestions.length > 0 ? (
+                                <div className="brochureImmersiveAddressSuggestions" role="listbox">
+                                  {visibleLocationSuggestions.map((suggestion) => (
+                                    <button
+                                      key={suggestion.label}
+                                      className="brochureImmersiveAddressSuggestion"
+                                      type="button"
+                                      onClick={() => applyLocationSuggestion(suggestion)}
+                                    >
+                                      {suggestion.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </div>
+                          </label>
+
+                          <div className="brochureImmersiveBuilderRow">
+                            <label className="projectFeedbackField">
+                              <span>Map style</span>
+                              <select
+                                className="projectFeedbackInput"
+                                value={immersiveBuilder.locationMapStyle}
+                                onChange={(event) =>
+                                  updateImmersiveBuilder((current) => ({
+                                    ...current,
+                                    locationMapStyle: event.target.value as BrochureImmersiveBuilder["locationMapStyle"],
+                                  }))
+                                }
+                              >
+                                <option value="minimalMono">Minimal mono</option>
+                                <option value="minimalWarm">Minimal warm</option>
+                                <option value="minimalBlue">Minimal blue</option>
+                                <option value="color">Color</option>
+                                <option value="dark">Dark</option>
+                              </select>
+                            </label>
+                            <label className="projectFeedbackField">
+                              <span>Zoom</span>
+                              <input
+                                className="projectFeedbackInput"
+                                type="number"
+                                min={1}
+                                max={20}
+                                value={immersiveBuilder.locationZoom}
+                                onChange={(event) =>
+                                  updateImmersiveBuilder((current) => ({
+                                    ...current,
+                                    locationZoom: Number(event.target.value) || 14,
+                                  }))
+                                }
+                              />
+                            </label>
+                          </div>
+
+                          {immersiveBuilder.locationLatitude != null &&
+                          immersiveBuilder.locationLongitude != null ? (
+                            <div className="brochureImmersiveMapPreview">
+                              <BrochureMapCanvas
+                                latitude={immersiveBuilder.locationLatitude}
+                                longitude={immersiveBuilder.locationLongitude}
+                                zoom={immersiveBuilder.locationZoom}
+                                mapStyle={immersiveBuilder.locationMapStyle}
+                                interactive={false}
+                              />
+                            </div>
+                          ) : null}
+                          <label className="projectFeedbackField">
+                            <span>Neighborhood description</span>
+                            <textarea
+                              className="projectFeedbackTextarea brochureStudioTextarea"
+                              value={immersiveBuilder.locationNeighborhood}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  locationNeighborhood: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="projectFeedbackField">
+                            <span>Points of interest</span>
+                            <textarea
+                              className="projectFeedbackTextarea brochureStudioTextarea"
+                              value={serializeLines(immersiveBuilder.locationPoints)}
+                              placeholder="One point per line"
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  locationPoints: parseLines(event.target.value),
+                                }))
+                              }
+                            />
+                          </label>
+                        </div>
+                      ) : null}
+
+                      {immersiveBuilder.selectedSections.includes("lifestyle") ? (
+                        <div className="brochureImmersiveBuilderCard">
+                          <label className="projectFeedbackField">
+                            <span>Lifestyle title</span>
+                            <input
+                              className="projectFeedbackInput"
+                              type="text"
+                              value={immersiveBuilder.lifestyleTitle}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  lifestyleTitle: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="projectFeedbackField">
+                            <span>Lifestyle / ambiance</span>
+                            <textarea
+                              className="projectFeedbackTextarea brochureStudioTextarea"
+                              value={immersiveBuilder.lifestyleBody}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  lifestyleBody: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                        </div>
+                      ) : null}
+
+                      {immersiveBuilder.selectedSections.includes("cta") ? (
+                        <div className="brochureImmersiveBuilderCard">
+                          <label className="projectFeedbackField">
+                            <span>CTA title</span>
+                            <input
+                              className="projectFeedbackInput"
+                              type="text"
+                              value={immersiveBuilder.ctaTitle}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  ctaTitle: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="projectFeedbackField">
+                            <span>CTA body</span>
+                            <textarea
+                              className="projectFeedbackTextarea brochureStudioTextarea"
+                              value={immersiveBuilder.ctaBody}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  ctaBody: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="projectFeedbackField">
+                            <span>CTA button label</span>
+                            <input
+                              className="projectFeedbackInput"
+                              type="text"
+                              value={immersiveBuilder.ctaButtonLabel}
+                              onChange={(event) =>
+                                updateImmersiveBuilder((current) => ({
+                                  ...current,
+                                  ctaButtonLabel: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                        </div>
+                      ) : null}
+
+                      <button
+                        className="projectFeedbackAction projectFeedbackActionDark"
+                        type="button"
+                        onClick={handleGenerateImmersiveSections}
+                      >
+                        Generate cinematic page
+                      </button>
+                    </div>
+                  </BrochureSidebarPanel>
+                ) : null}
+
+                <div className="brochureSidebarDivider" aria-hidden="true" />
 
                 <BrochureSidebarPanel
                   panelId="library"
@@ -1827,6 +2736,99 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
                       />
                     </label>
 
+                    {experienceMode === "immersive" ? (
+                      <>
+                        <label className="brochureImmersiveToggle">
+                          <input
+                            type="checkbox"
+                            checked={activeSection.isHidden === true}
+                            onChange={(event) =>
+                              updateActiveSection((section) => ({
+                                ...section,
+                                isHidden: event.target.checked,
+                              }))
+                            }
+                          />
+                          <span>Hide this section from the cinematic page</span>
+                        </label>
+
+                        <label className="projectFeedbackField">
+                          <span>Immersive layout</span>
+                          <select
+                            className="projectFeedbackInput"
+                            value={activeSection.immersiveLayout ?? "media-left"}
+                            onChange={(event) =>
+                              updateActiveSection((section) => ({
+                                ...section,
+                                immersiveLayout: event.target.value as NonNullable<
+                                  BrochureSection["immersiveLayout"]
+                                >,
+                              }))
+                            }
+                          >
+                            <option value="media-left">Media left</option>
+                            <option value="media-right">Media right</option>
+                            <option value="full-bleed">Full bleed</option>
+                          </select>
+                        </label>
+
+                        {(activeSection.immersiveVariant === "key-points" ||
+                          activeSection.immersiveVariant === "location") ? (
+                          <label className="projectFeedbackField">
+                            <span>Points list</span>
+                            <textarea
+                              className="projectFeedbackTextarea brochureStudioTextarea"
+                              value={serializeLines(activeSection.immersiveKeyPoints ?? [])}
+                              placeholder="One point per line"
+                              onChange={(event) =>
+                                updateActiveSection((section) => ({
+                                  ...section,
+                                  immersiveKeyPoints: parseLines(event.target.value),
+                                }))
+                              }
+                            />
+                          </label>
+                        ) : null}
+
+                        {activeSection.immersiveVariant === "video" ? (
+                          <>
+                            <label className="projectFeedbackField">
+                              <span>Video URL</span>
+                              <input
+                                className="projectFeedbackInput"
+                                type="url"
+                                value={activeSection.immersiveVideoUrl ?? ""}
+                                placeholder="https://..."
+                                onChange={(event) =>
+                                  updateActiveSection((section) => ({
+                                    ...section,
+                                    immersiveVideoUrl: event.target.value,
+                                  }))
+                                }
+                              />
+                            </label>
+                            <label className="projectFeedbackField">
+                              <span>Video mode</span>
+                              <select
+                                className="projectFeedbackInput"
+                                value={activeSection.immersiveVideoMode ?? "section"}
+                                onChange={(event) =>
+                                  updateActiveSection((section) => ({
+                                    ...section,
+                                    immersiveVideoMode:
+                                      event.target.value as BrochureImmersiveVideoMode,
+                                  }))
+                                }
+                              >
+                                <option value="background">Background</option>
+                                <option value="section">Dedicated section</option>
+                              </select>
+                            </label>
+                          </>
+                        ) : null}
+                      </>
+                    ) : null}
+
                     <div className="brochureSectionPicker">
                       <p className="projectFeedbackVersionMeta">Images for this section</p>
                       <div className="brochureSectionImageGrid">
@@ -1919,6 +2921,17 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
                 immersiveSettings={previewImmersiveSettings}
                 sections={previewSections}
                 images={previewImages}
+                pdfHref="?pdf=1"
+                editable
+                draggedImage={draggedPreviewImage}
+                onSelectSection={(sectionId) => {
+                  setActiveSectionId(sectionId);
+                  setOpenPanelId("edit");
+                }}
+                onDropImage={(sectionId, image, imageIndex) =>
+                  void handleDropImageIntoImmersive(sectionId, image, imageIndex ?? 0)
+                }
+                onUpdateSection={(sectionId, updater) => updateSectionById(sectionId, updater)}
               />
             ) : (
               <BrochurePreview
