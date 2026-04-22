@@ -21,11 +21,15 @@ import {
   createBrochureSection,
   getBrochureSectionDefinition,
 } from "@/lib/brochureSections";
+import { BrochureImmersive } from "@/components/BrochureImmersive";
 import { BrochurePreview } from "@/components/BrochurePreview";
 import type {
   BrochureCanvasItem,
   BrochureCanvasShapeType,
+  BrochureExperienceMode,
   BrochureFontFamily,
+  BrochureImmersiveMotionPreset,
+  BrochureImmersiveTheme,
   BrochureOrientation,
   BrochureProject,
   BrochureSection,
@@ -34,6 +38,7 @@ import type {
   BrochureTemplate,
 } from "@/lib/brochureTypes";
 import { getResponseErrorMessage } from "@/lib/errorMessage";
+import type { BrochureDraggedImage, UnsplashSearchPhoto } from "@/lib/unsplash";
 
 type BrochureStudioProps = {
   initialProject: BrochureProject;
@@ -46,7 +51,8 @@ type BrochureSidebarPanelId =
   | "sections"
   | "elements"
   | "edit"
-  | "library";
+  | "library"
+  | "unsplash";
 
 const elementToolOptions: Array<{
   key: BrochureCanvasShapeType | "text" | "logo" | "map";
@@ -246,6 +252,10 @@ function getCoverSection(project: BrochureProject, sections: BrochureSection[]) 
 function buildBrochureSavePayload(
   project: BrochureProject,
   template: BrochureTemplate,
+  experienceMode: BrochureExperienceMode,
+  immersiveTheme: BrochureImmersiveTheme,
+  immersiveMotionPreset: BrochureImmersiveMotionPreset,
+  showImmersiveProgressNav: boolean,
   fontFamily: BrochureFontFamily,
   orientation: BrochureOrientation,
   accentColor: string,
@@ -270,6 +280,12 @@ function buildBrochureSavePayload(
       title: coverSection.title,
       subtitle: coverSection.subtitle,
       body: coverSection.body,
+      experienceMode,
+      immersiveSettings: {
+        theme: immersiveTheme,
+        motionPreset: immersiveMotionPreset,
+        showProgressNav: showImmersiveProgressNav,
+      },
       fontFamily,
       orientation,
       accentColor,
@@ -286,6 +302,19 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [project, setProject] = useState(initialProject);
   const [template, setTemplate] = useState<BrochureTemplate>(initialProject.template);
+  const [experienceMode, setExperienceMode] = useState<BrochureExperienceMode>(
+    initialProject.experienceMode,
+  );
+  const [immersiveTheme, setImmersiveTheme] = useState<BrochureImmersiveTheme>(
+    initialProject.immersiveSettings.theme,
+  );
+  const [immersiveMotionPreset, setImmersiveMotionPreset] =
+    useState<BrochureImmersiveMotionPreset>(
+      initialProject.immersiveSettings.motionPreset,
+    );
+  const [showImmersiveProgressNav, setShowImmersiveProgressNav] = useState(
+    initialProject.immersiveSettings.showProgressNav,
+  );
   const [fontFamily, setFontFamily] = useState<BrochureFontFamily>(
     initialProject.styleSettings.fontFamily,
   );
@@ -305,15 +334,23 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
   );
   const [sectionKindToAdd, setSectionKindToAdd] = useState<BrochureSectionKind | "">("");
   const [draggedImageId, setDraggedImageId] = useState("");
+  const [draggedUnsplashPhoto, setDraggedUnsplashPhoto] = useState<UnsplashSearchPhoto | null>(
+    null,
+  );
   const [draggedSectionId, setDraggedSectionId] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackTone, setFeedbackTone] = useState<FeedbackTone>("neutral");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploadingAssets, setIsUploadingAssets] = useState(false);
+  const [isSearchingUnsplash, setIsSearchingUnsplash] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isDeletingLogo, setIsDeletingLogo] = useState(false);
+  const [importingUnsplashPhotoId, setImportingUnsplashPhotoId] = useState("");
   const [deletingAssetId, setDeletingAssetId] = useState("");
   const [isCopying, setIsCopying] = useState(false);
+  const [unsplashQuery, setUnsplashQuery] = useState("");
+  const [unsplashResults, setUnsplashResults] = useState<UnsplashSearchPhoto[]>([]);
+  const [unsplashError, setUnsplashError] = useState("");
   const [hasCanvasSelection, setHasCanvasSelection] = useState(false);
   const [sidebarView, setSidebarView] = useState<BrochureSidebarView>("menu");
   const [openPanelId, setOpenPanelId] = useState<BrochureSidebarPanelId | null>("sections");
@@ -330,6 +367,10 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
   useEffect(() => {
     setProject(initialProject);
     setTemplate(initialProject.template);
+    setExperienceMode(initialProject.experienceMode);
+    setImmersiveTheme(initialProject.immersiveSettings.theme);
+    setImmersiveMotionPreset(initialProject.immersiveSettings.motionPreset);
+    setShowImmersiveProgressNav(initialProject.immersiveSettings.showProgressNav);
     setFontFamily(initialProject.styleSettings.fontFamily);
     setOrientation(initialProject.styleSettings.orientation);
     setAccentColor(initialProject.styleSettings.accentColor);
@@ -337,6 +378,9 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     setImageOrder(initialProject.content.imageOrder);
     setSections(initialProject.content.sections);
     setActiveSectionId(initialProject.content.sections[0]?.id ?? "");
+    setDraggedImageId("");
+    setDraggedUnsplashPhoto(null);
+    setUnsplashError("");
     setHasCanvasSelection(false);
     setSidebarView("menu");
     setOpenPanelId("sections");
@@ -449,16 +493,38 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     () => generateSectionContent(project.name, sections, orderedImageIds),
     [orderedImageIds, project.name, sections],
   );
+  const previewCoverSection = useMemo(
+    () => getCoverSection(project, previewSections),
+    [previewSections, project],
+  );
 
   const previewImages = useMemo(
     () => orderedImages,
     [orderedImages],
   );
+  const previewImmersiveSettings = useMemo(
+    () => ({
+      theme: immersiveTheme,
+      motionPreset: immersiveMotionPreset,
+      showProgressNav: showImmersiveProgressNav,
+    }),
+    [immersiveMotionPreset, immersiveTheme, showImmersiveProgressNav],
+  );
+
+  const draggedPreviewImage: BrochureDraggedImage | null = draggedUnsplashPhoto
+    ? { source: "unsplash", photo: draggedUnsplashPhoto }
+    : draggedImageId
+      ? { source: "library", imageId: draggedImageId }
+      : null;
 
   const hydrateFromProject = (nextProject: BrochureProject) => {
     skipNextAutosaveRef.current = true;
     setProject(nextProject);
     setTemplate(nextProject.template);
+    setExperienceMode(nextProject.experienceMode);
+    setImmersiveTheme(nextProject.immersiveSettings.theme);
+    setImmersiveMotionPreset(nextProject.immersiveSettings.motionPreset);
+    setShowImmersiveProgressNav(nextProject.immersiveSettings.showProgressNav);
     setFontFamily(nextProject.styleSettings.fontFamily);
     setOrientation(nextProject.styleSettings.orientation);
     setAccentColor(nextProject.styleSettings.accentColor);
@@ -487,6 +553,10 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
       const { payload: requestBody } = buildBrochureSavePayload(
         project,
         template,
+        experienceMode,
+        immersiveTheme,
+        immersiveMotionPreset,
+        showImmersiveProgressNav,
         fontFamily,
         orientation,
         accentColor,
@@ -533,11 +603,15 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
   }, [
     accentColor,
     backgroundColor,
+    experienceMode,
     fontFamily,
     imageOrder,
+    immersiveMotionPreset,
+    immersiveTheme,
     orientation,
     project,
     sections,
+    showImmersiveProgressNav,
     template,
   ]);
 
@@ -683,7 +757,40 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     return nextItem.id;
   };
 
-  const handleAddImageToCanvas = (sectionId: string, imageId: string) => {
+  const handleSearchUnsplash = async () => {
+    const query = unsplashQuery.trim();
+    if (query.length < 2) {
+      setUnsplashResults([]);
+      setUnsplashError("Enter at least 2 characters.");
+      return;
+    }
+
+    setIsSearchingUnsplash(true);
+    setUnsplashError("");
+
+    try {
+      const response = await fetch(`/api/unsplash/search?q=${encodeURIComponent(query)}`);
+      if (!response.ok) {
+        throw new Error(
+          await getResponseErrorMessage(response, "Failed to search Unsplash."),
+        );
+      }
+
+      const payload = (await response.json()) as {
+        items?: UnsplashSearchPhoto[];
+      };
+      setUnsplashResults(payload.items ?? []);
+    } catch (error) {
+      setUnsplashResults([]);
+      setUnsplashError(
+        error instanceof Error ? error.message : "Failed to search Unsplash.",
+      );
+    } finally {
+      setIsSearchingUnsplash(false);
+    }
+  };
+
+  const appendCanvasPhotoItem = (sectionId: string, imageId: string) => {
     const targetSection = sections.find((section) => section.id === sectionId);
     const nextItem = createCanvasPhotoItem(
       imageId,
@@ -697,6 +804,77 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
 
     setActiveSectionId(sectionId);
     return nextItem.id;
+  };
+
+  const handleAddImageToCanvas = async (
+    sectionId: string,
+    image: BrochureDraggedImage,
+  ) => {
+    if (image.source === "library") {
+      return appendCanvasPhotoItem(sectionId, image.imageId);
+    }
+
+    setImportingUnsplashPhotoId(image.photo.id);
+    setFeedbackTone("neutral");
+    setFeedbackMessage("Importing Unsplash image...");
+
+    try {
+      const response = await fetch(
+        `/api/brochure/projects/${project.brochureId}/assets/unsplash`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ photo: image.photo }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          await getResponseErrorMessage(response, "Failed to import Unsplash image."),
+        );
+      }
+
+      const payload = (await response.json()) as {
+        project?: BrochureProject;
+        assetId?: string;
+      };
+
+      if (!payload.project || !payload.assetId) {
+        throw new Error("Failed to import Unsplash image.");
+      }
+
+      hydrateFromProject(payload.project);
+      const nextItem = createCanvasPhotoItem(
+        payload.assetId,
+        getMaxCanvasLayer(
+          sections.find((section) => section.id === sectionId)?.layoutItems ?? [],
+        ) + 1,
+      );
+
+      setSections((current) =>
+        current.map((section) =>
+          section.id === sectionId
+            ? {
+                ...section,
+                layoutItems: [...section.layoutItems, nextItem],
+              }
+            : section,
+        ),
+      );
+      setActiveSectionId(sectionId);
+      setFeedbackTone("success");
+      setFeedbackMessage("Unsplash image added to the library and preview.");
+      return nextItem.id;
+    } catch (error) {
+      setFeedbackTone("error");
+      setFeedbackMessage(
+        error instanceof Error ? error.message : "Failed to import Unsplash image.",
+      );
+      return null;
+    } finally {
+      setImportingUnsplashPhotoId("");
+      setDraggedUnsplashPhoto(null);
+    }
   };
 
   const handleAddElement = (
@@ -886,6 +1064,10 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
     const { payload: requestBody } = buildBrochureSavePayload(
       project,
       template,
+      experienceMode,
+      immersiveTheme,
+      immersiveMotionPreset,
+      showImmersiveProgressNav,
       fontFamily,
       orientation,
       accentColor,
@@ -1150,6 +1332,70 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
                   </div>
 
                   <label className="projectFeedbackField">
+                    <span>Experience mode</span>
+                    <select
+                      className="projectFeedbackInput"
+                      value={experienceMode}
+                      onChange={(event) =>
+                        setExperienceMode(event.target.value as BrochureExperienceMode)
+                      }
+                    >
+                      <option value="brochure">Brochure</option>
+                      <option value="immersive">Immersive</option>
+                    </select>
+                  </label>
+
+                  {experienceMode === "immersive" ? (
+                    <div className="brochureImmersiveControls">
+                      <label className="projectFeedbackField">
+                        <span>Theme</span>
+                        <select
+                          className="projectFeedbackInput"
+                          value={immersiveTheme}
+                          onChange={(event) =>
+                            setImmersiveTheme(
+                              event.target.value as BrochureImmersiveTheme,
+                            )
+                          }
+                        >
+                          <option value="light">Light</option>
+                          <option value="dark">Dark</option>
+                          <option value="warm">Warm</option>
+                          <option value="editorial">Editorial</option>
+                        </select>
+                      </label>
+
+                      <label className="projectFeedbackField">
+                        <span>Motion</span>
+                        <select
+                          className="projectFeedbackInput"
+                          value={immersiveMotionPreset}
+                          onChange={(event) =>
+                            setImmersiveMotionPreset(
+                              event.target.value as BrochureImmersiveMotionPreset,
+                            )
+                          }
+                        >
+                          <option value="soft">Soft</option>
+                          <option value="cinematic">Cinematic</option>
+                          <option value="bold">Bold</option>
+                        </select>
+                      </label>
+
+                      <label className="brochureImmersiveToggle">
+                        <input
+                          type="checkbox"
+                          checked={showImmersiveProgressNav}
+                          onChange={(event) =>
+                            setShowImmersiveProgressNav(event.target.checked)
+                          }
+                        />
+                        <span>Show chapter navigation</span>
+                      </label>
+                    </div>
+                  ) : null}
+
+                  <label className="projectFeedbackField">
                     <span>Font family</span>
                     <select
                       className="projectFeedbackInput"
@@ -1220,13 +1466,16 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
                     </label>
                   </div>
 
-                  <div className="brochureImageList">
+                  <div className="brochureImageList brochureImageListGrid">
                     {orderedImages.map((image, index) => (
                       <article
                         key={image.id}
                         className="brochureImageRow"
                         draggable
-                        onDragStart={() => setDraggedImageId(image.id)}
+                        onDragStart={() => {
+                          setDraggedUnsplashPhoto(null);
+                          setDraggedImageId(image.id);
+                        }}
                         onDragOver={(event: DragEvent<HTMLElement>) => event.preventDefault()}
                         onDrop={() => handleDropImage(image.id)}
                         onDragEnd={() => setDraggedImageId("")}
@@ -1271,6 +1520,84 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
                                 </button>
                               ) : null}
                             </div>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </BrochureSidebarPanel>
+
+                <BrochureSidebarPanel
+                  panelId="unsplash"
+                  title="Unsplash Pictures"
+                  isOpen={openPanelId === "unsplash"}
+                  onToggle={() => togglePanel("unsplash")}
+                >
+                  <form
+                    className="brochureUnsplashSearch"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void handleSearchUnsplash();
+                    }}
+                  >
+                    <input
+                      className="projectFeedbackInput"
+                      type="search"
+                      value={unsplashQuery}
+                      onChange={(event) => setUnsplashQuery(event.target.value)}
+                      placeholder="Search photos..."
+                    />
+                    <button
+                      className="projectFeedbackAction"
+                      type="submit"
+                      disabled={isSearchingUnsplash}
+                    >
+                      {isSearchingUnsplash ? "Searching..." : "Search"}
+                    </button>
+                  </form>
+
+                  <p className="projectFeedbackVersionMeta">
+                    Drag a photo directly onto the preview to import it into the
+                    project.
+                  </p>
+
+                  {unsplashError ? (
+                    <p className="projectFeedbackMessage projectFeedbackMessageError">
+                      {unsplashError}
+                    </p>
+                  ) : null}
+
+                  <div className="brochureImageList brochureImageListGrid">
+                    {unsplashResults.map((photo, index) => (
+                      <article
+                        key={photo.id}
+                        className="brochureImageRow brochureUnsplashRow"
+                        draggable
+                        onDragStart={(event) => {
+                          event.dataTransfer.effectAllowed = "copy";
+                          event.dataTransfer.setData("text/plain", photo.id);
+                          setDraggedImageId("");
+                          setDraggedUnsplashPhoto(photo);
+                        }}
+                        onDragEnd={() => setDraggedUnsplashPhoto(null)}
+                      >
+                        <div className="brochureImageRowMedia">
+                          <img
+                            src={photo.thumbUrl}
+                            alt={photo.alt || photo.description || "Unsplash image"}
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
+
+                        <div className="brochureImageRowBody">
+                          <div className="brochureImageRowCopy">
+                            <strong>{photo.description || `Unsplash ${index + 1}`}</strong>
+                            <span>
+                              {importingUnsplashPhotoId === photo.id
+                                ? "Importing..."
+                                : "Drag into the preview"}
+                            </span>
                           </div>
                         </div>
                       </article>
@@ -1576,30 +1903,49 @@ export function BrochureStudio({ initialProject }: BrochureStudioProps) {
 
         <section className="brochurePreviewShell brochureBuilderPreview">
           <div className="brochurePreviewSurface">
-            <BrochurePreview
-              projectName={project.name}
-              template={template}
-              styleSettings={{
-                ...project.styleSettings,
-                fontFamily,
-                orientation,
-                accentColor,
-                backgroundColor,
-              }}
-              sections={previewSections}
-              images={previewImages}
-              editable
-              activeSectionId={activeSectionId}
-              draggedImageId={draggedImageId}
-              selectionPanelTarget={elementEditorPortalTarget}
-              onSelectionStateChange={setHasCanvasSelection}
-              onActiveSectionChange={setActiveSectionId}
-              onAddImageToCanvas={handleAddImageToCanvas}
-              onUpdateCanvasItem={handleUpdateCanvasItem}
-              onUpdateCanvasItems={handleUpdateCanvasItems}
-              onDeleteCanvasItem={handleDeleteCanvasItem}
-              onMoveCanvasItemLayer={handleMoveCanvasItemLayer}
-            />
+            {experienceMode === "immersive" ? (
+              <BrochureImmersive
+                projectName={project.name}
+                title={previewCoverSection.title}
+                subtitle={previewCoverSection.subtitle}
+                body={previewCoverSection.body}
+                styleSettings={{
+                  ...project.styleSettings,
+                  fontFamily,
+                  orientation,
+                  accentColor,
+                  backgroundColor,
+                }}
+                immersiveSettings={previewImmersiveSettings}
+                sections={previewSections}
+                images={previewImages}
+              />
+            ) : (
+              <BrochurePreview
+                projectName={project.name}
+                template={template}
+                styleSettings={{
+                  ...project.styleSettings,
+                  fontFamily,
+                  orientation,
+                  accentColor,
+                  backgroundColor,
+                }}
+                sections={previewSections}
+                images={previewImages}
+                editable
+                activeSectionId={activeSectionId}
+                draggedImage={draggedPreviewImage}
+                selectionPanelTarget={elementEditorPortalTarget}
+                onSelectionStateChange={setHasCanvasSelection}
+                onActiveSectionChange={setActiveSectionId}
+                onAddImageToCanvas={handleAddImageToCanvas}
+                onUpdateCanvasItem={handleUpdateCanvasItem}
+                onUpdateCanvasItems={handleUpdateCanvasItems}
+                onDeleteCanvasItem={handleDeleteCanvasItem}
+                onMoveCanvasItemLayer={handleMoveCanvasItemLayer}
+              />
+            )}
           </div>
         </section>
       </div>

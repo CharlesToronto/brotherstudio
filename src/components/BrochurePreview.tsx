@@ -22,6 +22,7 @@ import type {
   BrochureStyleSettings,
   BrochureTemplate,
 } from "@/lib/brochureTypes";
+import type { BrochureDraggedImage } from "@/lib/unsplash";
 
 type BrochurePreviewProps = {
   projectName: string;
@@ -41,10 +42,13 @@ type BrochurePreviewProps = {
     sectionId: string,
     updater: (items: BrochureCanvasItem[]) => BrochureCanvasItem[],
   ) => void;
-  draggedImageId?: string;
+  draggedImage?: BrochureDraggedImage | null;
   selectionPanelTarget?: HTMLElement | null;
   onSelectionStateChange?: (hasSelection: boolean) => void;
-  onAddImageToCanvas?: (sectionId: string, imageId: string) => string | null;
+  onAddImageToCanvas?: (
+    sectionId: string,
+    image: BrochureDraggedImage,
+  ) => Promise<string | null> | string | null;
   onDeleteCanvasItem?: (sectionId: string, itemId: string) => void;
   onMoveCanvasItemLayer?: (
     sectionId: string,
@@ -702,7 +706,7 @@ export function BrochurePreview({
   onActiveSectionChange,
   onUpdateCanvasItem,
   onUpdateCanvasItems,
-  draggedImageId,
+  draggedImage,
   selectionPanelTarget,
   onSelectionStateChange,
   onAddImageToCanvas,
@@ -1299,21 +1303,21 @@ export function BrochurePreview({
     event: ReactDragEvent<HTMLElement>,
     sectionId: string,
   ) => {
-    if (!draggedImageId || !onAddImageToCanvas) return;
+    if (!draggedImage || !onAddImageToCanvas) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
     setDropSectionId(sectionId);
     onActiveSectionChange?.(sectionId);
   };
 
-  const handleSectionDrop = (
+  const handleSectionDrop = async (
     event: ReactDragEvent<HTMLElement>,
     sectionId: string,
   ) => {
-    if (!draggedImageId || !onAddImageToCanvas) return;
+    if (!draggedImage || !onAddImageToCanvas) return;
     event.preventDefault();
     setDropSectionId(null);
-    const nextItemId = onAddImageToCanvas(sectionId, draggedImageId);
+    const nextItemId = await onAddImageToCanvas(sectionId, draggedImage);
     if (nextItemId) {
       setSingleSelection(sectionId, nextItemId);
     }
@@ -1323,7 +1327,7 @@ export function BrochurePreview({
     event: ReactDragEvent<HTMLElement>,
     sectionId: string,
   ) => {
-    if (!draggedImageId) return;
+    if (!draggedImage) return;
     const nextTarget = event.relatedTarget as Node | null;
     if (nextTarget && event.currentTarget.contains(nextTarget)) return;
     if (dropSectionId === sectionId) {

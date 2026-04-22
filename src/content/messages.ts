@@ -101,6 +101,7 @@ export type SiteMessages = {
       details?: string[];
     }>;
     partnerships: string[];
+    partnershipNote: string;
     workflowIncludesLabel: string;
     workflowLinkLabel: string;
     workflowComingSoon: string;
@@ -367,7 +368,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         {
           name: "Walkthrough Classic (click & walk)",
           options: [
-            { name: "1-4 rooms", price: "CHF 1200" },
+            { name: "1-4 rooms", price: "CHF 1400" },
             { name: "5-9 rooms", price: "CHF 2200" },
           ],
         },
@@ -380,20 +381,23 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
           ],
         },
         {
-          name: "Photorealistic 3D Video (Drone View)",
+          name: "Drone Videorealist 3D",
           price: "CHF 1400",
         },
       ],
       packages: [
         {
           name: "Villa package",
-          price: "CHF 7000",
+          price: "CHF 7700",
           details: [
             "4-6 interior images",
             "2-3 exterior images",
             '1-3 style images (rain, dust, snow)',
             "1-3 focus images included",
             "1x marketing video, 31-60 seconds",
+            "Plan de vente",
+            "myStudio review tool",
+            "myBrochure presentation tool (coming soon)",
           ],
         },
         {
@@ -403,12 +407,15 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         },
       ],
       partnerships: [
-        "10% discount for 5+ projects per year",
-        "15% discount for 8+ projects per year",
+        "10% discount for 4+ projects per year",
+        "15% discount for 6+ projects per year",
+        "20% discount for 8+ projects per year",
       ],
+      partnershipNote:
+        "Agreement based on mutual understanding (no formal contract).\nDiscounts are applied based on the total number of projects completed over the year.\nIf the agreed volume is not reached, a price adjustment may be applied to reflect the actual tier.",
       workflowIncludesLabel:
         "Includes: interactive review platform to validate and comment on visuals in real time >",
-      workflowLinkLabel: "myBrochure",
+      workflowLinkLabel: "myStudio",
       workflowComingSoon:
         "Coming soon: immersive and cinematic digital experience to present and promote the project online.",
       ctaText: "For a custom quote, contact BrotherStudio.",
@@ -502,7 +509,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       metadataDescription:
         "Images haut de gamme pour promouvoir et vendre vos projets immobiliers.",
       introLine:
-        "Nous aidons les architectes et les developpeurs a presenter et vendre leurs projets grace a des visualisations haut de gamme.",
+        "De l’image à la vente : un workflow complet pour présenter et vendre vos projets avec impact.",
       backToTopLabel: "Retour en haut",
       backToFooterLabel: "Aller au footer",
       projectFilterAllLabel: "Tous",
@@ -543,7 +550,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Vue minimaliste des prix de BrotherStudio pour les visualisations architecturales.",
       openGraphDescription:
         "Vue minimaliste des prix BrotherStudio pour images et videos architecturales photorealistes.",
-      intro: "",
+      intro: "De l’image à la vente : un workflow complet pour présenter et vendre vos projets avec impact.",
       accessTitle: "Acces prive",
       accessText:
         "Entrez votre adresse email pour acceder a la page de prix.",
@@ -594,7 +601,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         {
           name: "Walkthrough Classic (clic & walk)",
           options: [
-            { name: "1-4 pieces", price: "CHF 1200" },
+            { name: "1-4 pieces", price: "CHF 1400" },
             { name: "5-9 pieces", price: "CHF 2200" },
           ],
         },
@@ -621,6 +628,9 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
             '1-3 image style (pluie, poussiere, neige)',
             "1-3 images focus offertes",
             "1x Video marketing, 31-60 secondes",
+            "Plan de vente",
+            "myStudio review tool",
+            "myBrochure presentation tool (coming soon)",
           ],
         },
         {
@@ -630,13 +640,15 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         },
       ],
       partnerships: [
-        "10% des 5 images commandees par projet",
-        "10% si il y a 5+ projet par annee",
-        "15% si il y a 8+ projet par annee",
+        "10% discount for 4+ projects per year",
+        "15% discount for 6+ projects per year",
+        "20% discount for 8+ projects per year",
       ],
+      partnershipNote:
+        "Agreement based on mutual understanding (no formal contract).\nDiscounts are applied based on the total number of projects completed over the year.\nIf the agreed volume is not reached, a price adjustment may be applied to reflect the actual tier.",
       workflowIncludesLabel:
         "Inclut : plateforme de review interactive pour valider et commenter les visuels en temps reel >",
-      workflowLinkLabel: "myBrochure",
+      workflowLinkLabel: "myStudio",
       workflowComingSoon:
         "Coming soon : experience digitale immersive et cinematique pour presenter et promouvoir le projet en ligne",
       ctaText: "Pour un devis sur mesure, contactez BrotherStudio.",

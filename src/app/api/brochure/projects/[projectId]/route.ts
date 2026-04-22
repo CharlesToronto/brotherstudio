@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { getErrorMessage } from "@/lib/errorMessage";
-import type { BrochureSection } from "@/lib/brochureTypes";
+import type {
+  BrochureExperienceMode,
+  BrochureImmersiveSettings,
+  BrochureSection,
+} from "@/lib/brochureTypes";
 import { saveBrochureSettings } from "@/lib/brochureStore";
 
 type RouteContext = {
@@ -16,6 +20,8 @@ export async function PATCH(request: Request, context: RouteContext) {
       title?: string;
       subtitle?: string;
       body?: string;
+      experienceMode?: BrochureExperienceMode;
+      immersiveSettings?: Partial<BrochureImmersiveSettings>;
       accentColor?: string;
       backgroundColor?: string;
       fontFamily?: "helvetica" | "garamond" | "georgia" | "times";

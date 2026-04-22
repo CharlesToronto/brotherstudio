@@ -12,7 +12,11 @@ import type {
   BrochureApprovedImage,
   BrochureAsset,
   BrochureContent,
+  BrochureExperienceMode,
   BrochureFontFamily,
+  BrochureImmersiveMotionPreset,
+  BrochureImmersiveSettings,
+  BrochureImmersiveTheme,
   BrochureOrientation,
   BrochureProject,
   BrochureProjectSummary,
@@ -274,6 +278,34 @@ function buildDefaultStyleSettings(): BrochureStyleSettings {
   };
 }
 
+function normalizeExperienceMode(
+  value: string | null | undefined,
+): BrochureExperienceMode {
+  return value === "immersive" ? "immersive" : "brochure";
+}
+
+function normalizeImmersiveTheme(
+  value: string | null | undefined,
+): BrochureImmersiveTheme {
+  return value === "dark" || value === "warm" || value === "editorial"
+    ? value
+    : "light";
+}
+
+function normalizeImmersiveMotionPreset(
+  value: string | null | undefined,
+): BrochureImmersiveMotionPreset {
+  return value === "cinematic" || value === "bold" ? value : "soft";
+}
+
+function buildDefaultImmersiveSettings(): BrochureImmersiveSettings {
+  return {
+    theme: "light",
+    motionPreset: "soft",
+    showProgressNav: true,
+  };
+}
+
 function buildDefaultSections(
   projectName: string,
   title: string,
@@ -433,6 +465,8 @@ function buildDefaultContent(
     imageOrder: allImageIds,
     selectedImageIds: allImageIds,
     sections: buildDefaultSections(projectName, title, subtitle, body, allImageIds),
+    experienceMode: "brochure",
+    immersiveSettings: buildDefaultImmersiveSettings(),
   };
 }
 
@@ -470,9 +504,36 @@ function normalizeContentJson(
   subtitle: string,
   body: string,
 ): BrochureContent {
+  const contentCandidate =
+    value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  const immersiveCandidate =
+    contentCandidate?.immersiveSettings &&
+    typeof contentCandidate.immersiveSettings === "object"
+      ? (contentCandidate.immersiveSettings as Record<string, unknown>)
+      : null;
+  const experienceMode = normalizeExperienceMode(
+    typeof contentCandidate?.experienceMode === "string"
+      ? contentCandidate.experienceMode
+      : null,
+  );
+  const immersiveSettings: BrochureImmersiveSettings = {
+    ...buildDefaultImmersiveSettings(),
+    theme: normalizeImmersiveTheme(
+      typeof immersiveCandidate?.theme === "string" ? immersiveCandidate.theme : null,
+    ),
+    motionPreset: normalizeImmersiveMotionPreset(
+      typeof immersiveCandidate?.motionPreset === "string"
+        ? immersiveCandidate.motionPreset
+        : null,
+    ),
+    showProgressNav:
+      typeof immersiveCandidate?.showProgressNav === "boolean"
+        ? immersiveCandidate.showProgressNav
+        : buildDefaultImmersiveSettings().showProgressNav,
+  };
   const availableSet = new Set(availableImageIds);
   const allOrderedIds = normalizeStringArray(
-    value && typeof value === "object" ? (value as Record<string, unknown>).imageOrder : null,
+    contentCandidate?.imageOrder ?? null,
   ).filter((id, index, source) => availableSet.has(id) && source.indexOf(id) === index);
 
   const imageOrder = [...allOrderedIds];
@@ -484,17 +545,14 @@ function normalizeContentJson(
   }
 
   const selectedFromValue = normalizeStringArray(
-    value && typeof value === "object"
-      ? (value as Record<string, unknown>).selectedImageIds
-      : null,
+    contentCandidate?.selectedImageIds ?? null,
   ).filter((id) => imageOrder.includes(id));
 
   const selectedImageIds = selectedFromValue.length > 0
     ? imageOrder.filter((id) => selectedFromValue.includes(id))
     : [...imageOrder];
 
-  const rawSections =
-    value && typeof value === "object" ? (value as Record<string, unknown>).sections : null;
+  const rawSections = contentCandidate?.sections ?? null;
 
   if (Array.isArray(rawSections)) {
     const legacyHero = rawSections.find(
@@ -535,6 +593,8 @@ function normalizeContentJson(
             ? imageOrder.filter((id) => selectedFromValue.includes(id) || usedImageIds.has(id))
             : imageOrder,
         sections,
+        experienceMode,
+        immersiveSettings,
       };
     }
 
@@ -561,6 +621,8 @@ function normalizeContentJson(
         imageOrder,
         selectedImageIds: selectedImageIds.length > 0 ? selectedImageIds : imageOrder,
         sections,
+        experienceMode,
+        immersiveSettings,
       };
     }
   }
@@ -569,6 +631,8 @@ function normalizeContentJson(
     imageOrder,
     selectedImageIds,
     sections: buildDefaultSections(projectName, title, subtitle, body, imageOrder),
+    experienceMode,
+    immersiveSettings,
   };
 }
 
@@ -920,6 +984,8 @@ export async function getBrochureProject(
     body,
     styleSettings,
     content,
+    experienceMode: content.experienceMode ?? "brochure",
+    immersiveSettings: content.immersiveSettings ?? buildDefaultImmersiveSettings(),
     approvedImages,
     extraAssets,
   };
@@ -939,6 +1005,8 @@ export async function saveBrochureSettings(
     title?: string;
     subtitle?: string;
     body?: string;
+    experienceMode?: BrochureExperienceMode;
+    immersiveSettings?: Partial<BrochureImmersiveSettings>;
     fontFamily?: BrochureFontFamily;
     orientation?: BrochureOrientation;
     accentColor?: string;
@@ -982,11 +1050,29 @@ export async function saveBrochureSettings(
   );
   const finalSelectedImageIds =
     selectedImageIds.length > 0 ? selectedImageIds : [...fallbackImageOrder];
+  const experienceMode = normalizeExperienceMode(
+    input.experienceMode ?? project.experienceMode,
+  );
+  const immersiveSettings: BrochureImmersiveSettings = {
+    ...buildDefaultImmersiveSettings(),
+    ...project.immersiveSettings,
+    ...(input.immersiveSettings ?? {}),
+    theme: normalizeImmersiveTheme(
+      input.immersiveSettings?.theme ?? project.immersiveSettings.theme,
+    ),
+    motionPreset: normalizeImmersiveMotionPreset(
+      input.immersiveSettings?.motionPreset ?? project.immersiveSettings.motionPreset,
+    ),
+    showProgressNav:
+      input.immersiveSettings?.showProgressNav ?? project.immersiveSettings.showProgressNav,
+  };
 
   const content = {
     imageOrder: fallbackImageOrder,
     selectedImageIds: finalSelectedImageIds,
     sections,
+    experienceMode,
+    immersiveSettings,
   } satisfies BrochureContent;
 
   const styleSettings: BrochureStyleSettings = {

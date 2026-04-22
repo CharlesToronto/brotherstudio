@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { BrochureImmersive } from "@/components/BrochureImmersive";
 import { BrochurePreview } from "@/components/BrochurePreview";
 import { BrochureStudio } from "@/components/BrochureStudio";
 import { getBrochureProject, isBrochureConfigured } from "@/lib/brochureStore";
@@ -104,14 +105,31 @@ export default async function MyBrochureProjectPage({
         <BrochureStudio initialProject={project} />
       ) : (
         <section className="brochurePublicShell">
-          <div className="brochurePublicCanvas">
-            <BrochurePreview
-              projectName={project.name}
-              template={project.template}
-              styleSettings={project.styleSettings}
-              sections={project.content.sections}
-              images={allImages}
-            />
+          <div
+            className={`brochurePublicCanvas${
+              project.experienceMode === "immersive" ? " brochurePublicCanvasImmersive" : ""
+            }`}
+          >
+            {project.experienceMode === "immersive" ? (
+              <BrochureImmersive
+                projectName={project.name}
+                title={project.title}
+                subtitle={project.subtitle}
+                body={project.body}
+                styleSettings={project.styleSettings}
+                immersiveSettings={project.immersiveSettings}
+                sections={project.content.sections}
+                images={allImages}
+              />
+            ) : (
+              <BrochurePreview
+                projectName={project.name}
+                template={project.template}
+                styleSettings={project.styleSettings}
+                sections={project.content.sections}
+                images={allImages}
+              />
+            )}
           </div>
         </section>
       )}

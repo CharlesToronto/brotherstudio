@@ -7,6 +7,9 @@ export type BrochureFontFamily =
   | "times";
 
 export type BrochureOrientation = "portrait" | "landscape";
+export type BrochureExperienceMode = "brochure" | "immersive";
+export type BrochureImmersiveTheme = "light" | "dark" | "warm" | "editorial";
+export type BrochureImmersiveMotionPreset = "soft" | "cinematic" | "bold";
 
 export type BrochureSocialLinkKey =
   | "website"
@@ -158,6 +161,14 @@ export type BrochureContent = {
   imageOrder: string[];
   selectedImageIds: string[];
   sections: BrochureSection[];
+  experienceMode?: BrochureExperienceMode;
+  immersiveSettings?: BrochureImmersiveSettings;
+};
+
+export type BrochureImmersiveSettings = {
+  theme: BrochureImmersiveTheme;
+  motionPreset: BrochureImmersiveMotionPreset;
+  showProgressNav: boolean;
 };
 
 export type BrochureProjectSummary = {
@@ -178,6 +189,8 @@ export type BrochureProject = BrochureProjectSummary & {
   body: string;
   styleSettings: BrochureStyleSettings;
   content: BrochureContent;
+  experienceMode: BrochureExperienceMode;
+  immersiveSettings: BrochureImmersiveSettings;
   approvedImages: BrochureApprovedImage[];
   extraAssets: BrochureAsset[];
 };
