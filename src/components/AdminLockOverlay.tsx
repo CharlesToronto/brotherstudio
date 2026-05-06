@@ -14,26 +14,38 @@ export function AdminLockOverlay({
   title = "Accès Admin",
   storageKey = ADMIN_UNLOCK_STORAGE_KEY,
 }: AdminLockOverlayProps) {
-  const [isUnlocked, setIsUnlocked] = useState(() => {
+  const readUnlockedState = () => {
     if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem(storageKey) === "1";
+    return (
+      window.sessionStorage.getItem(storageKey) === "1" ||
+      window.localStorage.getItem(storageKey) === "1"
+    );
+  };
+
+  const [isUnlocked, setIsUnlocked] = useState(() => {
+    return readUnlockedState();
   });
   const [error, setError] = useState("");
+  const [code, setCode] = useState("");
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    const codeRaw = formData.get("code");
-    const code = typeof codeRaw === "string" ? codeRaw.trim() : "";
+    const nextCode = code.trim();
 
-    if (code !== ACCESS_CODE) {
+    if (!nextCode) {
+      setError("Veuillez renseigner ce champ.");
+      return;
+    }
+
+    if (nextCode !== ACCESS_CODE) {
       setError("Code incorrect.");
       return;
     }
 
     window.sessionStorage.setItem(storageKey, "1");
+    window.localStorage.setItem(storageKey, "1");
     setError("");
+    setCode("");
     setIsUnlocked(true);
   };
 
@@ -41,7 +53,7 @@ export function AdminLockOverlay({
 
   return (
     <div className="adminLockOverlay" role="dialog" aria-modal="true" aria-labelledby="adminLockTitle">
-      <form className="adminLockCard" onSubmit={handleSubmit}>
+      <form className="adminLockCard" onSubmit={handleSubmit} noValidate>
         <h2 id="adminLockTitle" className="adminLockTitle">
           {title}
         </h2>
@@ -53,7 +65,11 @@ export function AdminLockOverlay({
           inputMode="numeric"
           autoComplete="one-time-code"
           autoFocus
-          required
+          value={code}
+          onChange={(event) => {
+            setCode(event.target.value);
+            if (error) setError("");
+          }}
         />
         <button className="adminLockButton" type="submit">
           Déverrouiller
