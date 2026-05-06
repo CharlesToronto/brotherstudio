@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AdminLockOverlay } from "@/components/AdminLockOverlay";
-import { TeamSectionNav } from "@/components/TeamSectionNav";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
 
@@ -38,19 +37,14 @@ export async function generateMetadata({
 
 export default async function LocaleTeamLayout({
   children,
-  params,
+  params: _params,
 }: LocaleTeamLayoutProps) {
-  const locale = await resolveLocaleParam(params);
+  await resolveLocaleParam(_params);
 
   return (
-    <main className="siteMain teamPage">
+    <>
       <AdminLockOverlay title="Accès Team" storageKey="bs_team_unlocked" />
-      <div className="teamShell">
-        <aside className="teamSidebar" aria-label="Team navigation">
-          <TeamSectionNav locale={locale} />
-        </aside>
-        <div className="teamContent">{children}</div>
-      </div>
-    </main>
+      {children}
+    </>
   );
 }

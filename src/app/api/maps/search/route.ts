@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   const response = await fetch(upstreamUrl, {
     headers: {
       "accept-language": request.headers.get("accept-language") ?? "fr,en",
-      "user-agent": "BrotherStudio myBrochure map search",
+      "user-agent": "BrotherStudio map search",
     },
     next: { revalidate: 3600 },
   });

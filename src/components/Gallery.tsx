@@ -27,6 +27,8 @@ type GalleryProps = {
 const GALLERY_IMAGE_SIZES =
   "(max-width: 640px) calc(100vw - 36px), (max-width: 1100px) calc((100vw - 84px) / 2), calc((100vw - 112px) / 3)";
 const ALWAYS_VISIBLE_PROJECT_KEYS = new Set<GalleryProjectKey>(["flanthey", "arbaz"]);
+const INITIAL_GALLERY_BATCH = 12;
+const GALLERY_BATCH_SIZE = 12;
 
 function arraysEqual(a: string[], b: string[]) {
   if (a.length !== b.length) return false;
@@ -109,9 +111,17 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
   const [busyId, setBusyId] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(() =>
+    Math.min(items.length, INITIAL_GALLERY_BATCH),
+  );
+  const [revealedIds, setRevealedIds] = useState<string[]>([]);
+  const [loadedIds, setLoadedIds] = useState<string[]>([]);
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
   const addInputRef = useRef<HTMLInputElement | null>(null);
   const replaceTargetIdRef = useRef<string | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const revealItemRefs = useRef(new Map<string, HTMLDivElement>());
+  const previousProjectRef = useRef<GalleryProjectKey | "all">("all");
   const lastSavedArchitectByIdRef = useRef<Map<string, string>>(new Map());
   const lastSavedProjectByIdRef = useRef<Map<string, GalleryProjectValue>>(new Map());
   const lastSavedOrderRef = useRef<string[]>([]);
@@ -148,6 +158,82 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
     if (activeProject === "all") return localItems;
     return localItems.filter((item) => item.project === activeProject);
   }, [activeProject, localItems]);
+
+  const renderedItems = useMemo(
+    () => filteredItems.slice(0, visibleCount),
+    [filteredItems, visibleCount],
+  );
+
+  useEffect(() => {
+    const nextInitialCount = Math.min(filteredItems.length, INITIAL_GALLERY_BATCH);
+
+    if (previousProjectRef.current !== activeProject) {
+      previousProjectRef.current = activeProject;
+      setVisibleCount(nextInitialCount);
+      setRevealedIds([]);
+      setLoadedIds([]);
+      return;
+    }
+
+    setVisibleCount((current) =>
+      current > filteredItems.length ? nextInitialCount : Math.max(current, nextInitialCount),
+    );
+  }, [activeProject, filteredItems.length]);
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || visibleCount >= filteredItems.length) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting) return;
+        setVisibleCount((current) =>
+          Math.min(current + GALLERY_BATCH_SIZE, filteredItems.length),
+        );
+      },
+      {
+        rootMargin: "220px 0px",
+        threshold: 0.01,
+      },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [filteredItems.length, visibleCount]);
+
+  useEffect(() => {
+    if (renderedItems.length === 0) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setRevealedIds((current) => {
+          const next = new Set(current);
+          for (const entry of entries) {
+            const id = (entry.target as HTMLElement).dataset.galleryId;
+            if (!id) continue;
+            if (entry.isIntersecting) {
+              next.add(id);
+            } else {
+              next.delete(id);
+            }
+          }
+          return Array.from(next);
+        });
+      },
+      {
+        rootMargin: "0px 0px -8% 0px",
+        threshold: 0.18,
+      },
+    );
+
+    for (const item of renderedItems) {
+      const node = revealItemRefs.current.get(item.id);
+      if (node) observer.observe(node);
+    }
+
+    return () => observer.disconnect();
+  }, [renderedItems]);
 
   const activeItem = useMemo(() => {
     if (activeId === null) return null;
@@ -412,16 +498,27 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
           void saveOrder(nextAll, previousAll);
         }}
       >
-        {filteredItems.map((item, index) => {
+        {renderedItems.map((item, index) => {
           const isDropTarget =
             editable && dragId !== null && dragId !== item.id && dragOverId === item.id;
-          const isPriorityImage = index < 4;
+          const isPriorityImage = index < 2;
           const isSvgImage = item.src.toLowerCase().endsWith(".svg");
+          const isRevealed = revealedIds.includes(item.id);
+          const isLoaded = loadedIds.includes(item.id);
           return (
             <div
               key={item.id}
               className={`galleryItem${isDropTarget ? " galleryItemDropTarget" : ""}`}
               role="listitem"
+              ref={(node) => {
+                if (node) {
+                  revealItemRefs.current.set(item.id, node);
+                } else {
+                  revealItemRefs.current.delete(item.id);
+                }
+              }}
+              data-gallery-id={item.id}
+              data-revealed={isRevealed ? "true" : "false"}
               onDragOver={(event) => {
                 if (!editable || busyId !== null) return;
                 event.preventDefault();
@@ -457,6 +554,7 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
                 type="button"
                 onClick={() => setActiveId(item.id)}
                 aria-label="Open image"
+                data-loaded={isLoaded ? "true" : "false"}
                 draggable={editable && busyId === null}
                 onDragStart={(event) => {
                   if (!editable || busyId !== null) return;
@@ -478,10 +576,16 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
                   width={1600}
                   height={1600}
                   sizes={GALLERY_IMAGE_SIZES}
+                  quality={78}
                   priority={isPriorityImage}
                   loading={isPriorityImage ? undefined : "lazy"}
                   decoding="async"
                   unoptimized={isSvgImage}
+                  onLoad={() =>
+                    setLoadedIds((current) =>
+                      current.includes(item.id) ? current : [...current, item.id],
+                    )
+                  }
                 />
               </button>
 
@@ -594,6 +698,14 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
           >
             Add
           </button>
+        ) : null}
+
+        {visibleCount < filteredItems.length ? (
+          <div
+            ref={loadMoreRef}
+            className="galleryLoadMoreSentinel"
+            aria-hidden="true"
+          />
         ) : null}
       </div>
 

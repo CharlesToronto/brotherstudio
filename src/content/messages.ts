@@ -398,7 +398,6 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
             "1x marketing video, 31-60 seconds",
             "Plan de vente",
             "myStudio review tool",
-            "myBrochure presentation tool (coming soon)",
           ],
         },
         {
@@ -632,7 +631,6 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
             "1x Video marketing, 31-60 secondes",
             "Plan de vente",
             "myStudio review tool",
-            "myBrochure presentation tool (coming soon)",
           ],
         },
         {

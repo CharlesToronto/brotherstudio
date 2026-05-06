@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useTypingPlaceholder } from "@/components/useTypingPlaceholder";
 import type { ProjectSummary, ProjectViewerRole } from "@/lib/projectFeedbackTypes";
@@ -17,6 +17,10 @@ type MyProjectDirectoryProps = {
   projects: ProjectSummary[];
 };
 
+function projectStatusLabel(status: ProjectSummary["status"]) {
+  return status === "approved" ? "Approved delivery" : "In review";
+}
+
 export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
   const router = useRouter();
   const passwordPlaceholder = useTypingPlaceholder(
@@ -27,6 +31,14 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
   const [modes, setModes] = useState<Record<string, ProjectViewerRole | null>>({});
   const [busyProjectId, setBusyProjectId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const inReviewProjects = useMemo(
+    () => projects.filter((project) => project.status === "in_review"),
+    [projects],
+  );
+  const approvedProjects = useMemo(
+    () => projects.filter((project) => project.status === "approved"),
+    [projects],
+  );
 
   const handleOpenProject = async (projectId: string) => {
     const mode = modes[projectId] ?? null;
@@ -87,6 +99,146 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
     } finally {
       setBusyProjectId(null);
     }
+  };
+
+  const renderProjectCard = (project: ProjectSummary) => {
+    const mode = modes[project.id] ?? null;
+
+    return (
+      <article
+        key={project.id}
+        className="projectDirectoryCard"
+        data-layout="grid"
+      >
+        <div className="projectDirectoryMedia">
+          {project.coverImageUrl ? (
+            <img
+              className="projectDirectoryImage"
+              src={project.coverImageUrl}
+              alt={project.name}
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <div className="projectDirectoryPlaceholder">
+              <span>{project.name.slice(0, 1).toUpperCase()}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="projectDirectoryBody">
+          <div className="projectDirectoryHeader">
+            <div className="projectDirectoryTitleRow">
+              <h2 className="projectFeedbackVersionTitle">{project.name}</h2>
+              <span className="projectFeedbackStatus" data-status={project.status}>
+                {projectStatusLabel(project.status)}
+              </span>
+            </div>
+            <p className="projectFeedbackVersionMeta">
+              {project.latestVersion > 0
+                ? `Latest variant: V${project.latestVersion}`
+                : "No variants yet"}
+            </p>
+          </div>
+
+          <div className="projectFeedbackSummary">
+            <span>{project.imageCount} image(s)</span>
+            <span>
+              {project.commentCount} edit request{project.commentCount === 1 ? "" : "s"}
+            </span>
+            <span>{project.viewerCount} viewer(s)</span>
+          </div>
+
+          <div className="projectDirectoryAccess">
+            <div className="projectDirectoryRoleSwitch">
+              <button
+                className="projectDirectoryRoleButton"
+                type="button"
+                data-active={mode === "team" ? "true" : "false"}
+                onClick={() => {
+                  setErrorMessage("");
+                  setModes((current) => ({
+                    ...current,
+                    [project.id]: current[project.id] === "team" ? null : "team",
+                  }));
+                }}
+              >
+                Team member
+              </button>
+              <button
+                className="projectDirectoryRoleButton"
+                type="button"
+                data-active={mode === "visitor" ? "true" : "false"}
+                onClick={() => {
+                  setErrorMessage("");
+                  setModes((current) => ({
+                    ...current,
+                    [project.id]:
+                      current[project.id] === "visitor" ? null : "visitor",
+                  }));
+                }}
+              >
+                Visitor
+              </button>
+            </div>
+
+            {mode ? (
+              <div className="projectDirectoryAccessPanel">
+                <label className="projectFeedbackField">
+                  <span>Email</span>
+                  <input
+                    className="projectFeedbackInput"
+                    type="email"
+                    value={emails[project.id] ?? ""}
+                    onChange={(event) =>
+                      setEmails((current) => ({
+                        ...current,
+                        [project.id]: event.target.value,
+                      }))
+                    }
+                    autoComplete="email"
+                    required
+                  />
+                </label>
+
+                {mode === "team" ? (
+                  <label className="projectFeedbackField">
+                    <span>Parcel Number</span>
+                    <input
+                      className="projectFeedbackInput"
+                      type="password"
+                      value={passwords[project.id] ?? ""}
+                      onChange={(event) =>
+                        setPasswords((current) => ({
+                          ...current,
+                          [project.id]: event.target.value,
+                        }))
+                      }
+                      placeholder={passwordPlaceholder}
+                      autoComplete="current-password"
+                      required
+                    />
+                  </label>
+                ) : null}
+
+                <button
+                  className="projectFeedbackAction"
+                  type="button"
+                  disabled={busyProjectId === project.id}
+                  onClick={() => void handleOpenProject(project.id)}
+                >
+                  {busyProjectId === project.id
+                    ? "Opening..."
+                    : mode === "team"
+                      ? "Open as team member"
+                      : "Open as visitor"}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </article>
+    );
   };
 
   return (
@@ -191,142 +343,47 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
       ) : null}
 
       {projects.length > 0 ? (
-        <div className="projectDirectoryGrid" data-layout="grid">
-          {projects.map((project) => {
-            const mode = modes[project.id] ?? null;
+        <>
+          <section className="projectDirectorySection">
+            <div className="projectDirectorySectionHeader">
+              <h2 className="projectFeedbackVersionTitle">Projects in review</h2>
+              <span className="projectFeedbackVersionMeta">{inReviewProjects.length}</span>
+            </div>
 
-            return (
-              <article
-                key={project.id}
-                className="projectDirectoryCard"
-                data-layout="grid"
-              >
-                <div className="projectDirectoryMedia">
-                  {project.coverImageUrl ? (
-                    <img
-                      className="projectDirectoryImage"
-                      src={project.coverImageUrl}
-                      alt={project.name}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ) : (
-                    <div className="projectDirectoryPlaceholder">
-                      <span>{project.name.slice(0, 1).toUpperCase()}</span>
-                    </div>
-                  )}
-                </div>
+            {inReviewProjects.length > 0 ? (
+              <div className="projectDirectoryGrid" data-layout="grid">
+                {inReviewProjects.map((project) => renderProjectCard(project))}
+              </div>
+            ) : (
+              <section className="projectFeedbackEmpty">
+                <h2 className="projectFeedbackVersionTitle">No projects in review</h2>
+                <p className="projectFeedbackVersionMeta">
+                  Active feedback projects will appear here.
+                </p>
+              </section>
+            )}
+          </section>
 
-                <div className="projectDirectoryBody">
-                  <div className="projectDirectoryHeader">
-                    <h2 className="projectFeedbackVersionTitle">{project.name}</h2>
-                    <p className="projectFeedbackVersionMeta">
-                      {project.latestVersion > 0
-                        ? `Latest variant: V${project.latestVersion}`
-                        : "No variants yet"}
-                    </p>
-                  </div>
+          <section className="projectDirectorySection">
+            <div className="projectDirectorySectionHeader">
+              <h2 className="projectFeedbackVersionTitle">Approved deliveries</h2>
+              <span className="projectFeedbackVersionMeta">{approvedProjects.length}</span>
+            </div>
 
-                  <div className="projectFeedbackSummary">
-                    <span>{project.imageCount} image(s)</span>
-                    <span>
-                      {project.commentCount} edit request{project.commentCount === 1 ? "" : "s"}
-                    </span>
-                    <span>{project.viewerCount} viewer(s)</span>
-                  </div>
-
-                  <div className="projectDirectoryAccess">
-                    <div className="projectDirectoryRoleSwitch">
-                      <button
-                        className="projectDirectoryRoleButton"
-                        type="button"
-                        data-active={mode === "team" ? "true" : "false"}
-                        onClick={() => {
-                          setErrorMessage("");
-                          setModes((current) => ({
-                            ...current,
-                            [project.id]: current[project.id] === "team" ? null : "team",
-                          }));
-                        }}
-                      >
-                        Team member
-                      </button>
-                      <button
-                        className="projectDirectoryRoleButton"
-                        type="button"
-                        data-active={mode === "visitor" ? "true" : "false"}
-                        onClick={() => {
-                          setErrorMessage("");
-                          setModes((current) => ({
-                            ...current,
-                            [project.id]:
-                              current[project.id] === "visitor" ? null : "visitor",
-                          }));
-                        }}
-                      >
-                        Visitor
-                      </button>
-                    </div>
-
-                    {mode ? (
-                      <div className="projectDirectoryAccessPanel">
-                        <label className="projectFeedbackField">
-                          <span>Email</span>
-                          <input
-                            className="projectFeedbackInput"
-                            type="email"
-                            value={emails[project.id] ?? ""}
-                            onChange={(event) =>
-                              setEmails((current) => ({
-                                ...current,
-                                [project.id]: event.target.value,
-                              }))
-                            }
-                            autoComplete="email"
-                            required
-                          />
-                        </label>
-
-                        {mode === "team" ? (
-                          <label className="projectFeedbackField">
-                            <span>Parcel Number</span>
-                            <input
-                              className="projectFeedbackInput"
-                              type="password"
-                              value={passwords[project.id] ?? ""}
-                              onChange={(event) =>
-                                setPasswords((current) => ({
-                                  ...current,
-                                  [project.id]: event.target.value,
-                                }))
-                              }
-                              placeholder={passwordPlaceholder}
-                              autoComplete="current-password"
-                              required
-                            />
-                          </label>
-                        ) : null}
-
-                        <button
-                          className="projectFeedbackAction"
-                          type="button"
-                          disabled={busyProjectId === project.id}
-                          onClick={() => void handleOpenProject(project.id)}
-                        >
-                          {busyProjectId === project.id
-                            ? "Opening..."
-                            : mode === "team"
-                              ? "Open as team member"
-                              : "Open as visitor"}
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+            {approvedProjects.length > 0 ? (
+              <div className="projectDirectoryGrid" data-layout="grid">
+                {approvedProjects.map((project) => renderProjectCard(project))}
+              </div>
+            ) : (
+              <section className="projectFeedbackEmpty">
+                <h2 className="projectFeedbackVersionTitle">No approved deliveries</h2>
+                <p className="projectFeedbackVersionMeta">
+                  Approved projects move here automatically.
+                </p>
+              </section>
+            )}
+          </section>
+        </>
       ) : (
         <section className="projectFeedbackEmpty">
           <h2 className="projectFeedbackVersionTitle">No current projects</h2>

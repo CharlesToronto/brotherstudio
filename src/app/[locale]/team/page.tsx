@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
-
-import { withLocalePath } from "@/lib/i18n";
+import { TeamCallWorkspace } from "@/components/TeamCallWorkspace";
 import { resolveLocaleParam } from "@/lib/localeParams";
 
 type LocaleTeamPageProps = {
@@ -11,5 +9,5 @@ export default async function LocalizedTeamPage({
   params,
 }: LocaleTeamPageProps) {
   const locale = await resolveLocaleParam(params);
-  redirect(withLocalePath(locale, "/team/call"));
+  return <TeamCallWorkspace locale={locale} />;
 }

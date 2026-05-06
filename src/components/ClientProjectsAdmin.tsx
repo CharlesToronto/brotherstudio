@@ -12,6 +12,10 @@ type ClientProjectsAdminProps = {
   setupError?: string | null;
 };
 
+function projectStatusLabel(status: ProjectSummary["status"]) {
+  return status === "approved" ? "Approved delivery" : "In review";
+}
+
 function formatProjectDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
@@ -93,7 +97,7 @@ export function ClientProjectsAdmin({
     () => sortedProjects.filter((project) => project.status !== "approved"),
     [sortedProjects],
   );
-  const archivedProjects = useMemo(
+  const approvedProjects = useMemo(
     () => sortedProjects.filter((project) => project.status === "approved"),
     [sortedProjects],
   );
@@ -333,7 +337,7 @@ export function ClientProjectsAdmin({
             <div className="clientProjectCardTitleRow">
               <h2 className="clientProjectCardTitle">{project.name}</h2>
               <span className="clientProjectCardStatus" data-status={project.status}>
-                {project.status === "approved" ? "Approved" : "In review"}
+                {projectStatusLabel(project.status)}
               </span>
             </div>
             <p className="clientProjectCardMeta">
@@ -514,7 +518,7 @@ export function ClientProjectsAdmin({
             >
               {isComposerOpen ? "Masquer le formulaire" : "Nouveau projet"}
             </button>
-            <p className="clientAdminText">{activeProjects.length} active project(s)</p>
+            <p className="clientAdminText">{activeProjects.length} project(s) in review</p>
           </div>
 
           <div className="clientAdminToolbarGroup">
@@ -591,26 +595,26 @@ export function ClientProjectsAdmin({
           activeProjects.map((project) => renderProjectCard(project))
         ) : (
           <div className="clientAdminSection">
-            <p className="clientAdminText">No active projects.</p>
+            <p className="clientAdminText">No projects in review.</p>
           </div>
         )}
       </div>
 
       <details className="clientAdminArchive">
         <summary className="clientAdminArchiveSummary">
-          <span>Archived projects</span>
-          <span>{archivedProjects.length} project(s)</span>
+          <span>Approved deliveries</span>
+          <span>{approvedProjects.length} project(s)</span>
         </summary>
         <div className="clientAdminArchiveBody">
           <p className="clientAdminText">
-            Approved projects move here automatically.
+            Approved projects move here automatically when the review cycle is complete.
           </p>
           <div className="clientAdminProjects" data-layout={layout}>
-            {archivedProjects.length > 0 ? (
-              archivedProjects.map((project) => renderProjectCard(project))
+            {approvedProjects.length > 0 ? (
+              approvedProjects.map((project) => renderProjectCard(project))
             ) : (
               <div className="clientAdminSection">
-                <p className="clientAdminText">No archived projects yet.</p>
+                <p className="clientAdminText">No approved deliveries yet.</p>
               </div>
             )}
           </div>

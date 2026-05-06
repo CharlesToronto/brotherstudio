@@ -522,9 +522,9 @@ export function ProjectFeedbackWorkspace({
       : busyImageAction === "delete"
         ? "Deleting image..."
         : busyImageStatus === "approved"
-          ? "Approving image..."
+          ? "Adding image to delivery..."
           : busyImageStatus === "in_review"
-            ? "Removing approved state..."
+            ? "Moving image back to review..."
             : isDownloadingApproved
               ? "Preparing downloads..."
               : "";
@@ -848,7 +848,7 @@ export function ProjectFeedbackWorkspace({
       }
 
       resetFeedbackState(payload.project);
-      setStatusMessage("Project marked as approved.");
+      setStatusMessage("Project moved to approved delivery.");
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to update status.",
@@ -901,8 +901,8 @@ export function ProjectFeedbackWorkspace({
       resetFeedbackState(payload.project);
       setStatusMessage(
         status === "approved"
-          ? "Image approved. It remains visible in review and approved images."
-          : "Approved state removed. The image now only appears in review.",
+          ? "Image added to approved delivery. It remains visible in review and delivery images."
+          : "Image moved back to review. It now appears only in review.",
       );
     } catch (error) {
       setErrorMessage(
@@ -1088,7 +1088,7 @@ export function ProjectFeedbackWorkspace({
       }
 
       setStatusMessage(
-        `Started downloading ${approvedImages.length} approved image${
+        `Started downloading ${approvedImages.length} delivery image${
           approvedImages.length === 1 ? "" : "s"
         }.`,
       );
@@ -1096,7 +1096,7 @@ export function ProjectFeedbackWorkspace({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Failed to download approved images.",
+          : "Failed to download delivery images.",
       );
     } finally {
       setIsDownloadingApproved(false);
@@ -1160,7 +1160,7 @@ export function ProjectFeedbackWorkspace({
                 onClick={() => void handleMarkApproved()}
                 disabled={isUpdatingStatus || project.status === "approved"}
               >
-                {isUpdatingStatus ? "Updating..." : "Approve all the project"}
+                {isUpdatingStatus ? "Updating..." : "Move project to approved delivery"}
               </button>
             ) : null}
           </div>
@@ -1173,7 +1173,7 @@ export function ProjectFeedbackWorkspace({
               : "No images yet"}
           </span>
           <span>{project.imageCount} image(s)</span>
-          <span>{approvedImageCount} approved</span>
+          <span>{approvedImageCount} in delivery</span>
           <span>{editRequestCountLabel(project.commentCount)}</span>
           <span>{viewerCountLabel(project.viewerCount)}</span>
         </div>
@@ -1222,7 +1222,7 @@ export function ProjectFeedbackWorkspace({
               aria-selected={activeWorkspaceTab === "approved"}
               onClick={() => setActiveWorkspaceTab("approved")}
             >
-              Approved Images
+              Delivery Images
               <span
                 data-empty={approvedImageCount === 0 ? "true" : "false"}
                 style={approvedImageCount === 0 ? emptyCountBadgeStyle : undefined}
@@ -1327,7 +1327,7 @@ export function ProjectFeedbackWorkspace({
               <div className="projectFeedbackEmpty">
                 <h2 className="projectFeedbackVersionTitle">No images in review</h2>
                 <p className="projectFeedbackVersionMeta">
-                  All current images are already in approved delivery.
+                  All current images are already in delivery.
                 </p>
               </div>
             )}
@@ -1588,7 +1588,7 @@ function ProjectFeedbackEditRequestsPanelContent({
           {canInteract
             ? "Click on the image to add the first edit request."
             : isApprovedImage
-              ? "Approved images stay visible here as read-only review history."
+              ? "Delivery images stay visible here as read-only review history."
               : "Visitor mode is view-only for edit requests."}
         </p>
       )}
@@ -1936,10 +1936,10 @@ function ProjectFeedbackImageCard({
                 onClick={() => onApproveImage(image.id)}
               >
                 {isStatusUpdating
-                  ? "Approving..."
+                  ? "Updating..."
                   : isApprovedImage
-                    ? "Approved"
-                    : "Approve image"}
+                    ? "In delivery"
+                    : "Add to delivery"}
               </button>
             ) : null}
             {showDownloadAction ? (
@@ -2004,7 +2004,7 @@ function ProjectFeedbackImageCard({
 
         {isApprovedImage ? (
           <div className="projectFeedbackApprovalWatermark" aria-hidden="true">
-            <span>Approved</span>
+            <span>In delivery</span>
           </div>
         ) : null}
 
@@ -2048,7 +2048,7 @@ function ProjectFeedbackImageCard({
             <div className="projectFeedbackIdentityTag">
               {!canInteractWithImage
                 ? isApprovedImage
-                  ? "Approved images stay visible here as read-only review history."
+                  ? "Delivery images stay visible here as read-only review history."
                   : "Visitor mode is read-only for edit requests."
                 : viewerIdentityLabel
                 ? `Posting as ${viewerIdentityLabel}`
@@ -2626,7 +2626,7 @@ function ProjectFeedbackDrawingPanelContent({
             {!canInteract ? (
               <p className="projectFeedbackCommentsMeta">
                 {isApprovedImage
-                  ? "Approved images keep the drawing layer visible in read-only mode."
+                  ? "Delivery images keep the drawing layer visible in read-only mode."
                   : viewerRole === "visitor"
                     ? "Visitor mode is view-only for drawings."
                     : "Open the project as a team member to edit drawings."}
@@ -2688,7 +2688,7 @@ function ProjectFeedbackApprovedCard({
           <p className="projectFeedbackImageMeta">{`Variant V${version}`}</p>
         </div>
 
-        <span className="projectFeedbackApprovedBadge">Approved</span>
+        <span className="projectFeedbackApprovedBadge">Approved delivery</span>
       </div>
 
       <div className="projectFeedbackApprovedMedia">
@@ -2723,7 +2723,7 @@ function ProjectFeedbackApprovedCard({
             disabled={busyImageStatusId === image.id}
             onClick={() => onMoveToReview(image.id)}
           >
-            {busyImageStatusId === image.id ? "Updating..." : "Remove approved state"}
+            {busyImageStatusId === image.id ? "Updating..." : "Move back to review"}
           </button>
         ) : null}
       </div>
@@ -2748,9 +2748,9 @@ function ProjectFeedbackApprovedGallery({
   if (approvedImages.length === 0) {
     return (
       <div className="projectFeedbackEmpty">
-        <h2 className="projectFeedbackVersionTitle">No approved images yet</h2>
+        <h2 className="projectFeedbackVersionTitle">No delivery images yet</h2>
         <p className="projectFeedbackVersionMeta">
-          Approved images will move here automatically.
+          Images added to approved delivery will appear here automatically.
         </p>
       </div>
     );
@@ -2760,10 +2760,10 @@ function ProjectFeedbackApprovedGallery({
     <section className="projectFeedbackApprovedShell">
       <div className="projectFeedbackApprovedHeader">
         <div className="projectFeedbackCommentsHeader">
-          <h2 className="projectFeedbackCommentsTitle">Approved Images</h2>
+          <h2 className="projectFeedbackCommentsTitle">Delivery Images</h2>
           <div className="projectFeedbackCommentsMetaGroup">
             <p className="projectFeedbackCommentsMeta">
-              {approvedImages.length} approved image{approvedImages.length === 1 ? "" : "s"}
+              {approvedImages.length} delivery image{approvedImages.length === 1 ? "" : "s"}
             </p>
           </div>
         </div>
@@ -3039,7 +3039,7 @@ function ProjectFeedbackTeamChat({
     if (!canPost) {
       setAnimatedPlaceholder(
         isApprovedImage
-          ? "Approved chat history"
+          ? "Delivery chat history"
           : "Open the project with your email to chat",
       );
       return;
@@ -3204,7 +3204,7 @@ function ProjectFeedbackTeamChat({
           {!canInteract ? (
             <p className="projectFeedbackCommentsMeta">
               {isApprovedImage
-                ? "Approved images keep the team chat history visible in read-only mode."
+                ? "Delivery images keep the team chat history visible in read-only mode."
                 : viewerRole === "visitor"
                 ? "Visitor mode is read-only for team chat."
                 : "Team member access is required to join the team chat."}

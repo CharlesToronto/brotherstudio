@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { TeamCallPanel } from "@/components/TeamWorkspace";
+import { TeamCallWorkspace } from "@/components/TeamCallWorkspace";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
 
@@ -32,5 +32,5 @@ export default async function LocalizedTeamCallPage({
 }: LocaleTeamCallPageProps) {
   const locale = await resolveLocaleParam(params);
 
-  return <TeamCallPanel locale={locale} />;
+  return <TeamCallWorkspace locale={locale} />;
 }
