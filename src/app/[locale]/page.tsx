@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 
 import { BackToTopButton } from "@/components/BackToTopButton";
-import { Gallery } from "@/components/Gallery";
+import { HomeBlurWordSection } from "@/components/HomeBlurWordSection";
+import { HomeGalleryExperience } from "@/components/HomeGalleryExperience";
+import { HomeHeroHeaderController } from "@/components/HomeHeroHeaderController";
 import { getMessages } from "@/content/messages";
 import { getGalleryItems } from "@/lib/galleryStore";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
@@ -49,9 +51,11 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
 
   return (
     <main className="siteMain">
-      <p className="homeIntro homeIntroHighlight">{messages.home.introLine}</p>
-      <Gallery
+      <HomeHeroHeaderController />
+      <HomeBlurWordSection />
+      <HomeGalleryExperience
         items={items}
+        introLine={messages.home.introLine}
         filterLabels={{
           all: messages.home.projectFilterAllLabel,
           ariaLabel: messages.home.projectFilterAriaLabel,

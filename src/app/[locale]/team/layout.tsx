@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { AdminLockOverlay } from "@/components/AdminLockOverlay";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
 
@@ -41,10 +40,5 @@ export default async function LocaleTeamLayout({
 }: LocaleTeamLayoutProps) {
   await resolveLocaleParam(_params);
 
-  return (
-    <>
-      <AdminLockOverlay title="Accès Team" storageKey="bs_team_unlocked" />
-      {children}
-    </>
-  );
+  return children;
 }

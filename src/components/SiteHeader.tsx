@@ -17,6 +17,7 @@ import {
 
 type Theme = "light" | "dark";
 const THEME_COOKIE_KEY = "theme";
+const MOBILE_NAV_BREAKPOINT = 980;
 
 type SiteHeaderProps = {
   initialTheme: Theme;
@@ -53,7 +54,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
   }, [locale]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || window.innerWidth > 640) return;
+    if (typeof window === "undefined" || window.innerWidth > MOBILE_NAV_BREAKPOINT) return;
     const nav = mobileNavRef.current;
     if (!nav) return;
 
@@ -208,12 +209,21 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     <header className="siteHeader">
       <Link className="siteLogo" href={localizedHref("/")}>
         <Image
-          className="siteLogoImage"
-          src="/site-logo-header.png"
+          className="siteLogoImage siteLogoImageBlack"
+          src="/bs-logo-black.png"
           alt={site.name}
-          width={789}
-          height={91}
+          width={891}
+          height={165}
           priority
+        />
+        <Image
+          className="siteLogoImage siteLogoImageWhite"
+          src="/bs-logo-white.png"
+          alt=""
+          width={892}
+          height={166}
+          priority
+          aria-hidden="true"
         />
       </Link>
 

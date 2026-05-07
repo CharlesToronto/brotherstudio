@@ -4,7 +4,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { GalleryItem } from "@/lib/galleryStore";
 import {
@@ -18,10 +18,13 @@ import {
 type GalleryProps = {
   items: GalleryItem[];
   editable?: boolean;
+  activeProject?: GalleryProjectKey | "all";
   filterLabels?: {
     all: string;
     ariaLabel: string;
   };
+  onProjectChange?: (project: GalleryProjectKey | "all") => void;
+  showProjectFilters?: boolean;
 };
 
 const GALLERY_IMAGE_SIZES =
@@ -99,7 +102,14 @@ function TrashIcon() {
   );
 }
 
-export function Gallery({ items, editable = false, filterLabels }: GalleryProps) {
+export function Gallery({
+  items,
+  editable = false,
+  activeProject: controlledActiveProject,
+  filterLabels,
+  onProjectChange,
+  showProjectFilters = true,
+}: GalleryProps) {
   const router = useRouter();
   const resolvedFilterLabels = filterLabels ?? {
     all: editable ? "Tous" : "All",
@@ -107,7 +117,14 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
   };
   const [localItems, setLocalItems] = useState<GalleryItem[]>(items);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeProject, setActiveProject] = useState<GalleryProjectKey | "all">("all");
+  const [internalActiveProject, setInternalActiveProject] = useState<GalleryProjectKey | "all">("all");
+  const activeProject = controlledActiveProject ?? internalActiveProject;
+  const setActiveProject = useCallback((project: GalleryProjectKey | "all") => {
+    if (controlledActiveProject === undefined) {
+      setInternalActiveProject(project);
+    }
+    onProjectChange?.(project);
+  }, [controlledActiveProject, onProjectChange]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -152,7 +169,7 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
     if (activeProject === "all") return;
     if (availableProjects.some((option) => option.key === activeProject)) return;
     setActiveProject("all");
-  }, [activeProject, availableProjects]);
+  }, [activeProject, availableProjects, setActiveProject]);
 
   const filteredItems = useMemo(() => {
     if (activeProject === "all") return localItems;
@@ -444,7 +461,7 @@ export function Gallery({ items, editable = false, filterLabels }: GalleryProps)
 
   return (
     <>
-      {availableProjects.length > 0 ? (
+      {showProjectFilters && availableProjects.length > 0 ? (
         <div
           className="galleryFilters"
           role="toolbar"

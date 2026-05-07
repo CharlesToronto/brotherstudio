@@ -7,6 +7,7 @@ import type {
   TeamClientRecord,
   TeamClientStatus,
   TeamQaRecord,
+  TeamScriptChoice,
   TeamScriptStep,
 } from "@/lib/teamStore";
 
@@ -18,6 +19,12 @@ type TeamNoteRecord = {
   id: string;
   clientId: string;
   content: string;
+};
+
+type TeamScriptMessage = {
+  id: string;
+  role: "agent" | "prospect" | "system";
+  text: string;
 };
 
 type TeamCopy = {
@@ -37,6 +44,9 @@ type TeamCopy = {
   qaTitle: string;
   editQa: string;
   addQa: string;
+  scriptSaved: string;
+  invalidScript: string;
+  noStepAvailable: string;
   clientFields: {
     name: string;
     company: string;
@@ -73,6 +83,9 @@ const copyByLocale: Record<Locale, TeamCopy> = {
     qaTitle: "Questions fréquentes",
     editQa: "Edit Q&A",
     addQa: "+ Ajouter",
+    scriptSaved: "Script sauvegardé",
+    invalidScript: "Le JSON du script est invalide.",
+    noStepAvailable: "Aucune étape disponible.",
     clientFields: {
       name: "Nom",
       company: "Entreprise",
@@ -112,6 +125,9 @@ const copyByLocale: Record<Locale, TeamCopy> = {
     qaTitle: "Frequently asked questions",
     editQa: "Edit Q&A",
     addQa: "+ Add",
+    scriptSaved: "Script saved",
+    invalidScript: "The script JSON is invalid.",
+    noStepAvailable: "No step available.",
     clientFields: {
       name: "Name",
       company: "Company",
@@ -157,6 +173,22 @@ function createQaDraft(): TeamQaRecord {
   };
 }
 
+function createScriptConversation(steps: TeamScriptStep[]) {
+  const firstStep = steps[0] ?? null;
+  return {
+    activeStepId: firstStep?.id ?? "",
+    messages: firstStep
+      ? [{ id: `step:${firstStep.id}:0`, role: "agent" as const, text: firstStep.text }]
+      : [],
+  };
+}
+
+function getProspectReplyLabel(action: TeamScriptChoice, fallbackLabel: string) {
+  if (action === "yes") return "Oui";
+  if (action === "no") return "Non";
+  return fallbackLabel;
+}
+
 export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
   const copy = copyByLocale[locale] ?? copyByLocale.en;
   const [isLoading, setIsLoading] = useState(true);
@@ -167,9 +199,11 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [newClientDraft, setNewClientDraft] = useState(emptyClientDraft);
   const [notesByClientId, setNotesByClientId] = useState<Record<string, TeamNoteRecord>>({});
+  const [scratchpadNote, setScratchpadNote] = useState("");
   const [notesStatus, setNotesStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [scriptSteps, setScriptSteps] = useState<TeamScriptStep[]>([]);
   const [activeScriptStepId, setActiveScriptStepId] = useState("");
+  const [scriptMessages, setScriptMessages] = useState<TeamScriptMessage[]>([]);
   const [isEditingScript, setIsEditingScript] = useState(false);
   const [scriptEditorValue, setScriptEditorValue] = useState("");
   const [qaItems, setQaItems] = useState<TeamQaRecord[]>([]);
@@ -217,7 +251,9 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
         setClients(nextClients);
         setSelectedClientId((current) => current || nextClients[0]?.id || "");
         setScriptSteps(nextScriptSteps);
-        setActiveScriptStepId(nextScriptSteps[0]?.id ?? "");
+        const initialConversation = createScriptConversation(nextScriptSteps);
+        setActiveScriptStepId(initialConversation.activeStepId);
+        setScriptMessages(initialConversation.messages);
         setQaItems(nextQaItems);
         setOpenQaId(nextQaItems[0]?.id ?? "");
         setScriptEditorValue(JSON.stringify(nextScriptSteps, null, 2));
@@ -254,11 +290,20 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
     [clients, selectedClientId],
   );
 
-  const selectedClientNote = selectedClient ? notesByClientId[selectedClient.id]?.content ?? "" : "";
+  const selectedClientNote = selectedClient
+    ? notesByClientId[selectedClient.id]?.content ?? ""
+    : scratchpadNote;
   const activeScriptStep = useMemo(
     () => scriptSteps.find((step) => step.id === activeScriptStepId) ?? null,
     [activeScriptStepId, scriptSteps],
   );
+
+  useEffect(() => {
+    if (selectedClientId && clients.some((client) => client.id === selectedClientId)) return;
+    if (clients.length > 0) {
+      setSelectedClientId(clients[0].id);
+    }
+  }, [clients, selectedClientId]);
 
   useEffect(() => {
     if (!selectedClient || notesByClientId[selectedClient.id]) return;
@@ -389,7 +434,10 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
   };
 
   const updateSelectedNote = (content: string) => {
-    if (!selectedClient) return;
+    if (!selectedClient) {
+      setScratchpadNote(content);
+      return;
+    }
     setNotesByClientId((current) => ({
       ...current,
       [selectedClient.id]: {
@@ -400,16 +448,57 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
     }));
   };
 
-  const advanceScript = (nextStepId?: string | null) => {
-    if (!nextStepId) {
-      setActiveScriptStepId("");
-      return;
-    }
-    setActiveScriptStepId(nextStepId);
+  const advanceScript = (button: TeamScriptStep["buttons"][number]) => {
+    setScriptMessages((current) => {
+      const nextMessages: TeamScriptMessage[] = [
+        ...current,
+        {
+          id: `reply:${activeScriptStepId || "end"}:${current.length}`,
+          role: "prospect",
+          text: getProspectReplyLabel(button.action, button.label),
+        },
+      ];
+
+      if (!button.nextStepId) {
+        return [
+          ...nextMessages,
+          {
+            id: `system:end:${nextMessages.length}`,
+            role: "system",
+            text: copy.endOfScript,
+          },
+        ];
+      }
+
+      const nextStep = scriptSteps.find((step) => step.id === button.nextStepId) ?? null;
+      if (!nextStep) {
+        return [
+          ...nextMessages,
+          {
+            id: `system:missing:${nextMessages.length}`,
+            role: "system",
+            text: copy.noStepAvailable,
+          },
+        ];
+      }
+
+      return [
+        ...nextMessages,
+        {
+          id: `step:${nextStep.id}:${nextMessages.length}`,
+          role: "agent",
+          text: nextStep.text,
+        },
+      ];
+    });
+
+    setActiveScriptStepId(button.nextStepId ?? "");
   };
 
   const resetScript = () => {
-    setActiveScriptStepId(scriptSteps[0]?.id ?? "");
+    const initialConversation = createScriptConversation(scriptSteps);
+    setActiveScriptStepId(initialConversation.activeStepId);
+    setScriptMessages(initialConversation.messages);
   };
 
   const handleSaveScript = async () => {
@@ -417,6 +506,9 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
     setErrorMessage("");
     try {
       const parsed = JSON.parse(scriptEditorValue) as TeamScriptStep[];
+      if (!Array.isArray(parsed)) {
+        throw new Error(copy.invalidScript);
+      }
       const response = await fetch("/api/team/script", {
         method: "PUT",
         headers: { "content-type": "application/json" },
@@ -430,8 +522,11 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
       const nextSteps = payload.script?.structure ?? parsed;
       setScriptSteps(nextSteps);
       setScriptEditorValue(JSON.stringify(nextSteps, null, 2));
-      setActiveScriptStepId(nextSteps[0]?.id ?? "");
+      const initialConversation = createScriptConversation(nextSteps);
+      setActiveScriptStepId(initialConversation.activeStepId);
+      setScriptMessages(initialConversation.messages);
       setIsEditingScript(false);
+      setErrorMessage(copy.scriptSaved);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to save script.");
     } finally {
@@ -695,16 +790,27 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
               </div>
             ) : (
               <div className="teamCallScriptStage">
-                {activeScriptStep ? (
+                {scriptMessages.length > 0 ? (
                   <>
-                    <p className="teamCallScriptText">{activeScriptStep.text}</p>
+                    <div className="teamCallScriptChat">
+                      {scriptMessages.map((message, index) => (
+                        <article
+                          key={message.id}
+                          className="teamCallScriptBubble"
+                          data-role={message.role}
+                          data-current={index === scriptMessages.length - 1 ? "true" : "false"}
+                        >
+                          <p className="teamCallScriptText">{message.text}</p>
+                        </article>
+                      ))}
+                    </div>
                     <div className="teamCallScriptActions">
-                      {activeScriptStep.buttons.map((button) => (
+                      {activeScriptStep?.buttons.map((button) => (
                         <button
-                          key={`${activeScriptStep.id}-${button.label}`}
+                          key={`${activeScriptStep?.id ?? "end"}-${button.label}`}
                           className="teamButton"
                           type="button"
-                          onClick={() => advanceScript(button.nextStepId)}
+                          onClick={() => advanceScript(button)}
                         >
                           {button.label}
                         </button>
@@ -733,7 +839,6 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
                 placeholder={copy.notesPlaceholder}
                 value={selectedClientNote}
                 onChange={(event) => updateSelectedNote(event.target.value)}
-                disabled={!selectedClient}
               />
             </label>
 

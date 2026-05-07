@@ -55,7 +55,7 @@ const DEFAULT_SCRIPT_ID = "default";
 export const DEFAULT_TEAM_SCRIPT: TeamScriptStep[] = [
   {
     id: "step_1",
-    text: "Bonjour, ici [Prénom] de BrotherStudio. Est-ce que l’architecte principal est disponible ?",
+    text: "Bonjour, [Prénom] de BrotherStudio. Est-ce que l'architecte en charge des projets est disponible ?",
     buttons: [
       { label: "Oui", action: "yes", nextStepId: "step_2" },
       { label: "Non", action: "no", nextStepId: "step_1b" },
@@ -63,17 +63,17 @@ export const DEFAULT_TEAM_SCRIPT: TeamScriptStep[] = [
   },
   {
     id: "step_1b",
-    text: "Quand serait-il disponible pour un appel rapide ?",
+    text: "Pas de souci. Quand puis-je le rappeler ? Je note un créneau.",
     buttons: [{ label: "Fin", action: "next", nextStepId: null }],
   },
   {
     id: "step_2",
-    text: "Bonjour, on aide les architectes à mieux vendre leurs projets avec des visuels haut de gamme.",
-    buttons: [{ label: "Next", action: "next", nextStepId: "step_3" }],
+    text: "Bonjour ! [Prénom] de BrotherStudio — on aide les architectes et promoteurs à vendre leurs projets plus facilement grâce à des visuels qui marquent les esprits.",
+    buttons: [{ label: "Suivant", action: "next", nextStepId: "step_3" }],
   },
   {
     id: "step_3",
-    text: "Utilisez-vous déjà des rendus 3D ?",
+    text: "Est-ce que vous utilisez déjà des rendus 3D pour présenter vos projets ?",
     buttons: [
       { label: "Oui", action: "yes", nextStepId: "step_4" },
       { label: "Non", action: "no", nextStepId: "step_4b" },
@@ -81,7 +81,7 @@ export const DEFAULT_TEAM_SCRIPT: TeamScriptStep[] = [
   },
   {
     id: "step_4",
-    text: "Travaillez-vous avec un studio externe ou en interne ?",
+    text: "C'est fait en interne ou vous travaillez avec un studio externe ?",
     buttons: [
       { label: "Externe", action: "external", nextStepId: "step_5" },
       { label: "Interne", action: "internal", nextStepId: "step_5b" },
@@ -89,7 +89,7 @@ export const DEFAULT_TEAM_SCRIPT: TeamScriptStep[] = [
   },
   {
     id: "step_4b",
-    text: "Avez-vous des projets où une meilleure présentation aiderait ?",
+    text: "Est-ce qu'il vous arrive de perdre des clients faute de visuels convaincants ?",
     buttons: [
       { label: "Oui", action: "yes", nextStepId: "step_5" },
       { label: "Non", action: "no", nextStepId: "step_6b" },
@@ -97,7 +97,7 @@ export const DEFAULT_TEAM_SCRIPT: TeamScriptStep[] = [
   },
   {
     id: "step_5",
-    text: "Avez-vous un projet en cours nécessitant des visuels ?",
+    text: "Vous avez un projet en cours en ce moment qui aurait besoin de visuels forts ?",
     buttons: [
       { label: "Oui", action: "yes", nextStepId: "step_6" },
       { label: "Non", action: "no", nextStepId: "step_6b" },
@@ -105,15 +105,15 @@ export const DEFAULT_TEAM_SCRIPT: TeamScriptStep[] = [
   },
   {
     id: "step_5b",
-    text: "Cherchez-vous parfois à améliorer la qualité des rendus ?",
+    text: "Est-ce que la qualité des rendus actuels vous satisfait pleinement, ou vous cherchez parfois mieux ?",
     buttons: [
-      { label: "Oui", action: "yes", nextStepId: "step_6" },
-      { label: "Non", action: "no", nextStepId: "step_6b" },
+      { label: "Cherche mieux", action: "yes", nextStepId: "step_6" },
+      { label: "Satisfait", action: "no", nextStepId: "step_6b" },
     ],
   },
   {
     id: "step_6",
-    text: "Souhaitez-vous voir quelques exemples ?",
+    text: "Je vous envoie 2–3 réalisations similaires à ce que vous faites — ça prend 30 secondes à regarder. Je peux ?",
     buttons: [
       { label: "Oui", action: "yes", nextStepId: "step_7" },
       { label: "Non", action: "no", nextStepId: "step_6c" },
@@ -121,7 +121,7 @@ export const DEFAULT_TEAM_SCRIPT: TeamScriptStep[] = [
   },
   {
     id: "step_6b",
-    text: "Puis-je vous envoyer quelques exemples pour plus tard ?",
+    text: "Je comprends. Est-ce que je peux quand même vous envoyer quelques exemples, pour que vous ayez notre contact si un besoin se présente ?",
     buttons: [
       { label: "Oui", action: "yes", nextStepId: "step_7" },
       { label: "Non", action: "no", nextStepId: null },
@@ -129,15 +129,15 @@ export const DEFAULT_TEAM_SCRIPT: TeamScriptStep[] = [
   },
   {
     id: "step_6c",
-    text: "Puis-je vous envoyer 2–3 exemples rapides ?",
+    text: "Juste 2 images — si ça ne vous parle pas, vous supprimez. Je vous les envoie ?",
     buttons: [
-      { label: "Oui", action: "yes", nextStepId: "step_7" },
-      { label: "Non", action: "no", nextStepId: null },
+      { label: "Ok", action: "yes", nextStepId: "step_7" },
+      { label: "Non merci", action: "no", nextStepId: null },
     ],
   },
   {
     id: "step_7",
-    text: "Quel est le meilleur email ?",
+    text: "Parfait. C'est quoi le meilleur email pour vous joindre ?",
     buttons: [{ label: "Fin", action: "next", nextStepId: null }],
   },
 ];

@@ -14,9 +14,15 @@ export function AdminLockOverlay({
   title = "Accès Admin",
   storageKey = ADMIN_UNLOCK_STORAGE_KEY,
 }: AdminLockOverlayProps) {
+  const cookieKey = `${storageKey}_cookie`;
+
   const readUnlockedState = () => {
     if (typeof window === "undefined") return false;
+    const hasCookie = document.cookie
+      .split(";")
+      .some((entry) => entry.trim() === `${cookieKey}=1`);
     return (
+      hasCookie ||
       window.sessionStorage.getItem(storageKey) === "1" ||
       window.localStorage.getItem(storageKey) === "1"
     );
@@ -42,8 +48,13 @@ export function AdminLockOverlay({
       return;
     }
 
-    window.sessionStorage.setItem(storageKey, "1");
-    window.localStorage.setItem(storageKey, "1");
+    try {
+      window.sessionStorage.setItem(storageKey, "1");
+    } catch {}
+    try {
+      window.localStorage.setItem(storageKey, "1");
+    } catch {}
+    document.cookie = `${cookieKey}=1; path=/; max-age=86400; SameSite=Lax`;
     setError("");
     setCode("");
     setIsUnlocked(true);
