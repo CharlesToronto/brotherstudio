@@ -16,10 +16,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const locale = getLocaleFromPathname(pathname);
-  if (!locale) return NextResponse.next();
-
   const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-site-pathname", pathname);
+
+  const locale = getLocaleFromPathname(pathname);
+  if (!locale) {
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
   requestHeaders.set("x-site-locale", locale);
 
   const response = NextResponse.next({

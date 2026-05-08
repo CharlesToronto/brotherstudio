@@ -2,9 +2,10 @@
 
 import type { CSSProperties } from "react";
 import { Dongle } from "next/font/google";
-import { useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 const INITIAL_CURSOR = { x: 50, y: 50, active: false, jitterX: 0, jitterY: 0 };
+const TOUCH_REVEAL_PERSIST_MS = 850;
 
 const dongle = Dongle({
   subsets: ["latin"],
@@ -13,24 +14,64 @@ const dongle = Dongle({
 
 export function HomeBlurWordSection() {
   const [cursor, setCursor] = useState(INITIAL_CURSOR);
+  const touchResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (touchResetTimeoutRef.current !== null) {
+        clearTimeout(touchResetTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const clearTouchResetTimeout = () => {
+    if (touchResetTimeoutRef.current !== null) {
+      clearTimeout(touchResetTimeoutRef.current);
+      touchResetTimeoutRef.current = null;
+    }
+  };
+
+  const updateCursorFromPointer = (event: ReactPointerEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const distance = Math.hypot(event.clientX - centerX, event.clientY - centerY);
+    const energy = Math.min(distance / Math.max(rect.width, rect.height), 0.62);
+    const jitterX = (Math.random() - 0.5) * 32 * energy;
+    const jitterY = (Math.random() - 0.5) * 26 * energy;
+    setCursor({ x, y, active: true, jitterX, jitterY });
+  };
 
   return (
     <section
       className="homeBlurWordSection"
       aria-label="BrotherStudio hero typography"
-      onPointerMove={(event) => {
-        const rect = event.currentTarget.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * 100;
-        const y = ((event.clientY - rect.top) / rect.height) * 100;
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const distance = Math.hypot(event.clientX - centerX, event.clientY - centerY);
-        const energy = Math.min(distance / Math.max(rect.width, rect.height), 0.62);
-        const jitterX = (Math.random() - 0.5) * 32 * energy;
-        const jitterY = (Math.random() - 0.5) * 26 * energy;
-        setCursor({ x, y, active: true, jitterX, jitterY });
+      onPointerDown={(event) => {
+        clearTouchResetTimeout();
+        updateCursorFromPointer(event);
       }}
-      onPointerLeave={() => setCursor(INITIAL_CURSOR)}
+      onPointerMove={(event) => {
+        clearTouchResetTimeout();
+        updateCursorFromPointer(event);
+      }}
+      onPointerUp={(event) => {
+        if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
+        clearTouchResetTimeout();
+        touchResetTimeoutRef.current = setTimeout(() => {
+          setCursor(INITIAL_CURSOR);
+          touchResetTimeoutRef.current = null;
+        }, TOUCH_REVEAL_PERSIST_MS);
+      }}
+      onPointerCancel={() => {
+        clearTouchResetTimeout();
+        setCursor(INITIAL_CURSOR);
+      }}
+      onPointerLeave={() => {
+        clearTouchResetTimeout();
+        setCursor(INITIAL_CURSOR);
+      }}
       style={
         {
           "--cursor-x": `${cursor.x}%`,

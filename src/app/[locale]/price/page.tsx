@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PriceAccessGate } from "@/components/PriceAccessGate";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { getMessages } from "@/content/messages";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
@@ -48,10 +49,12 @@ export default async function LocalizedPricePage({
       <PriceAccessGate messages={messages.price}>
         <div className="servicesLayout">
           {messages.price.intro ? (
-            <p className="homeIntro homeIntroHighlight">{messages.price.intro}</p>
+            <ScrollReveal as="p" className="homeIntro homeIntroHighlight">
+              {messages.price.intro}
+            </ScrollReveal>
           ) : null}
 
-          <section className="servicesSection" aria-labelledby="priceImagesTitle">
+          <ScrollReveal as="section" className="servicesSection" aria-labelledby="priceImagesTitle">
             <h1 id="priceImagesTitle" className="servicesTitle contactAccent">
               {messages.price.imagesTitle}
             </h1>
@@ -67,11 +70,13 @@ export default async function LocalizedPricePage({
               ))}
             </ul>
             <p className="servicesNote">{messages.price.imageNote}</p>
-          </section>
+          </ScrollReveal>
 
-          <section
+          <ScrollReveal
+            as="section"
             className="servicesSection"
             aria-labelledby="priceVideosTitle"
+            delay={50}
           >
             <h2
               id="priceVideosTitle"
@@ -104,11 +109,13 @@ export default async function LocalizedPricePage({
                 </li>
               ))}
             </ul>
-          </section>
+          </ScrollReveal>
 
-          <section
+          <ScrollReveal
+            as="section"
             className="servicesSection"
             aria-labelledby="pricePackagesTitle"
+            delay={90}
           >
             <h2
               id="pricePackagesTitle"
@@ -135,11 +142,13 @@ export default async function LocalizedPricePage({
                 </li>
               ))}
             </ul>
-          </section>
+          </ScrollReveal>
 
-          <section
+          <ScrollReveal
+            as="section"
             className="servicesSection"
             aria-labelledby="priceIncludedTitle"
+            delay={130}
           >
             <h2
               id="priceIncludedTitle"
@@ -157,11 +166,13 @@ export default async function LocalizedPricePage({
                 </li>
               ))}
             </ul>
-          </section>
+          </ScrollReveal>
 
-          <section
+          <ScrollReveal
+            as="section"
             className="servicesSection"
             aria-labelledby="pricePartnershipTitle"
+            delay={170}
           >
             <h2
               id="pricePartnershipTitle"
@@ -179,11 +190,13 @@ export default async function LocalizedPricePage({
             <p className="servicesNote pricePartnershipNote">
               <em>{messages.price.partnershipNote}</em>
             </p>
-          </section>
+          </ScrollReveal>
 
-          <section
+          <ScrollReveal
+            as="section"
             className="servicesSection workflowCard"
             aria-labelledby="priceWorkflowTitle"
+            delay={210}
           >
             <h2
               id="priceWorkflowTitle"
@@ -200,16 +213,16 @@ export default async function LocalizedPricePage({
               </li>
               <li className="servicesItem">{messages.price.workflowComingSoon}</li>
             </ul>
-          </section>
+          </ScrollReveal>
 
-          <p className="pageCta">
+          <ScrollReveal as="p" className="pageCta" delay={250}>
             <Link
               className="pageCtaInlineLink"
               href={withLocalePath(locale, "/contact")}
             >
               {messages.price.ctaText}
             </Link>
-          </p>
+          </ScrollReveal>
         </div>
       </PriceAccessGate>
     </main>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import { Gallery } from "@/components/Gallery";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { PROJECT_OPTIONS, type GalleryProjectKey } from "@/lib/galleryProjects";
 import type { GalleryItem } from "@/lib/galleryStore";
 
@@ -166,7 +167,8 @@ export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGa
   return (
     <>
       {marqueeProjects.length > 0 ? (
-        <section
+        <ScrollReveal
+          as="section"
           className="homeProjectMarquee"
           aria-label="Selected projects"
           data-paused={activeProject !== "all" || isHovered || isDragging ? "true" : "false"}
@@ -207,10 +209,12 @@ export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGa
               ))}
             </div>
           </div>
-        </section>
+        </ScrollReveal>
       ) : null}
 
-      <p className="homeIntro homeIntroHighlight">{introLine}</p>
+      <ScrollReveal as="p" className="homeIntro homeIntroHighlight" delay={80}>
+        {introLine}
+      </ScrollReveal>
 
       <Gallery
         key={activeProject}

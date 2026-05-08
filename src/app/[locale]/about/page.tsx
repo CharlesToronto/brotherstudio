@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AboutBiography } from "@/components/AboutBiography";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { getMessages } from "@/content/messages";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
@@ -10,7 +11,7 @@ type LocaleAboutPageProps = {
   params: Promise<{ locale: string }>;
 };
 
-const ABOUT_PORTRAIT_SRC = "/about-portrait-charles.png";
+const ABOUT_PORTRAIT_SRC = "/about-portrait-charles-2026.jpeg";
 
 export async function generateMetadata({
   params,
@@ -48,7 +49,7 @@ export default async function LocalizedAboutPage({
   return (
     <main className="siteMain">
       <div className="aboutLayout">
-        <section className="aboutPortraitSection" aria-labelledby="aboutTitle">
+        <ScrollReveal as="section" className="aboutPortraitSection" aria-labelledby="aboutTitle">
           <div className="aboutPortraitFrame">
             <Image
               src={ABOUT_PORTRAIT_SRC}
@@ -60,15 +61,22 @@ export default async function LocalizedAboutPage({
             />
           </div>
           <p className="aboutPortraitCaption">{messages.about.portraitCaption}</p>
-        </section>
+        </ScrollReveal>
 
         <section className="aboutContent">
-          <p className="aboutEyebrow contactAccent">{messages.about.location}</p>
-          <h1 id="aboutTitle" className="aboutTitle">
-            {messages.about.title}
-          </h1>
+          <ScrollReveal as="div">
+            <p className="aboutEyebrow contactAccent">{messages.about.location}</p>
+            <h1 id="aboutTitle" className="aboutTitle">
+              {messages.about.title}
+            </h1>
+          </ScrollReveal>
 
-          <section className="aboutSection aboutSectionFirst" aria-labelledby="aboutBiographyTitle">
+          <ScrollReveal
+            as="section"
+            className="aboutSection aboutSectionFirst"
+            aria-labelledby="aboutBiographyTitle"
+            delay={40}
+          >
             <h2
               id="aboutBiographyTitle"
               className="aboutSectionTitle contactAccent"
@@ -80,9 +88,14 @@ export default async function LocalizedAboutPage({
               paragraphs={messages.about.paragraphs}
               buttons={messages.about.biographyButtons}
             />
-          </section>
+          </ScrollReveal>
 
-          <section className="aboutSection" aria-labelledby="aboutHighlightsTitle">
+          <ScrollReveal
+            as="section"
+            className="aboutSection"
+            aria-labelledby="aboutHighlightsTitle"
+            delay={80}
+          >
             <h2
               id="aboutHighlightsTitle"
               className="aboutSectionTitle contactAccent"
@@ -99,15 +112,20 @@ export default async function LocalizedAboutPage({
                 </li>
               ))}
             </ul>
-          </section>
+          </ScrollReveal>
 
-          <section className="aboutSection" aria-labelledby="aboutContactTitle">
+          <ScrollReveal
+            as="section"
+            className="aboutSection"
+            aria-labelledby="aboutContactTitle"
+            delay={120}
+          >
             <h2 id="aboutContactTitle" className="aboutSectionTitle">
               <Link href={withLocalePath(locale, "/contact")}>
                 {messages.about.ctaLinkLabel}
               </Link>
             </h2>
-          </section>
+          </ScrollReveal>
         </section>
       </div>
     </main>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { getMessages } from "@/content/messages";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
@@ -45,7 +46,7 @@ export default async function LocalizedServicesPage({
   return (
     <main className="siteMain">
       <div className="servicesLayout">
-        <section className="servicesSection" aria-labelledby="servicesTitle">
+        <ScrollReveal as="section" className="servicesSection" aria-labelledby="servicesTitle">
           <h1 id="servicesTitle" className="servicesTitle contactAccent">
             {messages.services.title}
           </h1>
@@ -57,11 +58,13 @@ export default async function LocalizedServicesPage({
               </li>
             ))}
           </ul>
-        </section>
+        </ScrollReveal>
 
-        <section
+        <ScrollReveal
+          as="section"
           className="servicesSection"
           aria-labelledby="servicesIncludedTitle"
+          delay={70}
         >
           <h2
             id="servicesIncludedTitle"
@@ -76,16 +79,16 @@ export default async function LocalizedServicesPage({
               </li>
             ))}
           </ul>
-        </section>
+        </ScrollReveal>
 
-        <p className="pageCta">
+        <ScrollReveal as="p" className="pageCta" delay={120}>
           <Link
             className="pageCtaInlineLink"
             href={withLocalePath(locale, "/contact")}
           >
             {messages.services.ctaText}
           </Link>
-        </p>
+        </ScrollReveal>
       </div>
     </main>
   );

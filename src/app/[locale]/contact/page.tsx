@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { getMessages } from "@/content/messages";
 import { site } from "@/content/site";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
@@ -44,7 +45,7 @@ export default async function LocalizedContactPage({
 
   return (
     <main className="siteMain">
-      <section className="contactBlock" aria-labelledby="contactTitle">
+      <ScrollReveal as="section" className="contactBlock" aria-labelledby="contactTitle">
         <h1 id="contactTitle" className="contactTitle contactAccent">
           {messages.contact.title}
         </h1>
@@ -60,7 +61,7 @@ export default async function LocalizedContactPage({
             <a href={`tel:${site.contact.phone}`}>{site.contact.phone}</a>
           </div>
         </address>
-      </section>
+      </ScrollReveal>
     </main>
   );
 }

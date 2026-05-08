@@ -7,7 +7,12 @@ import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { site } from "@/content/site";
-import { DEFAULT_LOCALE, LOCALE_COOKIE_KEY, normalizeLocale } from "@/lib/i18n";
+import {
+  DEFAULT_LOCALE,
+  LOCALE_COOKIE_KEY,
+  normalizeLocale,
+  stripLocaleFromPathname,
+} from "@/lib/i18n";
 import { getSiteUrl } from "@/lib/siteUrl";
 
 const siteUrl = getSiteUrl();
@@ -59,6 +64,9 @@ export default async function RootLayout({
     normalizeLocale(headerStore.get("x-site-locale")) ??
     normalizeLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value ?? null) ??
     DEFAULT_LOCALE;
+  const pathname = headerStore.get("x-site-pathname") ?? "/";
+  const subpath = stripLocaleFromPathname(pathname);
+  const isBareExperiencePage = subpath === "/myexperience";
   const shouldLoadAnalytics =
     process.env.NODE_ENV === "production" && process.env.VERCEL === "1";
 
@@ -79,10 +87,10 @@ export default async function RootLayout({
             }),
           }}
         />
-        <SiteHeader initialTheme={theme} />
+        {isBareExperiencePage ? null : <SiteHeader initialTheme={theme} />}
         <AnalyticsTracker />
         {children}
-        <SiteFooter locale={locale} />
+        {isBareExperiencePage ? null : <SiteFooter locale={locale} />}
         {shouldLoadAnalytics ? (
           <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />
         ) : null}

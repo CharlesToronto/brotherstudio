@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { ScrollReveal } from "@/components/ScrollReveal";
 import type { Locale } from "@/lib/i18n";
 import type {
   TeamClientRecord,
@@ -573,17 +574,17 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
   return (
     <main className="siteMain teamPage">
       <section className="teamCallPage">
-        <header className="teamCallPageHeader">
+        <ScrollReveal as="header" className="teamCallPageHeader">
           <div>
             <p className="projectFeedbackEyebrow">Team</p>
             <h1 className="projectFeedbackTitle">{copy.title}</h1>
             <p className="projectFeedbackVersionMeta">{copy.subtitle}</p>
           </div>
           {errorMessage ? <p className="projectFeedbackMessage projectFeedbackMessageError">{errorMessage}</p> : null}
-        </header>
+        </ScrollReveal>
 
         <div className="teamCallGrid">
-          <section className="teamCallColumn teamCallClientColumn">
+          <ScrollReveal as="section" className="teamCallColumn teamCallClientColumn">
             <div className="teamCallColumnHeader">
               <h2 className="teamCallColumnTitle">{copy.clientColumn}</h2>
               <button
@@ -751,9 +752,9 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
                 </label>
               </div>
             ) : null}
-          </section>
+          </ScrollReveal>
 
-          <section className="teamCallColumn teamCallScriptColumn">
+          <ScrollReveal as="section" className="teamCallColumn teamCallScriptColumn" delay={70}>
             <div className="teamCallColumnHeader">
               <h2 className="teamCallColumnTitle">{copy.scriptColumn}</h2>
               <button
@@ -825,9 +826,9 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
                 )}
               </div>
             )}
-          </section>
+          </ScrollReveal>
 
-          <section className="teamCallColumn teamCallNotesColumn">
+          <ScrollReveal as="section" className="teamCallColumn teamCallNotesColumn" delay={140}>
             <div className="teamCallColumnHeader">
               <h2 className="teamCallColumnTitle">{copy.notesColumn}</h2>
             </div>
@@ -939,7 +940,7 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
                 ))}
               </div>
             )}
-          </section>
+          </ScrollReveal>
         </div>
       </section>
     </main>

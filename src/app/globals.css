@@ -48,6 +48,564 @@ body {
   color: #1f5cff;
 }
 
+.scrollReveal {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale(0.988);
+  filter: blur(10px);
+  transition:
+    opacity 420ms ease,
+    transform 720ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 720ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform, filter;
+}
+
+.scrollReveal[data-revealed="true"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollReveal,
+  .scrollReveal[data-revealed="true"] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+}
+
+.myExperiencePage {
+  min-height: 100vh;
+  padding: 0;
+  color: #f7f5f1;
+  background:
+    radial-gradient(circle at top, rgb(52 70 101 / 0.35), transparent 34%),
+    linear-gradient(180deg, #071018 0%, #0a1118 28%, #06090e 100%);
+}
+
+.myExperienceShell {
+  width: min(100% - 48px, 1340px);
+  margin: 0 auto;
+}
+
+.myExperienceHero {
+  position: relative;
+  min-height: 100svh;
+  padding: 22px 0 44px;
+  overflow: clip;
+}
+
+.myExperienceHeroImage {
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(0.92) brightness(0.62);
+}
+
+.myExperienceHeroOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(4 8 14 / 0.4) 0%, rgb(4 8 14 / 0.68) 72%, #071018 100%),
+    radial-gradient(circle at 20% 22%, rgb(255 156 84 / 0.18), transparent 28%);
+}
+
+.myExperienceHeroCard {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-content: space-between;
+  min-height: calc(100svh - 44px);
+  padding: 28px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.myExperienceNav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 22px;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.myExperienceNav a {
+  color: rgb(255 255 255 / 0.74);
+  transition: color 180ms ease, opacity 180ms ease;
+}
+
+.myExperienceNav a:hover,
+.myExperienceNav a:focus-visible {
+  color: #fff;
+}
+
+.myExperienceEyebrow,
+.myExperienceSectionKicker {
+  margin: 0 0 10px;
+  color: rgb(255 255 255 / 0.62);
+  font-size: 11px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.myExperienceHeroTitle,
+.myExperienceSectionTitle,
+.myExperienceFinalTitle {
+  margin: 0;
+  font-size: clamp(44px, 8vw, 112px);
+  line-height: 0.92;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.myExperienceHeroCopy {
+  max-width: 34rem;
+  margin: 18px 0 0;
+  color: rgb(255 255 255 / 0.8);
+  font-size: clamp(15px, 1.5vw, 18px);
+  line-height: 1.65;
+}
+
+.myExperienceHeroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin-top: 28px;
+  color: rgb(255 255 255 / 0.62);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.myExperienceSections {
+  display: grid;
+  gap: 26px;
+  padding: 0 0 64px;
+}
+
+.myExperiencePanel,
+.myExperienceFinalCta {
+  position: relative;
+  overflow: clip;
+  padding: 28px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.myExperienceSectionHeading {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 22px;
+}
+
+.myExperienceSectionTitle {
+  font-size: clamp(30px, 5vw, 58px);
+}
+
+.myExperienceServiceGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.myExperienceServiceCard {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  transition: transform 220ms ease;
+}
+
+.myExperienceServiceCard:hover {
+  transform: translateY(-6px);
+}
+
+.myExperienceServiceMedia {
+  position: relative;
+  aspect-ratio: 1.1;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.myExperienceServiceImage,
+.myExperienceGalleryImage {
+  object-fit: cover;
+  transition: transform 420ms ease;
+}
+
+.myExperienceServiceCard:hover .myExperienceServiceImage,
+.myExperienceGalleryCard:hover .myExperienceGalleryImage {
+  transform: scale(1.04);
+}
+
+.myExperienceServiceBody {
+  display: grid;
+  gap: 8px;
+}
+
+.myExperienceServiceNumber {
+  margin: 0;
+  color: rgb(255 255 255 / 0.88);
+  font-size: 32px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.myExperienceServiceTitle {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.myExperienceServiceText,
+.myExperienceStoryText,
+.myExperiencePlanNote {
+  margin: 0;
+  color: rgb(255 255 255 / 0.7);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.myExperiencePlanSection,
+.myExperienceStoryGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 22px;
+}
+
+.myExperiencePlanCopy {
+  display: grid;
+  align-content: start;
+}
+
+.myExperienceSpecs {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0;
+}
+
+.myExperienceSpecs div,
+.myExperienceAmenityRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.myExperienceSpecs dt,
+.myExperienceSpecs dd,
+.myExperienceAmenityRow span {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.myExperienceSpecs dt,
+.myExperienceAmenityRow span:first-child {
+  color: rgb(255 255 255 / 0.68);
+}
+
+.myExperienceSpecs dd,
+.myExperienceAmenityRow span:last-child {
+  color: #fff;
+}
+
+.myExperiencePlanVisual {
+  display: grid;
+  place-items: center;
+  min-height: 560px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.myExperiencePlanImageFrame {
+  width: 100%;
+  max-width: 560px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.myExperiencePlanImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0;
+}
+
+.myExperienceGallerySection {
+  display: grid;
+  gap: 22px;
+}
+
+.myExperienceGalleryGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  grid-template-areas:
+    "a b"
+    "a c"
+    "d e";
+  gap: 18px;
+}
+
+.myExperienceGalleryCard {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0;
+  background: transparent;
+}
+
+.myExperienceGalleryCard1 { grid-area: a; }
+.myExperienceGalleryCard2 { grid-area: b; }
+.myExperienceGalleryCard3 { grid-area: c; }
+.myExperienceGalleryCard4 { grid-area: d; }
+.myExperienceGalleryCard5 { grid-area: e; }
+
+.myExperienceStoryCard {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.myExperienceMapCard {
+  position: relative;
+  min-height: 280px;
+  margin: 8px 0 20px;
+  overflow: hidden;
+  border-radius: 0;
+  background: transparent;
+}
+
+.myExperienceMapImage {
+  object-fit: cover;
+  object-position: center;
+}
+
+.myExperienceGalleryImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.myExperienceAmenityList {
+  display: grid;
+  gap: 10px;
+}
+
+.myExperienceFinalCta {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  padding-top: 54px;
+  padding-bottom: 54px;
+  text-align: center;
+}
+
+.myExperienceFinalTitle {
+  max-width: 18ch;
+  font-size: clamp(36px, 5vw, 72px);
+}
+
+.myExperienceFinalActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+.myExperiencePrimaryButton,
+.myExperienceGhostButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.myExperiencePrimaryButton {
+  background: linear-gradient(180deg, #fff, #dadada);
+  color: #071018;
+}
+
+.myExperienceGhostButton {
+  border: 1px solid rgb(255 255 255 / 0.16);
+  color: #fff;
+  background: rgb(255 255 255 / 0.04);
+}
+
+.myExperiencePrimaryButton:hover,
+.myExperienceGhostButton:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 980px) {
+  .myExperienceShell {
+    width: min(100% - 32px, 1340px);
+  }
+
+  .myExperienceHero {
+    min-height: auto;
+    padding: 16px 0 26px;
+  }
+
+  .myExperienceHeroCard {
+    min-height: min(880px, calc(100svh - 32px));
+    padding: 22px;
+  }
+
+  .myExperienceNav {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 14px 18px;
+  }
+
+  .myExperienceServiceGrid,
+  .myExperiencePlanSection,
+  .myExperienceStoryGrid,
+  .myExperienceGalleryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .myExperienceGalleryGrid {
+    grid-template-areas:
+      "a"
+      "b"
+      "c"
+      "d"
+      "e";
+  }
+
+  .myExperienceGalleryCard1,
+  .myExperienceGalleryCard2,
+  .myExperienceGalleryCard3,
+  .myExperienceGalleryCard4,
+  .myExperienceGalleryCard5 {
+    min-height: 0;
+  }
+
+  .myExperiencePlanVisual {
+    min-height: 440px;
+  }
+}
+
+@media (max-width: 640px) {
+  .myExperienceShell {
+    width: min(100% - 24px, 1340px);
+  }
+
+  .myExperienceHeroCard,
+  .myExperiencePanel,
+  .myExperienceFinalCta {
+    padding: 18px;
+  }
+
+  .myExperienceHeroCard {
+    min-height: min(760px, calc(100svh - 24px));
+  }
+
+  .myExperienceNav {
+    gap: 12px 14px;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+  }
+
+  .myExperienceHeroTitle,
+  .myExperienceFinalTitle {
+    font-size: clamp(38px, 16vw, 68px);
+  }
+
+  .myExperienceSectionTitle {
+    font-size: clamp(28px, 11vw, 48px);
+  }
+
+  .myExperienceHeroCopy {
+    max-width: 100%;
+    font-size: 14px;
+  }
+
+  .myExperienceHeroMeta {
+    gap: 8px 18px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+
+  .myExperienceSections {
+    gap: 18px;
+    padding-bottom: 34px;
+  }
+
+  .myExperienceSectionHeading {
+    margin-bottom: 16px;
+  }
+
+  .myExperienceServiceGrid {
+    gap: 14px;
+  }
+
+  .myExperienceServiceCard {
+    gap: 12px;
+    padding: 0;
+  }
+
+  .myExperienceServiceMedia {
+    border-radius: 0;
+  }
+
+  .myExperienceServiceNumber {
+    font-size: 26px;
+  }
+
+  .myExperiencePlanVisual {
+    min-height: 320px;
+    padding: 0;
+  }
+
+  .myExperienceMapCard {
+    min-height: 220px;
+    border-radius: 0;
+  }
+
+  .myExperienceGalleryCard1,
+  .myExperienceGalleryCard2,
+  .myExperienceGalleryCard3,
+  .myExperienceGalleryCard4,
+  .myExperienceGalleryCard5 {
+    min-height: 0;
+    border-radius: 0;
+  }
+
+  .myExperienceFinalActions {
+    width: 100%;
+  }
+
+  .myExperiencePrimaryButton,
+  .myExperienceGhostButton {
+    width: 100%;
+  }
+}
+
 .homeBlurWordSection {
   --cursor-x: 50%;
   --cursor-y: 50%;
@@ -151,7 +709,7 @@ body {
 
 .homeBlurWordBase {
   color: rgb(255 255 255 / 0.38);
-  filter: blur(4px);
+  filter: blur(2.6px);
   opacity: 0.55;
   z-index: 1;
 }
@@ -160,7 +718,7 @@ body {
   color: #fff;
   z-index: 3;
   opacity: calc(var(--cursor-opacity) * 0.92);
-  filter: blur(1.6px);
+  filter: blur(1px);
   transform: translate(var(--cursor-jitter-x), var(--cursor-jitter-y));
   -webkit-mask-image: radial-gradient(
     circle 150px at var(--cursor-x) var(--cursor-y),
