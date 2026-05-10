@@ -167,8 +167,7 @@ export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGa
   return (
     <>
       {marqueeProjects.length > 0 ? (
-        <ScrollReveal
-          as="section"
+        <section
           className="homeProjectMarquee"
           aria-label="Selected projects"
           data-paused={activeProject !== "all" || isHovered || isDragging ? "true" : "false"}
@@ -209,7 +208,7 @@ export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGa
               ))}
             </div>
           </div>
-        </ScrollReveal>
+        </section>
       ) : null}
 
       <ScrollReveal as="p" className="homeIntro homeIntroHighlight" delay={80}>

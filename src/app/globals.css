@@ -80,14 +80,158 @@ body {
   min-height: 100vh;
   padding: 0;
   color: #f7f5f1;
+  position: relative;
   background:
     radial-gradient(circle at top, rgb(52 70 101 / 0.35), transparent 34%),
     linear-gradient(180deg, #071018 0%, #0a1118 28%, #06090e 100%);
 }
 
+.myExperienceAmbient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.myExperienceAmbientSpot {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  filter: blur(90px);
+  opacity: 0.24;
+  will-change: transform;
+}
+
+.myExperienceAmbientSpot1 {
+  top: 10%;
+  left: -8%;
+  width: 34vw;
+  height: 34vw;
+  min-width: 280px;
+  min-height: 280px;
+  background: radial-gradient(circle, rgb(34 92 168 / 0.7) 0%, rgb(34 92 168 / 0.18) 54%, transparent 76%);
+  animation: myExperienceAmbientFloatA 28s ease-in-out infinite alternate;
+}
+
+.myExperienceAmbientSpot2 {
+  top: 42%;
+  right: -10%;
+  width: 30vw;
+  height: 30vw;
+  min-width: 240px;
+  min-height: 240px;
+  background: radial-gradient(circle, rgb(232 157 83 / 0.5) 0%, rgb(232 157 83 / 0.14) 56%, transparent 78%);
+  animation: myExperienceAmbientFloatB 34s ease-in-out infinite alternate;
+}
+
+.myExperienceAmbientSpot3 {
+  bottom: -6%;
+  left: 26%;
+  width: 28vw;
+  height: 28vw;
+  min-width: 220px;
+  min-height: 220px;
+  background: radial-gradient(circle, rgb(114 86 198 / 0.48) 0%, rgb(114 86 198 / 0.12) 56%, transparent 78%);
+  animation: myExperienceAmbientFloatC 31s ease-in-out infinite alternate;
+}
+
+.myExperiencePage::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top, rgb(23 70 113 / 0.34), transparent 38%),
+    linear-gradient(180deg, rgb(23 70 113 / 0.18) 0%, #174671 55%, rgb(23 70 113 / 0.92) 100%);
+  opacity: 0;
+  transition: opacity 680ms ease;
+}
+
+.myExperiencePage[data-gallery-tone="blue"]::before {
+  opacity: 1;
+}
+
+@keyframes myExperienceAmbientFloatA {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(8vw, 5vh, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(16vw, 12vh, 0) scale(0.96);
+  }
+}
+
+@keyframes myExperienceAmbientFloatB {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-10vw, -6vh, 0) scale(0.94);
+  }
+  100% {
+    transform: translate3d(-18vw, 8vh, 0) scale(1.06);
+  }
+}
+
+@keyframes myExperienceAmbientFloatC {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6vw, -8vh, 0) scale(1.1);
+  }
+  100% {
+    transform: translate3d(-4vw, -16vh, 0) scale(0.92);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .myExperienceAmbientSpot1,
+  .myExperienceAmbientSpot2,
+  .myExperienceAmbientSpot3 {
+    animation: none;
+  }
+}
+
+.myExperiencePage[data-gallery-mode="night"] .myExperienceGalleryImage {
+  filter: brightness(0.38) saturate(0.7) contrast(1.08) hue-rotate(-10deg);
+}
+
+.myExperiencePage[data-gallery-mode="day"] .myExperienceGalleryImage {
+  filter: brightness(1) saturate(1) contrast(1);
+}
+
 .myExperienceShell {
+  position: relative;
+  z-index: 1;
   width: min(100% - 48px, 1340px);
   margin: 0 auto;
+}
+
+.myExperienceScrollProgress {
+  position: fixed;
+  left: 16px;
+  top: 50%;
+  z-index: 30;
+  width: 4px;
+  height: 128px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.28);
+  transform: translateY(-50%);
+}
+
+.myExperienceScrollProgressFill {
+  width: 100%;
+  height: 100%;
+  transform-origin: center bottom;
+  border-radius: inherit;
+  background: #1f5cff;
+  transition: transform 120ms linear;
 }
 
 .myExperienceHero {
@@ -211,47 +355,286 @@ body {
   font-size: clamp(30px, 5vw, 58px);
 }
 
-.myExperienceServiceGrid {
+.myExperienceCommunitySection {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top center, rgb(255 255 255 / 0.04), transparent 30%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.015), rgb(255 255 255 / 0.005));
+}
+
+.myExperienceCommunityContent {
+  position: relative;
+  z-index: 2;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 30px;
+}
+
+.myExperienceServiceImage {
+  object-fit: cover;
+}
+
+.myExperienceGalleryImage {
+  object-fit: contain;
+  object-position: center;
+}
+
+.myExperienceCommunityIntro {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.myExperienceCommunityTitle {
+  margin: 0;
+  font-size: clamp(36px, 5.2vw, 74px);
+  line-height: 0.98;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.myExperienceCommunityLead {
+  margin: 0;
+  max-width: 42rem;
+  color: rgb(255 255 255 / 0.64);
+  font-size: clamp(15px, 1.3vw, 19px);
+  line-height: 1.7;
+}
+
+.myExperienceCommunityRail {
+  display: grid;
+  align-items: stretch;
   gap: 18px;
+  min-height: 500px;
 }
 
-.myExperienceServiceCard {
-  display: grid;
-  gap: 14px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  transition: transform 220ms ease;
+.myExperienceCommunityCard {
+  position: relative;
+  min-width: 0;
+  outline: none;
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 320ms ease;
 }
 
-.myExperienceServiceCard:hover {
+.myExperienceCommunityCard[data-active="true"] {
   transform: translateY(-6px);
 }
 
-.myExperienceServiceMedia {
+.myExperienceCommunityCardFrame {
   position: relative;
-  aspect-ratio: 1.1;
+  height: 100%;
   overflow: hidden;
-  border-radius: 0;
+  border-radius: 26px;
 }
 
-.myExperienceServiceImage,
-.myExperienceGalleryImage {
-  object-fit: cover;
-  transition: transform 420ms ease;
+.myExperienceCommunityCardGlow,
+.myExperienceCommunityCardSheen {
+  position: absolute;
+  pointer-events: none;
+  inset: 0;
+  border-radius: 26px;
 }
 
-.myExperienceServiceCard:hover .myExperienceServiceImage,
-.myExperienceGalleryCard:hover .myExperienceGalleryImage {
-  transform: scale(1.04);
+.myExperienceCommunityCardGlow {
+  background:
+    radial-gradient(circle at 50% 115%, rgb(var(--community-accent) / 0.28), transparent 34%),
+    radial-gradient(circle at 50% -4%, rgb(var(--community-accent) / 0.18), transparent 40%);
+  opacity: 0.64;
+  transition: opacity 360ms ease;
 }
 
-.myExperienceServiceBody {
+.myExperienceCommunityCardSheen {
+  inset: auto -28% 14%;
+  height: 34%;
+  background: linear-gradient(90deg, transparent, rgb(var(--community-accent) / 0.24), transparent);
+  filter: blur(24px);
+  opacity: 0.42;
+  transform: translateX(-18%);
+  transition:
+    opacity 320ms ease,
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.myExperienceCommunityCard[data-active="true"] .myExperienceCommunityCardGlow {
+  opacity: 0.82;
+}
+
+.myExperienceCommunityCard[data-active="true"] .myExperienceCommunityCardSheen {
+  opacity: 0.6;
+  transform: translateX(10%);
+}
+
+.myExperienceCommunityCardSurface {
+  position: relative;
+  height: 100%;
+  min-height: 500px;
+  padding: 14px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.015) 22%, rgb(255 255 255 / 0.025) 100%),
+    linear-gradient(180deg, rgb(4 7 12 / 0.9), rgb(7 11 16 / 0.94));
+  backdrop-filter: blur(18px);
+  border-radius: 25px;
+  overflow: hidden;
+}
+
+.myExperienceCommunityCardLabel {
+  position: absolute;
+  inset: 16px auto 16px 16px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 28px;
+}
+
+.myExperienceCommunityCardNumber {
+  color: rgb(255 255 255 / 0.54);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.myExperienceCommunityCardTitleVertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  color: #fff;
+  font-size: clamp(16px, 1.2vw, 24px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.myExperienceCommunityCardExpanded {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   display: grid;
-  gap: 8px;
+  align-content: space-between;
+  height: 100%;
+  gap: 0;
+  padding-left: 54px;
+}
+
+.myExperienceCommunityCardImageWrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 25px;
+}
+
+.myExperienceCommunityCardImageWrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(7 11 16 / 0.08) 0%, rgb(7 11 16 / 0.14) 36%, rgb(7 11 16 / 0.78) 100%),
+    linear-gradient(90deg, rgb(7 11 16 / 0.3) 0%, transparent 16%);
+}
+
+.myExperienceCommunityCardCopy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 10px;
+  align-content: end;
+  min-height: 0;
+  height: 100%;
+  padding: 20px 22px 22px 0;
+}
+
+.myExperienceCommunityCardEyebrow {
+  margin: 0;
+  color: rgb(255 255 255 / 0.48);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.myExperienceCommunityCardTitle {
+  margin: 0;
+  font-size: clamp(22px, 2vw, 34px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+
+.myExperienceCommunityCardText {
+  margin: 0;
+  max-width: 28rem;
+  color: rgb(255 255 255 / 0.76);
+  font-size: 16px;
+  line-height: 1.62;
+}
+
+.myExperienceCommunityCardAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.myExperienceCommunityActionIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.myExperienceCommunityCardCollapsed {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  align-content: end;
+  justify-items: center;
+  height: 100%;
+}
+
+.myExperienceCommunityCardMarker {
+  width: 18px;
+  height: 18px;
+  margin-bottom: 6px;
+  border-radius: 999px;
+  background: rgb(var(--community-accent) / 0.16);
+  box-shadow:
+    0 0 0 1px rgb(var(--community-accent) / 0.34),
+    0 0 32px rgb(var(--community-accent) / 0.14);
+}
+
+.myExperienceCommunityCard[data-active="false"] .myExperienceCommunityCardMarker {
+  animation: myExperienceCommunityPulse 3.4s ease-in-out infinite;
+}
+
+.myExperienceCommunityCardChrome {
+  position: absolute;
+  inset: auto -12% -16% -12%;
+  height: 34%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, rgb(var(--community-accent) / 0.22), transparent 38%),
+    linear-gradient(180deg, transparent, rgb(var(--community-accent) / 0.08));
+  filter: blur(26px);
+  opacity: 0.9;
+}
+
+@keyframes myExperienceCommunityPulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.72;
+  }
+  50% {
+    transform: translateY(-4px) scale(1.08);
+    opacity: 1;
+  }
 }
 
 .myExperienceServiceNumber {
@@ -290,19 +673,71 @@ body {
   align-content: start;
 }
 
+.myExperiencePlanTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.myExperiencePlanEditButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.03);
+  color: rgb(255 255 255 / 0.78);
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.myExperiencePlanEditButton:hover,
+.myExperiencePlanEditButton:focus-visible,
+.myExperiencePlanEditButton[aria-pressed="true"] {
+  color: #6f99ff;
+  border-color: rgb(111 153 255 / 0.54);
+  background: rgb(111 153 255 / 0.12);
+  transform: translateY(-1px);
+}
+
+.myExperiencePlanToolIcon {
+  width: 15px;
+  height: 15px;
+}
+
 .myExperienceSpecs {
   display: grid;
   gap: 12px;
   margin: 22px 0;
 }
 
-.myExperienceSpecs div,
+.myExperienceSpecRow,
 .myExperienceAmenityRow {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 16px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.myExperienceSpecRow:hover {
+  border-bottom-color: rgb(111 153 255 / 0.45);
+}
+
+.myExperienceSpecRow:hover dt,
+.myExperienceSpecRow:hover dd {
+  color: #6f99ff;
 }
 
 .myExperienceSpecs dt,
@@ -321,6 +756,52 @@ body {
 .myExperienceSpecs dd,
 .myExperienceAmenityRow span:last-child {
   color: #fff;
+}
+
+.myExperienceSpecValueCluster {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.myExperiencePlanUploadButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: rgb(255 255 255 / 0.48);
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+.myExperiencePlanUploadButton:hover {
+  color: #6f99ff;
+  transform: translateY(-1px);
+}
+
+.myExperiencePlanUploadIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.myExperienceSpecRow[data-edit-mode="false"] .myExperiencePlanUploadButton {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.myExperienceSpecRow[data-edit-mode="true"] .myExperiencePlanUploadButton {
+  opacity: 0.78;
+}
+
+.myExperienceSpecRow[data-edit-mode="true"]:hover .myExperiencePlanUploadButton,
+.myExperienceSpecRow[data-has-upload="true"] .myExperiencePlanUploadButton {
+  opacity: 1;
+  color: #6f99ff;
 }
 
 .myExperiencePlanVisual {
@@ -354,6 +835,13 @@ body {
   gap: 22px;
 }
 
+.myExperienceGalleryHeadingRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
 .myExperienceGalleryGrid {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
@@ -366,16 +854,123 @@ body {
 
 .myExperienceGalleryCard {
   position: relative;
-  overflow: hidden;
+  display: grid;
+  place-items: start center;
+  overflow: visible;
   border-radius: 0;
   background: transparent;
 }
 
-.myExperienceGalleryCard1 { grid-area: a; }
-.myExperienceGalleryCard2 { grid-area: b; }
-.myExperienceGalleryCard3 { grid-area: c; }
-.myExperienceGalleryCard4 { grid-area: d; }
-.myExperienceGalleryCard5 { grid-area: e; }
+.myExperienceGalleryCarousel {
+  display: grid;
+  gap: 18px;
+}
+
+.myExperienceGalleryCarouselViewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.myExperienceGalleryCarouselViewport::-webkit-scrollbar {
+  display: none;
+}
+
+.myExperienceGalleryCarousel[data-dragging="true"] .myExperienceGalleryCarouselViewport {
+  cursor: grabbing;
+}
+
+.myExperienceGalleryCarouselTrack {
+  display: flex;
+  gap: 24px;
+}
+
+.myExperienceGalleryCluster {
+  flex: 0 0 min(90vw, 980px);
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.myExperienceGalleryClusterGrid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.18fr 0.96fr 1.12fr;
+  grid-auto-rows: auto;
+  grid-template-areas:
+    "a c e"
+    "b d e";
+  align-items: start;
+  gap: 18px;
+}
+
+.myExperienceGalleryClusterCard {
+  min-height: 0;
+}
+
+.myExperienceGalleryCarouselControls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+}
+
+.myExperienceGalleryCarouselStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgb(255 255 255 / 0.62);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.myExperienceGalleryCarouselButtons {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.myExperienceGalleryCarouselButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.04);
+  color: #fff;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    opacity 180ms ease;
+}
+
+.myExperienceGalleryCarouselButton:hover,
+.myExperienceGalleryCarouselButton:focus-visible {
+  border-color: rgb(31 92 255 / 0.54);
+  background: rgb(31 92 255 / 0.14);
+  color: #1f5cff;
+}
+
+.myExperienceGalleryCarouselButton:disabled {
+  opacity: 0.34;
+  cursor: default;
+}
+
+.myExperienceGalleryClusterCard1 { grid-area: a; }
+.myExperienceGalleryClusterCard2 { grid-area: b; }
+.myExperienceGalleryClusterCard3 { grid-area: c; }
+.myExperienceGalleryClusterCard4 { grid-area: d; }
+.myExperienceGalleryClusterCard5 { grid-area: e; }
 
 .myExperienceStoryCard {
   display: grid;
@@ -392,15 +987,183 @@ body {
   background: transparent;
 }
 
+.myExperienceMapSlideshow {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+.myExperienceMapDots {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.myExperienceMapDot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.54);
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease,
+    background-color 180ms ease;
+}
+
+.myExperienceMapDot[data-active="true"] {
+  width: 11px;
+  height: 11px;
+  background: #fff;
+}
+
+.myExperienceMapSlides {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+.myExperienceMapSlide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 420ms ease;
+}
+
+.myExperienceMapSlide[data-active="true"] {
+  opacity: 1;
+}
+
 .myExperienceMapImage {
   object-fit: cover;
   object-position: center;
+}
+
+.myExperienceGalleryModeToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 4px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.05);
+}
+
+.myExperienceGalleryModeOption {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgb(255 255 255 / 0.64);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+.myExperienceGalleryModeOption:hover,
+.myExperienceGalleryModeOption:focus-visible {
+  color: #fff;
+}
+
+.myExperienceGalleryModeOption[data-active="true"] {
+  color: #071018;
+  background: #fff;
+}
+
+.myExperienceGalleryModeOption:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.myExperienceGalleryModePopup {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  padding: 0;
+  background: rgb(4 10 18 / 0.18);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 220ms ease,
+    visibility 220ms ease,
+    backdrop-filter 220ms ease,
+    -webkit-backdrop-filter 220ms ease;
+}
+
+.myExperienceGalleryModePopup[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.myExperienceGalleryModePopupCard {
+  width: min(56vw, 520px);
+  height: min(56vw, 520px);
+  min-width: 280px;
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: transparent;
+  transform: scale(0.92);
+  opacity: 0;
+  transition:
+    opacity 220ms ease,
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.myExperienceGalleryModePopup[data-open="true"] .myExperienceGalleryModePopupCard {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.myExperienceGalleryModePopupCard > *,
+.myExperienceGalleryModePopupCard canvas,
+.myExperienceGalleryModePopupCard svg {
+  width: 100%;
+  height: 100%;
+}
+
+.myExperienceGalleryModePopup[data-mode="night"] .myExperienceGalleryModePopupCard {
+  transform-origin: center;
+  rotate: 0deg;
+}
+
+.myExperienceGalleryModePopup[data-mode="day"] .myExperienceGalleryModePopupCard {
+  transform-origin: center;
+  rotate: 180deg;
 }
 
 .myExperienceGalleryImage {
   display: block;
   width: 100%;
   height: auto;
+  transition: filter 420ms ease;
 }
 
 .myExperienceAmenityList {
@@ -465,6 +1228,11 @@ body {
     width: min(100% - 32px, 1340px);
   }
 
+  .myExperienceScrollProgress {
+    left: 10px;
+    height: 108px;
+  }
+
   .myExperienceHero {
     min-height: auto;
     padding: 16px 0 26px;
@@ -481,28 +1249,46 @@ body {
     gap: 14px 18px;
   }
 
-  .myExperienceServiceGrid,
   .myExperiencePlanSection,
   .myExperienceStoryGrid,
   .myExperienceGalleryGrid {
     grid-template-columns: 1fr;
   }
 
-  .myExperienceGalleryGrid {
-    grid-template-areas:
-      "a"
-      "b"
-      "c"
-      "d"
-      "e";
+  .myExperienceCommunityRail {
+    display: flex;
+    gap: 14px;
+    min-height: 0;
+    padding-bottom: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 
-  .myExperienceGalleryCard1,
-  .myExperienceGalleryCard2,
-  .myExperienceGalleryCard3,
-  .myExperienceGalleryCard4,
-  .myExperienceGalleryCard5 {
-    min-height: 0;
+  .myExperienceCommunityRail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .myExperienceCommunityCard {
+    flex: 0 0 min(72vw, 420px);
+    transform: none !important;
+  }
+
+  .myExperienceGalleryHeadingRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .myExperienceGalleryCluster {
+    flex-basis: min(92vw, 860px);
+  }
+
+  .myExperienceGalleryClusterGrid {
+    grid-template-columns: 1.1fr 0.92fr 1.02fr;
+    grid-auto-rows: auto;
+  }
+
+  .myExperienceGalleryCarouselControls {
+    justify-content: space-between;
   }
 
   .myExperiencePlanVisual {
@@ -513,6 +1299,12 @@ body {
 @media (max-width: 640px) {
   .myExperienceShell {
     width: min(100% - 24px, 1340px);
+  }
+
+  .myExperienceScrollProgress {
+    left: 8px;
+    width: 3px;
+    height: 92px;
   }
 
   .myExperienceHeroCard,
@@ -556,21 +1348,93 @@ body {
     padding-bottom: 34px;
   }
 
+  .myExperienceMapDots {
+    top: 12px;
+    gap: 7px;
+  }
+
+  .myExperienceMapDot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .myExperienceMapDot[data-active="true"] {
+    width: 10px;
+    height: 10px;
+  }
+
   .myExperienceSectionHeading {
     margin-bottom: 16px;
   }
 
-  .myExperienceServiceGrid {
-    gap: 14px;
+  .myExperienceGalleryModeToggle {
+    width: 100%;
+    justify-content: flex-end;
   }
 
-  .myExperienceServiceCard {
+  .myExperienceGalleryCarouselControls {
     gap: 12px;
-    padding: 0;
   }
 
-  .myExperienceServiceMedia {
-    border-radius: 0;
+  .myExperienceGalleryCarouselButton {
+    width: 38px;
+    height: 38px;
+  }
+
+  .myExperienceGalleryCluster {
+    flex-basis: min(94vw, 720px);
+  }
+
+  .myExperienceGalleryClusterGrid {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-auto-rows: auto;
+    gap: 12px;
+  }
+
+  .myExperienceGalleryModeOption {
+    min-width: 62px;
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 10px;
+  }
+
+  .myExperienceGalleryModePopupCard {
+    width: min(76vw, 420px);
+    height: min(76vw, 420px);
+  }
+
+  .myExperienceCommunityIntro {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .myExperienceCommunityRail {
+    gap: 12px;
+  }
+
+  .myExperienceCommunityCard {
+    flex-basis: min(82vw, 360px);
+  }
+
+  .myExperienceCommunityTitle {
+    font-size: clamp(32px, 12vw, 52px);
+  }
+
+  .myExperienceCommunityLead {
+    font-size: 14px;
+  }
+
+  .myExperienceCommunityCardSurface {
+    min-height: 440px;
+    padding: 16px;
+  }
+
+  .myExperienceCommunityCardExpanded {
+    padding-left: 46px;
+  }
+
+  .myExperienceCommunityCardImageWrap {
+    inset: 0;
   }
 
   .myExperienceServiceNumber {
@@ -587,11 +1451,11 @@ body {
     border-radius: 0;
   }
 
-  .myExperienceGalleryCard1,
-  .myExperienceGalleryCard2,
-  .myExperienceGalleryCard3,
-  .myExperienceGalleryCard4,
-  .myExperienceGalleryCard5 {
+  .myExperienceGalleryClusterCard1,
+  .myExperienceGalleryClusterCard2,
+  .myExperienceGalleryClusterCard3,
+  .myExperienceGalleryClusterCard4,
+  .myExperienceGalleryClusterCard5 {
     min-height: 0;
     border-radius: 0;
   }
@@ -1325,6 +2189,21 @@ html[data-theme="dark"] .adminLockOverlay {
   .homeBlurWordSection {
     min-height: 100svh;
     padding-top: 56px;
+  }
+
+  .homeBlurWordBase {
+    color: #fff;
+    filter: none;
+    opacity: 1;
+  }
+
+  .homeBlurWordReveal {
+    opacity: 0;
+    filter: none;
+    transform: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+    transition: none;
   }
 
   .homeProjectMarquee {

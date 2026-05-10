@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 
 const INITIAL_CURSOR = { x: 50, y: 50, active: false, jitterX: 0, jitterY: 0 };
 const TOUCH_REVEAL_PERSIST_MS = 850;
+const MOBILE_BREAKPOINT = "(max-width: 640px)";
 
 const dongle = Dongle({
   subsets: ["latin"],
@@ -14,6 +15,7 @@ const dongle = Dongle({
 
 export function HomeBlurWordSection() {
   const [cursor, setCursor] = useState(INITIAL_CURSOR);
+  const [isMobileHero, setIsMobileHero] = useState(false);
   const touchResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -21,6 +23,21 @@ export function HomeBlurWordSection() {
       if (touchResetTimeoutRef.current !== null) {
         clearTimeout(touchResetTimeoutRef.current);
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(MOBILE_BREAKPOINT);
+
+    const syncMobileState = () => {
+      setIsMobileHero(mediaQuery.matches);
+    };
+
+    syncMobileState();
+    mediaQuery.addEventListener("change", syncMobileState);
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncMobileState);
     };
   }, []);
 
@@ -49,14 +66,17 @@ export function HomeBlurWordSection() {
       className="homeBlurWordSection"
       aria-label="BrotherStudio hero typography"
       onPointerDown={(event) => {
+        if (isMobileHero) return;
         clearTouchResetTimeout();
         updateCursorFromPointer(event);
       }}
       onPointerMove={(event) => {
+        if (isMobileHero) return;
         clearTouchResetTimeout();
         updateCursorFromPointer(event);
       }}
       onPointerUp={(event) => {
+        if (isMobileHero) return;
         if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
         clearTouchResetTimeout();
         touchResetTimeoutRef.current = setTimeout(() => {
@@ -65,10 +85,12 @@ export function HomeBlurWordSection() {
         }, TOUCH_REVEAL_PERSIST_MS);
       }}
       onPointerCancel={() => {
+        if (isMobileHero) return;
         clearTouchResetTimeout();
         setCursor(INITIAL_CURSOR);
       }}
       onPointerLeave={() => {
+        if (isMobileHero) return;
         clearTouchResetTimeout();
         setCursor(INITIAL_CURSOR);
       }}
@@ -76,7 +98,7 @@ export function HomeBlurWordSection() {
         {
           "--cursor-x": `${cursor.x}%`,
           "--cursor-y": `${cursor.y}%`,
-          "--cursor-opacity": cursor.active ? 1 : 0,
+          "--cursor-opacity": isMobileHero ? 0 : cursor.active ? 1 : 0,
           "--cursor-jitter-x": `${cursor.jitterX}px`,
           "--cursor-jitter-y": `${cursor.jitterY}px`,
         } as CSSProperties

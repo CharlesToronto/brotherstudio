@@ -2,7 +2,15 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { MyExperienceCommunitySection } from "@/components/MyExperienceCommunitySection";
+import { MyExperienceGalleryCarousel } from "@/components/MyExperienceGalleryCarousel";
+import { MyExperienceGalleryModeToggle } from "@/components/MyExperienceGalleryModeToggle";
+import { MyExperienceGalleryToneObserver } from "@/components/MyExperienceGalleryToneObserver";
+import { MyExperienceHousePlanSection } from "@/components/MyExperienceHousePlanSection";
+import { MyExperienceLocationSlideshow } from "@/components/MyExperienceLocationSlideshow";
+import { MyExperienceScrollProgress } from "@/components/MyExperienceScrollProgress";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { getGalleryItems } from "@/lib/galleryStore";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
 
@@ -10,67 +18,80 @@ type MyExperiencePageProps = {
   params: Promise<{ locale: string }>;
 };
 
-const HERO_IMAGE = "/uploads/e04f9a62-980f-4650-a5fc-b754dcc16435-1775053117422.jpeg";
+const HERO_IMAGE = "/myexperience-hero-night.png";
 const SERVICE_IMAGES = [
   "/myexperience-community-01.png",
   "/myexperience-community-02.png",
   "/myexperience-community-03.png",
   "/myexperience-community-04.png",
 ] as const;
-const GALLERY_IMAGES = [
+const FLOORPLAN_IMAGE = "/myexperience-floorplan-mesange.png";
+const LIFESTYLE_ACCESS_IMAGE = "/myexperience-lifestyle-access-map.png";
+const LIFESTYLE_ACCESS_SLIDES = [
   {
-    src: "/uploads/9a18a588-da54-48b3-987a-3809a86b91b0-1773938014771.png",
-    width: 1024,
-    height: 768,
+    src: LIFESTYLE_ACCESS_IMAGE,
+    alt: "Lifestyle and access slide 1",
   },
   {
-    src: "/uploads/7ed9ad20-4238-45f8-be89-d937f2ce9dcf-1773938060753.png",
-    width: 1024,
-    height: 768,
+    src: "/myexperience-lifestyle-slide-02.png",
+    alt: "Lifestyle and access slide 2",
   },
   {
-    src: "/uploads/d319f063-7b8b-41b2-857c-471d64d9083c-1774016140036.jpg",
-    width: 5120,
-    height: 3840,
-  },
-  {
-    src: "/uploads/afc57519-61e4-4225-bb43-8cdc51125275-1774016096392.jpg",
-    width: 5120,
-    height: 3840,
-  },
-  {
-    src: "/uploads/03315390-9045-44d2-9845-6f3c5783dc32-1774037083611.jpg",
-    width: 5120,
-    height: 3840,
+    src: "/myexperience-lifestyle-slide-03.png",
+    alt: "Lifestyle and access slide 3",
   },
 ] as const;
-const FLOORPLAN_IMAGE = "/myexperience-floorplan-gpt.png";
-const LIFESTYLE_ACCESS_IMAGE = "/myexperience-lifestyle-access-map.png";
+const housePlanSpecs = [
+  { id: "total-area", label: "Total area", value: "192 m²" },
+  { id: "living-room", label: "Living room", value: "52 m²" },
+  { id: "dining-room", label: "Dining room", value: "21 m²" },
+  { id: "primary-suite", label: "Primary suite", value: "28 m²" },
+  { id: "guest-suites", label: "Guest suites", value: "19 m²" },
+  { id: "terrace-pool", label: "Terrace + pool", value: "74 m²" },
+] as const;
 
-const services = [
+const communityItems = [
   {
     number: "01",
     title: "Fondue Nights",
     description: "Warm alpine tables, shared rituals and the kind of hospitality that turns the village into a lived experience.",
     image: SERVICE_IMAGES[0],
+    size: "narrow",
   },
   {
     number: "02",
     title: "Alpine Panorama",
     description: "Wide mountain views and village rooftops frame the project within a dramatic Swiss landscape.",
     image: SERVICE_IMAGES[1],
+    size: "medium",
   },
   {
     number: "03",
     title: "Local Matchday",
     description: "Daily life extends beyond the chalet with sports, open air activity and a visible sense of community.",
     image: SERVICE_IMAGES[2],
+    size: "medium",
   },
   {
     number: "04",
     title: "Village Walks",
     description: "Pedestrian streets, timber facades and mountain air create a slower rhythm around the residence.",
     image: SERVICE_IMAGES[3],
+    size: "narrow",
+  },
+  {
+    number: "05",
+    title: "Summit Outlooks",
+    description: "Open viewpoints and elevated routes keep the village tied to a broader alpine panorama throughout the day.",
+    image: SERVICE_IMAGES[1],
+    size: "narrow",
+  },
+  {
+    number: "06",
+    title: "Slow Routes",
+    description: "On-foot connections between homes, restaurants and trails make the setting feel intimate rather than resort-like.",
+    image: SERVICE_IMAGES[3],
+    size: "narrow",
   },
 ] as const;
 
@@ -99,9 +120,23 @@ export async function generateMetadata({
 
 export default async function MyExperiencePage({ params }: MyExperiencePageProps) {
   const locale = await resolveLocaleParam(params);
+  const mesangeGalleryImages = (await getGalleryItems())
+    .filter((item) => item.project === "mesange")
+    .map((item, index) => ({
+      id: item.id,
+      src: item.src,
+      alt: item.architect?.trim() || `Mesange render ${index + 1}`,
+    }));
 
   return (
     <main className="myExperiencePage">
+      <div className="myExperienceAmbient" aria-hidden="true">
+        <span className="myExperienceAmbientSpot myExperienceAmbientSpot1" />
+        <span className="myExperienceAmbientSpot myExperienceAmbientSpot2" />
+        <span className="myExperienceAmbientSpot myExperienceAmbientSpot3" />
+      </div>
+      <MyExperienceScrollProgress />
+      <MyExperienceGalleryToneObserver />
       <section className="myExperienceHero">
         <Image
           src={HERO_IMAGE}
@@ -121,13 +156,13 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
               <Link href="#location">Location</Link>
             </nav>
             <p className="myExperienceEyebrow">Cinematic Residential Presentation</p>
-            <h1 className="myExperienceHeroTitle">AURELIA HOUSE</h1>
+            <h1 className="myExperienceHeroTitle">MESANGE</h1>
             <p className="myExperienceHeroCopy">
               A private modern residence shaped as an emotional architectural story,
               balancing calm landscape views, warm interior light and refined urban living.
             </p>
             <div className="myExperienceHeroMeta">
-              <span>Toronto, Canada</span>
+              <span>Mesange, Gland / Suisse</span>
               <span>Private Estate / 2026</span>
             </div>
           </ScrollReveal>
@@ -135,97 +170,43 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
       </section>
 
       <div className="myExperienceShell myExperienceSections" id="overview">
-        <ScrollReveal as="section" className="myExperiencePanel" id="services">
-          <div className="myExperienceSectionHeading">
-            <p className="myExperienceSectionKicker">Daily Life</p>
-            <h2 className="myExperienceSectionTitle">IN THE COMMUNITY</h2>
-          </div>
-          <div className="myExperienceServiceGrid">
-            {services.map((service, index) => (
-              <ScrollReveal
-                key={service.number}
-                as="article"
-                className="myExperienceServiceCard"
-                delay={index * 60}
-              >
-                <div className="myExperienceServiceMedia">
-                  <Image
-                    src={service.image}
-                    alt={service.title}
-                    fill
-                    sizes="(max-width: 900px) 100vw, 25vw"
-                    className="myExperienceServiceImage"
-                  />
-                </div>
-                <div className="myExperienceServiceBody">
-                  <p className="myExperienceServiceNumber">{service.number}</p>
-                  <h3 className="myExperienceServiceTitle">{service.title}</h3>
-                  <p className="myExperienceServiceText">{service.description}</p>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </ScrollReveal>
+        <MyExperienceCommunitySection
+          kicker="Advanced living tools"
+          title="Its Just The Mood."
+          description=""
+          items={[...communityItems]}
+        />
 
         <ScrollReveal as="section" className="myExperiencePanel myExperiencePlanSection">
-          <div className="myExperiencePlanCopy">
-            <p className="myExperienceSectionKicker">House Plan</p>
-            <h2 className="myExperienceSectionTitle">HOUSE PLAN</h2>
-            <dl className="myExperienceSpecs">
-              <div><dt>Total area</dt><dd>192 m²</dd></div>
-              <div><dt>Living room</dt><dd>52 m²</dd></div>
-              <div><dt>Dining room</dt><dd>21 m²</dd></div>
-              <div><dt>Primary suite</dt><dd>28 m²</dd></div>
-              <div><dt>Guest suites</dt><dd>19 m²</dd></div>
-              <div><dt>Terrace + pool</dt><dd>74 m²</dd></div>
-            </dl>
-            <p className="myExperiencePlanNote">
-              The spatial composition is conceived as a hospitality-grade residence,
-              organized around light, privacy, indoor warmth and fluid transitions into landscape.
-            </p>
-          </div>
-          <div className="myExperiencePlanVisual">
-            <div className="myExperiencePlanImageFrame">
-              <Image
-                src={FLOORPLAN_IMAGE}
-                alt="Luxury residence floor plan"
-                width={1198}
-                height={1313}
-                sizes="(max-width: 980px) 100vw, 50vw"
-                className="myExperiencePlanImage"
-              />
-            </div>
-          </div>
+          <MyExperienceHousePlanSection
+            kicker="House Plan"
+            title="HOUSE PLAN"
+            specs={[...housePlanSpecs]}
+            note="The spatial composition is conceived as a hospitality-grade residence, organized around light, privacy, indoor warmth and fluid transitions into landscape."
+            defaultImage={{
+              src: FLOORPLAN_IMAGE,
+              alt: "Luxury residence floor plan",
+            }}
+          />
         </ScrollReveal>
 
         <section className="myExperienceGallerySection" id="gallery">
-          <div className="myExperienceSectionHeading">
-            <ScrollReveal as="p" className="myExperienceSectionKicker">
-              Visual Narrative
-            </ScrollReveal>
-            <ScrollReveal as="h2" className="myExperienceSectionTitle" delay={50}>
-              GALLERY
-            </ScrollReveal>
-          </div>
-          <div className="myExperienceGalleryGrid">
-            {GALLERY_IMAGES.map((image, index) => (
-              <ScrollReveal
-                key={image.src}
-                as="figure"
-                className={`myExperienceGalleryCard myExperienceGalleryCard${index + 1}`}
-                delay={index * 45}
-              >
-                <Image
-                  src={image.src}
-                  alt={`Architectural render ${index + 1}`}
-                  width={image.width}
-                  height={image.height}
-                  sizes="(max-width: 900px) 100vw, 50vw"
-                  className="myExperienceGalleryImage"
-                />
+          <div className="myExperienceGalleryHeadingRow">
+            <div className="myExperienceSectionHeading">
+              <ScrollReveal as="p" className="myExperienceSectionKicker">
+                Visual Narrative
               </ScrollReveal>
-            ))}
+              <ScrollReveal as="h2" className="myExperienceSectionTitle" delay={50}>
+                GALLERY
+              </ScrollReveal>
+            </div>
+            <ScrollReveal as="div" delay={90}>
+              <MyExperienceGalleryModeToggle />
+            </ScrollReveal>
           </div>
+          <ScrollReveal as="div" delay={120}>
+            <MyExperienceGalleryCarousel images={mesangeGalleryImages} />
+          </ScrollReveal>
         </section>
 
         <section className="myExperienceStoryGrid">
@@ -233,7 +214,7 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
             <p className="myExperienceSectionKicker">Project Story</p>
             <h2 className="myExperienceSectionTitle">ARCHITECTURAL PHILOSOPHY</h2>
             <p className="myExperienceStoryText">
-              Aurelia House is imagined as a residence of presence rather than spectacle.
+              Mesange is imagined as a residence of presence rather than spectacle.
               The massing stays restrained, while the experience unfolds through warm interior glow,
               crisp material contrast and carefully framed openings toward the landscape.
             </p>
@@ -251,14 +232,8 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
           >
             <p className="myExperienceSectionKicker">Location</p>
             <h2 className="myExperienceSectionTitle">LIFESTYLE & ACCESS</h2>
-            <div className="myExperienceMapCard" aria-hidden="true">
-              <Image
-                src={LIFESTYLE_ACCESS_IMAGE}
-                alt="Lifestyle and access map"
-                fill
-                sizes="(max-width: 900px) 100vw, 50vw"
-                className="myExperienceMapImage"
-              />
+            <div className="myExperienceMapCard">
+              <MyExperienceLocationSlideshow slides={[...LIFESTYLE_ACCESS_SLIDES]} />
             </div>
             <div className="myExperienceAmenityList">
               {amenities.map((amenity) => (
