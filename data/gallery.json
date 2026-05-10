@@ -7,6 +7,30 @@
       "project": null
     },
     {
+      "id": "f5f751a2-a41b-4b52-ab82-fe909f4562b4",
+      "src": "/uploads/f5f751a2-a41b-4b52-ab82-fe909f4562b4-1778384081578.png",
+      "architect": "BS / Night",
+      "project": "others"
+    },
+    {
+      "id": "53b22701-98ca-4b9c-85ef-e46070e76e2e",
+      "src": "/uploads/53b22701-98ca-4b9c-85ef-e46070e76e2e-1778382825543.png",
+      "architect": "BS / Focus",
+      "project": "others"
+    },
+    {
+      "id": "ed9f3b5a-1789-4145-b2d6-cb8f8d55f18a",
+      "src": "/uploads/ed9f3b5a-1789-4145-b2d6-cb8f8d55f18a-1778382810647.png",
+      "architect": "BS / Living room",
+      "project": "others"
+    },
+    {
+      "id": "91e7c9ca-c7c4-4105-bac2-2ea185b2fc7c",
+      "src": "/uploads/91e7c9ca-c7c4-4105-bac2-2ea185b2fc7c-1778382761486.png",
+      "architect": "BS / Exterior",
+      "project": "others"
+    },
+    {
       "id": "9d78de11-f341-48ca-bc64-d398f559d98a",
       "src": "/uploads/9d78de11-f341-48ca-bc64-d398f559d98a-1776655685693.jpg",
       "architect": "BS / Focus",
@@ -38,7 +62,7 @@
     },
     {
       "id": "71d6adb1-3bb4-4152-ae4b-6f906ba3a2bc",
-      "src": "/uploads/71d6adb1-3bb4-4152-ae4b-6f906ba3a2bc-1776187912965.jpg",
+      "src": "/uploads/71d6adb1-3bb4-4152-ae4b-6f906ba3a2bc-1778383002919.png",
       "architect": "BS / Living room",
       "project": "flanthey"
     },
@@ -50,7 +74,7 @@
     },
     {
       "id": "72934922-adc9-4af5-8681-94328e0c589f",
-      "src": "/uploads/72934922-adc9-4af5-8681-94328e0c589f-1776186591550.jpg",
+      "src": "/uploads/72934922-adc9-4af5-8681-94328e0c589f-1778383088023.png",
       "architect": "BS / Exterior",
       "project": "flanthey"
     },
