@@ -60,9 +60,16 @@ type ImageDimensions = {
 };
 
 type WorkspaceTab = "review" | "approved";
-type ImageSidePanelTab = "requests" | "chat" | "drawing";
+type ImageSidePanelTab = "requests" | "chat" | "notes" | "drawing";
 type DrawingTool = "freehand" | "line" | "rectangle" | "circle" | "eraser";
 type ShapeDrawingTool = Exclude<DrawingTool, "eraser">;
+
+type ProjectPostItNote = {
+  id: string;
+  content: string;
+  color: string;
+  createdAt: string;
+};
 
 type DrawingStrokeDraft =
   | {
@@ -92,6 +99,7 @@ type NumberedVersionGroup = {
 const commentColorStorageKey = "bs_project_feedback_color";
 const defaultCommentColor = "#d88fa2";
 const teamChatPollIntervalMs = 1500;
+const projectFeedbackDisplayImageWidths = [720, 1200, 1800];
 const commentColorOptions = [
   "#d88fa2",
   "#e7a27d",
@@ -106,6 +114,7 @@ const commentColorOptions = [
   "#c39fdd",
   "#d59cbc",
 ];
+const postItColorOptions = ["#fff1a8", "#ffd5df", "#d9f6c4", "#cfeaff", "#eadbff", "#ffe0b8"];
 
 const teamChatBubblePalettes = [
   { background: "#eef4ff", border: "#bfd3ff", accent: "#4f7df0" },
@@ -132,6 +141,50 @@ function createId() {
   }
 
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function getProjectToolStorageKey(projectId: string, imageId: string, tool: string) {
+  return `bs_project_${projectId}_${imageId}_${tool}`;
+}
+
+function getProjectFeedbackDisplayImageUrl(url: string, width: number) {
+  try {
+    const parsedUrl = new URL(url);
+    const marker = "/storage/v1/object/public/project-images/";
+    const markerIndex = parsedUrl.pathname.indexOf(marker);
+    if (markerIndex === -1) return url;
+
+    const imagePath = parsedUrl.pathname.slice(markerIndex + marker.length);
+    parsedUrl.pathname = `${parsedUrl.pathname.slice(
+      0,
+      markerIndex,
+    )}/storage/v1/render/image/public/project-images/${imagePath}`;
+    parsedUrl.search = "";
+    parsedUrl.searchParams.set("width", String(width));
+    parsedUrl.searchParams.set("quality", "78");
+    parsedUrl.searchParams.set("resize", "contain");
+
+    return parsedUrl.toString();
+  } catch {
+    return url;
+  }
+}
+
+function getProjectFeedbackImageSrcSet(url: string) {
+  return projectFeedbackDisplayImageWidths
+    .map((width) => `${getProjectFeedbackDisplayImageUrl(url, width)} ${width}w`)
+    .join(", ");
+}
+
+function parseStoredArray<T>(value: string | null): T[] {
+  if (!value) return [];
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
+  }
 }
 
 function hashString(value: string) {
@@ -1670,6 +1723,8 @@ function ProjectFeedbackImageCard({
   const [isLoadingDrawingLayer, setIsLoadingDrawingLayer] = useState(true);
   const [isSavingDrawingLayer, setIsSavingDrawingLayer] = useState(false);
   const downloadHref = `/api/project/${projectId}/images/${image.id}/download`;
+  const displayImageUrl = getProjectFeedbackDisplayImageUrl(image.url, 1800);
+  const displayImageSrcSet = getProjectFeedbackImageSrcSet(image.url);
   const hasDrawingTab = true;
   const isDrawingInteractionEnabled =
     activeSidePanel === "drawing" && canInteractWithImage && hasDrawingTab;
@@ -1989,17 +2044,26 @@ function ProjectFeedbackImageCard({
       >
         <img
           className="projectFeedbackImage"
-          src={image.url}
+          src={displayImageUrl}
+          srcSet={displayImageSrcSet}
+          sizes="(max-width: 760px) calc(100vw - 36px), 54vw"
           alt={imageLabel}
-          loading="lazy"
+          loading={imageLabel === "Image 1" ? "eager" : "lazy"}
           decoding="async"
+          fetchPriority={imageLabel === "Image 1" ? "high" : "auto"}
           onLoad={(event) => {
             setDimensions({
               width: event.currentTarget.naturalWidth,
               height: event.currentTarget.naturalHeight,
             });
           }}
-          onError={() => setDimensions(null)}
+          onError={(event) => {
+            setDimensions(null);
+            if (event.currentTarget.src !== image.url) {
+              event.currentTarget.srcset = "";
+              event.currentTarget.src = image.url;
+            }
+          }}
         />
 
         {isApprovedImage ? (
@@ -2147,6 +2211,16 @@ function ProjectFeedbackImageCard({
               Team Chat
             </button>
           ) : null}
+          <button
+            className="projectFeedbackSidePanelTab"
+            type="button"
+            role="tab"
+            data-active={activeSidePanel === "notes" ? "true" : "false"}
+            aria-selected={activeSidePanel === "notes"}
+            onClick={() => setActiveSidePanel("notes")}
+          >
+            Note
+          </button>
           {hasDrawingTab ? (
             <button
               className="projectFeedbackSidePanelTab"
@@ -2197,6 +2271,16 @@ function ProjectFeedbackImageCard({
                 canInteract={canInteractWithImage}
                 viewerRole={viewerRole}
                 detailsMode={false}
+              />
+            </div>
+          ) : null}
+
+          {activeSidePanel === "notes" ? (
+            <div>
+              <ProjectFeedbackNotesPanel
+                key={`${image.id}-notes`}
+                projectId={projectId}
+                imageId={image.id}
               />
             </div>
           ) : null}
@@ -2277,6 +2361,19 @@ function ProjectFeedbackImageCard({
             detailsMode
           />
         ) : null}
+
+        <details className="projectFeedbackSectionPanel projectFeedbackNotesSection">
+          <summary className="projectFeedbackSectionSummary">
+            <span className="projectFeedbackCommentsTitle">Note</span>
+            <span className="projectFeedbackCommentsMeta">Post-it</span>
+          </summary>
+
+          <ProjectFeedbackNotesPanel
+            key={`${image.id}-mobile-notes`}
+            projectId={projectId}
+            imageId={image.id}
+          />
+        </details>
 
         {hasDrawingTab ? (
           <details className="projectFeedbackSectionPanel projectFeedbackDrawingSection">
@@ -2672,6 +2769,8 @@ function ProjectFeedbackApprovedCard({
 }: ProjectFeedbackApprovedCardProps) {
   const [dimensions, setDimensions] = useState<ImageDimensions | null>(null);
   const dimensionsLabel = imageDimensionsLabel(dimensions);
+  const displayImageUrl = getProjectFeedbackDisplayImageUrl(image.url, 1200);
+  const displayImageSrcSet = getProjectFeedbackImageSrcSet(image.url);
 
   return (
     <article className="projectFeedbackApprovedCard">
@@ -2694,7 +2793,9 @@ function ProjectFeedbackApprovedCard({
       <div className="projectFeedbackApprovedMedia">
         <img
           className="projectFeedbackImage"
-          src={image.url}
+          src={displayImageUrl}
+          srcSet={displayImageSrcSet}
+          sizes="(max-width: 760px) calc(100vw - 36px), 46vw"
           alt={`${imageLabel} from variant V${version}`}
           loading="lazy"
           decoding="async"
@@ -2704,7 +2805,13 @@ function ProjectFeedbackApprovedCard({
               height: event.currentTarget.naturalHeight,
             });
           }}
-          onError={() => setDimensions(null)}
+          onError={(event) => {
+            setDimensions(null);
+            if (event.currentTarget.src !== image.url) {
+              event.currentTarget.srcset = "";
+              event.currentTarget.src = image.url;
+            }
+          }}
         />
       </div>
 
@@ -2905,6 +3012,123 @@ function ProjectFeedbackSendIcon() {
         strokeWidth="1.9"
       />
     </svg>
+  );
+}
+
+function ProjectFeedbackNotesPanel({
+  projectId,
+  imageId,
+}: {
+  projectId: string;
+  imageId: string;
+}) {
+  const storageKey = getProjectToolStorageKey(projectId, imageId, "notes");
+  const [notes, setNotes] = useState<ProjectPostItNote[]>(() => {
+    if (typeof window === "undefined") return [];
+    return parseStoredArray<ProjectPostItNote>(window.localStorage.getItem(storageKey));
+  });
+  const [content, setContent] = useState("");
+  const [color, setColor] = useState(postItColorOptions[0]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(storageKey, JSON.stringify(notes));
+  }, [notes, storageKey]);
+
+  const handleAddNote = () => {
+    const trimmedContent = content.trim();
+    if (!trimmedContent) return;
+
+    setNotes((current) => [
+      {
+        id: createId(),
+        content: trimmedContent,
+        color,
+        createdAt: new Date().toISOString(),
+      },
+      ...current,
+    ]);
+    setContent("");
+  };
+
+  return (
+    <aside className="projectFeedbackNotes">
+      <div className="projectFeedbackCommentsHeader">
+        <h3 className="projectFeedbackCommentsTitle">Note</h3>
+        <p className="projectFeedbackCommentsMeta">
+          {notes.length} post-it{notes.length === 1 ? "" : "s"}
+        </p>
+      </div>
+
+      <div className="projectFeedbackNotesPanel">
+        <div className="projectFeedbackNotesComposer">
+          <textarea
+            className="projectFeedbackTextarea"
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+            placeholder="Add a quick note for this image"
+            aria-label="Post-it note"
+          />
+
+          <div className="projectFeedbackNotesComposerActions">
+            <div className="projectFeedbackColorOptions" role="group" aria-label="Post-it color">
+              {postItColorOptions.map((colorOption) => (
+                <button
+                  key={colorOption}
+                  className="projectFeedbackColorOption"
+                  type="button"
+                  data-active={color === colorOption ? "true" : "false"}
+                  style={{ "--comment-color": colorOption } as CSSProperties}
+                  aria-label={`Select note color ${colorOption}`}
+                  onClick={() => setColor(colorOption)}
+                >
+                  <span />
+                </button>
+              ))}
+            </div>
+
+            <button
+              className="projectFeedbackMiniAction projectFeedbackMiniActionApprove"
+              type="button"
+              disabled={content.trim().length === 0}
+              onClick={handleAddNote}
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div className="projectFeedbackPostItWall">
+          {notes.length > 0 ? (
+            notes.map((note) => (
+              <article
+                key={note.id}
+                className="projectFeedbackPostIt"
+                style={{ "--post-it-color": note.color } as CSSProperties}
+              >
+                <p>{note.content}</p>
+                <div>
+                  <span>{formatTimestamp(note.createdAt)}</span>
+                  <button
+                    type="button"
+                    aria-label="Delete note"
+                    onClick={() =>
+                      setNotes((current) => current.filter((item) => item.id !== note.id))
+                    }
+                  >
+                    <ProjectFeedbackTrashIcon />
+                  </button>
+                </div>
+              </article>
+            ))
+          ) : (
+            <p className="projectFeedbackCommentsMeta">
+              No post-it yet. Add a short note, choose a color, and keep the image context visible.
+            </p>
+          )}
+        </div>
+      </div>
+    </aside>
   );
 }
 

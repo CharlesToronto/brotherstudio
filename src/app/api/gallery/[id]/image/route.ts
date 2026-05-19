@@ -4,22 +4,11 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 
 import { getGalleryItems, updateGalleryItem } from "@/lib/galleryStore";
+import { convertGalleryImageToWebp } from "@/lib/galleryImageConversion";
 
 export const runtime = "nodejs";
 
 const uploadsDirPath = path.join(process.cwd(), "public", "uploads");
-
-function extensionForFile(file: File) {
-  const fromName = path.extname(file.name).toLowerCase();
-  if (fromName) return fromName;
-
-  const mime = file.type.toLowerCase();
-  if (mime === "image/png") return ".png";
-  if (mime === "image/webp") return ".webp";
-  if (mime === "image/gif") return ".gif";
-  if (mime === "image/svg+xml") return ".svg";
-  return ".jpg";
-}
 
 function pathForUpload(src: string) {
   if (!src.startsWith("/uploads/")) return null;
@@ -47,13 +36,12 @@ export async function POST(
     return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
   }
 
-  const ext = extensionForFile(file);
-  const filename = `${id}-${Date.now()}${ext}`;
+  const image = await convertGalleryImageToWebp(file);
+  const filename = `${id}-${Date.now()}${image.extension}`;
   const outputPath = path.join(uploadsDirPath, filename);
 
   await fs.mkdir(uploadsDirPath, { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(outputPath, buffer);
+  await fs.writeFile(outputPath, image.buffer);
 
   const nextSrc = `/uploads/${filename}`;
   const updated = await updateGalleryItem(id, { src: nextSrc });

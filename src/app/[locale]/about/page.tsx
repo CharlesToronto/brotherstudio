@@ -11,7 +11,7 @@ type LocaleAboutPageProps = {
   params: Promise<{ locale: string }>;
 };
 
-const ABOUT_PORTRAIT_SRC = "/about-portrait-charles-2026.jpeg";
+const ABOUT_PORTRAIT_SRC = "/about-portrait-charles-2026.webp";
 
 export async function generateMetadata({
   params,

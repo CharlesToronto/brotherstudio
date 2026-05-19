@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { ScrollReveal } from "@/components/ScrollReveal";
 import { getMessages } from "@/content/messages";
 import { site } from "@/content/site";
 import type { Locale } from "@/lib/i18n";
@@ -89,23 +88,22 @@ export function SiteFooter({ locale }: { locale: Locale }) {
 
   return (
     <footer id="site-footer" className="siteFooter">
-      <ScrollReveal as="div" className="siteFooterBrand">
+      <div className="siteFooterBrand">
         <p className="siteFooterGroupTitle">{footerLabels.studio}</p>
         <p className="siteFooterName">{site.name}</p>
         <p className="siteFooterText">{footerLocation}</p>
-      </ScrollReveal>
+      </div>
 
       {footerGroups.map((group) => (
-        <ScrollReveal
+        <div
           key={group.title}
-          as="div"
           className="siteFooterGroup siteFooterGroupDesktop"
         >
           <p className="siteFooterGroupTitle">{group.title}</p>
           <div className="siteFooterList">
             {group.links.map((link) => renderFooterLink(link))}
           </div>
-        </ScrollReveal>
+        </div>
       ))}
 
       <div className="siteFooterAccordions">

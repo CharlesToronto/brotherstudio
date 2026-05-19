@@ -7,8 +7,10 @@ export const PROJECT_OPTIONS = [
   { key: "jolimont", label: "Jolimont" },
   { key: "markham", label: "Markham" },
   { key: "markham-2", label: "Markham 2" },
+  { key: "hdm6", label: "HDM6" },
   { key: "violette", label: "Violette" },
   { key: "cfoc", label: "CFOC" },
+  { key: "three-peaks", label: "Three Peaks" },
   { key: "others", label: "Others" },
 ] as const;
 

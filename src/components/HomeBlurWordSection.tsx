@@ -1,112 +1,58 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { Dongle } from "next/font/google";
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { ArrowDown } from "lucide-react";
 
-const INITIAL_CURSOR = { x: 50, y: 50, active: false, jitterX: 0, jitterY: 0 };
-const TOUCH_REVEAL_PERSIST_MS = 850;
-const MOBILE_BREAKPOINT = "(max-width: 640px)";
+import InfiniteGallery from "@/components/ui/3d-gallery-photography";
+import type { GalleryItem } from "@/lib/galleryStore";
 
 const dongle = Dongle({
   subsets: ["latin"],
   weight: ["300"],
 });
 
-export function HomeBlurWordSection() {
-  const [cursor, setCursor] = useState(INITIAL_CURSOR);
-  const [isMobileHero, setIsMobileHero] = useState(false);
-  const touchResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+type HomeBlurWordSectionProps = {
+  items: GalleryItem[];
+};
 
-  useEffect(() => {
-    return () => {
-      if (touchResetTimeoutRef.current !== null) {
-        clearTimeout(touchResetTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(MOBILE_BREAKPOINT);
-
-    const syncMobileState = () => {
-      setIsMobileHero(mediaQuery.matches);
-    };
-
-    syncMobileState();
-    mediaQuery.addEventListener("change", syncMobileState);
-
-    return () => {
-      mediaQuery.removeEventListener("change", syncMobileState);
-    };
-  }, []);
-
-  const clearTouchResetTimeout = () => {
-    if (touchResetTimeoutRef.current !== null) {
-      clearTimeout(touchResetTimeoutRef.current);
-      touchResetTimeoutRef.current = null;
-    }
-  };
-
-  const updateCursorFromPointer = (event: ReactPointerEvent<HTMLElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const distance = Math.hypot(event.clientX - centerX, event.clientY - centerY);
-    const energy = Math.min(distance / Math.max(rect.width, rect.height), 0.62);
-    const jitterX = (Math.random() - 0.5) * 32 * energy;
-    const jitterY = (Math.random() - 0.5) * 26 * energy;
-    setCursor({ x, y, active: true, jitterX, jitterY });
-  };
+export function HomeBlurWordSection({ items }: HomeBlurWordSectionProps) {
+  const heroImages = items
+    .filter((item) => item.architect.trim().toUpperCase() !== "BS")
+    .slice(0, 8)
+    .map((item) => ({
+      src: item.src,
+      alt: item.architect?.trim() || "BrotherStudio gallery image",
+    }));
 
   return (
-    <section
-      className="homeBlurWordSection"
-      aria-label="BrotherStudio hero typography"
-      onPointerDown={(event) => {
-        if (isMobileHero) return;
-        clearTouchResetTimeout();
-        updateCursorFromPointer(event);
-      }}
-      onPointerMove={(event) => {
-        if (isMobileHero) return;
-        clearTouchResetTimeout();
-        updateCursorFromPointer(event);
-      }}
-      onPointerUp={(event) => {
-        if (isMobileHero) return;
-        if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
-        clearTouchResetTimeout();
-        touchResetTimeoutRef.current = setTimeout(() => {
-          setCursor(INITIAL_CURSOR);
-          touchResetTimeoutRef.current = null;
-        }, TOUCH_REVEAL_PERSIST_MS);
-      }}
-      onPointerCancel={() => {
-        if (isMobileHero) return;
-        clearTouchResetTimeout();
-        setCursor(INITIAL_CURSOR);
-      }}
-      onPointerLeave={() => {
-        if (isMobileHero) return;
-        clearTouchResetTimeout();
-        setCursor(INITIAL_CURSOR);
-      }}
-      style={
-        {
-          "--cursor-x": `${cursor.x}%`,
-          "--cursor-y": `${cursor.y}%`,
-          "--cursor-opacity": isMobileHero ? 0 : cursor.active ? 1 : 0,
-          "--cursor-jitter-x": `${cursor.jitterX}px`,
-          "--cursor-jitter-y": `${cursor.jitterY}px`,
-        } as CSSProperties
-      }
-    >
-      <div className={`homeBlurWordStage ${dongle.className}`}>
-        <span className="homeBlurWord homeBlurWordBase">BROTHERSTUDIO</span>
-        <span className="homeBlurWord homeBlurWordReveal">BROTHERSTUDIO</span>
+    <section className="homeBlurWordSection" aria-label="BrotherStudio gallery hero">
+      <InfiniteGallery
+        images={heroImages}
+        speed={1.4}
+        zSpacing={3}
+        visibleCount={3}
+        falloff={{ near: 0.8, far: 14 }}
+        className="homeHero3dGallery"
+      />
+
+      <div className="homeHeroOverlay">
+        <div className={`homeHeroCopy ${dongle.className}`}>
+          <p className="homeHeroEyebrow">Selected Works</p>
+          <h1 className="homeHeroTitle">BROTHERSTUDIO</h1>
+        </div>
+        <button
+          type="button"
+          className="homeHeroScrollButton"
+          onClick={() => {
+            document.getElementById("home-gallery-grid")?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+        >
+          Gallery
+          <ArrowDown size={18} strokeWidth={1.8} />
+        </button>
       </div>
     </section>
   );

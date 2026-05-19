@@ -16,6 +16,8 @@ type HomeGalleryExperienceProps = {
   introLine: string;
 };
 
+const ALWAYS_VISIBLE_MARQUEE_PROJECT_KEYS = new Set<GalleryProjectKey>(["hdm6"]);
+
 export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGalleryExperienceProps) {
   const [activeProject, setActiveProject] = useState<GalleryProjectKey | "all">("all");
   const [isHovered, setIsHovered] = useState(false);
@@ -32,6 +34,7 @@ export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGa
   const suppressClickRef = useRef(false);
   const singleLoopWidthRef = useRef(0);
   const availableProjects = PROJECT_OPTIONS.filter((option) =>
+    ALWAYS_VISIBLE_MARQUEE_PROJECT_KEYS.has(option.key) ||
     items.some((item) => item.project === option.key),
   );
   const marqueeProjects = [...availableProjects, ...availableProjects];
@@ -114,6 +117,7 @@ export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGa
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    if ((event.target as HTMLElement).closest("button")) return;
     pointerIdRef.current = event.pointerId;
     dragStartXRef.current = event.clientX;
     dragStartOffsetRef.current = offsetRef.current;
@@ -193,9 +197,8 @@ export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGa
                   type="button"
                   data-active={activeProject === project.key ? "true" : "false"}
                   aria-pressed={activeProject === project.key}
-                  aria-hidden={index >= availableProjects.length ? "true" : undefined}
-                  tabIndex={index >= availableProjects.length ? -1 : 0}
                   onClick={(event) => {
+                    event.stopPropagation();
                     if (suppressClickRef.current) {
                       event.preventDefault();
                       return;
@@ -215,12 +218,18 @@ export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGa
         {introLine}
       </ScrollReveal>
 
-      <Gallery
-        key={activeProject}
-        items={visibleItems}
-        showProjectFilters={false}
-        filterLabels={filterLabels}
-      />
+      <div id="home-gallery-grid">
+        <Gallery
+          key={activeProject}
+          items={visibleItems}
+          showProjectFilters={false}
+          filterLabels={filterLabels}
+          galleryState={{
+            activeProject,
+            visibleCount: visibleItems.length,
+          }}
+        />
+      </div>
     </>
   );
 }

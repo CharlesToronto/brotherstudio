@@ -19,6 +19,10 @@ type GalleryProps = {
   items: GalleryItem[];
   editable?: boolean;
   activeProject?: GalleryProjectKey | "all";
+  galleryState?: {
+    activeProject: GalleryProjectKey | "all";
+    visibleCount: number;
+  };
   filterLabels?: {
     all: string;
     ariaLabel: string;
@@ -106,6 +110,7 @@ export function Gallery({
   items,
   editable = false,
   activeProject: controlledActiveProject,
+  galleryState,
   filterLabels,
   onProjectChange,
   showProjectFilters = true,
@@ -116,6 +121,7 @@ export function Gallery({
     ariaLabel: editable ? "Filtres de projet" : "Project filters",
   };
   const [localItems, setLocalItems] = useState<GalleryItem[]>(items);
+  const sourceItems = editable ? localItems : items;
   const [activeId, setActiveId] = useState<string | null>(null);
   const [internalActiveProject, setInternalActiveProject] = useState<GalleryProjectKey | "all">("all");
   const activeProject = controlledActiveProject ?? internalActiveProject;
@@ -159,10 +165,10 @@ export function Gallery({
       if (editable) return [...PROJECT_OPTIONS];
       return PROJECT_OPTIONS.filter((option) =>
         ALWAYS_VISIBLE_PROJECT_KEYS.has(option.key) ||
-        localItems.some((item) => item.project === option.key),
+        sourceItems.some((item) => item.project === option.key),
       );
     },
-    [editable, localItems],
+    [editable, sourceItems],
   );
 
   useEffect(() => {
@@ -172,9 +178,9 @@ export function Gallery({
   }, [activeProject, availableProjects, setActiveProject]);
 
   const filteredItems = useMemo(() => {
-    if (activeProject === "all") return localItems;
-    return localItems.filter((item) => item.project === activeProject);
-  }, [activeProject, localItems]);
+    if (activeProject === "all") return sourceItems;
+    return sourceItems.filter((item) => item.project === activeProject);
+  }, [activeProject, sourceItems]);
 
   const renderedItems = useMemo(
     () => filteredItems.slice(0, visibleCount),
@@ -254,8 +260,8 @@ export function Gallery({
 
   const activeItem = useMemo(() => {
     if (activeId === null) return null;
-    return localItems.find((i) => i.id === activeId) ?? null;
-  }, [activeId, localItems]);
+    return sourceItems.find((i) => i.id === activeId) ?? null;
+  }, [activeId, sourceItems]);
 
   useEffect(() => {
     if (!activeItem) return;
@@ -491,6 +497,8 @@ export function Gallery({
 
       <div
         className="gallery"
+        data-active-project={galleryState?.activeProject ?? activeProject}
+        data-visible-count={galleryState?.visibleCount ?? filteredItems.length}
         role="list"
         onDragOver={(event) => {
           if (!editable || busyId !== null) return;

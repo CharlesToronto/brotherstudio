@@ -66,7 +66,7 @@ export default async function RootLayout({
     DEFAULT_LOCALE;
   const pathname = headerStore.get("x-site-pathname") ?? "/";
   const subpath = stripLocaleFromPathname(pathname);
-  const isBareExperiencePage = subpath === "/myexperience";
+  const isBareExperiencePage = subpath === "/myexperience" || subpath.startsWith("/myexperience/");
   const shouldLoadAnalytics =
     process.env.NODE_ENV === "production" && process.env.VERCEL === "1";
 

@@ -52,7 +52,7 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
   return (
     <main className="siteMain">
       <HomeHeroHeaderController />
-      <HomeBlurWordSection />
+      <HomeBlurWordSection items={items} />
       <HomeGalleryExperience
         items={items}
         introLine={messages.home.introLine}
