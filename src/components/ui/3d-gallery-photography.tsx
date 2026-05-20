@@ -336,8 +336,9 @@ function GalleryScene({
   const size = useThree((state) => state.size);
   const [autoPlay, setAutoPlay] = useState(true);
   const lastInteraction = useRef(0);
-  const velocityRef = useRef(0.46 * speed);
+  const velocityRef = useRef(0.58 * speed);
   const progressRef = useRef(0.36);
+  const touchYRef = useRef<number | null>(null);
 
   const planeCount = Math.max(1, Math.min(PLANE_COUNT, visibleCount, images.length || PLANE_COUNT));
   const isNarrow = size.width < 900;
@@ -406,6 +407,34 @@ function GalleryScene({
     [speed],
   );
 
+  const handleTouchStart = useCallback((event: TouchEvent) => {
+    touchYRef.current = event.touches[0]?.clientY ?? null;
+  }, []);
+
+  const handleTouchMove = useCallback(
+    (event: TouchEvent) => {
+      const nextTouchY = event.touches[0]?.clientY;
+      if (typeof nextTouchY !== "number") return;
+
+      const previousTouchY = touchYRef.current;
+      touchYRef.current = nextTouchY;
+      if (previousTouchY === null) return;
+
+      const deltaY = previousTouchY - nextTouchY;
+      event.preventDefault();
+      progressRef.current += deltaY * 0.0016 * speed;
+      velocityRef.current += deltaY * 0.0115 * speed;
+      velocityRef.current = THREE.MathUtils.clamp(velocityRef.current, -2.1, 2.1);
+      setAutoPlay(false);
+      lastInteraction.current = Date.now();
+    },
+    [speed],
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    touchYRef.current = null;
+  }, []);
+
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
@@ -425,20 +454,28 @@ function GalleryScene({
     const wheelTarget = wheelTargetRef.current;
     if (wheelTarget) {
       wheelTarget.addEventListener("wheel", handleWheel, { passive: false });
+      wheelTarget.addEventListener("touchstart", handleTouchStart, { passive: true });
+      wheelTarget.addEventListener("touchmove", handleTouchMove, { passive: false });
+      wheelTarget.addEventListener("touchend", handleTouchEnd);
+      wheelTarget.addEventListener("touchcancel", handleTouchEnd);
     }
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       if (wheelTarget) {
         wheelTarget.removeEventListener("wheel", handleWheel);
+        wheelTarget.removeEventListener("touchstart", handleTouchStart);
+        wheelTarget.removeEventListener("touchmove", handleTouchMove);
+        wheelTarget.removeEventListener("touchend", handleTouchEnd);
+        wheelTarget.removeEventListener("touchcancel", handleTouchEnd);
       }
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleKeyDown, handleWheel, wheelTargetRef]);
+  }, [handleKeyDown, handleTouchEnd, handleTouchMove, handleTouchStart, handleWheel, wheelTargetRef]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      if (Date.now() - lastInteraction.current > 1400) {
+      if (Date.now() - lastInteraction.current > 1000) {
         setAutoPlay(true);
       }
     }, 1000);
@@ -450,12 +487,12 @@ function GalleryScene({
     if (!normalizedImages.length) return;
 
     if (autoPlay) {
-      velocityRef.current += 0.07 * delta * speed;
+      velocityRef.current += 0.1 * delta * speed;
     }
 
-    velocityRef.current *= 0.968;
-    velocityRef.current = THREE.MathUtils.clamp(velocityRef.current, -1.65, 1.65);
-    progressRef.current += velocityRef.current * delta * 0.72;
+    velocityRef.current *= 0.972;
+    velocityRef.current = THREE.MathUtils.clamp(velocityRef.current, -2.1, 2.1);
+    progressRef.current += velocityRef.current * delta * 0.86;
 
     let rotated = false;
     while (progressRef.current >= 1) {

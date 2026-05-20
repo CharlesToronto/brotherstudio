@@ -23,6 +23,12 @@ body {
   overflow-x: hidden;
 }
 
+html.homeHeroMobileScrollLocked,
+body.homeHeroMobileScrollLocked {
+  overflow: hidden;
+  touch-action: none;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -1162,6 +1168,33 @@ body {
   background: transparent;
 }
 
+.myExperienceGalleryOgl {
+  position: relative;
+  width: 100%;
+  height: min(72svh, 760px);
+  min-height: 560px;
+  overflow: hidden;
+}
+
+.myExperienceGalleryOglCanvas {
+  width: 100%;
+  height: 100%;
+}
+
+.myExperienceGalleryOgl canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.myExperiencePage[data-gallery-mode="night"] .myExperienceGalleryOgl canvas {
+  filter: saturate(0.88) brightness(0.78) contrast(1.04);
+}
+
+.myExperiencePage[data-gallery-mode="day"] .myExperienceGalleryOgl canvas {
+  filter: saturate(1.06) brightness(1.02) contrast(1.02);
+}
+
 .zoomParallax {
   position: relative;
   height: 375svh;
@@ -1290,7 +1323,7 @@ body {
   -ms-overflow-style: none;
   cursor: grab;
   user-select: none;
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
 }
 
 .myExperienceGalleryCarouselViewport::-webkit-scrollbar {
@@ -1303,25 +1336,88 @@ body {
 
 .myExperienceGalleryCarouselTrack {
   display: flex;
-  align-items: stretch;
-  gap: 24px;
+  align-items: flex-start;
+  gap: clamp(16px, 1.8vw, 30px);
+  padding-block: 24px 58px;
 }
 
-.myExperienceGalleryCluster {
-  flex: 0 0 min(100%, 1360px);
+.myExperienceGallerySlide {
+  position: relative;
+  flex: 0 0 clamp(240px, 24vw, 410px);
   min-width: 0;
+  transform-origin: center bottom;
+  transition:
+    transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 280ms ease,
+    filter 280ms ease;
+  will-change: transform, opacity, filter;
 }
 
-.myExperienceGalleryClusterGrid {
+.myExperienceGallerySlideFigure {
+  position: relative;
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-items: stretch;
-  gap: 18px;
+  aspect-ratio: 4 / 5;
+  margin: 0;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.03);
+  box-shadow:
+    0 26px 80px rgb(0 0 0 / 0.34),
+    inset 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 
-.myExperienceGalleryClusterCard {
-  min-height: 0;
+.myExperienceGallerySlideImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.myExperienceGallerySlide[data-distance="0"] {
+  z-index: 4;
+  opacity: 1;
+  filter: none;
+  transform: translateY(0) scale(1) rotate(0deg);
+}
+
+.myExperienceGallerySlide[data-distance="-1"] {
+  z-index: 3;
+  opacity: 0.92;
+  filter: saturate(0.94);
+  transform: translateY(34px) scale(0.9) rotate(-8deg);
+}
+
+.myExperienceGallerySlide[data-distance="1"] {
+  z-index: 3;
+  opacity: 0.92;
+  filter: saturate(0.94);
+  transform: translateY(34px) scale(0.9) rotate(8deg);
+}
+
+.myExperienceGallerySlide[data-distance="-2"] {
+  z-index: 2;
+  opacity: 0.62;
+  filter: saturate(0.86) brightness(0.88);
+  transform: translateY(70px) scale(0.77) rotate(-14deg);
+}
+
+.myExperienceGallerySlide[data-distance="2"] {
+  z-index: 2;
+  opacity: 0.62;
+  filter: saturate(0.86) brightness(0.88);
+  transform: translateY(70px) scale(0.77) rotate(14deg);
+}
+
+.myExperienceGallerySlide[data-distance="-3"] {
+  z-index: 1;
+  opacity: 0.24;
+  filter: saturate(0.72) brightness(0.76);
+  transform: translateY(96px) scale(0.62) rotate(-20deg);
+}
+
+.myExperienceGallerySlide[data-distance="3"] {
+  z-index: 1;
+  opacity: 0.24;
+  filter: saturate(0.72) brightness(0.76);
+  transform: translateY(96px) scale(0.62) rotate(20deg);
 }
 
 .myExperienceGalleryCarouselControls {
@@ -1692,6 +1788,24 @@ body {
     margin-inline: calc(50% - 50vw);
   }
 
+  .myExperienceGalleryOgl {
+    height: min(64svh, 640px);
+    min-height: 460px;
+  }
+
+  .myExperienceGalleryCarouselTrack {
+    padding-block: 18px 42px;
+  }
+
+  .myExperienceGallerySlide {
+    flex-basis: clamp(220px, 36vw, 340px);
+  }
+
+  .myExperienceGallerySlide[data-distance="-2"],
+  .myExperienceGallerySlide[data-distance="2"] {
+    opacity: 0.48;
+  }
+
   .zoomParallax {
     height: 160svh;
     margin-inline: calc(50% - 50vw);
@@ -1839,13 +1953,45 @@ body {
     gap: 12px;
   }
 
-  .myExperienceGalleryCluster {
-    flex-basis: 100%;
+  .myExperienceGalleryCarouselFrame {
+    padding-inline: 10px;
   }
 
-  .myExperienceGalleryClusterGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+  .myExperienceGalleryOgl {
+    height: min(58svh, 520px);
+    min-height: 380px;
+  }
+
+  .myExperienceGalleryCarouselTrack {
+    gap: 14px;
+    padding-block: 12px 30px;
+  }
+
+  .myExperienceGallerySlide {
+    flex-basis: clamp(190px, 62vw, 280px);
+  }
+
+  .myExperienceGallerySlide[data-distance="-1"] {
+    transform: translateY(18px) scale(0.86) rotate(-7deg);
+  }
+
+  .myExperienceGallerySlide[data-distance="1"] {
+    transform: translateY(18px) scale(0.86) rotate(7deg);
+  }
+
+  .myExperienceGallerySlide[data-distance="-2"] {
+    opacity: 0.22;
+    transform: translateY(36px) scale(0.72) rotate(-12deg);
+  }
+
+  .myExperienceGallerySlide[data-distance="2"] {
+    opacity: 0.22;
+    transform: translateY(36px) scale(0.72) rotate(12deg);
+  }
+
+  .myExperienceGallerySlide[data-distance="-3"],
+  .myExperienceGallerySlide[data-distance="3"] {
+    opacity: 0;
   }
 
   .myExperienceGalleryModeOption {
@@ -1927,11 +2073,6 @@ body {
 
   .myExperienceMapCard {
     min-height: 220px;
-    border-radius: 0;
-  }
-
-  .myExperienceGalleryClusterCard {
-    min-height: 0;
     border-radius: 0;
   }
 
