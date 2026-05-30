@@ -1,14 +1,13 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 type IncomingMessage = {
   role: "user" | "assistant";
   content: string;
 };
-
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 const PROJECT_ADDRESS = process.env.MESANGE_ADDRESS?.trim() || "Gland, VD, Suisse";
 
@@ -50,7 +49,9 @@ Regles de reponse:
 `;
 
 export async function POST(request: Request) {
-  if (!process.env.OPENAI_API_KEY) {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+
+  if (!apiKey) {
     return NextResponse.json(
       { error: "La variable OPENAI_API_KEY est absente du serveur." },
       { status: 500 },
@@ -58,6 +59,8 @@ export async function POST(request: Request) {
   }
 
   try {
+    const client = new OpenAI({ apiKey });
+
     const body = (await request.json()) as {
       history?: IncomingMessage[];
       message?: string;
