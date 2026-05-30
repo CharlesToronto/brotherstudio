@@ -22,6 +22,8 @@ export async function POST(request: Request) {
     | {
         name?: unknown;
         company?: unknown;
+        address?: unknown;
+        country?: unknown;
         phone?: unknown;
         email?: unknown;
         project?: unknown;
@@ -39,6 +41,8 @@ export async function POST(request: Request) {
     const client = await createTeamClient({
       name,
       company: typeof body?.company === "string" ? body.company : "",
+      address: typeof body?.address === "string" ? body.address : "",
+      country: typeof body?.country === "string" ? body.country : "",
       phone: typeof body?.phone === "string" ? body.phone : "",
       email: typeof body?.email === "string" ? body.email : "",
       project: typeof body?.project === "string" ? body.project : "",

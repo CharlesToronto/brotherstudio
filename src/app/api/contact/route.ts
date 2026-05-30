@@ -10,6 +10,8 @@ type ContactPayload = {
   phone?: unknown;
   message?: unknown;
   website?: unknown;
+  source?: unknown;
+  project?: unknown;
 };
 
 function asTrimmedString(value: unknown) {
@@ -59,6 +61,8 @@ export async function POST(request: Request) {
   const email = clip(asTrimmedString(body.email).toLowerCase(), 200);
   const phone = clip(asTrimmedString(body.phone), 40);
   const message = clip(asTrimmedString(body.message), 4000);
+  const source = clip(asTrimmedString(body.source), 80);
+  const project = clip(asTrimmedString(body.project), 120);
 
   if (!name) {
     return NextResponse.json({ error: "Name is required." }, { status: 400 });
@@ -82,6 +86,7 @@ export async function POST(request: Request) {
   }
 
   const toEmail = process.env.CONTACT_FORM_TO_EMAIL?.trim() || site.contact.email;
+  const ccEmail = process.env.CONTACT_FORM_CC_EMAIL?.trim() || site.contact.email;
   const fromEmail =
     process.env.CONTACT_FORM_FROM_EMAIL?.trim() ||
     process.env.RESEND_FROM_EMAIL?.trim() ||
@@ -106,6 +111,8 @@ export async function POST(request: Request) {
         <strong>Name:</strong> ${escapeHtml(name)}<br />
         <strong>Email:</strong> ${escapeHtml(email)}<br />
         <strong>Phone:</strong> ${escapeHtml(phone || "-")}<br />
+        <strong>Source:</strong> ${escapeHtml(source || "-")}<br />
+        <strong>Project:</strong> ${escapeHtml(project || "-")}<br />
         <strong>Submitted:</strong> ${escapeHtml(submittedAt)}
       </p>
       <p><strong>Message:</strong></p>
@@ -113,7 +120,7 @@ export async function POST(request: Request) {
     </div>
   `;
 
-  const resendResponse = await fetch("https://api.resend.com/emails", {
+  const ownerEmailResponse = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -129,8 +136,65 @@ export async function POST(request: Request) {
     }),
   });
 
-  if (!resendResponse.ok) {
-    const errorPayload = (await resendResponse.json().catch(() => null)) as
+  if (!ownerEmailResponse.ok) {
+    const errorPayload = (await ownerEmailResponse.json().catch(() => null)) as
+      | { message?: string; error?: { message?: string } }
+      | null;
+
+    const errorMessage =
+      errorPayload?.message ||
+      errorPayload?.error?.message ||
+      "Email provider error.";
+
+    return NextResponse.json({ error: errorMessage }, { status: 502 });
+  }
+
+  const clientText = [
+    `Bonjour ${name},`,
+    "",
+    "Nous avons bien recu votre demande concernant le projet Mesange.",
+    "Notre equipe revient vers vous rapidement.",
+    "",
+    "Recapitulatif :",
+    `- Email : ${email}`,
+    `- Telephone : ${phone || "-"}`,
+    `- Demande : ${message}`,
+    "",
+    "BrotherStudio",
+  ].join("\n");
+
+  const clientHtml = `
+    <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111">
+      <p>Bonjour ${escapeHtml(name)},</p>
+      <p>Nous avons bien recu votre demande concernant le projet Mesange.</p>
+      <p>Notre equipe revient vers vous rapidement.</p>
+      <p><strong>Recapitulatif</strong><br />
+      Email: ${escapeHtml(email)}<br />
+      Telephone: ${escapeHtml(phone || "-")}<br />
+      Demande: ${escapeHtml(message)}</p>
+      <p>BrotherStudio</p>
+    </div>
+  `;
+
+  const clientEmailResponse = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: fromEmail,
+      to: [email],
+      cc: ccEmail && ccEmail !== email ? [ccEmail] : undefined,
+      reply_to: toEmail,
+      subject: "Confirmation de votre demande - Projet Mesange",
+      text: clientText,
+      html: clientHtml,
+    }),
+  });
+
+  if (!clientEmailResponse.ok) {
+    const errorPayload = (await clientEmailResponse.json().catch(() => null)) as
       | { message?: string; error?: { message?: string } }
       | null;
 

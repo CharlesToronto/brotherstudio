@@ -14,6 +14,8 @@ export async function PATCH(
     | {
         name?: unknown;
         company?: unknown;
+        address?: unknown;
+        country?: unknown;
         phone?: unknown;
         email?: unknown;
         project?: unknown;
@@ -26,6 +28,8 @@ export async function PATCH(
     const client = await updateTeamClient(clientId, {
       ...(typeof body?.name === "string" ? { name: body.name } : null),
       ...(typeof body?.company === "string" ? { company: body.company } : null),
+      ...(typeof body?.address === "string" ? { address: body.address } : null),
+      ...(typeof body?.country === "string" ? { country: body.country } : null),
       ...(typeof body?.phone === "string" ? { phone: body.phone } : null),
       ...(typeof body?.email === "string" ? { email: body.email } : null),
       ...(typeof body?.project === "string" ? { project: body.project } : null),

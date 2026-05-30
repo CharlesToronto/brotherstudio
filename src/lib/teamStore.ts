@@ -13,6 +13,8 @@ export type TeamClientRecord = {
   id: string;
   name: string;
   company: string;
+  address: string;
+  country: string;
   phone: string;
   email: string;
   project: string;
@@ -24,6 +26,15 @@ export type TeamNoteRecord = {
   id: string;
   clientId: string;
   content: string;
+};
+
+export type TeamClientContactRecord = {
+  id: string;
+  clientId: string;
+  name: string;
+  lastContact: string;
+  note: string;
+  nextContact: string;
 };
 
 export type TeamScriptChoice = "yes" | "no" | "next" | "external" | "internal";
@@ -167,6 +178,8 @@ type TeamClientRow = {
   id: string;
   name: string | null;
   company: string | null;
+  address: string | null;
+  country: string | null;
   phone: string | null;
   email: string | null;
   project: string | null;
@@ -178,6 +191,15 @@ type TeamNoteRow = {
   id: string;
   client_id: string;
   content: string | null;
+};
+
+type TeamClientContactRow = {
+  id: string;
+  client_id: string;
+  name: string | null;
+  last_contact: string | null;
+  note: string | null;
+  next_contact: string | null;
 };
 
 type TeamScriptRow = {
@@ -221,6 +243,8 @@ function normalizeClientRow(row: TeamClientRow): TeamClientRecord {
     id: row.id,
     name: row.name?.trim() ?? "",
     company: row.company?.trim() ?? "",
+    address: row.address?.trim() ?? "",
+    country: row.country?.trim() ?? "",
     phone: row.phone?.trim() ?? "",
     email: row.email?.trim() ?? "",
     project: row.project?.trim() ?? "",
@@ -282,7 +306,7 @@ export async function listTeamClients(): Promise<TeamClientRecord[]> {
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from("team_clients")
-    .select("id, name, company, phone, email, project, status, next_follow_up")
+    .select("id, name, company, address, country, phone, email, project, status, next_follow_up")
     .order("name", { ascending: true });
 
   if (error) {
@@ -301,6 +325,8 @@ export async function createTeamClient(input: Omit<TeamClientRecord, "id">) {
   const payload = {
     name: input.name.trim(),
     company: input.company.trim(),
+    address: input.address.trim(),
+    country: input.country.trim(),
     phone: input.phone.trim(),
     email: input.email.trim(),
     project: input.project.trim(),
@@ -311,7 +337,7 @@ export async function createTeamClient(input: Omit<TeamClientRecord, "id">) {
   const { data, error } = await supabase
     .from("team_clients")
     .insert(payload)
-    .select("id, name, company, phone, email, project, status, next_follow_up")
+    .select("id, name, company, address, country, phone, email, project, status, next_follow_up")
     .single();
 
   if (error) {
@@ -331,6 +357,8 @@ export async function updateTeamClient(id: string, patch: Partial<Omit<TeamClien
 
   if (typeof patch.name === "string") payload.name = patch.name.trim();
   if (typeof patch.company === "string") payload.company = patch.company.trim();
+  if (typeof patch.address === "string") payload.address = patch.address.trim();
+  if (typeof patch.country === "string") payload.country = patch.country.trim();
   if (typeof patch.phone === "string") payload.phone = patch.phone.trim();
   if (typeof patch.email === "string") payload.email = patch.email.trim();
   if (typeof patch.project === "string") payload.project = patch.project.trim();
@@ -343,7 +371,7 @@ export async function updateTeamClient(id: string, patch: Partial<Omit<TeamClien
     .from("team_clients")
     .update(payload)
     .eq("id", id)
-    .select("id, name, company, phone, email, project, status, next_follow_up")
+    .select("id, name, company, address, country, phone, email, project, status, next_follow_up")
     .single();
 
   if (error) {
@@ -354,6 +382,115 @@ export async function updateTeamClient(id: string, patch: Partial<Omit<TeamClien
   }
 
   return normalizeClientRow(data as TeamClientRow);
+}
+
+function normalizeClientContactRow(row: TeamClientContactRow): TeamClientContactRecord {
+  return {
+    id: row.id,
+    clientId: row.client_id,
+    name: row.name?.trim() ?? "",
+    lastContact: row.last_contact?.trim() ?? "",
+    note: row.note?.trim() ?? "",
+    nextContact: row.next_contact?.trim() ?? "",
+  };
+}
+
+export async function listTeamClientContacts(): Promise<TeamClientContactRecord[]> {
+  assertTeamConfigured();
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("team_client_contacts")
+    .select("id, client_id, name, last_contact, note, next_contact")
+    .order("client_id", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    if (isMissingTableError(error, "team_client_contacts")) {
+      throw new Error("Missing Supabase table: team_client_contacts.");
+    }
+    throw error;
+  }
+
+  return (data ?? []).map((row) => normalizeClientContactRow(row as TeamClientContactRow));
+}
+
+export async function createTeamClientContact(
+  input: Omit<TeamClientContactRecord, "id">,
+) {
+  assertTeamConfigured();
+  const supabase = getSupabaseAdminClient();
+  const payload = {
+    client_id: input.clientId,
+    name: input.name.trim(),
+    last_contact: input.lastContact.trim() || null,
+    note: input.note.trim(),
+    next_contact: input.nextContact.trim() || null,
+  };
+
+  const { data, error } = await supabase
+    .from("team_client_contacts")
+    .insert(payload)
+    .select("id, client_id, name, last_contact, note, next_contact")
+    .single();
+
+  if (error) {
+    if (isMissingTableError(error, "team_client_contacts")) {
+      throw new Error("Missing Supabase table: team_client_contacts.");
+    }
+    throw error;
+  }
+
+  return normalizeClientContactRow(data as TeamClientContactRow);
+}
+
+export async function updateTeamClientContact(
+  id: string,
+  patch: Partial<Omit<TeamClientContactRecord, "id" | "clientId">>,
+) {
+  assertTeamConfigured();
+  const supabase = getSupabaseAdminClient();
+  const payload: Record<string, string | null> = {};
+
+  if (typeof patch.name === "string") payload.name = patch.name.trim();
+  if (typeof patch.lastContact === "string") {
+    payload.last_contact = patch.lastContact.trim() || null;
+  }
+  if (typeof patch.note === "string") payload.note = patch.note.trim();
+  if (typeof patch.nextContact === "string") {
+    payload.next_contact = patch.nextContact.trim() || null;
+  }
+
+  const { data, error } = await supabase
+    .from("team_client_contacts")
+    .update(payload)
+    .eq("id", id)
+    .select("id, client_id, name, last_contact, note, next_contact")
+    .single();
+
+  if (error) {
+    if (isMissingTableError(error, "team_client_contacts")) {
+      throw new Error("Missing Supabase table: team_client_contacts.");
+    }
+    throw error;
+  }
+
+  return normalizeClientContactRow(data as TeamClientContactRow);
+}
+
+export async function deleteTeamClientContact(id: string) {
+  assertTeamConfigured();
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("team_client_contacts")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    if (isMissingTableError(error, "team_client_contacts")) {
+      throw new Error("Missing Supabase table: team_client_contacts.");
+    }
+    throw error;
+  }
 }
 
 export async function getTeamNote(clientId: string): Promise<TeamNoteRecord> {

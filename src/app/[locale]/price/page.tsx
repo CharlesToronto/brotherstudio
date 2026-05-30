@@ -46,7 +46,7 @@ export default async function LocalizedPricePage({
 
   return (
     <main className="siteMain">
-      <PriceAccessGate messages={messages.price}>
+      <PriceAccessGate messages={messages.price} fallbackHref={withLocalePath(locale, "/")}>
         <div className="servicesLayout">
           {messages.price.intro ? (
             <ScrollReveal as="p" className="homeIntro homeIntroHighlight">

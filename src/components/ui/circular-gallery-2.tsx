@@ -26,7 +26,9 @@ interface CircularGalleryProps extends React.HTMLAttributes<HTMLDivElement> {
   borderRadius?: number;
   scrollSpeed?: number;
   scrollEase?: number;
+  dragFactor?: number;
   fontClassName?: string;
+  onItemSelect?: (index: number) => void;
 }
 
 function debounce(func: (...args: unknown[]) => void, wait: number) {
@@ -414,6 +416,7 @@ class Media {
 class App {
   container: HTMLElement;
   scrollSpeed: number;
+  dragFactor: number;
   scroll: {
     ease: number;
     current: number;
@@ -440,6 +443,11 @@ class App {
   boundOnTouchDown!: (e: MouseEvent | TouchEvent) => void;
   boundOnTouchMove!: (e: MouseEvent | TouchEvent) => void;
   boundOnTouchUp!: () => void;
+  boundOnClick!: (e: MouseEvent) => void;
+  pointerStartX = 0;
+  pointerStartY = 0;
+  didDrag = false;
+  onItemSelect?: (index: number) => void;
 
   constructor(
     container: HTMLElement,
@@ -451,6 +459,8 @@ class App {
       font,
       scrollSpeed,
       scrollEase,
+      dragFactor,
+      onItemSelect,
     }: {
       items?: GalleryItem[];
       bend: number;
@@ -459,10 +469,14 @@ class App {
       font: string;
       scrollSpeed: number;
       scrollEase: number;
+      dragFactor: number;
+      onItemSelect?: (index: number) => void;
     },
   ) {
     this.container = container;
     this.scrollSpeed = scrollSpeed;
+    this.dragFactor = dragFactor;
+    this.onItemSelect = onItemSelect;
     this.scroll = {
       ease: scrollEase,
       current: 0,
@@ -566,20 +580,52 @@ class App {
 
   onTouchDown(e: MouseEvent | TouchEvent) {
     this.isDown = true;
+    this.didDrag = false;
     this.scroll.position = this.scroll.current;
     this.start = "touches" in e ? e.touches[0].clientX : e.clientX;
+    this.pointerStartX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    this.pointerStartY = "touches" in e ? e.touches[0].clientY : e.clientY;
   }
 
   onTouchMove(e: MouseEvent | TouchEvent) {
     if (!this.isDown) return;
     const x = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const distance = (this.start - x) * (this.scrollSpeed * 0.025);
+    const y = "touches" in e ? e.touches[0].clientY : e.clientY;
+    if (
+      Math.abs(x - this.pointerStartX) > 6 ||
+      Math.abs(y - this.pointerStartY) > 6
+    ) {
+      this.didDrag = true;
+    }
+    const distance = (this.start - x) * (this.scrollSpeed * this.dragFactor);
     this.scroll.target = this.scroll.position + distance;
   }
 
   onTouchUp() {
     this.isDown = false;
     this.onCheck();
+  }
+
+  onClick(e: MouseEvent) {
+    if (this.didDrag || !this.onItemSelect || !this.medias?.length) return;
+
+    const rect = this.container.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickXWorld = (clickX / rect.width - 0.5) * this.viewport.width;
+
+    const visibleMedias = this.medias.filter((media) => {
+      const halfWidth = media.plane.scale.x / 2;
+      return Math.abs(media.plane.position.x) <= this.viewport.width / 2 + halfWidth;
+    });
+
+    const candidates = visibleMedias.length > 0 ? visibleMedias : this.medias;
+    const nearest = candidates.reduce((closest, media) => {
+      const currentDistance = Math.abs(media.plane.position.x - clickXWorld);
+      const closestDistance = Math.abs(closest.plane.position.x - clickXWorld);
+      return currentDistance < closestDistance ? media : closest;
+    });
+
+    this.onItemSelect(nearest.index);
   }
 
   onWheel(e: WheelEvent) {
@@ -642,14 +688,14 @@ class App {
 
   addEventListeners() {
     this.boundOnResize = this.onResize;
-    this.boundOnWheel = this.onWheel;
     this.boundOnTouchDown = this.onTouchDown;
     this.boundOnTouchMove = this.onTouchMove;
     this.boundOnTouchUp = this.onTouchUp;
+    this.boundOnClick = this.onClick;
 
     window.addEventListener("resize", this.boundOnResize);
-    this.container.addEventListener("wheel", this.boundOnWheel, { passive: false });
     this.container.addEventListener("mousedown", this.boundOnTouchDown);
+    this.container.addEventListener("click", this.boundOnClick);
     window.addEventListener("mousemove", this.boundOnTouchMove);
     window.addEventListener("mouseup", this.boundOnTouchUp);
     this.container.addEventListener("touchstart", this.boundOnTouchDown, { passive: true });
@@ -660,8 +706,8 @@ class App {
   destroy() {
     window.cancelAnimationFrame(this.raf);
     window.removeEventListener("resize", this.boundOnResize);
-    this.container.removeEventListener("wheel", this.boundOnWheel);
     this.container.removeEventListener("mousedown", this.boundOnTouchDown);
+    this.container.removeEventListener("click", this.boundOnClick);
     window.removeEventListener("mousemove", this.boundOnTouchMove);
     window.removeEventListener("mouseup", this.boundOnTouchUp);
     this.container.removeEventListener("touchstart", this.boundOnTouchDown);
@@ -680,8 +726,10 @@ const CircularGallery = ({
   borderRadius = 0.05,
   scrollSpeed = 2,
   scrollEase = 0.05,
+  dragFactor = 0.025,
   className,
   fontClassName,
+  onItemSelect,
   ...props
 }: CircularGalleryProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -704,12 +752,14 @@ const CircularGallery = ({
       font: computedFont,
       scrollSpeed,
       scrollEase,
+      dragFactor,
+      onItemSelect,
     });
 
     return () => {
       app.destroy();
     };
-  }, [items, bend, borderRadius, scrollSpeed, scrollEase, fontClassName]);
+  }, [items, bend, borderRadius, scrollSpeed, scrollEase, dragFactor, fontClassName, onItemSelect]);
 
   return (
     <div

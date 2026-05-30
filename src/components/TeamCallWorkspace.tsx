@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { TeamContactsTab } from "@/components/TeamContactsTab";
 import type { Locale } from "@/lib/i18n";
 import type {
   TeamClientRecord,
@@ -30,7 +31,10 @@ type TeamScriptMessage = {
 
 type TeamCopy = {
   title: string;
-  subtitle: string;
+  tabs: {
+    call: string;
+    contacts: string;
+  };
   clientColumn: string;
   searchPlaceholder: string;
   newClient: string;
@@ -51,6 +55,8 @@ type TeamCopy = {
   clientFields: {
     name: string;
     company: string;
+    address: string;
+    country: string;
     phone: string;
     email: string;
     project: string;
@@ -69,7 +75,10 @@ type TeamCopy = {
 const copyByLocale: Record<Locale, TeamCopy> = {
   fr: {
     title: "Team Call Workspace",
-    subtitle: "Un outil simple pour appeler, guider, noter et sauvegarder sans quitter la page.",
+    tabs: {
+      call: "Call",
+      contacts: "Contacts",
+    },
     clientColumn: "Client",
     searchPlaceholder: "Rechercher un client",
     newClient: "+ Nouveau client",
@@ -90,6 +99,8 @@ const copyByLocale: Record<Locale, TeamCopy> = {
     clientFields: {
       name: "Nom",
       company: "Entreprise",
+      address: "Adresse",
+      country: "Pays",
       phone: "Téléphone",
       email: "Email",
       project: "Projet",
@@ -111,7 +122,10 @@ const copyByLocale: Record<Locale, TeamCopy> = {
   },
   en: {
     title: "Team Call Workspace",
-    subtitle: "A simple live-call workspace for clients, guided script, notes and useful answers.",
+    tabs: {
+      call: "Call",
+      contacts: "Contacts",
+    },
     clientColumn: "Client",
     searchPlaceholder: "Search a client",
     newClient: "+ New client",
@@ -132,6 +146,8 @@ const copyByLocale: Record<Locale, TeamCopy> = {
     clientFields: {
       name: "Name",
       company: "Company",
+      address: "Address",
+      country: "Country",
       phone: "Phone",
       email: "Email",
       project: "Project",
@@ -158,6 +174,8 @@ const STATUSES: TeamClientStatus[] = ["new", "contacted", "follow_up", "closed"]
 const emptyClientDraft = {
   name: "",
   company: "",
+  address: "",
+  country: "",
   phone: "",
   email: "",
   project: "",
@@ -192,6 +210,7 @@ function getProspectReplyLabel(action: TeamScriptChoice, fallbackLabel: string) 
 
 export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
   const copy = copyByLocale[locale] ?? copyByLocale.en;
+  const [activeTab, setActiveTab] = useState<"call" | "contacts">("call");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [clients, setClients] = useState<TeamClientRecord[]>([]);
@@ -565,6 +584,29 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
     return (
       <main className="siteMain teamPage">
         <section className="teamCallPage">
+          <ScrollReveal as="header" className="teamCallPageHeader">
+            <div>
+              <h1 className="projectFeedbackTitle">{copy.title}</h1>
+            </div>
+            <div className="teamCallTabs" role="tablist" aria-label="Team sections">
+              <button
+                className="teamCallTab"
+                type="button"
+                data-active={activeTab === "call" ? "true" : "false"}
+                onClick={() => setActiveTab("call")}
+              >
+                {copy.tabs.call}
+              </button>
+              <button
+                className="teamCallTab"
+                type="button"
+                data-active={activeTab === "contacts" ? "true" : "false"}
+                onClick={() => setActiveTab("contacts")}
+              >
+                {copy.tabs.contacts}
+              </button>
+            </div>
+          </ScrollReveal>
           <p className="teamCallLoading">{copy.loading}</p>
         </section>
       </main>
@@ -576,372 +618,410 @@ export function TeamCallWorkspace({ locale }: TeamCallWorkspaceProps) {
       <section className="teamCallPage">
         <ScrollReveal as="header" className="teamCallPageHeader">
           <div>
-            <p className="projectFeedbackEyebrow">Team</p>
             <h1 className="projectFeedbackTitle">{copy.title}</h1>
-            <p className="projectFeedbackVersionMeta">{copy.subtitle}</p>
+          </div>
+          <div className="teamCallTabs" role="tablist" aria-label="Team sections">
+            <button
+              className="teamCallTab"
+              type="button"
+              data-active={activeTab === "call" ? "true" : "false"}
+              onClick={() => setActiveTab("call")}
+            >
+              {copy.tabs.call}
+            </button>
+            <button
+              className="teamCallTab"
+              type="button"
+              data-active={activeTab === "contacts" ? "true" : "false"}
+              onClick={() => setActiveTab("contacts")}
+            >
+              {copy.tabs.contacts}
+            </button>
           </div>
           {errorMessage ? <p className="projectFeedbackMessage projectFeedbackMessageError">{errorMessage}</p> : null}
         </ScrollReveal>
 
-        <div className="teamCallGrid">
-          <ScrollReveal as="section" className="teamCallColumn teamCallClientColumn">
-            <div className="teamCallColumnHeader">
-              <h2 className="teamCallColumnTitle">{copy.clientColumn}</h2>
-              <button
-                className="teamGhostButton"
-                type="button"
-                onClick={() => setShowNewClientForm((current) => !current)}
-              >
-                {copy.newClient}
-              </button>
-            </div>
-
-            <input
-              className="teamInput"
-              type="search"
-              value={clientSearch}
-              onChange={(event) => setClientSearch(event.target.value)}
-              placeholder={copy.searchPlaceholder}
-            />
-
-            {showNewClientForm ? (
-              <form className="teamCallInlineForm" onSubmit={handleCreateClient}>
-                <input
-                  className="teamInput"
-                  type="text"
-                  placeholder={copy.clientFields.name}
-                  value={newClientDraft.name}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, name: event.target.value }))
-                  }
-                  required
-                />
-                <input
-                  className="teamInput"
-                  type="text"
-                  placeholder={copy.clientFields.company}
-                  value={newClientDraft.company}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, company: event.target.value }))
-                  }
-                />
-                <input
-                  className="teamInput"
-                  type="tel"
-                  placeholder={copy.clientFields.phone}
-                  value={newClientDraft.phone}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, phone: event.target.value }))
-                  }
-                />
-                <input
-                  className="teamInput"
-                  type="email"
-                  placeholder={copy.clientFields.email}
-                  value={newClientDraft.email}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, email: event.target.value }))
-                  }
-                />
-                <input
-                  className="teamInput"
-                  type="text"
-                  placeholder={copy.clientFields.project}
-                  value={newClientDraft.project}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, project: event.target.value }))
-                  }
-                />
-                <div className="teamCallInlineRow">
-                  <select
-                    className="teamSelect"
-                    value={newClientDraft.status}
-                    onChange={(event) =>
-                      setNewClientDraft((current) => ({
-                        ...current,
-                        status: event.target.value as TeamClientStatus,
-                      }))
-                    }
-                  >
-                    {STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {copy.statuses[status]}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    className="teamInput"
-                    type="date"
-                    value={newClientDraft.nextFollowUp}
-                    onChange={(event) =>
-                      setNewClientDraft((current) => ({
-                        ...current,
-                        nextFollowUp: event.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="teamCallInlineActions">
-                  <button className="teamButton" type="submit" disabled={isBusy}>
-                    {copy.save}
-                  </button>
-                  <button
-                    className="teamGhostButton"
-                    type="button"
-                    onClick={() => {
-                      setShowNewClientForm(false);
-                      setNewClientDraft(emptyClientDraft);
-                    }}
-                  >
-                    {copy.cancel}
-                  </button>
-                </div>
-              </form>
-            ) : null}
-
-            <div className="teamCallClientList">
-              {filteredClients.length > 0 ? (
-                filteredClients.map((client) => (
-                  <button
-                    key={client.id}
-                    className="teamCallClientCard"
-                    type="button"
-                    data-active={selectedClient?.id === client.id ? "true" : "false"}
-                    onClick={() => setSelectedClientId(client.id)}
-                  >
-                    <strong>{client.name}</strong>
-                    <span>{client.company || client.project || client.email}</span>
-                  </button>
-                ))
-              ) : (
-                <p className="teamEmpty">{copy.emptyClients}</p>
-              )}
-            </div>
-
-            {selectedClient ? (
-              <div className="teamCallClientDetail">
-                <label className="teamField">
-                  <span className="teamFieldLabel">{copy.clientFields.status}</span>
-                  <select
-                    className="teamSelect"
-                    value={selectedClient.status}
-                    onChange={(event) =>
-                      void patchSelectedClient({
-                        status: event.target.value as TeamClientStatus,
-                      })
-                    }
-                  >
-                    {STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {copy.statuses[status]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="teamField">
-                  <span className="teamFieldLabel">{copy.clientFields.nextFollowUp}</span>
-                  <input
-                    className="teamInput"
-                    type="date"
-                    value={selectedClient.nextFollowUp}
-                    onChange={(event) =>
-                      void patchSelectedClient({ nextFollowUp: event.target.value })
-                    }
-                  />
-                </label>
+        {activeTab === "contacts" ? (
+          <TeamContactsTab locale={locale} />
+        ) : (
+          <div className="teamCallGrid">
+            <ScrollReveal as="section" className="teamCallColumn teamCallClientColumn">
+              <div className="teamCallColumnHeader">
+                <h2 className="teamCallColumnTitle">{copy.clientColumn}</h2>
+                <button
+                  className="teamGhostButton"
+                  type="button"
+                  onClick={() => setShowNewClientForm((current) => !current)}
+                >
+                  {copy.newClient}
+                </button>
               </div>
-            ) : null}
-          </ScrollReveal>
 
-          <ScrollReveal as="section" className="teamCallColumn teamCallScriptColumn" delay={70}>
-            <div className="teamCallColumnHeader">
-              <h2 className="teamCallColumnTitle">{copy.scriptColumn}</h2>
-              <button
-                className="teamGhostButton"
-                type="button"
-                onClick={() => setIsEditingScript((current) => !current)}
-              >
-                {copy.editScript}
-              </button>
-            </div>
-
-            {isEditingScript ? (
-              <div className="teamCallEditorPanel">
-                <textarea
-                  className="teamTextarea teamCallEditorTextarea"
-                  value={scriptEditorValue}
-                  onChange={(event) => setScriptEditorValue(event.target.value)}
-                />
-                <div className="teamCallInlineActions">
-                  <button className="teamButton" type="button" onClick={() => void handleSaveScript()} disabled={isBusy}>
-                    {copy.save}
-                  </button>
-                  <button
-                    className="teamGhostButton"
-                    type="button"
-                    onClick={() => {
-                      setIsEditingScript(false);
-                      setScriptEditorValue(JSON.stringify(scriptSteps, null, 2));
-                    }}
-                  >
-                    {copy.cancel}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="teamCallScriptStage">
-                {scriptMessages.length > 0 ? (
-                  <>
-                    <div className="teamCallScriptChat">
-                      {scriptMessages.map((message, index) => (
-                        <article
-                          key={message.id}
-                          className="teamCallScriptBubble"
-                          data-role={message.role}
-                          data-current={index === scriptMessages.length - 1 ? "true" : "false"}
-                        >
-                          <p className="teamCallScriptText">{message.text}</p>
-                        </article>
-                      ))}
-                    </div>
-                    <div className="teamCallScriptActions">
-                      {activeScriptStep?.buttons.map((button) => (
-                        <button
-                          key={`${activeScriptStep?.id ?? "end"}-${button.label}`}
-                          className="teamButton"
-                          type="button"
-                          onClick={() => advanceScript(button)}
-                        >
-                          {button.label}
-                        </button>
-                      ))}
-                      <button className="teamGhostButton" type="button" onClick={resetScript}>
-                        {copy.reset}
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <p className="teamEmpty">{copy.endOfScript}</p>
-                )}
-              </div>
-            )}
-          </ScrollReveal>
-
-          <ScrollReveal as="section" className="teamCallColumn teamCallNotesColumn" delay={140}>
-            <div className="teamCallColumnHeader">
-              <h2 className="teamCallColumnTitle">{copy.notesColumn}</h2>
-            </div>
-
-            <label className="teamField">
-              <span className="teamFieldLabel">{copy.notesLabel}</span>
-              <textarea
-                className="teamTextarea teamCallNotesTextarea"
-                placeholder={copy.notesPlaceholder}
-                value={selectedClientNote}
-                onChange={(event) => updateSelectedNote(event.target.value)}
+              <input
+                className="teamInput"
+                type="search"
+                value={clientSearch}
+                onChange={(event) => setClientSearch(event.target.value)}
+                placeholder={copy.searchPlaceholder}
               />
-            </label>
 
-            <p className="teamCallAutosaveMeta">
-              {!selectedClient
-                ? copy.noClientSelected
-                : notesStatus === "saving"
-                  ? copy.autosaving
-                  : notesStatus === "saved"
-                    ? copy.saved
-                    : null}
-            </p>
-
-            <div className="teamCallColumnHeader teamCallColumnHeaderInline">
-              <h3 className="teamCallSubTitle">{copy.qaTitle}</h3>
-              <button
-                className="teamGhostButton"
-                type="button"
-                onClick={() => setIsEditingQa((current) => !current)}
-              >
-                {copy.editQa}
-              </button>
-            </div>
-
-            {isEditingQa ? (
-              <div className="teamCallEditorPanel">
-                {qaDraftItems.map((item, index) => (
-                  <div key={item.id} className="teamCallQaEditorItem">
+              {showNewClientForm ? (
+                <form className="teamCallInlineForm" onSubmit={handleCreateClient}>
+                  <input
+                    className="teamInput"
+                    type="text"
+                    placeholder={copy.clientFields.name}
+                    value={newClientDraft.name}
+                    onChange={(event) =>
+                      setNewClientDraft((current) => ({ ...current, name: event.target.value }))
+                    }
+                    required
+                  />
+                  <input
+                    className="teamInput"
+                    type="text"
+                    placeholder={copy.clientFields.company}
+                    value={newClientDraft.company}
+                    onChange={(event) =>
+                      setNewClientDraft((current) => ({ ...current, company: event.target.value }))
+                    }
+                  />
+                  <input
+                    className="teamInput"
+                    type="text"
+                    placeholder={copy.clientFields.address}
+                    value={newClientDraft.address}
+                    onChange={(event) =>
+                      setNewClientDraft((current) => ({ ...current, address: event.target.value }))
+                    }
+                  />
+                  <input
+                    className="teamInput"
+                    type="text"
+                    placeholder={copy.clientFields.country}
+                    value={newClientDraft.country}
+                    onChange={(event) =>
+                      setNewClientDraft((current) => ({ ...current, country: event.target.value }))
+                    }
+                  />
+                  <input
+                    className="teamInput"
+                    type="tel"
+                    placeholder={copy.clientFields.phone}
+                    value={newClientDraft.phone}
+                    onChange={(event) =>
+                      setNewClientDraft((current) => ({ ...current, phone: event.target.value }))
+                    }
+                  />
+                  <input
+                    className="teamInput"
+                    type="email"
+                    placeholder={copy.clientFields.email}
+                    value={newClientDraft.email}
+                    onChange={(event) =>
+                      setNewClientDraft((current) => ({ ...current, email: event.target.value }))
+                    }
+                  />
+                  <input
+                    className="teamInput"
+                    type="text"
+                    placeholder={copy.clientFields.project}
+                    value={newClientDraft.project}
+                    onChange={(event) =>
+                      setNewClientDraft((current) => ({ ...current, project: event.target.value }))
+                    }
+                  />
+                  <div className="teamCallInlineRow">
+                    <select
+                      className="teamSelect"
+                      value={newClientDraft.status}
+                      onChange={(event) =>
+                        setNewClientDraft((current) => ({
+                          ...current,
+                          status: event.target.value as TeamClientStatus,
+                        }))
+                      }
+                    >
+                      {STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {copy.statuses[status]}
+                        </option>
+                      ))}
+                    </select>
                     <input
                       className="teamInput"
-                      type="text"
-                      value={item.question}
-                      placeholder="Question"
+                      type="date"
+                      value={newClientDraft.nextFollowUp}
                       onChange={(event) =>
-                        setQaDraftItems((current) =>
-                          current.map((entry) =>
-                            entry.id === item.id ? { ...entry, question: event.target.value, order: index } : entry,
-                          ),
-                        )
-                      }
-                    />
-                    <textarea
-                      className="teamTextarea"
-                      value={item.answer}
-                      placeholder="Réponse"
-                      onChange={(event) =>
-                        setQaDraftItems((current) =>
-                          current.map((entry) =>
-                            entry.id === item.id ? { ...entry, answer: event.target.value, order: index } : entry,
-                          ),
-                        )
+                        setNewClientDraft((current) => ({
+                          ...current,
+                          nextFollowUp: event.target.value,
+                        }))
                       }
                     />
                   </div>
-                ))}
-
-                <div className="teamCallInlineActions">
-                  <button
-                    className="teamGhostButton"
-                    type="button"
-                    onClick={() => setQaDraftItems((current) => [...current, createQaDraft()])}
-                  >
-                    {copy.addQa}
-                  </button>
-                  <button className="teamButton" type="button" onClick={() => void handleSaveQa()} disabled={isBusy}>
-                    {copy.save}
-                  </button>
-                  <button
-                    className="teamGhostButton"
-                    type="button"
-                    onClick={() => {
-                      setIsEditingQa(false);
-                      setQaDraftItems(qaItems);
-                    }}
-                  >
-                    {copy.cancel}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="teamCallQaList">
-                {qaItems.map((item) => (
-                  <article key={item.id} className="teamCallQaItem">
-                    <button
-                      className="teamCallQaQuestion"
-                      type="button"
-                      onClick={() => setOpenQaId((current) => (current === item.id ? "" : item.id))}
-                    >
-                      <span>{item.question}</span>
-                      <span>{openQaId === item.id ? "−" : "+"}</span>
+                  <div className="teamCallInlineActions">
+                    <button className="teamButton" type="submit" disabled={isBusy}>
+                      {copy.save}
                     </button>
-                    {openQaId === item.id ? (
-                      <div className="teamCallQaAnswer">
-                        <p>{item.answer}</p>
-                      </div>
-                    ) : null}
-                  </article>
-                ))}
+                    <button
+                      className="teamGhostButton"
+                      type="button"
+                      onClick={() => {
+                        setShowNewClientForm(false);
+                        setNewClientDraft(emptyClientDraft);
+                      }}
+                    >
+                      {copy.cancel}
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+
+              <div className="teamCallClientList">
+                {filteredClients.length > 0 ? (
+                  filteredClients.map((client) => (
+                    <button
+                      key={client.id}
+                      className="teamCallClientCard"
+                      type="button"
+                      data-active={selectedClient?.id === client.id ? "true" : "false"}
+                      onClick={() => setSelectedClientId(client.id)}
+                    >
+                      <strong>{client.name}</strong>
+                      <span>{client.company || client.project || client.email}</span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="teamEmpty">{copy.emptyClients}</p>
+                )}
               </div>
-            )}
-          </ScrollReveal>
-        </div>
+
+              {selectedClient ? (
+                <div className="teamCallClientDetail">
+                  <label className="teamField">
+                    <span className="teamFieldLabel">{copy.clientFields.status}</span>
+                    <select
+                      className="teamSelect"
+                      value={selectedClient.status}
+                      onChange={(event) =>
+                        void patchSelectedClient({
+                          status: event.target.value as TeamClientStatus,
+                        })
+                      }
+                    >
+                      {STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {copy.statuses[status]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="teamField">
+                    <span className="teamFieldLabel">{copy.clientFields.nextFollowUp}</span>
+                    <input
+                      className="teamInput"
+                      type="date"
+                      value={selectedClient.nextFollowUp}
+                      onChange={(event) =>
+                        void patchSelectedClient({ nextFollowUp: event.target.value })
+                      }
+                    />
+                  </label>
+                </div>
+              ) : null}
+            </ScrollReveal>
+
+            <ScrollReveal as="section" className="teamCallColumn teamCallScriptColumn" delay={70}>
+              <div className="teamCallColumnHeader">
+                <h2 className="teamCallColumnTitle">{copy.scriptColumn}</h2>
+                <button
+                  className="teamGhostButton"
+                  type="button"
+                  onClick={() => setIsEditingScript((current) => !current)}
+                >
+                  {copy.editScript}
+                </button>
+              </div>
+
+              {isEditingScript ? (
+                <div className="teamCallEditorPanel">
+                  <textarea
+                    className="teamTextarea teamCallEditorTextarea"
+                    value={scriptEditorValue}
+                    onChange={(event) => setScriptEditorValue(event.target.value)}
+                  />
+                  <div className="teamCallInlineActions">
+                    <button className="teamButton" type="button" onClick={() => void handleSaveScript()} disabled={isBusy}>
+                      {copy.save}
+                    </button>
+                    <button
+                      className="teamGhostButton"
+                      type="button"
+                      onClick={() => {
+                        setIsEditingScript(false);
+                        setScriptEditorValue(JSON.stringify(scriptSteps, null, 2));
+                      }}
+                    >
+                      {copy.cancel}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="teamCallScriptStage">
+                  {scriptMessages.length > 0 ? (
+                    <>
+                      <div className="teamCallScriptChat">
+                        {scriptMessages.map((message, index) => (
+                          <article
+                            key={message.id}
+                            className="teamCallScriptBubble"
+                            data-role={message.role}
+                            data-current={index === scriptMessages.length - 1 ? "true" : "false"}
+                          >
+                            <p className="teamCallScriptText">{message.text}</p>
+                          </article>
+                        ))}
+                      </div>
+                      <div className="teamCallScriptActions">
+                        {activeScriptStep?.buttons.map((button) => (
+                          <button
+                            key={`${activeScriptStep?.id ?? "end"}-${button.label}`}
+                            className="teamButton"
+                            type="button"
+                            onClick={() => advanceScript(button)}
+                          >
+                            {button.label}
+                          </button>
+                        ))}
+                        <button className="teamGhostButton" type="button" onClick={resetScript}>
+                          {copy.reset}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="teamEmpty">{copy.endOfScript}</p>
+                  )}
+                </div>
+              )}
+            </ScrollReveal>
+
+            <ScrollReveal as="section" className="teamCallColumn teamCallNotesColumn" delay={140}>
+              <div className="teamCallColumnHeader">
+                <h2 className="teamCallColumnTitle">{copy.notesColumn}</h2>
+              </div>
+
+              <label className="teamField">
+                <span className="teamFieldLabel">{copy.notesLabel}</span>
+                <textarea
+                  className="teamTextarea teamCallNotesTextarea"
+                  placeholder={copy.notesPlaceholder}
+                  value={selectedClientNote}
+                  onChange={(event) => updateSelectedNote(event.target.value)}
+                />
+              </label>
+
+              <p className="teamCallAutosaveMeta">
+                {!selectedClient
+                  ? copy.noClientSelected
+                  : notesStatus === "saving"
+                    ? copy.autosaving
+                    : notesStatus === "saved"
+                      ? copy.saved
+                      : null}
+              </p>
+
+              <div className="teamCallColumnHeader teamCallColumnHeaderInline">
+                <h3 className="teamCallSubTitle">{copy.qaTitle}</h3>
+                <button
+                  className="teamGhostButton"
+                  type="button"
+                  onClick={() => setIsEditingQa((current) => !current)}
+                >
+                  {copy.editQa}
+                </button>
+              </div>
+
+              {isEditingQa ? (
+                <div className="teamCallEditorPanel">
+                  {qaDraftItems.map((item, index) => (
+                    <div key={item.id} className="teamCallQaEditorItem">
+                      <input
+                        className="teamInput"
+                        type="text"
+                        value={item.question}
+                        placeholder="Question"
+                        onChange={(event) =>
+                          setQaDraftItems((current) =>
+                            current.map((entry) =>
+                              entry.id === item.id ? { ...entry, question: event.target.value, order: index } : entry,
+                            ),
+                          )
+                        }
+                      />
+                      <textarea
+                        className="teamTextarea"
+                        value={item.answer}
+                        placeholder="Réponse"
+                        onChange={(event) =>
+                          setQaDraftItems((current) =>
+                            current.map((entry) =>
+                              entry.id === item.id ? { ...entry, answer: event.target.value, order: index } : entry,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
+                  ))}
+
+                  <div className="teamCallInlineActions">
+                    <button
+                      className="teamGhostButton"
+                      type="button"
+                      onClick={() => setQaDraftItems((current) => [...current, createQaDraft()])}
+                    >
+                      {copy.addQa}
+                    </button>
+                    <button className="teamButton" type="button" onClick={() => void handleSaveQa()} disabled={isBusy}>
+                      {copy.save}
+                    </button>
+                    <button
+                      className="teamGhostButton"
+                      type="button"
+                      onClick={() => {
+                        setIsEditingQa(false);
+                        setQaDraftItems(qaItems);
+                      }}
+                    >
+                      {copy.cancel}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="teamCallQaList">
+                  {qaItems.map((item) => (
+                    <article key={item.id} className="teamCallQaItem">
+                      <button
+                        className="teamCallQaQuestion"
+                        type="button"
+                        onClick={() => setOpenQaId((current) => (current === item.id ? "" : item.id))}
+                      >
+                        <span>{item.question}</span>
+                        <span>{openQaId === item.id ? "−" : "+"}</span>
+                      </button>
+                      {openQaId === item.id ? (
+                        <div className="teamCallQaAnswer">
+                          <p>{item.answer}</p>
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </ScrollReveal>
+          </div>
+        )}
       </section>
     </main>
   );

@@ -3,6 +3,8 @@
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useEffect, useRef, useState } from "react";
 
+import { Toggle } from "@/components/ui/toggle";
+
 export function MyExperienceGalleryModeToggle() {
   const [mode, setMode] = useState<"day" | "night">("day");
   const [pendingMode, setPendingMode] = useState<"day" | "night" | null>(null);
@@ -55,25 +57,29 @@ export function MyExperienceGalleryModeToggle() {
 
   return (
     <>
-      <div className="myExperienceGalleryModeToggle" aria-label="Gallery lighting mode">
-        <button
-          type="button"
+      <div className="myExperienceGalleryModeToggle" aria-label="Mode d'eclairage de la galerie">
+        <Toggle
           className="myExperienceGalleryModeOption"
           data-active={mode === "day" ? "true" : "false"}
+          variant="outline"
+          size="sm"
           disabled={pendingMode !== null}
+          pressed={mode === "day"}
           onClick={() => handleModeChange("day")}
         >
-          Day
-        </button>
-        <button
-          type="button"
+          Jour
+        </Toggle>
+        <Toggle
           className="myExperienceGalleryModeOption"
           data-active={mode === "night" ? "true" : "false"}
+          variant="outline"
+          size="sm"
           disabled={pendingMode !== null}
+          pressed={mode === "night"}
           onClick={() => handleModeChange("night")}
         >
-          Night
-        </button>
+          Nuit
+        </Toggle>
       </div>
 
       <div

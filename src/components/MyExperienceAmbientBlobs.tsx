@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
 type BlobConfig = {
@@ -30,43 +29,53 @@ const PALETTES = [
   { inner: "rgb(217 70 239 / 0.24)", mid: "rgb(126 34 206 / 0.1)" },
 ];
 
-function randomBetween(min: number, max: number) {
-  return min + Math.random() * (max - min);
+function createSeededRandom(seed: number) {
+  let state = seed >>> 0;
+
+  return () => {
+    state += 0x6d2b79f5;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
 }
+
+function randomBetween(random: () => number, min: number, max: number) {
+  return min + random() * (max - min);
+}
+
+const BLOBS: BlobConfig[] = Array.from({ length: 6 }, (_, index) => {
+  const random = createSeededRandom(2048 + index * 97);
+  const palette = PALETTES[index % PALETTES.length];
+
+  return {
+    top: randomBetween(random, -8, 72),
+    left: randomBetween(random, -10, 76),
+    size: randomBetween(random, 24, 42),
+    minSize: randomBetween(random, 260, 420),
+    inner: palette.inner,
+    mid: palette.mid,
+    x1: `${randomBetween(random, -10, 14)}vw`,
+    x2: `${randomBetween(random, -14, 16)}vw`,
+    y1: `${randomBetween(random, -10, 12)}vh`,
+    y2: `${randomBetween(random, -12, 14)}vh`,
+    s1: randomBetween(random, 0.92, 1.12),
+    s2: randomBetween(random, 0.88, 1.16),
+    o1: randomBetween(random, 0.18, 0.28),
+    o2: randomBetween(random, 0.24, 0.38),
+    o3: randomBetween(random, 0.16, 0.3),
+    duration: randomBetween(random, 18, 34),
+    delay: randomBetween(random, 0, 6),
+  };
+});
 
 export function MyExperienceAmbientBlobs() {
   const prefersReducedMotion = useReducedMotion();
-  const blobs = useMemo<BlobConfig[]>(
-    () =>
-      Array.from({ length: 6 }, (_, index) => {
-        const palette = PALETTES[index % PALETTES.length];
-
-        return {
-          top: randomBetween(-8, 72),
-          left: randomBetween(-10, 76),
-          size: randomBetween(24, 42),
-          minSize: randomBetween(260, 420),
-          inner: palette.inner,
-          mid: palette.mid,
-          x1: `${randomBetween(-10, 14)}vw`,
-          x2: `${randomBetween(-14, 16)}vw`,
-          y1: `${randomBetween(-10, 12)}vh`,
-          y2: `${randomBetween(-12, 14)}vh`,
-          s1: randomBetween(0.92, 1.12),
-          s2: randomBetween(0.88, 1.16),
-          o1: randomBetween(0.18, 0.28),
-          o2: randomBetween(0.24, 0.38),
-          o3: randomBetween(0.16, 0.3),
-          duration: randomBetween(18, 34),
-          delay: randomBetween(0, 6),
-        };
-      }),
-    [],
-  );
 
   return (
     <div className="myExperienceAmbient" aria-hidden="true">
-      {blobs.map((blob, index) => (
+      {BLOBS.map((blob, index) => (
         <motion.span
           key={`${blob.top}-${blob.left}-${index}`}
           className="myExperienceAmbientSpot"

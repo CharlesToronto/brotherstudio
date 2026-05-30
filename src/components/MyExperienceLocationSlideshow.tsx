@@ -31,14 +31,14 @@ export function MyExperienceLocationSlideshow({
 
   return (
     <div className="myExperienceMapSlideshow">
-      <div className="myExperienceMapDots" aria-label="Lifestyle slideshow">
+      <div className="myExperienceMapDots" aria-label="Diaporama cadre de vie">
         {slides.map((slide, index) => (
           <button
             key={slide.src}
             type="button"
             className="myExperienceMapDot"
             data-active={index === activeIndex ? "true" : "false"}
-            aria-label={`Show lifestyle image ${index + 1}`}
+            aria-label={`Afficher l'image ${index + 1}`}
             onClick={() => setActiveIndex(index)}
           />
         ))}

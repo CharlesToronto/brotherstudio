@@ -100,6 +100,9 @@ export default async function AdminPage() {
         >
           Ouvrir le dashboard analytics
         </a>
+        <Link className="adminAnalyticsLink" href="/dashboard">
+          Ouvrir Admin Dashboard
+        </Link>
         <Link className="adminAnalyticsLink" href="/admin/client-projects">
           Ouvrir les projets review
         </Link>
