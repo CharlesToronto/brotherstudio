@@ -17,6 +17,7 @@ import {
 
 import { MyExperienceAssistantMap } from "@/components/MyExperienceAssistantMap";
 import { Button } from "@/components/ui/button";
+import { GradientPromptButtons } from "@/components/ui/gradient-prompt-buttons";
 import { cn } from "@/lib/utils";
 
 interface UseAutoResizeTextareaProps {
@@ -73,6 +74,8 @@ type QuickPrompt = {
   icon: React.ReactNode;
   label: string;
   question: string;
+  gradientFrom: string;
+  gradientTo: string;
 };
 
 type ChatMessage = {
@@ -171,21 +174,29 @@ const quickPrompts: QuickPrompt[] = [
     icon: <Calendar className="h-4 w-4" />,
     label: "Dates de livraison",
     question: "Quelles sont les dates prevues de livraison ?",
+    gradientFrom: "#63c5ff",
+    gradientTo: "#2f7df6",
   },
   {
     icon: <MapPin className="h-4 w-4" />,
     label: "Avantages du quartier",
     question: "Quels sont les avantages de ce quartier ?",
+    gradientFrom: "#8fe388",
+    gradientTo: "#38b6a4",
   },
   {
     icon: <Receipt className="h-4 w-4" />,
     label: "Frais apres achat",
     question: "Quels sont les frais a prevoir apres l'achat ?",
+    gradientFrom: "#ffb36b",
+    gradientTo: "#ff6c5f",
   },
   {
     icon: <SlidersHorizontal className="h-4 w-4" />,
     label: "Personnalisation",
     question: "Puis-je personnaliser certains elements de mon unite ?",
+    gradientFrom: "#d398ff",
+    gradientTo: "#f252c9",
   },
 ];
 
@@ -551,7 +562,7 @@ export function AnimatedAIChat() {
             </h2>
             <div className="mx-auto h-px w-28 bg-gradient-to-r from-transparent via-black/18 to-transparent md:w-48" />
             <p className="text-sm text-black/70 md:text-lg">
-              Posez une question ou lancez une demande
+              AI sur votre projet Mésange
             </p>
           </motion.div>
         </div>
@@ -713,7 +724,12 @@ export function AnimatedAIChat() {
                   onClick={handleScrollToMap}
                   variant="secondary"
                   size="default"
-                  className="min-h-11 rounded-xl bg-sky-100 px-4 text-sky-700 hover:bg-sky-200"
+                  className={cn(
+                    "min-h-11 rounded-xl px-4",
+                    mapData
+                      ? "bg-sky-600 text-white hover:bg-sky-700"
+                      : "bg-sky-100 text-sky-700 hover:bg-sky-200",
+                  )}
                 >
                   Voir la map
                 </Button>
@@ -752,28 +768,22 @@ export function AnimatedAIChat() {
           ) : null}
         </motion.div>
 
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          {quickPrompts.map((prompt, index) => (
-            <motion.div
-              key={prompt.question}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-10%" }}
-              transition={{ delay: index * 0.06, duration: 0.3 }}
-            >
-              <Button
-                type="button"
-                variant="outline"
-                size="default"
-                onClick={() => handleQuickPrompt(prompt.question, prompt.label)}
-                className="rounded-xl border-stone-200 bg-white/88 px-4 py-3 text-sm text-stone-900 hover:bg-stone-50"
-              >
-                <span>{prompt.icon}</span>
-                <span>{prompt.label}</span>
-              </Button>
-            </motion.div>
-          ))}
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-10%" }}
+          transition={{ duration: 0.3 }}
+        >
+          <GradientPromptButtons
+            items={quickPrompts.map((prompt) => ({
+              label: prompt.label,
+              icon: prompt.icon,
+              gradientFrom: prompt.gradientFrom,
+              gradientTo: prompt.gradientTo,
+              onClick: () => handleQuickPrompt(prompt.question, prompt.label),
+            }))}
+          />
+        </motion.div>
 
         {isMapLoading || mapData ? (
           <div ref={mapSectionRef} className="w-full">

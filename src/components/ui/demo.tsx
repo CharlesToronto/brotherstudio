@@ -3,7 +3,6 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { Carousel } from "@ark-ui/react/carousel";
-import { ArrowDown, ArrowUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -29,25 +28,19 @@ export default function VerticalCarousel({ images, className }: VerticalCarousel
       orientation="vertical"
       loop
       allowMouseDrag
-      className={cn("mx-auto max-h-[34rem] w-full max-w-[40rem]", className)}
+      className={cn(
+        "w-[min(48vw,40rem)] max-w-[calc(100vw-5rem)] max-md:w-[min(82vw,27rem)] max-md:max-w-[calc(100vw-3rem)]",
+        className,
+      )}
     >
       <div className="flex items-center gap-4">
-        <Carousel.Control className="flex flex-col justify-center gap-3">
-          <Carousel.PrevTrigger className="inline-flex h-16 w-11 items-center justify-center rounded-xl bg-[#1f2b40] text-white transition-colors hover:bg-[#273753]">
-            <ArrowUp className="h-4 w-4" />
-          </Carousel.PrevTrigger>
-          <Carousel.NextTrigger className="inline-flex h-16 w-11 items-center justify-center rounded-xl bg-[#1f2b40] text-white transition-colors hover:bg-[#273753]">
-            <ArrowDown className="h-4 w-4" />
-          </Carousel.NextTrigger>
-        </Carousel.Control>
-
-        <Carousel.ItemGroup className="h-[34rem] flex-1 overflow-hidden rounded-[8px]">
+        <Carousel.ItemGroup className="h-[min(72svh,40rem)] aspect-[4/5] flex-none overflow-hidden rounded-[8px] max-md:h-[min(68svh,30rem)]">
           {images.map((image, index) => (
             <Carousel.Item key={image.src} index={index}>
               <img
                 src={image.src}
                 alt={image.alt}
-                className="h-[34rem] w-full object-cover"
+                className="h-full w-full object-cover"
                 draggable={false}
               />
             </Carousel.Item>

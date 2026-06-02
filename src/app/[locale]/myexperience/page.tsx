@@ -2,14 +2,15 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { MyExperienceAmbientBlobs } from "@/components/MyExperienceAmbientBlobs";
 import { MyExperienceCommunitySection } from "@/components/MyExperienceCommunitySection";
+import { MyExperienceExteriorWeather } from "@/components/MyExperienceExteriorWeather";
 import { MyExperienceGalleryCarousel } from "@/components/MyExperienceGalleryCarousel";
+import { MyExperienceGalleryHeading } from "@/components/MyExperienceGalleryHeading";
 import { MyExperienceGalleryModeToggle } from "@/components/MyExperienceGalleryModeToggle";
 import { MyExperienceGalleryToneObserver } from "@/components/MyExperienceGalleryToneObserver";
 import { MyExperienceHousePlanSection } from "@/components/MyExperienceHousePlanSection";
 import { MyExperienceLeadFooter } from "@/components/MyExperienceLeadFooter";
 import { MyExperienceLocationSlideshow } from "@/components/MyExperienceLocationSlideshow";
 import { MyExperienceParallaxHero } from "@/components/MyExperienceParallaxHero";
-import { MyExperienceScrollProgress } from "@/components/MyExperienceScrollProgress";
 import { MyExperienceStickyNavObserver } from "@/components/MyExperienceStickyNavObserver";
 import { AnimatedAIChat } from "@/components/ui/animated-ai-chat";
 import { buttonVariants } from "@/components/ui/button";
@@ -147,7 +148,6 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
   return (
     <main className="myExperiencePage" data-hero-visible="true">
       <MyExperienceAmbientBlobs />
-      <MyExperienceScrollProgress />
       <MyExperienceGalleryToneObserver />
       <MyExperienceStickyNavObserver />
       <MyExperienceParallaxHero heroImage={HERO_IMAGE} />
@@ -218,8 +218,8 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
               <VerticalCarousel images={mesangeExteriorImages} />
             </div>
             <div className="myExperienceExteriorCopy">
-              <p className="myExperienceSectionKicker">Sequence exterieure</p>
-              <h2 className="myExperienceSectionTitle">PREMIERE IMPRESSION</h2>
+              <p className="myExperienceSectionKicker">Around me</p>
+              <h2 className="myExperienceSectionTitle">AUTOUR DE MOI</h2>
               <p className="myExperienceStoryText">
                 Les rendus exterieurs definissent la perception de Mesange avant meme la lecture du plan,
                 des materiaux ou des perspectives interieures. Les volumes restent maitrises,
@@ -230,31 +230,23 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
                 une image architecturale maitrisee qui rend la residence lisible, privee
                 et immediatement ancree dans son paysage.
               </p>
+              <MyExperienceExteriorWeather />
             </div>
           </div>
         </section>
 
         <section className="myExperienceGallerySection" id="gallery">
           <div className="myExperienceGalleryHeadingRow">
-            <div className="myExperienceSectionHeading">
-              <p className="myExperienceSectionKicker">Narration visuelle</p>
-              <h2 className="myExperienceSectionTitle">GALERIE</h2>
+            <MyExperienceGalleryHeading
+              kicker="Narration visuelle"
+              title="GALERIE"
+            />
+            <div className="myExperienceGalleryHeadingControls">
+              <MyExperienceGalleryModeToggle />
             </div>
-            <MyExperienceGalleryModeToggle />
           </div>
           <div className="myExperienceGalleryCarouselFrame">
             <MyExperienceGalleryCarousel images={mesangeGalleryImages} />
-          </div>
-          <div className="myExperienceGalleryNextAction">
-            <a
-              href="#location"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "myExperienceGhostButton",
-              )}
-            >
-              Le cadre de vie / Localisation
-            </a>
           </div>
         </section>
 

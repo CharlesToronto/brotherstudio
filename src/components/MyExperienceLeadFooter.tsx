@@ -160,7 +160,7 @@ export function MyExperienceLeadFooter() {
             <span>Message</span>
             <textarea
               name="message"
-              rows={5}
+              rows={4}
               required
               maxLength={4000}
               value={messageValue}
