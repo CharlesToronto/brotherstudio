@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { Pencil, Search, Trash2 } from "lucide-react";
+import { Eye, Pencil, Search, Trash2 } from "lucide-react";
 
 import { AdminLockOverlay } from "@/components/AdminLockOverlay";
 import {
@@ -107,6 +107,14 @@ function sumInDisplayCurrency(
   }, 0);
 }
 
+function getPendingAmount(project: Project) {
+  return project.status === "En attente de payment" ? project.invoicedAmount : 0;
+}
+
+function getReceivedAmount(project: Project) {
+  return project.status === "En attente de payment" ? 0 : project.invoicedAmount;
+}
+
 function renderCurrencySummary(total: number, emptyLabel = "Aucun montant") {
   if (total <= 0) {
     return <p className="text-sm text-neutral-400">{emptyLabel}</p>;
@@ -172,6 +180,7 @@ const DashboardSelect = forwardRef<
 
 export default function DashboardPage() {
   const clientPickerRef = useRef<HTMLSelectElement | null>(null);
+  const paymentCarouselRef = useRef<HTMLElement | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [teamClients, setTeamClients] = useState<TeamClientRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -187,6 +196,7 @@ export default function DashboardPage() {
   const [newClientDraft, setNewClientDraft] = useState(emptyTeamClientDraft);
   const [projectSearch, setProjectSearch] = useState("");
   const [projectStatusFilter, setProjectStatusFilter] = useState<"all" | ProjectStatus>("all");
+  const [activePaymentSlide, setActivePaymentSlide] = useState(0);
 
   useEffect(() => {
     let isCancelled = false;
@@ -234,6 +244,52 @@ export default function DashboardPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const carousel = paymentCarouselRef.current;
+    if (!carousel) return;
+
+    let frame = 0;
+
+    const updateActiveSlide = () => {
+      const cards = Array.from(carousel.children) as HTMLElement[];
+      if (cards.length === 0) return;
+
+      const carouselRect = carousel.getBoundingClientRect();
+      const carouselCenter = carouselRect.left + carouselRect.width / 2;
+
+      let nextIndex = 0;
+      let closestDistance = Number.POSITIVE_INFINITY;
+
+      cards.forEach((card, index) => {
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.left + rect.width / 2;
+        const distance = Math.abs(cardCenter - carouselCenter);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          nextIndex = index;
+        }
+      });
+
+      setActivePaymentSlide((current) => (current === nextIndex ? current : nextIndex));
+    };
+
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(updateActiveSlide);
+    };
+
+    updateActiveSlide();
+    carousel.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", updateActiveSlide);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      carousel.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", updateActiveSlide);
+    };
+  }, []);
+
   const clientsCount = useMemo(
     () =>
       new Set(
@@ -255,7 +311,7 @@ export default function DashboardPage() {
   );
 
   const totalInvoiced = useMemo(
-    () => sumInDisplayCurrency(projects, (project) => project.invoicedAmount),
+    () => sumInDisplayCurrency(projects, (project) => getReceivedAmount(project)),
     [projects],
   );
   const totalUpcoming = useMemo(
@@ -279,11 +335,7 @@ export default function DashboardPage() {
     [projects],
   );
   const totalPendingPayment = useMemo(
-    () =>
-      sumInDisplayCurrency(
-        pendingPaymentProjects,
-        (project) => project.invoicedAmount + project.upcomingAmount,
-      ),
+    () => sumInDisplayCurrency(pendingPaymentProjects, (project) => getPendingAmount(project)),
     [pendingPaymentProjects],
   );
   const filteredProjects = useMemo(() => {
@@ -606,7 +658,7 @@ export default function DashboardPage() {
           {errorMessage ? <p className="text-sm text-rose-700">{errorMessage}</p> : null}
         </header>
 
-        <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           {stats.map((stat) => (
             <article
               key={stat.label}
@@ -622,8 +674,29 @@ export default function DashboardPage() {
           ))}
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-4">
-          <article className="rounded-2xl border border-orange-200 bg-[linear-gradient(135deg,rgba(255,247,237,0.96),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+        <div className="flex items-center justify-center gap-2 pb-4 lg:hidden">
+          {[
+            "bg-orange-300",
+            "bg-sky-300",
+            "bg-emerald-300",
+            "bg-emerald-400",
+          ].map((dotColor, index) => (
+            <span
+              key={dotColor}
+              className={`rounded-full transition-all duration-300 ${
+                activePaymentSlide === index
+                  ? `h-2.5 w-6 ${dotColor} shadow-[0_0_0_4px_rgba(255,255,255,0.7)]`
+                  : `h-2 w-2 ${dotColor} opacity-45`
+              }`}
+            />
+          ))}
+        </div>
+        <div className="overflow-hidden">
+          <section
+            ref={paymentCarouselRef}
+            className="grid auto-cols-[100%] grid-flow-col gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid-flow-row lg:grid-cols-4 lg:gap-4 lg:overflow-visible"
+          >
+          <article className="min-w-0 snap-center rounded-2xl border border-orange-200 bg-[linear-gradient(135deg,rgba(255,247,237,0.96),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)] lg:mr-0">
             <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
               Payment
             </p>
@@ -632,7 +705,7 @@ export default function DashboardPage() {
             </h2>
             <div className="mt-6">{renderCurrencySummary(totalPendingPayment)}</div>
           </article>
-          <article className="rounded-2xl border border-sky-200 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+          <article className="min-w-0 snap-center rounded-2xl border border-sky-200 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
             <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
               Payment
             </p>
@@ -642,7 +715,7 @@ export default function DashboardPage() {
             <div className="mt-6">{renderCurrencySummary(totalUpcoming)}</div>
           </article>
 
-          <article className="rounded-2xl border border-emerald-200 bg-[linear-gradient(135deg,rgba(236,253,245,0.95),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+          <article className="min-w-0 snap-center rounded-2xl border border-emerald-200 bg-[linear-gradient(135deg,rgba(236,253,245,0.95),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
             <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
               Payment
             </p>
@@ -652,7 +725,7 @@ export default function DashboardPage() {
             <div className="mt-6">{renderCurrencySummary(totalInvoiced)}</div>
           </article>
 
-          <article className="rounded-2xl border-2 border-emerald-300 bg-[linear-gradient(135deg,rgba(220,252,231,0.96),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+          <article className="min-w-0 snap-center rounded-2xl border-2 border-emerald-300 bg-[linear-gradient(135deg,rgba(220,252,231,0.96),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
             <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
               Payment
             </p>
@@ -661,11 +734,12 @@ export default function DashboardPage() {
             </h2>
             <div className="mt-6">{renderCurrencySummary(totalProjected)}</div>
           </article>
-        </section>
+          </section>
+        </div>
 
-        <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-2">
+        <section className="bg-transparent py-0 md:rounded-2xl md:border md:border-neutral-200 md:bg-white md:p-6 md:shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+          <div className="mb-5 flex flex-wrap items-start justify-between gap-4 md:items-start">
+            <div className="w-full space-y-2 text-center md:w-auto md:text-left">
               <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
                 Vue d&apos;ensemble
               </p>
@@ -678,7 +752,7 @@ export default function DashboardPage() {
               type="button"
               onClick={startAdd}
               disabled={isSaving}
-              className="inline-flex h-11 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
+              className="mx-auto inline-flex h-11 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white transition hover:bg-neutral-800 md:mx-0"
             >
               Ajouter un projet
             </button>
@@ -853,7 +927,7 @@ export default function DashboardPage() {
                     ))}
                   </DashboardSelect>
                 </DashboardField>
-                <DashboardField label="Facturé">
+                <DashboardField label="Payment reçu">
                   <DashboardInput
                     value={String(draft.invoicedAmount)}
                     onChange={(event) =>
@@ -934,52 +1008,187 @@ export default function DashboardPage() {
             </div>
           ) : null}
 
-          <div className="grid gap-3">
+          <div className="flex snap-x snap-mandatory overflow-x-auto pb-2 scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:max-h-none md:gap-0 md:overflow-visible md:px-0 md:pb-0">
             {isLoading ? (
               <p className="text-sm text-neutral-500">Chargement des projets...</p>
             ) : filteredProjects.length > 0 ? (
               filteredProjects.map((project) => (
                 <article
                   key={project.id}
-                  className="rounded-[28px] border border-neutral-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(250,248,245,0.96))] p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
+                  className="flex w-full flex-none snap-center justify-center px-3 p-0 sm:px-4 md:block md:h-full md:min-h-[20rem] md:w-full md:max-w-none md:border-b-2 md:border-black/15 md:px-0 md:py-6 md:last:border-b-0"
                 >
-                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(240px,0.8fr)]">
-                    <section className="rounded-2xl border border-neutral-200/80 bg-white/70 p-4">
+                  <div className="w-full max-w-[40rem] rounded-[24px] border border-neutral-200 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)] md:hidden">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
+                          Client
+                        </p>
+                        <h3 className="mt-2 text-[1.36rem] font-semibold leading-[1.02] tracking-[-0.04em] text-neutral-950">
+                          {project.clientName || "Client sans nom"}
+                        </h3>
+                      </div>
+                      <span
+                        className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium ${statusStyles[project.status]}`}
+                      >
+                        {project.status}
+                      </span>
+                    </div>
+
+                    <details className="mt-5 rounded-[22px] bg-[#f8f5f0] p-4">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
+                            Projet
+                          </p>
+                          <p className="mt-2 text-[1.18rem] font-semibold tracking-[-0.04em] text-neutral-950">
+                            {project.projectName || "Projet sans titre"}
+                          </p>
+                        </div>
+                        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-500">
+                          <Eye size={17} />
+                        </span>
+                      </summary>
+                      <div className="mt-4 border-t border-neutral-200/80 pt-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
+                            <p className="text-[0.92rem] text-neutral-500">
+                              {formatDate(project.expectedDate)}
+                            </p>
+                            <p className="mt-3 text-[0.92rem] text-neutral-500">
+                              {project.clientCompany || "Aucune compagnie"}
+                            </p>
+                          </div>
+                          <span className="inline-flex w-fit shrink-0 rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500">
+                            {project.currency}
+                            {project.currency === "CHF"
+                              ? ` ${project.exchangeRateToCad.toFixed(2)}`
+                              : null}
+                          </span>
+                        </div>
+                        <p className="mt-4 text-[0.94rem] leading-6 text-neutral-600">
+                          {project.serviceTypes.length > 0
+                            ? project.serviceTypes.join(", ")
+                            : "Aucun service renseigné"}
+                        </p>
+                      </div>
+                    </details>
+
+                    <div className="mt-5 grid gap-3">
+                      <div className="min-w-0 rounded-[18px] border border-emerald-200 bg-emerald-50/70 p-3">
+                        <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-neutral-400">
+                          Reçu
+                        </p>
+                        <p className="mt-2 text-[1.05rem] font-semibold leading-none tracking-[-0.03em] text-emerald-700">
+                          {formatCurrency(
+                            toDisplayCurrency(
+                              getReceivedAmount(project),
+                              project.currency,
+                              project.exchangeRateToCad,
+                            ),
+                            DISPLAY_CURRENCY,
+                          )}
+                        </p>
+                      </div>
+                      <div className="min-w-0 rounded-[18px] border border-orange-200 bg-orange-50/70 p-3">
+                        <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-neutral-400">
+                          Attente
+                        </p>
+                        <p className="mt-2 text-[1.05rem] font-semibold leading-none tracking-[-0.03em] text-orange-700">
+                          {formatCurrency(
+                            toDisplayCurrency(
+                              getPendingAmount(project),
+                              project.currency,
+                              project.exchangeRateToCad,
+                            ),
+                            DISPLAY_CURRENCY,
+                          )}
+                        </p>
+                      </div>
+                      <div className="min-w-0 rounded-[18px] border border-sky-200 bg-sky-50/70 p-3">
+                        <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-neutral-400">
+                          À facturer
+                        </p>
+                        <p className="mt-2 text-[1.05rem] font-semibold leading-none tracking-[-0.03em] text-sky-700">
+                          {formatCurrency(
+                            toDisplayCurrency(
+                              project.upcomingAmount,
+                              project.currency,
+                              project.exchangeRateToCad,
+                            ),
+                            DISPLAY_CURRENCY,
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 grid gap-2 text-[0.88rem] text-neutral-600">
+                      <div>{project.clientEmail || "Email non renseigné"}</div>
+                      <div>{project.clientPhone || "Téléphone non renseigné"}</div>
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(project)}
+                        disabled={isSaving}
+                        aria-label="Éditer le projet"
+                        title="Éditer"
+                        className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[0.9rem] font-medium text-neutral-700 transition hover:bg-neutral-50"
+                      >
+                        Éditer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void deleteProject(project.id)}
+                        disabled={isSaving}
+                        aria-label="Supprimer le projet"
+                        title="Supprimer"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="hidden md:grid md:w-full md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(280px,0.9fr)] md:items-stretch md:gap-4">
+                    <section className="flex min-w-[18rem] flex-none snap-start flex-col rounded-2xl border border-neutral-200/80 bg-white/70 p-4 xl:min-w-0">
                       <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
                         Information client
                       </p>
-                      <div className="mt-4 space-y-3">
-                        <div>
+                      <div className="mt-4 flex flex-1 flex-col">
+                        <div className="min-h-[4.25rem]">
                           <p className="text-lg font-semibold text-neutral-950">
                             {project.clientName || "Client sans nom"}
                           </p>
-                          <p className="mt-1 text-sm text-neutral-500">
+                          <p className="mt-1 text-sm text-neutral-500 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
                             {project.clientCompany || "Aucune compagnie"}
                           </p>
                         </div>
-                        <div className="grid gap-2 text-sm text-neutral-600">
-                          <div>{project.clientEmail || "Email non renseigné"}</div>
-                          <div>{project.clientPhone || "Téléphone non renseigné"}</div>
+                        <div className="mt-4 grid gap-2 text-sm text-neutral-600">
+                          <div className="truncate">{project.clientEmail || "Email non renseigné"}</div>
+                          <div className="truncate">{project.clientPhone || "Téléphone non renseigné"}</div>
                         </div>
                       </div>
                     </section>
 
-                    <section className="rounded-2xl border border-neutral-200/80 bg-white/70 p-4">
+                    <section className="flex min-w-[18rem] flex-none snap-start flex-col rounded-2xl border border-neutral-200/80 bg-white/70 p-4 xl:min-w-0">
                       <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
                         Information projet
                       </p>
-                      <div className="mt-4 space-y-3">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <h3 className="text-lg font-semibold text-neutral-950">
-                            {project.projectName || "Projet sans titre"}
-                          </h3>
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-[11px] font-medium ${statusStyles[project.status]}`}
-                          >
-                            {project.status}
-                          </span>
+                      <div className="mt-4 flex flex-1 flex-col">
+                        <div className="min-h-[4.25rem]">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="text-lg font-semibold text-neutral-950">
+                              {project.projectName || "Projet sans titre"}
+                            </h3>
+                            <span
+                              className={`inline-flex rounded-full px-3 py-1 text-[11px] font-medium ${statusStyles[project.status]}`}
+                            >
+                              {project.status}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-500">
+                        <div className="min-h-[2.5rem] flex flex-wrap items-center gap-3 text-sm text-neutral-500">
                           <span>{formatDate(project.expectedDate)}</span>
                           <span className="inline-flex rounded-full border border-neutral-200 bg-white/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500">
                             {project.currency}
@@ -988,11 +1197,11 @@ export default function DashboardPage() {
                               : null}
                           </span>
                         </div>
-                        <div>
+                        <div className="mt-4 flex-1">
                           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
                             Services
                           </p>
-                          <p className="mt-2 text-sm leading-6 text-neutral-600">
+                          <p className="mt-2 text-sm leading-6 text-neutral-600 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] overflow-hidden">
                             {project.serviceTypes.length > 0
                               ? project.serviceTypes.join(", ")
                               : "Aucun service renseigné"}
@@ -1001,63 +1210,80 @@ export default function DashboardPage() {
                       </div>
                     </section>
 
-                    <section className="rounded-2xl border border-neutral-200/80 bg-white/70 p-4">
+                    <section className="flex min-w-[18rem] flex-none snap-start flex-col rounded-2xl border border-neutral-200/80 bg-white/70 p-4 xl:min-w-0">
                       <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
                         Finance
                       </p>
-                      <div className="mt-4 grid gap-3 rounded-2xl border border-neutral-200 bg-white/85 p-4">
-                        <div className="flex items-baseline justify-between gap-4">
-                          <span className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-                            Facturé
-                          </span>
-                          <strong className="text-[1.05rem] font-semibold text-emerald-700">
-                            {formatCurrency(
-                              toDisplayCurrency(
-                                project.invoicedAmount,
-                                project.currency,
-                                project.exchangeRateToCad,
-                              ),
-                              DISPLAY_CURRENCY,
-                            )}
-                          </strong>
+                      <div className="mt-4 flex flex-1 flex-col justify-between">
+                        <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-white/85 p-4">
+                          <div className="flex items-baseline justify-between gap-4">
+                            <span className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
+                              Payment reçu
+                            </span>
+                            <strong className="text-[1.05rem] font-semibold text-emerald-700">
+                              {formatCurrency(
+                                toDisplayCurrency(
+                                  getReceivedAmount(project),
+                                  project.currency,
+                                  project.exchangeRateToCad,
+                                ),
+                                DISPLAY_CURRENCY,
+                              )}
+                            </strong>
+                          </div>
+                          <div className="flex items-baseline justify-between gap-4">
+                            <span className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
+                              En attente
+                            </span>
+                            <strong className="text-[1.05rem] font-semibold text-orange-700">
+                              {formatCurrency(
+                                toDisplayCurrency(
+                                  getPendingAmount(project),
+                                  project.currency,
+                                  project.exchangeRateToCad,
+                                ),
+                                DISPLAY_CURRENCY,
+                              )}
+                            </strong>
+                          </div>
+                          <div className="flex items-baseline justify-between gap-4">
+                            <span className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
+                              À facturer
+                            </span>
+                            <strong className="text-[1.05rem] font-semibold text-sky-700">
+                              {formatCurrency(
+                                toDisplayCurrency(
+                                  project.upcomingAmount,
+                                  project.currency,
+                                  project.exchangeRateToCad,
+                                ),
+                                DISPLAY_CURRENCY,
+                              )}
+                            </strong>
+                          </div>
                         </div>
-                        <div className="flex items-baseline justify-between gap-4">
-                          <span className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-                            À facturer
-                          </span>
-                          <strong className="text-[1.05rem] font-semibold text-sky-700">
-                            {formatCurrency(
-                              toDisplayCurrency(
-                                project.upcomingAmount,
-                                project.currency,
-                                project.exchangeRateToCad,
-                              ),
-                              DISPLAY_CURRENCY,
-                            )}
-                          </strong>
+                        <div className="mt-4 flex flex-wrap items-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(project)}
+                            disabled={isSaving}
+                            aria-label="Éditer le projet"
+                            title="Éditer"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 transition hover:bg-neutral-50"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void deleteProject(project.id)}
+                            disabled={isSaving}
+                            aria-label="Supprimer le projet"
+                            title="Supprimer"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
-                      </div>
-                      <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => startEdit(project)}
-                          disabled={isSaving}
-                          aria-label="Éditer le projet"
-                          title="Éditer"
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 transition hover:bg-neutral-50"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void deleteProject(project.id)}
-                          disabled={isSaving}
-                          aria-label="Supprimer le projet"
-                          title="Supprimer"
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100"
-                        >
-                          <Trash2 size={16} />
-                        </button>
                       </div>
                     </section>
                   </div>
