@@ -3070,18 +3070,54 @@ select:focus-visible {
 }
 
 .siteHeader {
+  display: grid;
+  gap: 12px;
+  padding: 0 var(--page-padding) calc(var(--page-padding) * 0.7);
+}
+
+.siteHeaderNotice {
+  margin: 0 calc(var(--page-padding) * -1);
+  padding: 9px var(--page-padding);
+  background: #111;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+
+.siteHeaderNoticeText {
+  display: inline-block;
+  will-change: transform;
+  animation: siteHeaderNoticeDrift 9s ease-in-out infinite;
+}
+
+@keyframes siteHeaderNoticeDrift {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(10px);
+  }
+}
+
+.siteHeaderMain {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--page-padding);
+  justify-content: flex-start;
+  gap: 16px;
 }
 
 body:has(.homeBlurWordSection) .siteHeader {
   position: fixed;
   inset: 0 0 auto;
   z-index: 50;
-  background: rgb(255 255 255 / 0.92);
-  backdrop-filter: blur(12px);
+  background: rgb(255 255 255 / 0.72);
+  backdrop-filter: blur(18px);
   opacity: 0;
   transform: translateY(-100%);
   transition:
@@ -3128,7 +3164,9 @@ html[data-theme="dark"] .siteLogoImageWhite {
 
 .siteNav {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
+  justify-content: center;
   gap: 26px;
 }
 
@@ -3709,8 +3747,11 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
 
 @media (max-width: 980px) {
   .siteHeader {
-    align-items: flex-start;
     gap: 10px;
+  }
+
+  .siteHeaderMain {
+    align-items: flex-start;
   }
 
   .siteLogo {
@@ -3734,11 +3775,11 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
     gap: 16px;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 12px calc(max(12px, 50% - 42px))
-      calc(12px + env(safe-area-inset-bottom));
-    background: rgb(255 255 255 / 0.16);
+    padding: 10px calc(max(12px, 50% - 42px))
+      calc(10px + env(safe-area-inset-bottom));
+    background: rgb(255 255 255 / 0.34);
     border: 1px solid rgb(0 0 0 / 0.08);
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
     scroll-padding-inline: 50%;
@@ -3919,8 +3960,11 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
   }
 
   .siteHeader {
-    align-items: flex-start;
     gap: 10px;
+  }
+
+  .siteHeaderMain {
+    align-items: flex-start;
   }
 
   .siteLogoImage {
@@ -6790,8 +6834,7 @@ html[data-theme="dark"] .contactForm {
   width: 100%;
   max-width: 100%;
   padding: clamp(10px, 1.6vw, 0px);
-  border: 1px solid rgb(127 127 127 / 0.18);
-  background: #f1f1f1;
+  background: transparent;
   aspect-ratio: 8 / 1;
   box-sizing: border-box;
   overflow: hidden;

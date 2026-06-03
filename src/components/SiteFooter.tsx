@@ -93,6 +93,10 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         <p className="siteFooterGroupTitle">{footerLabels.studio}</p>
         <p className="siteFooterName">{site.name}</p>
         <p className="siteFooterText">{footerLocation}</p>
+        <p className="siteFooterText">BrotherStudio Visualization</p>
+        <p className="siteFooterText">
+          Ontario Business Registration No. 1001633126
+        </p>
       </div>
 
       {footerGroups.map((group) => (

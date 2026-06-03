@@ -31,6 +31,10 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
   const locale = localeFromPath ?? DEFAULT_LOCALE;
   const subpath = stripLocaleFromPathname(pathname);
   const messages = getMessages(locale).header;
+  const headerNotice =
+    locale === "fr"
+      ? "New : des 4 images commandees, site web de vente inclu dans la livraison"
+      : "New: from 4 images ordered, a sales website is included in the delivery";
   const isGalleryPage = subpath === "/";
   const activeNavKey = isGalleryPage
     ? "gallery"
@@ -207,29 +211,35 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
 
   return (
     <header className="siteHeader">
-      <Link className="siteLogo" href={localizedHref("/")}>
-        <Image
-          className="siteLogoImage siteLogoImageBlack"
-          src="/bs-logo-black.png"
-          alt={site.name}
-          width={891}
-          height={165}
-          priority
-        />
-        <Image
-          className="siteLogoImage siteLogoImageWhite"
-          src="/bs-logo-white.png"
-          alt=""
-          width={892}
-          height={166}
-          priority
-          aria-hidden="true"
-        />
-      </Link>
+      <div className="siteHeaderNotice">
+        <span className="siteHeaderNoticeText">{headerNotice}</span>
+      </div>
 
-      <nav className="siteNav siteNavDesktop" aria-label="Primary">
-        {renderNavItems(navItems)}
-      </nav>
+      <div className="siteHeaderMain">
+        <Link className="siteLogo" href={localizedHref("/")}>
+          <Image
+            className="siteLogoImage siteLogoImageBlack"
+            src="/bs-logo-black.png"
+            alt={site.name}
+            width={891}
+            height={165}
+            priority
+          />
+          <Image
+            className="siteLogoImage siteLogoImageWhite"
+            src="/bs-logo-white.png"
+            alt=""
+            width={892}
+            height={166}
+            priority
+            aria-hidden="true"
+          />
+        </Link>
+
+        <nav className="siteNav siteNavDesktop" aria-label="Primary">
+          {renderNavItems(navItems)}
+        </nav>
+      </div>
 
       <nav ref={mobileNavRef} className="siteNavMobile" aria-label="Primary">
         {renderNavItems(mobileNavItems)}
