@@ -9,7 +9,6 @@ import { MyExperienceGalleryModeToggle } from "@/components/MyExperienceGalleryM
 import { MyExperienceGalleryToneObserver } from "@/components/MyExperienceGalleryToneObserver";
 import { MyExperienceHousePlanSection } from "@/components/MyExperienceHousePlanSection";
 import { MyExperienceLeadFooter } from "@/components/MyExperienceLeadFooter";
-import { MyExperienceLocationSlideshow } from "@/components/MyExperienceLocationSlideshow";
 import { MyExperienceParallaxHero } from "@/components/MyExperienceParallaxHero";
 import { MyExperienceStickyNavObserver } from "@/components/MyExperienceStickyNavObserver";
 import { AnimatedAIChat } from "@/components/ui/animated-ai-chat";
@@ -32,19 +31,22 @@ const HOUSE_PLAN_SLIDES = [
   "/myexperience-house-plan-03.png",
 ] as const;
 const FLOORPLAN_IMAGE = "/myexperience-house-plan-sales-05.png";
-const LIFESTYLE_ACCESS_IMAGE = "/myexperience-lifestyle-access-map.webp";
 const LIFESTYLE_ACCESS_SLIDES = [
   {
-    src: LIFESTYLE_ACCESS_IMAGE,
-    alt: "Cadre de vie et accessibilite, vue 1",
+    src: "/myexperience-lifestyle-forest-malagnou.png",
+    alt: "Cadre de vie et accessibilite, sentier forestier de Malagnou",
   },
   {
-    src: "/myexperience-lifestyle-slide-02.webp",
-    alt: "Cadre de vie et accessibilite, vue 2",
+    src: "/myexperience-lifestyle-lakeside-evening.png",
+    alt: "Cadre de vie et accessibilite, animation au bord du lac au coucher du soleil",
   },
   {
-    src: "/myexperience-lifestyle-slide-03.webp",
-    alt: "Cadre de vie et accessibilite, vue 3",
+    src: "/myexperience-lifestyle-golf-view.png",
+    alt: "Cadre de vie et accessibilite, vue aerienne sur le golf et le lac",
+  },
+  {
+    src: "/myexperience-lifestyle-street-sunset.png",
+    alt: "Cadre de vie et accessibilite, rue residentielle au coucher du soleil",
   },
 ] as const;
 const housePlanSpecs = [
@@ -80,12 +82,6 @@ const communityItems = [
   },
 ] as const;
 
-const amenities = [
-  { label: "Promenade au bord du lac", time: "4 min" },
-  { label: "Club wellness prive", time: "6 min" },
-  { label: "Quartier de restaurants", time: "8 min" },
-  { label: "Centre-ville", time: "12 min" },
-] as const;
 const propertyFacts = [
   { label: "3 lots", value: "135-185 m²" },
   { label: "Caracteristiques", value: "Calme & familial" },
@@ -130,7 +126,6 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
     { href: "#plan", label: "Plan" },
     { href: "#exterieur", label: "Exterieur" },
     { href: "#gallery", label: "Galerie" },
-    { href: "#location", label: "Localisation" },
     { href: "#vision", label: "Vision" },
     { href: "#brochure", label: "Brochure" },
   ] as const;
@@ -141,9 +136,7 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
       src: item.src,
       alt: item.architect?.trim() || `Rendu Mesange ${index + 1}`,
     }));
-  const mesangeExteriorImages = mesangeGalleryImages.filter((item) =>
-    item.alt.toLowerCase().includes("exterior"),
-  );
+  const aroundMeImages = [...LIFESTYLE_ACCESS_SLIDES];
 
   return (
     <main className="myExperiencePage" data-hero-visible="true">
@@ -215,20 +208,22 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
         >
           <div className="myExperienceExteriorGrid">
             <div className="myExperienceExteriorMedia">
-              <VerticalCarousel images={mesangeExteriorImages} />
+              <VerticalCarousel images={aroundMeImages} />
             </div>
             <div className="myExperienceExteriorCopy">
               <p className="myExperienceSectionKicker">Around me</p>
               <h2 className="myExperienceSectionTitle">AUTOUR DE MOI</h2>
               <p className="myExperienceStoryText">
-                Les rendus exterieurs definissent la perception de Mesange avant meme la lecture du plan,
-                des materiaux ou des perspectives interieures. Les volumes restent maitrises,
-                la ligne de toiture demeure sobre et les ouvertures portent la chaleur du projet.
+                Autour de Mesange, le quotidien s&apos;ouvre sur l&apos;espace forestier de Malagny,
+                la plage, le club de golf et des rues residentielles paisibles. Le cadre
+                combine une presence naturelle forte, des lieux de detente accessibles et
+                une atmosphere de quartier calme.
               </p>
               <p className="myExperienceStoryText">
-                Cette sequence est pensee comme une arrivee, une silhouette et une atmosphere:
-                une image architecturale maitrisee qui rend la residence lisible, privee
-                et immediatement ancree dans son paysage.
+                Cette selection presente seulement quelques reperes du cadre de vie:
+                les environs offrent encore bien plus a decouvrir, entre promenades,
+                loisirs, vues ouvertes et proximite du lac. Mesange s&apos;inscrit ainsi dans
+                un environnement complet, agreable a vivre au quotidien.
               </p>
               <MyExperienceExteriorWeather />
             </div>
@@ -247,40 +242,6 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
           </div>
           <div className="myExperienceGalleryCarouselFrame">
             <MyExperienceGalleryCarousel images={mesangeGalleryImages} />
-          </div>
-        </section>
-
-        <section className="myExperienceLifestyleSection" id="location">
-          <div className="myExperienceLifestyleGrid">
-            <ScrollReveal as="article" className="myExperiencePanel myExperienceLifestyleCopy">
-              <p className="myExperienceSectionKicker">Cadre de vie / Localisation</p>
-              <h2 className="myExperienceSectionTitle">CADRE DE VIE & ACCES</h2>
-              <p className="myExperienceStoryText">
-                Mesange privilegie avant tout une qualite residentielle: un cadre calme, maitrise
-                et connecte a un quotidien rythme par les commodites accessibles a pied,
-                les vues paysagees et une exclusivite discrete.
-              </p>
-              <p className="myExperienceStoryText">
-                Le projet n&apos;est pas pense comme un objet isole, mais comme une maniere complete d&apos;habiter:
-                l&apos;arrivee, l&apos;ambiance du quartier et l&apos;acces immediat a l&apos;essentiel au quotidien.
-              </p>
-              <div className="myExperienceAmenityList">
-                {amenities.map((amenity) => (
-                  <div key={amenity.label} className="myExperienceAmenityRow">
-                    <span>{amenity.label}</span>
-                    <span>{amenity.time}</span>
-                  </div>
-                ))}
-              </div>
-            </ScrollReveal>
-
-            <ScrollReveal as="article" className="myExperiencePanel myExperienceStoryCard" delay={90}>
-              <p className="myExperienceSectionKicker">Vues d&apos;acces</p>
-              <h3 className="myExperienceLifestyleVisualTitle">Le contexte quotidien autour de la residence</h3>
-              <div className="myExperienceMapCard">
-                <MyExperienceLocationSlideshow slides={[...LIFESTYLE_ACCESS_SLIDES]} />
-              </div>
-            </ScrollReveal>
           </div>
         </section>
 

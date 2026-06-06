@@ -1697,6 +1697,7 @@ body {
 .myExperienceGalleryLightboxClose,
 .myExperienceGalleryLightboxArrow {
   position: absolute;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1708,6 +1709,7 @@ body {
     transform 180ms ease,
     background-color 180ms ease,
     border-color 180ms ease;
+  cursor: pointer;
 }
 
 .myExperienceGalleryLightboxClose:hover,
@@ -1723,6 +1725,7 @@ body {
   width: 48px;
   height: 48px;
   border-radius: 999px;
+  box-shadow: 0 16px 34px rgb(0 0 0 / 0.24);
 }
 
 .myExperienceGalleryLightboxArrow {
