@@ -42,6 +42,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.6,
     });
+
+    entries.push({
+      url: toAbsoluteUrl(withLocalePath(locale, "/mywebsite")),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.65,
+    });
   }
 
   return entries;

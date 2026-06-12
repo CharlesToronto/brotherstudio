@@ -11,6 +11,7 @@ import type {
   PointerEvent,
   SetStateAction,
 } from "react";
+import { Download } from "lucide-react";
 
 import type {
   ProjectFeedbackComment,
@@ -1722,7 +1723,9 @@ function ProjectFeedbackImageCard({
   const [drawingErrorMessage, setDrawingErrorMessage] = useState("");
   const [isLoadingDrawingLayer, setIsLoadingDrawingLayer] = useState(true);
   const [isSavingDrawingLayer, setIsSavingDrawingLayer] = useState(false);
-  const downloadHref = `/api/project/${projectId}/images/${image.id}/download`;
+  const downloadHref = showImageActions
+    ? `/api/projects/${projectId}/images/${image.id}/download`
+    : `/api/project/${projectId}/images/${image.id}/download`;
   const displayImageUrl = getProjectFeedbackDisplayImageUrl(image.url, 1800);
   const displayImageSrcSet = getProjectFeedbackImageSrcSet(image.url);
   const hasDrawingTab = true;
@@ -1994,12 +1997,17 @@ function ProjectFeedbackImageCard({
                   ? "Updating..."
                   : isApprovedImage
                     ? "In delivery"
-                    : "Add to delivery"}
+                    : "Approuver"}
               </button>
             ) : null}
-            {showDownloadAction ? (
-              <a className="projectFeedbackMiniAction" href={downloadHref}>
-                Download
+            {showDownloadAction || allowImageApproval ? (
+              <a
+                className="projectFeedbackMiniAction"
+                href={downloadHref}
+                aria-label="Download image"
+                title="Download image"
+              >
+                <Download aria-hidden="true" size={14} strokeWidth={1.8} />
               </a>
             ) : null}
             {showImageActions ? (

@@ -3365,6 +3365,101 @@ body:has(.brochureStudioPageMain .brochureStudioLayout[data-sidebar-collapsed="t
   color: rgb(127 127 127);
 }
 
+.myWebsitePage {
+  padding: 3.5rem clamp(1.25rem, 4vw, 3.5rem) 5rem;
+}
+
+.myWebsiteShell {
+  margin: 0 auto;
+  max-width: 1480px;
+}
+
+.myWebsiteHeader {
+  margin: 0 0 1.5rem;
+}
+
+.myWebsiteEyebrow {
+  margin: 0 0 0.65rem;
+  color: rgb(17 17 17 / 0.48);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+}
+
+.myWebsiteTitle {
+  margin: 0;
+  font-size: clamp(3rem, 9vw, 7rem);
+  font-weight: 600;
+  letter-spacing: -0.06em;
+  line-height: 0.92;
+}
+
+.myWebsiteGrid {
+  display: grid;
+  gap: 1.1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.myWebsiteCard {
+  position: relative;
+  min-height: 18rem;
+  border-radius: 2rem;
+  background: rgb(255 255 255 / 0.72);
+  box-shadow: 0 16px 40px rgb(17 17 17 / 0.06);
+}
+
+.myWebsiteCardInner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  overflow: hidden;
+  border-radius: inherit;
+  color: inherit;
+  text-decoration: none;
+}
+
+.myWebsiteCardMedia {
+  position: absolute;
+  inset: 0;
+}
+
+.myWebsiteCardMedia::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(17 17 17 / 0.02) 8%, rgb(17 17 17 / 0.46) 100%);
+}
+
+.myWebsiteCardImage {
+  object-fit: cover;
+  transition: transform 400ms ease;
+}
+
+.myWebsiteCard:hover .myWebsiteCardImage,
+.myWebsiteCard:focus-within .myWebsiteCardImage {
+  transform: scale(1.03);
+}
+
+.myWebsiteCardFooter {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  margin-top: auto;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 1.4rem 1.5rem;
+}
+
+.myWebsiteCardTitle {
+  color: #fff;
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
 .backToTopButton {
   display: none;
   position: fixed;
@@ -3955,6 +4050,27 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
   .siteFooterAccordions {
     display: grid;
     gap: 0;
+  }
+
+  .myWebsitePage {
+    padding: 2.4rem 1rem 3.5rem;
+  }
+
+  .myWebsiteHeader {
+    margin-bottom: 1.35rem;
+  }
+
+  .myWebsiteTitle {
+    font-size: clamp(2.6rem, 16vw, 4.5rem);
+  }
+
+  .myWebsiteGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .myWebsiteCard,
+  .myWebsiteCardFeatured {
+    min-height: 22rem;
   }
 
   .backToTopButton {
@@ -12287,6 +12403,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   min-height: 32px;
   padding: 8px 10px;
   border: 1px solid rgb(127 127 127 / 0.35);
@@ -12299,6 +12416,10 @@ html[data-theme="dark"] .myStudioGuideArrow {
   text-decoration: none;
   text-transform: uppercase;
   cursor: pointer;
+}
+
+.projectFeedbackMiniAction svg {
+  flex: 0 0 auto;
 }
 
 .projectFeedbackMiniActionApprove {
