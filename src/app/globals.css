@@ -3837,6 +3837,56 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
   color: #111;
 }
 
+.homeSceneFilters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 0 30px;
+}
+
+.homeSceneFilterButton {
+  position: relative;
+  border-radius: 999px;
+  border: 1px solid rgb(17 17 17 / 0.09);
+  background: transparent;
+  color: rgb(17 17 17 / 0.56);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.homeSceneFilterButton::before {
+  content: none;
+}
+
+.homeSceneFilterButton[data-active="true"] {
+  border-color: #111;
+  background: #111;
+  color: #f5f1ea;
+}
+
+.homeSceneFilterButton:hover,
+.homeSceneFilterButton:focus-visible {
+  border-color: rgb(17 17 17 / 0.16);
+  color: #111;
+  background: rgb(17 17 17 / 0.03);
+}
+
+.homeSceneFilterButton:focus-visible {
+  outline: 2px solid rgb(17 17 17 / 0.14);
+  outline-offset: 2px;
+}
+
 @media (max-width: 1100px) {
   .gallery {
     column-count: 2;
@@ -4177,6 +4227,29 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
   }
 
   .galleryFilterButton {
+    scroll-snap-align: start;
+  }
+
+  .homeSceneFilters {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 10px;
+    padding-bottom: 2px;
+    margin-right: calc(var(--page-padding) * -1);
+    padding-right: var(--page-padding);
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .homeSceneFilters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .homeSceneFilterButton {
+    flex: 0 0 auto;
     scroll-snap-align: start;
   }
 

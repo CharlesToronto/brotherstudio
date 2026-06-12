@@ -53,6 +53,16 @@ export type SiteMessages = {
     backToFooterLabel: string;
     projectFilterAllLabel: string;
     projectFilterAriaLabel: string;
+    sceneFilterAriaLabel: string;
+    sceneFilterLabels: {
+      all: string;
+      bedroom: string;
+      livingRoom: string;
+      kitchen: string;
+      exterior: string;
+      bathroom: string;
+      focusAmbiance: string;
+    };
   };
   services: {
     title: string;
@@ -280,6 +290,16 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       backToFooterLabel: "Go to footer",
       projectFilterAllLabel: "All",
       projectFilterAriaLabel: "Project filters",
+      sceneFilterAriaLabel: "Image type filters",
+      sceneFilterLabels: {
+        all: "All",
+        bedroom: "Bedroom",
+        livingRoom: "Living room",
+        kitchen: "Kitchen",
+        exterior: "Exterior",
+        bathroom: "Bathroom",
+        focusAmbiance: "Focus & Ambiance",
+      },
     },
     services: {
       title: "Services",
@@ -514,6 +534,16 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       backToFooterLabel: "Aller au footer",
       projectFilterAllLabel: "Tous",
       projectFilterAriaLabel: "Filtres de projet",
+      sceneFilterAriaLabel: "Filtres de type d'image",
+      sceneFilterLabels: {
+        all: "Toutes",
+        bedroom: "Chambre",
+        livingRoom: "Living room",
+        kitchen: "Cuisine",
+        exterior: "Exterieure",
+        bathroom: "Salle de bain",
+        focusAmbiance: "Focus & Ambiance",
+      },
     },
     services: {
       title: "Services",

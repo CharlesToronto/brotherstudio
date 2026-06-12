@@ -7,6 +7,8 @@ export const PROJECT_OPTIONS = [
   { key: "jolimont", label: "Jolimont" },
   { key: "markham", label: "Markham" },
   { key: "markham-2", label: "Markham 2" },
+  { key: "tourelle", label: "Tourelle" },
+  { key: "maretset", label: "Maretset" },
   { key: "hdm6", label: "HDM6" },
   { key: "violette", label: "Violette" },
   { key: "cfoc", label: "CFOC" },

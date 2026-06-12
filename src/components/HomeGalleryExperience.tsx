@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import { Gallery } from "@/components/Gallery";
-import { ScrollReveal } from "@/components/ScrollReveal";
 import { PROJECT_OPTIONS, type GalleryProjectKey } from "@/lib/galleryProjects";
 import type { GalleryItem } from "@/lib/galleryStore";
 
@@ -13,13 +12,87 @@ type HomeGalleryExperienceProps = {
     all: string;
     ariaLabel: string;
   };
-  introLine: string;
+  sceneFilterLabels: {
+    ariaLabel: string;
+    all: string;
+    bedroom: string;
+    livingRoom: string;
+    kitchen: string;
+    exterior: string;
+    bathroom: string;
+    focusAmbiance: string;
+  };
 };
 
 const ALWAYS_VISIBLE_MARQUEE_PROJECT_KEYS = new Set<GalleryProjectKey>(["hdm6"]);
+type SceneFilterKey =
+  | "all"
+  | "bedroom"
+  | "living-room"
+  | "kitchen"
+  | "exterior"
+  | "bathroom"
+  | "focus-ambiance";
 
-export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGalleryExperienceProps) {
+function normalizeSceneValue(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function getSceneFilterForItem(item: GalleryItem): Exclude<SceneFilterKey, "all"> | null {
+  const value = normalizeSceneValue(item.architect);
+
+  if (
+    value.includes("bed room") ||
+    value.includes("bedroom") ||
+    value.includes("chambre")
+  ) {
+    return "bedroom";
+  }
+
+  if (value.includes("living room") || value.includes("salon")) {
+    return "living-room";
+  }
+
+  if (value.includes("kitchen") || value.includes("cuisine")) {
+    return "kitchen";
+  }
+
+  if (
+    value.includes("exterior") ||
+    value.includes("exterieure") ||
+    value.includes("exterieur") ||
+    value.includes("drone view") ||
+    value.includes("veranda")
+  ) {
+    return "exterior";
+  }
+
+  if (value.includes("bathroom") || value.includes("salle de bain")) {
+    return "bathroom";
+  }
+
+  if (
+    value.includes("focus") ||
+    value.includes("ambiance") ||
+    value.includes("style")
+  ) {
+    return "focus-ambiance";
+  }
+
+  return null;
+}
+
+export function HomeGalleryExperience({
+  items,
+  filterLabels,
+  sceneFilterLabels,
+}: HomeGalleryExperienceProps) {
   const [activeProject, setActiveProject] = useState<GalleryProjectKey | "all">("all");
+  const [activeSceneFilter, setActiveSceneFilter] = useState<SceneFilterKey>("all");
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -33,15 +106,38 @@ export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGa
   const didDragRef = useRef(false);
   const suppressClickRef = useRef(false);
   const singleLoopWidthRef = useRef(0);
+  const sceneFilters = [
+    { key: "all", label: sceneFilterLabels.all },
+    { key: "bedroom", label: sceneFilterLabels.bedroom },
+    { key: "living-room", label: sceneFilterLabels.livingRoom },
+    { key: "kitchen", label: sceneFilterLabels.kitchen },
+    { key: "exterior", label: sceneFilterLabels.exterior },
+    { key: "bathroom", label: sceneFilterLabels.bathroom },
+    { key: "focus-ambiance", label: sceneFilterLabels.focusAmbiance },
+  ] as const;
   const availableProjects = PROJECT_OPTIONS.filter((option) =>
     ALWAYS_VISIBLE_MARQUEE_PROJECT_KEYS.has(option.key) ||
     items.some((item) => item.project === option.key),
   );
   const marqueeProjects = [...availableProjects, ...availableProjects];
-  const visibleItems =
+  const projectFilteredItems =
     activeProject === "all"
       ? items
       : items.filter((item) => item.project === activeProject);
+  const availableSceneFilters = sceneFilters.filter(
+    (filter) =>
+      filter.key === "all" ||
+      projectFilteredItems.some((item) => getSceneFilterForItem(item) === filter.key),
+  );
+  const resolvedSceneFilter = availableSceneFilters.some(
+    (filter) => filter.key === activeSceneFilter,
+  )
+    ? activeSceneFilter
+    : "all";
+  const visibleItems =
+    resolvedSceneFilter === "all"
+      ? projectFilteredItems
+      : projectFilteredItems.filter((item) => getSceneFilterForItem(item) === resolvedSceneFilter);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -214,9 +310,21 @@ export function HomeGalleryExperience({ items, filterLabels, introLine }: HomeGa
         </section>
       ) : null}
 
-      <ScrollReveal as="p" className="homeIntro homeIntroHighlight" delay={80}>
-        {introLine}
-      </ScrollReveal>
+      {availableSceneFilters.length > 1 ? (
+        <section className="homeSceneFilters" aria-label={sceneFilterLabels.ariaLabel}>
+          {availableSceneFilters.map((filter) => (
+            <button
+              key={filter.key}
+              type="button"
+              className="homeSceneFilterButton"
+              data-active={resolvedSceneFilter === filter.key}
+              onClick={() => setActiveSceneFilter(filter.key)}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </section>
+      ) : null}
 
       <div id="home-gallery-grid">
         <Gallery

@@ -55,10 +55,19 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
       <HomeBlurWordSection items={items} />
       <HomeGalleryExperience
         items={items}
-        introLine={messages.home.introLine}
         filterLabels={{
           all: messages.home.projectFilterAllLabel,
           ariaLabel: messages.home.projectFilterAriaLabel,
+        }}
+        sceneFilterLabels={{
+          ariaLabel: messages.home.sceneFilterAriaLabel,
+          all: messages.home.sceneFilterLabels.all,
+          bedroom: messages.home.sceneFilterLabels.bedroom,
+          livingRoom: messages.home.sceneFilterLabels.livingRoom,
+          kitchen: messages.home.sceneFilterLabels.kitchen,
+          exterior: messages.home.sceneFilterLabels.exterior,
+          bathroom: messages.home.sceneFilterLabels.bathroom,
+          focusAmbiance: messages.home.sceneFilterLabels.focusAmbiance,
         }}
       />
       <BackToTopButton

@@ -34,7 +34,6 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   ];
   const accessLinks = [
     { label: "myStudio", href: "/mystudio" },
-    { label: "myExperience", href: withLocalePath(locale, "/myexperience") },
     { label: "myWebsite", href: withLocalePath(locale, "/mywebsite") },
   ];
   const adminLinks = [
