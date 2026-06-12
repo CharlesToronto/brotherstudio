@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PriceAccessGate } from "@/components/PriceAccessGate";
+import { PricePackagesSection } from "@/components/PricePackagesSection";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { getMessages } from "@/content/messages";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
@@ -43,6 +44,12 @@ export default async function LocalizedPricePage({
 }: LocalePricePageProps) {
   const locale = await resolveLocaleParam(params);
   const messages = getMessages(locale);
+  const walkthroughVideos = messages.price.videos.filter(
+    (video) => video.subsectionTitle === messages.price.walkthroughTitle,
+  );
+  const standardVideos = messages.price.videos.filter(
+    (video) => video.subsectionTitle !== messages.price.walkthroughTitle,
+  );
 
   return (
     <main className="siteMain">
@@ -53,6 +60,18 @@ export default async function LocalizedPricePage({
               {messages.price.intro}
             </ScrollReveal>
           ) : null}
+
+          <ScrollReveal
+            as="div"
+            delay={20}
+          >
+            <PricePackagesSection
+              title={messages.price.packagesTitle}
+              titleId="pricePackagesTitle"
+              packages={messages.price.packages}
+              tabLabels={messages.price.packageTabLabels}
+            />
+          </ScrollReveal>
 
           <ScrollReveal as="section" className="servicesSection" aria-labelledby="priceImagesTitle">
             <h1 id="priceImagesTitle" className="servicesTitle contactAccent">
@@ -85,7 +104,7 @@ export default async function LocalizedPricePage({
               {messages.price.videosTitle}
             </h2>
             <ul className="servicesList" aria-label={messages.price.videosTitle}>
-              {messages.price.videos.map((video) => (
+              {standardVideos.map((video) => (
                 <li key={video.name} className="servicesItem">
                   <div className="servicesItemPriceRow">
                     <span>{video.name}</span>
@@ -111,34 +130,58 @@ export default async function LocalizedPricePage({
             </ul>
           </ScrollReveal>
 
+          {walkthroughVideos.length > 0 ? (
+            <ScrollReveal
+              as="section"
+              className="servicesSection"
+              aria-labelledby="priceWalkthroughTitle"
+              delay={70}
+            >
+              <h2 id="priceWalkthroughTitle" className="servicesTitle contactAccent">
+                {messages.price.walkthroughTitle}
+              </h2>
+              <ul className="servicesList" aria-label={messages.price.walkthroughTitle}>
+                {walkthroughVideos.map((video) => (
+                  <li key={video.name} className="servicesItem">
+                    <div className="servicesItemPriceRow">
+                      <span>{video.name}</span>
+                      {video.price ? (
+                        <span className="servicesItemPriceValue">{video.price}</span>
+                      ) : null}
+                    </div>
+                    {video.options?.length ? (
+                      <ul className="servicesNestedList" aria-label={video.name}>
+                        {video.options.map((option) => (
+                          <li
+                            key={`${video.name}-${option.name}`}
+                            className="servicesNestedItem servicesItemPriceRow"
+                          >
+                            <span>{option.name}</span>
+                            <span className="servicesItemPriceValue">{option.price}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </ScrollReveal>
+          ) : null}
+
           <ScrollReveal
             as="section"
             className="servicesSection"
-            aria-labelledby="pricePackagesTitle"
-            delay={90}
+            aria-labelledby="priceWebsiteTitle"
+            delay={80}
           >
-            <h2
-              id="pricePackagesTitle"
-              className="servicesTitle contactAccent"
-            >
-              {messages.price.packagesTitle}
+            <h2 id="priceWebsiteTitle" className="servicesTitle contactAccent">
+              {messages.price.websiteTitle}
             </h2>
-            <ul className="servicesList" aria-label={messages.price.packagesTitle}>
-              {messages.price.packages.map((item) => (
-                <li key={item.name} className="servicesItem">
-                  <div className="servicesItemPriceRow">
-                    <span>{item.name}</span>
-                    <span className="servicesItemPriceValue">{item.price}</span>
-                  </div>
-                  {item.details?.length ? (
-                    <ul className="servicesNestedList" aria-label={item.name}>
-                      {item.details.map((detail) => (
-                        <li key={`${item.name}-${detail}`} className="servicesNestedItem">
-                          {detail}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
+            <ul className="servicesList" aria-label={messages.price.websiteTitle}>
+              {messages.price.websites.map((item) => (
+                <li key={item.name} className="servicesItem servicesItemPriceRow">
+                  <span>{item.name}</span>
+                  <span className="servicesItemPriceValue">{item.price}</span>
                 </li>
               ))}
             </ul>
@@ -146,7 +189,7 @@ export default async function LocalizedPricePage({
 
           <ScrollReveal
             as="section"
-            className="servicesSection"
+            className="servicesSection servicesSectionWithDivider"
             aria-labelledby="priceIncludedTitle"
             delay={130}
           >

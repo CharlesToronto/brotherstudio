@@ -265,7 +265,7 @@ export function HomeGalleryExperience({
   };
 
   return (
-    <>
+    <section id="home-gallery-start">
       {marqueeProjects.length > 0 ? (
         <section
           className="homeProjectMarquee"
@@ -338,6 +338,8 @@ export function HomeGalleryExperience({
           }}
         />
       </div>
-    </>
+
+      <div id="home-gallery-end" aria-hidden="true" />
+    </section>
   );
 }

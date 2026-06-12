@@ -88,7 +88,14 @@ export type SiteMessages = {
     invalidEmail: string;
     imagesTitle: string;
     videosTitle: string;
+    walkthroughTitle: string;
+    websiteTitle: string;
     packagesTitle: string;
+    packageTabLabels: {
+      ariaLabel: string;
+      classic: string;
+      premium: string;
+    };
     partnershipTitle: string;
     workflowTitle: string;
     includedTitle: string;
@@ -100,14 +107,21 @@ export type SiteMessages = {
     videos: Array<{
       name: string;
       price?: string;
+      subsectionTitle?: string;
       options?: Array<{
         name: string;
         price: string;
       }>;
     }>;
+    websites: Array<{
+      name: string;
+      price: string;
+    }>;
     packages: Array<{
       name: string;
       price: string;
+      comparePrice?: string;
+      tier?: "classic" | "premium" | "other";
       details?: string[];
     }>;
     partnerships: string[];
@@ -286,8 +300,8 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Images haut de gamme pour promouvoir et vendre vos projets immobiliers.",
       introLine:
         "From image to sale: an end-to-end workflow to present and sell your projects with impact.",
-      backToTopLabel: "Back to top",
-      backToFooterLabel: "Go to footer",
+      backToTopLabel: "Go to top of gallery",
+      backToFooterLabel: "Go to bottom of gallery",
       projectFilterAllLabel: "All",
       projectFilterAriaLabel: "Project filters",
       sceneFilterAriaLabel: "Image type filters",
@@ -323,7 +337,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Project modeling based on PDF plans",
         "Full environment integration according to client style (furniture, plants, weather, people, etc.)",
         "Image treatment - lighting and materials",
-        "Revisions and retouching until client satisfaction",
+        "Revisions and retouching (3 revisions max)",
         "Image delivery up to 6K quality",
         "Delivery of complete documents",
         "Premium renderings: high-definition outputs optimized for real estate marketing (brochures, portals, digital marketing)",
@@ -337,8 +351,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Minimal pricing overview for BrotherStudio architectural visualization services.",
       openGraphDescription:
         "Minimal pricing overview for BrotherStudio photorealistic architectural images and videos.",
-      intro:
-        "From image to sale: an end-to-end workflow to present and sell your projects with impact.",
+      intro: "",
       accessTitle: "Private access",
       accessText:
         "Enter your email address to view the pricing page.",
@@ -349,7 +362,14 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       invalidEmail: "Please enter a valid email address.",
       imagesTitle: "Image",
       videosTitle: "Video",
+      walkthroughTitle: "Walkthrough",
+      websiteTitle: "Website",
       packagesTitle: "Packages",
+      packageTabLabels: {
+        ariaLabel: "Package tiers",
+        classic: 'Package "classic"',
+        premium: 'Package "premium"',
+      },
       partnershipTitle: "Partnership",
       workflowTitle: "Workflow",
       includedTitle: "Included in pricing",
@@ -358,15 +378,19 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       images: [
         {
           name: "3D Photorealistic Interior Images",
-          price: "CHF 800",
+          price: "CHF 700",
         },
         {
           name: "3D Photorealistic Exterior Images",
-          price: "CHF 900",
+          price: "CHF 800",
         },
         {
           name: "3D Floor Plans",
           price: "CHF 400",
+        },
+        {
+          name: "3D Photorealistic Focus & ambiance",
+          price: "CHF 350",
         },
         {
           name: "Sales plan for brochure",
@@ -379,50 +403,65 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       ],
       videos: [
         {
-          name: "Video Walkthrough",
+          name: "Video Walkthrough Marketing (50% reduction if images ordered)",
           options: [
-            { name: "1-4 rooms", price: "CHF 1700" },
-            { name: "5-9 rooms", price: "CHF 3200" },
+            { name: "1-4 rooms", price: "CHF 3500" },
+            { name: "5-9 rooms", price: "CHF 4700" },
             { name: "10+ rooms", price: "On request" },
           ],
         },
         {
           name: "Walkthrough Classic (click & walk)",
+          subsectionTitle: "Walkthrough",
           options: [
-            { name: "1-4 rooms", price: "CHF 1400" },
-            { name: "5-9 rooms", price: "CHF 2200" },
-          ],
-        },
-        {
-          name: "Marketing Video (emotional / cinematic)",
-          options: [
-            { name: "1-30 seconds", price: "CHF 2000" },
-            { name: "31-60 seconds", price: "CHF 3500" },
-            { name: "61-90 seconds", price: "CHF 4800" },
+            { name: "per room", price: "CHF 570" },
           ],
         },
         {
           name: "Drone Videorealist 3D",
-          price: "CHF 1400",
+          price: "From CHF 750",
+        },
+      ],
+      websites: [
+        {
+          name: "BS template for sale",
+          price: "CHF 2700",
+        },
+        {
+          name: "Custom website",
+          price: "From CHF 4700",
         },
       ],
       packages: [
         {
           name: "Villa package",
-          price: "CHF 7700",
+          price: "Sale price: 5400",
+          comparePrice: "7670 CHF",
+          tier: "classic",
           details: [
             "4-6 interior images",
-            "2-3 exterior images",
-            '1-3 style images (rain, dust, snow)',
-            "1-3 focus images included",
-            "1x marketing video, 31-60 seconds",
-            "Plan de vente",
+            "1-2 style focus images",
+            "1x sales video (1080p)",
+            "1-3 sales plans",
             "myStudio review tool",
+          ],
+        },
+        {
+          name: "Website package",
+          price: "7700 CHF",
+          comparePrice: "17800 CHF",
+          tier: "premium",
+          details: [
+            "8-12 images 4K",
+            "3-4 focus / ambiance night variants 4K",
+            "1 video (1080p)",
+            "site custom",
           ],
         },
         {
           name: "Building package",
           price: "On request",
+          tier: "other",
           details: ["Project size review required before pricing."],
         },
       ],
@@ -530,8 +569,8 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Images haut de gamme pour promouvoir et vendre vos projets immobiliers.",
       introLine:
         "De l’image à la vente : un workflow complet pour présenter et vendre vos projets avec impact.",
-      backToTopLabel: "Retour en haut",
-      backToFooterLabel: "Aller au footer",
+      backToTopLabel: "Aller en haut de la galerie",
+      backToFooterLabel: "Aller en bas de la galerie",
       projectFilterAllLabel: "Tous",
       projectFilterAriaLabel: "Filtres de projet",
       sceneFilterAriaLabel: "Filtres de type d'image",
@@ -567,7 +606,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Modelisation du projet sur base PDF",
         "Integration de l'environnement complet selon style du client (mobilier, vegetaux, meteo, personne, etc.)",
         "Traitement image - Lumiere & materiaux",
-        "Modifications & retouche jusqu'a satisfaction client",
+        "Modifications & retouche (3 revisions max)",
         "Livraison d'images jusqu'en qualite 6K",
         "Remise des documents complets",
         "Rendus premium : haute definition optimises pour commercialisation immobiliere (brochures, portails, marketing digital).",
@@ -581,7 +620,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Vue minimaliste des prix de BrotherStudio pour les visualisations architecturales.",
       openGraphDescription:
         "Vue minimaliste des prix BrotherStudio pour images et videos architecturales photorealistes.",
-      intro: "De l’image à la vente : un workflow complet pour présenter et vendre vos projets avec impact.",
+      intro: "",
       accessTitle: "Acces prive",
       accessText:
         "Entrez votre adresse email pour acceder a la page de prix.",
@@ -592,7 +631,14 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       invalidEmail: "Veuillez entrer une adresse email valide.",
       imagesTitle: "Images",
       videosTitle: "Videos",
+      walkthroughTitle: "Walkthrough",
+      websiteTitle: "Website",
       packagesTitle: "Forfait",
+      packageTabLabels: {
+        ariaLabel: "Niveaux de forfait",
+        classic: 'Package "classic"',
+        premium: 'Package "premium"',
+      },
       partnershipTitle: "Partenariat",
       workflowTitle: "Workflow",
       includedTitle: "Inclus dans mes prix",
@@ -601,15 +647,19 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       images: [
         {
           name: "Images 3D photorealistes interieures",
-          price: "CHF 800",
+          price: "CHF 700",
         },
         {
           name: "Images 3D photorealistes exterieures",
-          price: "CHF 900",
+          price: "CHF 800",
         },
         {
           name: "3D FloorPlan",
           price: "CHF 400",
+        },
+        {
+          name: "3D Photorealistic Focus & ambiance",
+          price: "CHF 350",
         },
         {
           name: "Plan de vente pour brochure",
@@ -622,50 +672,65 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       ],
       videos: [
         {
-          name: "Video Walkthrough",
+          name: "Video Walkthrough Marketing (50% reduction si images commandees)",
           options: [
-            { name: "1-4 pieces", price: "CHF 1700" },
-            { name: "5-9 pieces", price: "CHF 3200" },
+            { name: "1-4 pieces", price: "CHF 3500" },
+            { name: "5-9 pieces", price: "CHF 4700" },
             { name: "10+", price: "Sur demande" },
           ],
         },
         {
           name: "Walkthrough Classic (clic & walk)",
+          subsectionTitle: "Walkthrough",
           options: [
-            { name: "1-4 pieces", price: "CHF 1400" },
-            { name: "5-9 pieces", price: "CHF 2200" },
-          ],
-        },
-        {
-          name: "Video Marketing (emotionnelle / cinematique)",
-          options: [
-            { name: "1-30 secondes", price: "CHF 2000" },
-            { name: "31-60 secondes", price: "CHF 3500" },
-            { name: "61-90 secondes", price: "CHF 4800" },
+            { name: "par piece", price: "CHF 570" },
           ],
         },
         {
           name: "Videorealistes 3D (Drone View)",
-          price: "CHF 1400",
+          price: "From CHF 750",
+        },
+      ],
+      websites: [
+        {
+          name: "BS template for sale",
+          price: "CHF 2700",
+        },
+        {
+          name: "Custom website",
+          price: "From CHF 4700",
         },
       ],
       packages: [
         {
           name: "Villa forfait",
-          price: "CHF 7700",
+          price: "Prix de vente : 5400",
+          comparePrice: "7670 CHF",
+          tier: "classic",
           details: [
             "4-6 images interieures",
-            "2-3 images exterieures",
-            '1-3 image style (pluie, poussiere, neige)',
-            "1-3 images focus offertes",
-            "1x Video marketing, 31-60 secondes",
-            "Plan de vente",
+            "1-2 images style focus",
+            "1x video de vente (1080p)",
+            "1-3 plan de vente",
             "myStudio review tool",
+          ],
+        },
+        {
+          name: "Website forfait",
+          price: "7700 CHF",
+          comparePrice: "17800 CHF",
+          tier: "premium",
+          details: [
+            "8-12 images 4K",
+            "3-4 focus / ambiance night variantes 4K",
+            "1 video (1080p)",
+            "site custom",
           ],
         },
         {
           name: "Immeuble forfait",
           price: "Sur demande",
+          tier: "other",
           details: ["Besoin de voir la taille du projet."],
         },
       ],

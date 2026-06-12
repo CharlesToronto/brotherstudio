@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PricePackagesSection } from "@/components/PricePackagesSection";
 import { getMessages } from "@/content/messages";
 import { withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
@@ -13,12 +14,25 @@ export default async function LocalizedTeamPricePage({
 }: LocaleTeamPricePageProps) {
   const locale = await resolveLocaleParam(params);
   const messages = getMessages(locale);
+  const walkthroughVideos = messages.price.videos.filter(
+    (video) => video.subsectionTitle === messages.price.walkthroughTitle,
+  );
+  const standardVideos = messages.price.videos.filter(
+    (video) => video.subsectionTitle !== messages.price.walkthroughTitle,
+  );
 
   return (
     <div className="servicesLayout">
       {messages.price.intro ? (
         <p className="homeIntro homeIntroHighlight">{messages.price.intro}</p>
       ) : null}
+
+      <PricePackagesSection
+        title={messages.price.packagesTitle}
+        titleId="teamPricePackagesTitle"
+        packages={messages.price.packages}
+        tabLabels={messages.price.packageTabLabels}
+      />
 
       <section className="servicesSection" aria-labelledby="teamPriceImagesTitle">
         <h1 id="teamPriceImagesTitle" className="servicesTitle contactAccent">
@@ -43,7 +57,7 @@ export default async function LocalizedTeamPricePage({
           {messages.price.videosTitle}
         </h2>
         <ul className="servicesList" aria-label={messages.price.videosTitle}>
-          {messages.price.videos.map((video) => (
+          {standardVideos.map((video) => (
             <li key={video.name} className="servicesItem">
               <div className="servicesItemPriceRow">
                 <span>{video.name}</span>
@@ -69,32 +83,57 @@ export default async function LocalizedTeamPricePage({
         </ul>
       </section>
 
-      <section className="servicesSection" aria-labelledby="teamPricePackagesTitle">
-        <h2 id="teamPricePackagesTitle" className="servicesTitle contactAccent">
-          {messages.price.packagesTitle}
+      {walkthroughVideos.length > 0 ? (
+        <section className="servicesSection" aria-labelledby="teamPriceWalkthroughTitle">
+          <h2 id="teamPriceWalkthroughTitle" className="servicesTitle contactAccent">
+            {messages.price.walkthroughTitle}
+          </h2>
+          <ul className="servicesList" aria-label={messages.price.walkthroughTitle}>
+            {walkthroughVideos.map((video) => (
+              <li key={video.name} className="servicesItem">
+                <div className="servicesItemPriceRow">
+                  <span>{video.name}</span>
+                  {video.price ? (
+                    <span className="servicesItemPriceValue">{video.price}</span>
+                  ) : null}
+                </div>
+                {video.options?.length ? (
+                  <ul className="servicesNestedList" aria-label={video.name}>
+                    {video.options.map((option) => (
+                      <li
+                        key={`${video.name}-${option.name}`}
+                        className="servicesNestedItem servicesItemPriceRow"
+                      >
+                        <span>{option.name}</span>
+                        <span className="servicesItemPriceValue">{option.price}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="servicesSection" aria-labelledby="teamPriceWebsiteTitle">
+        <h2 id="teamPriceWebsiteTitle" className="servicesTitle contactAccent">
+          {messages.price.websiteTitle}
         </h2>
-        <ul className="servicesList" aria-label={messages.price.packagesTitle}>
-          {messages.price.packages.map((item) => (
-            <li key={item.name} className="servicesItem">
-              <div className="servicesItemPriceRow">
-                <span>{item.name}</span>
-                <span className="servicesItemPriceValue">{item.price}</span>
-              </div>
-              {item.details?.length ? (
-                <ul className="servicesNestedList" aria-label={item.name}>
-                  {item.details.map((detail) => (
-                    <li key={`${item.name}-${detail}`} className="servicesNestedItem">
-                      {detail}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+        <ul className="servicesList" aria-label={messages.price.websiteTitle}>
+          {messages.price.websites.map((item) => (
+            <li key={item.name} className="servicesItem servicesItemPriceRow">
+              <span>{item.name}</span>
+              <span className="servicesItemPriceValue">{item.price}</span>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="servicesSection" aria-labelledby="teamPriceIncludedTitle">
+      <section
+        className="servicesSection servicesSectionWithDivider"
+        aria-labelledby="teamPriceIncludedTitle"
+      >
         <h2 id="teamPriceIncludedTitle" className="servicesTitle contactAccent">
           {messages.price.includedTitle}
         </h2>
@@ -146,4 +185,3 @@ export default async function LocalizedTeamPricePage({
     </div>
   );
 }
-

@@ -38,6 +38,15 @@ export function BackToTopButton({ label, footerLabel }: BackToTopButtonProps) {
   if (!isVisible) return null;
 
   const buttonLabel = direction === "down" ? footerLabel : label;
+  const scrollToTarget = (targetId: string, fallback: () => void) => {
+    const target = document.getElementById(targetId);
+    if (!target) {
+      fallback();
+      return;
+    }
+
+    target.scrollIntoView({ block: "start", behavior: "auto" });
+  };
 
   return (
     <button
@@ -47,13 +56,17 @@ export function BackToTopButton({ label, footerLabel }: BackToTopButtonProps) {
       data-direction={direction}
       onClick={() => {
         if (direction === "down") {
-          document
-            .getElementById("site-footer")
-            ?.scrollIntoView({ block: "start", behavior: "auto" });
+          scrollToTarget("home-gallery-end", () => {
+            document
+              .getElementById("site-footer")
+              ?.scrollIntoView({ block: "start", behavior: "auto" });
+          });
           return;
         }
 
-        window.scrollTo({ top: 0, behavior: "auto" });
+        scrollToTarget("home-gallery-start", () => {
+          window.scrollTo({ top: 0, behavior: "auto" });
+        });
       }}
     >
       <svg
