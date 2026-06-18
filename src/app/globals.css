@@ -23,12 +23,6 @@ body {
   overflow-x: hidden;
 }
 
-html.homeHeroMobileScrollLocked,
-body.homeHeroMobileScrollLocked {
-  overflow: hidden;
-  touch-action: none;
-}
-
 body {
   margin: 0;
   min-height: 100vh;
@@ -2881,30 +2875,50 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-height: 54px;
-  padding: 0 22px;
-  border: 1px solid rgb(255 255 255 / 0.24);
-  background: rgb(255 255 255 / 0.08);
+  gap: 12px;
+  min-height: 0;
+  padding: 0 0 10px;
+  border: 0;
+  border-bottom: 1px solid rgb(255 255 255 / 0.34);
+  background: transparent;
   color: #fff;
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   cursor: pointer;
-  backdrop-filter: blur(12px);
   transition:
-    background-color 180ms ease,
+    transform 180ms ease,
     border-color 180ms ease,
+    color 180ms ease,
     bottom 180ms ease;
+}
+
+.homeHeroScrollButtonLabel {
+  white-space: nowrap;
+}
+
+.homeHeroScrollButtonIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  opacity: 0.9;
 }
 
 .homeHeroScrollButton:hover,
 .homeHeroScrollButton:focus-visible {
   bottom: calc(clamp(44px, 9vh, 96px) + 2px);
-  border-color: rgb(255 255 255 / 0.44);
-  background: rgb(255 255 255 / 0.14);
+  border-color: rgb(255 255 255 / 0.62);
+  color: rgb(255 255 255 / 0.96);
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.homeHeroScrollButton:hover .homeHeroScrollButtonIcon,
+.homeHeroScrollButton:focus-visible .homeHeroScrollButtonIcon {
+  opacity: 1;
 }
 
 .threeGalleryFallback {
@@ -3074,16 +3088,16 @@ select:focus-visible {
 
 .siteHeader {
   display: grid;
-  gap: 12px;
-  padding: 0 var(--page-padding) calc(var(--page-padding) * 0.7);
+  gap: 0;
+  padding: 0 calc(var(--page-padding) * 0.62) 0;
 }
 
 .siteHeaderNotice {
-  margin: 0 calc(var(--page-padding) * -1);
-  padding: 9px var(--page-padding);
+  margin: 0 calc(var(--page-padding) * -0.62);
+  padding: 6px calc(var(--page-padding) * 0.62);
   background: #111;
   color: #fff;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-align: center;
@@ -3112,7 +3126,9 @@ select:focus-visible {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 16px;
+  gap: 6px;
+  min-height: 0;
+  padding: 4px 0;
 }
 
 body:has(.homeBlurWordSection) .siteHeader {
@@ -3141,6 +3157,7 @@ body:has(.homeBlurWordSection).homeSplineHeaderVisible .siteHeader {
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
+  margin-left: 14px;
 }
 
 body:has(.brochureStudioPageMain) .siteLogo {
@@ -3149,8 +3166,8 @@ body:has(.brochureStudioPageMain) .siteLogo {
 
 .siteLogoImage {
   display: block;
-  width: clamp(150px, 18vw, 190px);
-  height: auto;
+  width: auto;
+  height: clamp(32px, 3.5vw, 48px);
 }
 
 .siteLogoImageWhite {
@@ -3170,7 +3187,7 @@ html[data-theme="dark"] .siteLogoImageWhite {
   flex: 1 1 auto;
   align-items: center;
   justify-content: center;
-  gap: 26px;
+  gap: 14px;
 }
 
 .siteNavMobile {
@@ -3182,10 +3199,11 @@ html[data-theme="dark"] .siteLogoImageWhite {
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
+  line-height: 1;
   transition: color 180ms ease;
 }
 
@@ -3193,8 +3211,8 @@ html[data-theme="dark"] .siteLogoImageWhite {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 68px;
-  padding: 7px 10px;
+  min-width: 54px;
+  padding: 4px 8px;
   border: 1px solid var(--foreground);
   background: var(--foreground);
   color: var(--background);
@@ -3275,6 +3293,18 @@ body:has(.brochureStudioPageMain .brochureStudioLayout[data-sidebar-collapsed="t
   align-content: start;
 }
 
+.siteFooterBrandHeader {
+  display: flex;
+  align-items: flex-start;
+  min-height: 24px;
+}
+
+.siteFooterBrandCopy,
+.siteFooterBrandBody {
+  display: grid;
+  gap: 6px;
+}
+
 .siteFooterAccordions {
   display: none;
   width: 100%;
@@ -3283,6 +3313,14 @@ body:has(.brochureStudioPageMain .brochureStudioLayout[data-sidebar-collapsed="t
 .siteFooterBrand,
 .siteFooterGroup {
   gap: 8px;
+}
+
+.siteFooterLogo {
+  display: block;
+  width: clamp(132px, 14vw, 190px);
+  height: auto;
+  flex: 0 0 auto;
+  margin-top: -10px;
 }
 
 .siteFooterList {
@@ -3796,7 +3834,7 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
 }
 
 .gallery {
-  column-count: 3;
+  column-count: 4;
   column-gap: 18px;
 }
 
@@ -3885,6 +3923,153 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
 .homeSceneFilterButton:focus-visible {
   outline: 2px solid rgb(17 17 17 / 0.14);
   outline-offset: 2px;
+}
+
+.homeProjectCarousels {
+  display: grid;
+  gap: 32px;
+}
+
+.homeMobileDisplayFilters {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.homeMobileDisplayButton {
+  border-radius: 999px;
+  border: 1px solid rgb(17 17 17 / 0.09);
+  background: transparent;
+  color: rgb(17 17 17 / 0.56);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.homeMobileDisplayButton[data-active="true"] {
+  border-color: #111;
+  background: #111;
+  color: #f5f1ea;
+}
+
+.homeProjectCarouselSection {
+  display: grid;
+  gap: 14px;
+}
+
+.homeProjectCarouselHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.homeProjectCarouselTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.homeProjectCarouselCount {
+  flex: 0 0 auto;
+  color: rgb(17 17 17 / 0.42);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.homeProjectCarouselTrack {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.homeProjectCarouselTrack::-webkit-scrollbar {
+  display: none;
+}
+
+.homeProjectCarouselCard {
+  flex: 0 0 min(82vw, 320px);
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  scroll-snap-align: start;
+}
+
+.homeProjectCarouselImageFrame {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  height: clamp(220px, 58vw, 320px);
+  overflow: hidden;
+}
+
+.homeProjectCarouselImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+}
+
+.homeMobileGalleryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.homeMobileGalleryGridCard {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.homeMobileGalleryGridImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.homeProjectCarouselMeta {
+  display: grid;
+  gap: 4px;
+}
+
+.homeProjectCarouselCaption {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.homeProjectCarouselProject {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7f7f7f;
 }
 
 @media (max-width: 1100px) {
@@ -4055,10 +4240,15 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
     left: 50%;
     bottom: calc(96px + env(safe-area-inset-bottom));
     transform: translateX(-50%);
-    min-height: 48px;
-    padding: 0 18px;
-    font-size: 11px;
+    gap: 10px;
+    padding-bottom: 8px;
+    font-size: 10px;
     letter-spacing: 0.18em;
+  }
+
+  .homeHeroScrollButtonIcon {
+    width: 16px;
+    height: 16px;
   }
 
   .threeGalleryFallbackGrid {
@@ -4253,6 +4443,32 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
     scroll-snap-align: start;
   }
 
+  .homeProjectCarousels {
+    gap: 24px;
+  }
+
+  #home-gallery-start {
+    margin-top: 28px;
+  }
+
+  .homeMobileDisplayFilters {
+    margin-bottom: 22px;
+  }
+
+  .homeProjectCarouselSection {
+    gap: 10px;
+  }
+
+  .homeProjectCarouselTrack {
+    flex-wrap: nowrap;
+    margin-right: calc(var(--page-padding) * -1);
+    padding-right: var(--page-padding);
+  }
+
+  .homeProjectCarouselCard {
+    flex-basis: min(78vw, 296px);
+  }
+
   .adminAnalyticsTables {
     grid-template-columns: 1fr;
   }
@@ -4374,7 +4590,7 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #7f7f7f;
+  color: #a6a6a6;
 }
 
 .galleryProjectInline {
@@ -4384,7 +4600,7 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
   letter-spacing: 0.08em;
   font-style: italic;
   text-transform: uppercase;
-  color: #7f7f7f;
+  color: #a6a6a6;
   text-align: right;
   white-space: nowrap;
 }
@@ -4485,9 +4701,145 @@ html[data-theme="dark"] .priceAccessButton:focus-visible {
 .lightboxImage {
   display: block;
   max-width: 100%;
-  max-height: 100%;
+  max-height: calc(100vh - (var(--page-padding) * 2));
   width: auto;
   height: auto;
+}
+
+.lightboxArrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgb(17 17 17 / 0.08);
+  background: rgb(255 255 255 / 0.82);
+  color: #111;
+  cursor: pointer;
+  transform: translateY(-50%);
+  backdrop-filter: blur(14px);
+}
+
+.lightboxArrowLeft {
+  left: max(16px, var(--page-padding));
+}
+
+.lightboxArrowRight {
+  right: max(16px, var(--page-padding));
+}
+
+.lightboxClose {
+  position: fixed;
+  top: max(16px, var(--page-padding));
+  right: max(16px, var(--page-padding));
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgb(17 17 17 / 0.08);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.82);
+  color: #111;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+}
+
+.lightboxPreviewRail {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  top: auto;
+  bottom: max(12px, var(--page-padding));
+  z-index: 2;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  width: auto;
+  max-width: min(calc(100vw - (var(--page-padding) * 2)), 720px);
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px;
+  transform: translateX(-50%);
+  border: 1px solid rgb(17 17 17 / 0.08);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.72);
+  box-shadow: 0 20px 40px rgb(17 17 17 / 0.08);
+  backdrop-filter: blur(18px);
+  scrollbar-width: none;
+}
+
+.lightboxPreviewRail::-webkit-scrollbar {
+  display: none;
+}
+
+.lightboxPreviewButton {
+  flex: 0 0 auto;
+  width: 46px;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+  opacity: 0.58;
+  transition:
+    opacity 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.lightboxPreviewButton[data-active="true"] {
+  border-color: rgb(17 17 17 / 0.28);
+  opacity: 1;
+}
+
+.lightboxPreviewImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (min-width: 641px) {
+  .lightboxImage {
+    max-width: 100%;
+    max-height: calc(100vh - 132px);
+  }
+
+  .lightboxArrowRight {
+    right: max(16px, var(--page-padding));
+  }
+
+  .lightboxClose {
+    right: max(16px, var(--page-padding));
+  }
+}
+
+@media (max-width: 640px) {
+  .lightboxImage {
+    max-width: 100%;
+    max-height: calc(100vh - 118px);
+  }
+
+  .lightboxArrow {
+    width: 42px;
+    height: 42px;
+  }
+
+  .lightboxArrowRight {
+    right: max(12px, var(--page-padding));
+  }
+
+  .lightboxArrowLeft {
+    left: max(12px, var(--page-padding));
+  }
 }
 
 .contactText {

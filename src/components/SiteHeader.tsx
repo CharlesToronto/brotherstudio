@@ -219,18 +219,18 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
         <Link className="siteLogo" href={localizedHref("/")}>
           <Image
             className="siteLogoImage siteLogoImageBlack"
-            src="/bs-logo-black.png"
+            src="/bs-logo-menu-cropped.png"
             alt={site.name}
-            width={891}
-            height={165}
+            width={2565}
+            height={570}
             priority
           />
           <Image
             className="siteLogoImage siteLogoImageWhite"
-            src="/bs-logo-white.png"
+            src="/bs-logo-menu-cropped.png"
             alt=""
-            width={892}
-            height={166}
+            width={2565}
+            height={570}
             priority
             aria-hidden="true"
           />

@@ -32,7 +32,7 @@ type GalleryProps = {
 };
 
 const GALLERY_IMAGE_SIZES =
-  "(max-width: 640px) calc(100vw - 36px), (max-width: 1100px) calc((100vw - 84px) / 2), calc((100vw - 112px) / 3)";
+  "(max-width: 640px) calc(100vw - 36px), (max-width: 1100px) calc((100vw - 84px) / 2), calc((100vw - 130px) / 4)";
 const ALWAYS_VISIBLE_PROJECT_KEYS = new Set<GalleryProjectKey>(["flanthey", "arbaz"]);
 const INITIAL_GALLERY_BATCH = 12;
 const GALLERY_BATCH_SIZE = 12;
@@ -106,6 +106,39 @@ function TrashIcon() {
   );
 }
 
+function LightboxArrow({
+  direction,
+}: {
+  direction: "left" | "right";
+}) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+        d={direction === "left" ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"}
+      />
+    </svg>
+  );
+}
+
+function LightboxCloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+        d="M6 6l12 12M18 6L6 18"
+      />
+    </svg>
+  );
+}
+
 export function Gallery({
   items,
   editable = false,
@@ -144,6 +177,7 @@ export function Gallery({
   const replaceTargetIdRef = useRef<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const revealItemRefs = useRef(new Map<string, HTMLDivElement>());
+  const lightboxPreviewRefs = useRef(new Map<string, HTMLButtonElement>());
   const previousProjectRef = useRef<GalleryProjectKey | "all">("all");
   const lastSavedArchitectByIdRef = useRef<Map<string, string>>(new Map());
   const lastSavedProjectByIdRef = useRef<Map<string, GalleryProjectValue>>(new Map());
@@ -262,12 +296,29 @@ export function Gallery({
     if (activeId === null) return null;
     return sourceItems.find((i) => i.id === activeId) ?? null;
   }, [activeId, sourceItems]);
+  const activeItemIndex = useMemo(
+    () => (activeId === null ? -1 : filteredItems.findIndex((item) => item.id === activeId)),
+    [activeId, filteredItems],
+  );
+  const hasLightboxNavigation = filteredItems.length > 1 && activeItemIndex !== -1;
+  const showPreviousItem = useCallback(() => {
+    if (!hasLightboxNavigation) return;
+    const previousIndex = (activeItemIndex - 1 + filteredItems.length) % filteredItems.length;
+    setActiveId(filteredItems[previousIndex]?.id ?? null);
+  }, [activeItemIndex, filteredItems, hasLightboxNavigation]);
+  const showNextItem = useCallback(() => {
+    if (!hasLightboxNavigation) return;
+    const nextIndex = (activeItemIndex + 1) % filteredItems.length;
+    setActiveId(filteredItems[nextIndex]?.id ?? null);
+  }, [activeItemIndex, filteredItems, hasLightboxNavigation]);
 
   useEffect(() => {
     if (!activeItem) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setActiveId(null);
+      if (event.key === "ArrowLeft") showPreviousItem();
+      if (event.key === "ArrowRight") showNextItem();
     };
 
     document.documentElement.style.overflow = "hidden";
@@ -279,6 +330,16 @@ export function Gallery({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
     };
+  }, [activeItem, showNextItem, showPreviousItem]);
+
+  useEffect(() => {
+    if (!activeItem) return;
+    const previewNode = lightboxPreviewRefs.current.get(activeItem.id);
+    previewNode?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
   }, [activeItem]);
 
   const openReplacePicker = (id: string) => {
@@ -741,12 +802,83 @@ export function Gallery({
           aria-modal="true"
           onClick={() => setActiveId(null)}
         >
+          <button
+            type="button"
+            className="lightboxClose"
+            aria-label="Close slideshow"
+            onClick={(event) => {
+              event.stopPropagation();
+              setActiveId(null);
+            }}
+          >
+            <LightboxCloseIcon />
+          </button>
+          {hasLightboxNavigation ? (
+            <button
+              type="button"
+              className="lightboxArrow lightboxArrowLeft"
+              aria-label="Previous image"
+              onClick={(event) => {
+                event.stopPropagation();
+                showPreviousItem();
+              }}
+            >
+              <LightboxArrow direction="left" />
+            </button>
+          ) : null}
           <img
             className="lightboxImage"
             src={activeItem.src}
             alt={activeItem.architect}
             decoding="async"
           />
+          {hasLightboxNavigation ? (
+            <div
+              className="lightboxPreviewRail"
+              role="list"
+              aria-label="Image previews"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {filteredItems.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="lightboxPreviewButton"
+                  data-active={item.id === activeItem.id ? "true" : "false"}
+                  role="listitem"
+                  aria-label={`Open preview ${index + 1}`}
+                  onClick={() => setActiveId(item.id)}
+                  ref={(node) => {
+                    if (node) {
+                      lightboxPreviewRefs.current.set(item.id, node);
+                    } else {
+                      lightboxPreviewRefs.current.delete(item.id);
+                    }
+                  }}
+                >
+                  <img
+                    className="lightboxPreviewImage"
+                    src={item.src}
+                    alt={item.architect}
+                    decoding="async"
+                  />
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {hasLightboxNavigation ? (
+            <button
+              type="button"
+              className="lightboxArrow lightboxArrowRight"
+              aria-label="Next image"
+              onClick={(event) => {
+                event.stopPropagation();
+                showNextItem();
+              }}
+            >
+              <LightboxArrow direction="right" />
+            </button>
+          ) : null}
         </div>
       ) : null}
 

@@ -454,24 +454,28 @@ function GalleryScene({
     const wheelTarget = wheelTargetRef.current;
     if (wheelTarget) {
       wheelTarget.addEventListener("wheel", handleWheel, { passive: false });
-      wheelTarget.addEventListener("touchstart", handleTouchStart, { passive: true });
-      wheelTarget.addEventListener("touchmove", handleTouchMove, { passive: false });
-      wheelTarget.addEventListener("touchend", handleTouchEnd);
-      wheelTarget.addEventListener("touchcancel", handleTouchEnd);
+      if (!isNarrow) {
+        wheelTarget.addEventListener("touchstart", handleTouchStart, { passive: true });
+        wheelTarget.addEventListener("touchmove", handleTouchMove, { passive: false });
+        wheelTarget.addEventListener("touchend", handleTouchEnd);
+        wheelTarget.addEventListener("touchcancel", handleTouchEnd);
+      }
     }
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       if (wheelTarget) {
         wheelTarget.removeEventListener("wheel", handleWheel);
-        wheelTarget.removeEventListener("touchstart", handleTouchStart);
-        wheelTarget.removeEventListener("touchmove", handleTouchMove);
-        wheelTarget.removeEventListener("touchend", handleTouchEnd);
-        wheelTarget.removeEventListener("touchcancel", handleTouchEnd);
+        if (!isNarrow) {
+          wheelTarget.removeEventListener("touchstart", handleTouchStart);
+          wheelTarget.removeEventListener("touchmove", handleTouchMove);
+          wheelTarget.removeEventListener("touchend", handleTouchEnd);
+          wheelTarget.removeEventListener("touchcancel", handleTouchEnd);
+        }
       }
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleKeyDown, handleTouchEnd, handleTouchMove, handleTouchStart, handleWheel, wheelTargetRef]);
+  }, [handleKeyDown, handleTouchEnd, handleTouchMove, handleTouchStart, handleWheel, isNarrow, wheelTargetRef]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {

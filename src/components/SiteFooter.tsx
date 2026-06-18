@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { getMessages } from "@/content/messages";
@@ -90,13 +91,22 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   return (
     <footer id="site-footer" className="siteFooter">
       <div className="siteFooterBrand">
-        <p className="siteFooterGroupTitle">{footerLabels.studio}</p>
-        <p className="siteFooterName">{site.name}</p>
-        <p className="siteFooterText">{footerLocation}</p>
-        <p className="siteFooterText">BrotherStudio Visualization</p>
-        <p className="siteFooterText">
-          Ontario Business Registration No. 1001633126
-        </p>
+        <div className="siteFooterBrandHeader">
+          <Image
+            className="siteFooterLogo"
+            src="/bs-logo-menu-cropped.png"
+            alt={site.name}
+            width={2565}
+            height={570}
+          />
+        </div>
+        <div className="siteFooterBrandBody">
+          <p className="siteFooterText">{footerLocation}</p>
+          <p className="siteFooterText">BrotherStudio Visualization</p>
+          <p className="siteFooterText">
+            Ontario Business Registration No. 1001633126
+          </p>
+        </div>
       </div>
 
       {footerGroups.map((group) => (
