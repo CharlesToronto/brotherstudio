@@ -5,7 +5,9 @@ import { Eye, Pencil, Search, Trash2 } from "lucide-react";
 
 import { AdminLockOverlay } from "@/components/AdminLockOverlay";
 import {
+  DASHBOARD_PAYMENT_STATUSES,
   DASHBOARD_SERVICE_OPTIONS,
+  type DashboardPaymentStatus as PaymentStatus,
   type DashboardProjectCurrency as Currency,
   type DashboardProjectRecord as Project,
   type DashboardProjectStatus as ProjectStatus,
@@ -15,24 +17,12 @@ import type { TeamClientRecord } from "@/lib/teamStore";
 const DISPLAY_CURRENCY: Currency = "CAD";
 const DEFAULT_CHF_TO_CAD = 1.66;
 
-const statusStyles: Record<ProjectStatus, string> = {
-  Réalisé: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  "En cours": "bg-rose-50 text-rose-700 border border-rose-200",
-  "À venir": "bg-sky-50 text-sky-700 border border-sky-200",
-  "En attente": "bg-neutral-100 text-neutral-700 border border-neutral-200",
-  "En attente de payment":
-    "bg-orange-50 text-orange-700 border border-orange-200",
-  Terminé: "bg-emerald-100 text-emerald-800 border border-emerald-300",
-};
-
 const statusOptions: ProjectStatus[] = [
-  "Réalisé",
   "En cours",
   "À venir",
-  "En attente",
-  "En attente de payment",
   "Terminé",
 ];
+const paymentStatusOptions: PaymentStatus[] = [...DASHBOARD_PAYMENT_STATUSES];
 const currencyOptions: Currency[] = ["CAD", "CHF"];
 type ProjectDraft = Omit<Project, "id" | "createdAt" | "updatedAt">;
 type TeamClientStatus = "new" | "contacted" | "follow_up" | "closed";
@@ -57,9 +47,11 @@ function createEmptyProject(): ProjectDraft {
     clientCompany: "",
     clientEmail: "",
     clientPhone: "",
+    clientWebsite: "",
     projectName: "",
     serviceTypes: [],
     status: "À venir",
+    paymentStatus: "À facturer",
     invoicedAmount: 0,
     upcomingAmount: 0,
     expectedDate: "",
@@ -108,11 +100,47 @@ function sumInDisplayCurrency(
 }
 
 function getPendingAmount(project: Project) {
-  return project.status === "En attente de payment" ? project.invoicedAmount : 0;
+  return project.paymentStatus === "En attente de payment" ? project.invoicedAmount : 0;
+}
+
+function getAwaitingPaymentAmount(project: Project) {
+  if (project.paymentStatus !== "En attente de payment") return 0;
+  return getPendingAmount(project) > 0 ? getPendingAmount(project) : project.upcomingAmount;
 }
 
 function getReceivedAmount(project: Project) {
-  return project.status === "En attente de payment" ? 0 : project.invoicedAmount;
+  return project.paymentStatus === "Reçu" ? project.invoicedAmount : 0;
+}
+
+function getNotReceivedAmount(project: Project) {
+  return project.invoicedAmount + project.upcomingAmount - getReceivedAmount(project);
+}
+
+function getAmountSummary(project: Project) {
+  if (project.paymentStatus === "En attente de payment") {
+    return {
+      label: "En attente de payment",
+      amount: getAwaitingPaymentAmount(project),
+      badgeClass: "bg-orange-50 text-orange-700 border border-orange-200",
+      amountClass: "text-orange-700",
+    };
+  }
+
+  if (project.paymentStatus === "À facturer") {
+    return {
+      label: "À facturer",
+      amount: project.upcomingAmount > 0 ? project.upcomingAmount : getNotReceivedAmount(project),
+      badgeClass: "bg-sky-50 text-sky-700 border border-sky-200",
+      amountClass: "text-sky-700",
+    };
+  }
+
+  return {
+    label: "Reçu",
+    amount: getReceivedAmount(project),
+    badgeClass: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    amountClass: "text-emerald-700",
+  };
 }
 
 function renderCurrencySummary(total: number, emptyLabel = "Aucun montant") {
@@ -178,6 +206,14 @@ const DashboardSelect = forwardRef<
   );
 });
 
+const dashboardButtonMotionClass =
+  "transition-[transform,background-color,color,border-color,box-shadow] duration-200 ease-out active:scale-[0.98] disabled:transform-none";
+const dashboardPrimaryButtonClass = `${dashboardButtonMotionClass} hover:-translate-y-0.5 hover:bg-neutral-800 hover:shadow-[0_10px_24px_rgba(15,23,42,0.14)]`;
+const dashboardSecondaryButtonClass = `${dashboardButtonMotionClass} hover:-translate-y-0.5 hover:bg-neutral-50 hover:shadow-[0_8px_20px_rgba(15,23,42,0.08)]`;
+const dashboardIconButtonClass = `${dashboardButtonMotionClass} hover:-translate-y-0.5 hover:bg-neutral-50 hover:shadow-[0_8px_20px_rgba(15,23,42,0.08)]`;
+const dashboardDangerButtonClass = `${dashboardButtonMotionClass} hover:-translate-y-0.5 hover:bg-rose-100 hover:shadow-[0_8px_20px_rgba(244,63,94,0.16)]`;
+const dashboardDisclosureButtonClass = `${dashboardButtonMotionClass} hover:-translate-y-0.5 hover:bg-neutral-950 hover:text-white hover:shadow-[0_10px_24px_rgba(15,23,42,0.16)]`;
+
 export default function DashboardPage() {
   const clientPickerRef = useRef<HTMLSelectElement | null>(null);
   const paymentCarouselRef = useRef<HTMLElement | null>(null);
@@ -198,6 +234,34 @@ export default function DashboardPage() {
   const [projectStatusFilter, setProjectStatusFilter] = useState<"all" | ProjectStatus>("all");
   const [activePaymentSlide, setActivePaymentSlide] = useState(0);
 
+  const loadDashboardData = async () => {
+    const [projectsResponse, clientsResponse] = await Promise.all([
+      fetch("/api/dashboard/projects", {
+        cache: "no-store",
+        headers: { "cache-control": "no-cache" },
+      }),
+      fetch("/api/team/clients", {
+        cache: "no-store",
+        headers: { "cache-control": "no-cache" },
+      }),
+    ]);
+    const projectsPayload = (await projectsResponse.json().catch(() => null)) as
+      | { projects?: Project[]; error?: string }
+      | null;
+    const clientsPayload = (await clientsResponse.json().catch(() => null)) as
+      | { clients?: TeamClientRecord[]; error?: string }
+      | null;
+
+    if (!projectsResponse.ok) {
+      throw new Error(projectsPayload?.error ?? "Failed to load dashboard projects.");
+    }
+
+    return {
+      projects: projectsPayload?.projects ?? [],
+      clients: clientsResponse.ok ? clientsPayload?.clients ?? [] : [],
+    };
+  };
+
   useEffect(() => {
     let isCancelled = false;
 
@@ -206,23 +270,10 @@ export default function DashboardPage() {
       setErrorMessage("");
 
       try {
-        const [projectsResponse, clientsResponse] = await Promise.all([
-          fetch("/api/dashboard/projects", { cache: "no-store" }),
-          fetch("/api/team/clients", { cache: "no-store" }),
-        ]);
-        const projectsPayload = (await projectsResponse.json().catch(() => null)) as
-          | { projects?: Project[]; error?: string }
-          | null;
-        const clientsPayload = (await clientsResponse.json().catch(() => null)) as
-          | { clients?: TeamClientRecord[]; error?: string }
-          | null;
-
-        if (!projectsResponse.ok) {
-          throw new Error(projectsPayload?.error ?? "Failed to load dashboard projects.");
-        }
+        const { projects, clients } = await loadDashboardData();
         if (!isCancelled) {
-          setProjects(projectsPayload?.projects ?? []);
-          setTeamClients(clientsResponse.ok ? clientsPayload?.clients ?? [] : []);
+          setProjects(projects);
+          setTeamClients(clients);
         }
       } catch (error) {
         if (!isCancelled) {
@@ -301,7 +352,7 @@ export default function DashboardPage() {
   );
 
   const completedProjects = useMemo(
-    () => projects.filter((project) => project.status === "Réalisé" || project.status === "Terminé"),
+    () => projects.filter((project) => project.status === "Terminé"),
     [projects],
   );
 
@@ -315,7 +366,7 @@ export default function DashboardPage() {
     [projects],
   );
   const totalUpcoming = useMemo(
-    () => sumInDisplayCurrency(projects, (project) => project.upcomingAmount),
+    () => sumInDisplayCurrency(projects, (project) => getNotReceivedAmount(project)),
     [projects],
   );
   const totalProjected = useMemo(
@@ -327,7 +378,7 @@ export default function DashboardPage() {
     [projects],
   );
   const pendingPaymentProjects = useMemo(
-    () => projects.filter((project) => project.status === "En attente de payment"),
+    () => projects.filter((project) => project.paymentStatus === "En attente de payment"),
     [projects],
   );
   const inProgressProjects = useMemo(
@@ -335,7 +386,10 @@ export default function DashboardPage() {
     [projects],
   );
   const totalPendingPayment = useMemo(
-    () => sumInDisplayCurrency(pendingPaymentProjects, (project) => getPendingAmount(project)),
+    () =>
+      sumInDisplayCurrency(pendingPaymentProjects, (project) =>
+        getAwaitingPaymentAmount(project),
+      ),
     [pendingPaymentProjects],
   );
   const filteredProjects = useMemo(() => {
@@ -363,13 +417,12 @@ export default function DashboardPage() {
     });
   }, [projectSearch, projectStatusFilter, projects]);
 
-  const stats = [
+  const projectStats = [
     { label: "Clients", value: clientsCount },
     { label: "Projets", value: projects.length },
-    { label: "Réalisés", value: completedProjects.length },
     { label: "En cours", value: inProgressProjects.length },
     { label: "À venir", value: upcomingOnlyProjects.length },
-    { label: "En attente de payment", value: pendingPaymentProjects.length },
+    { label: "Terminés", value: completedProjects.length },
   ] as const;
 
   const startAdd = () => {
@@ -391,9 +444,11 @@ export default function DashboardPage() {
       clientCompany: project.clientCompany,
       clientEmail: project.clientEmail,
       clientPhone: project.clientPhone,
+      clientWebsite: project.clientWebsite,
       projectName: project.projectName,
       serviceTypes: project.serviceTypes,
       status: project.status,
+      paymentStatus: project.paymentStatus,
       invoicedAmount: project.invoicedAmount,
       upcomingAmount: project.upcomingAmount,
       expectedDate: project.expectedDate,
@@ -424,6 +479,7 @@ export default function DashboardPage() {
       clientCompany: draft.clientCompany.trim(),
       clientEmail: draft.clientEmail.trim(),
       clientPhone: draft.clientPhone.trim(),
+      clientWebsite: draft.clientWebsite.trim(),
       projectName: draft.projectName.trim(),
       serviceTypes: draft.serviceTypes,
       expectedDate: draft.expectedDate,
@@ -465,23 +521,10 @@ export default function DashboardPage() {
         );
       }
 
-      if (isAdding) {
-        setProjects((current) => [payload.project!, ...current]);
-        setStatusMessage("Projet créé.");
-      } else if (editingId !== null) {
-        setProjects((current) =>
-          current.map((project) => (project.id === editingId ? payload.project! : project)),
-        );
-        setStatusMessage("Projet mis à jour.");
-      }
-      if (payload.teamClient) {
-        setTeamClients((current) => {
-          if (current.some((client) => client.id === payload.teamClient!.id)) {
-            return current;
-          }
-          return [payload.teamClient!, ...current];
-        });
-      }
+      const { projects, clients } = await loadDashboardData();
+      setProjects(projects);
+      setTeamClients(clients);
+      setStatusMessage(isAdding ? "Projet créé." : "Projet mis à jour.");
 
       cancelDraft();
     } catch (error) {
@@ -508,7 +551,9 @@ export default function DashboardPage() {
         throw new Error(payload?.error ?? "Failed to delete dashboard project.");
       }
 
-      setProjects((current) => current.filter((project) => project.id !== projectId));
+      const { projects, clients } = await loadDashboardData();
+      setProjects(projects);
+      setTeamClients(clients);
       if (editingId === projectId) {
         cancelDraft();
       }
@@ -640,6 +685,278 @@ export default function DashboardPage() {
     });
   };
 
+  const renderDraftEditor = () => {
+    if (!draft) return null;
+
+    return (
+      <>
+        {errorMessage ? <p className="mb-4 text-sm text-rose-700">{errorMessage}</p> : null}
+        <div className="grid gap-4 xl:grid-cols-3">
+          <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
+              Informations
+            </p>
+            <DashboardField
+              label="Client"
+              action={
+                <button
+                  type="button"
+                  onClick={openClientPicker}
+                  disabled={teamClients.length === 0}
+                  className={`inline-flex h-6 w-6 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-500 ${dashboardIconButtonClass}`}
+                  aria-label="Choisir un client existant"
+                  title={
+                    teamClients.length > 0
+                      ? "Choisir un client existant"
+                      : "Aucun client existant disponible"
+                  }
+                >
+                  <Search size={12} />
+                </button>
+              }
+            >
+              <div className="relative">
+                <DashboardInput
+                  value={draft.clientName}
+                  onChange={(event) => {
+                    updateDraft("teamClientId", null);
+                    updateDraft("clientName", event.target.value);
+                  }}
+                  placeholder="Nom du client"
+                />
+                {showClientPicker && teamClients.length > 0 ? (
+                  <DashboardSelect
+                    ref={clientPickerRef}
+                    value={draft.teamClientId ?? ""}
+                    onChange={(event) => {
+                      if (!event.target.value) return;
+                      applyTeamClientToDraft(event.target.value);
+                    }}
+                    onBlur={() => setShowClientPicker(false)}
+                  >
+                    <option value="">{selectedClientLabel}</option>
+                    {teamClients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.name || "Client sans nom"}
+                        {client.company ? ` - ${client.company}` : ""}
+                        {client.email ? ` - ${client.email}` : ""}
+                      </option>
+                    ))}
+                  </DashboardSelect>
+                ) : null}
+              </div>
+            </DashboardField>
+            <DashboardField label="Compagnie">
+              <DashboardInput
+                value={draft.clientCompany}
+                onChange={(event) => {
+                  updateDraft("teamClientId", null);
+                  updateDraft("clientCompany", event.target.value);
+                }}
+                placeholder="Compagnie"
+              />
+            </DashboardField>
+            <DashboardField label="Email">
+              <DashboardInput
+                value={draft.clientEmail}
+                onChange={(event) => {
+                  updateDraft("teamClientId", null);
+                  updateDraft("clientEmail", event.target.value);
+                }}
+                type="email"
+                placeholder="client@email.com"
+              />
+            </DashboardField>
+            <DashboardField label="Phone number">
+              <DashboardInput
+                value={draft.clientPhone}
+                onChange={(event) => {
+                  updateDraft("teamClientId", null);
+                  updateDraft("clientPhone", event.target.value);
+                }}
+                placeholder="+41 ..."
+              />
+            </DashboardField>
+            <DashboardField label="Site web">
+              <DashboardInput
+                value={draft.clientWebsite}
+                onChange={(event) => {
+                  updateDraft("teamClientId", null);
+                  updateDraft("clientWebsite", event.target.value);
+                }}
+                type="url"
+                placeholder="https://..."
+              />
+            </DashboardField>
+          </div>
+
+          <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
+              Projet
+            </p>
+            <DashboardField label="Nom du projet">
+              <DashboardInput
+                value={draft.projectName}
+                onChange={(event) => updateDraft("projectName", event.target.value)}
+                placeholder="Nom du projet"
+              />
+            </DashboardField>
+            <DashboardField label="Date">
+              <DashboardInput
+                value={draft.expectedDate}
+                onChange={(event) => updateDraft("expectedDate", event.target.value)}
+                type="date"
+              />
+            </DashboardField>
+            <DashboardField label="Service effectué">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowClientPicker(false);
+                    setShowServicesMenu((current) => !current);
+                  }}
+                  className={`flex h-11 w-full items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 text-left text-sm text-neutral-950 outline-none ${dashboardSecondaryButtonClass}`}
+                >
+                  <span className="truncate">{selectedServicesLabel}</span>
+                  <span className="text-neutral-400">{showServicesMenu ? "▲" : "▼"}</span>
+                </button>
+                {showServicesMenu ? (
+                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 max-h-72 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-3 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                    <div className="grid gap-2">
+                      {DASHBOARD_SERVICE_OPTIONS.map((service) => (
+                        <label
+                          key={service}
+                          className="flex items-start gap-2 text-sm text-neutral-700"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={draft.serviceTypes.includes(service)}
+                            onChange={() => toggleDraftService(service)}
+                            className="mt-1 h-4 w-4 rounded border-neutral-300"
+                          />
+                          <span>{service}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </DashboardField>
+            <DashboardField label="Statuts">
+              <DashboardSelect
+                value={draft.status}
+                onChange={(event) =>
+                  updateDraft("status", event.target.value as ProjectStatus)
+                }
+              >
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </DashboardSelect>
+            </DashboardField>
+          </div>
+
+          <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
+              Payment
+            </p>
+            <DashboardField label="Invoice">
+              <DashboardInput
+                value={String(draft.invoicedAmount)}
+                onChange={(event) =>
+                  updateDraft("invoicedAmount", Number(event.target.value) || 0)
+                }
+                type="number"
+                min="0"
+              />
+            </DashboardField>
+            <DashboardField label="Devis">
+              <DashboardInput
+                value={String(draft.upcomingAmount)}
+                onChange={(event) =>
+                  updateDraft("upcomingAmount", Number(event.target.value) || 0)
+                }
+                type="number"
+                min="0"
+              />
+            </DashboardField>
+            <DashboardField label="Statut">
+              <DashboardSelect
+                value={draft.paymentStatus}
+                onChange={(event) =>
+                  updateDraft("paymentStatus", event.target.value as PaymentStatus)
+                }
+              >
+                {paymentStatusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </DashboardSelect>
+            </DashboardField>
+            {draft.currency === "CHF" ? (
+              <DashboardField label="Taux de change">
+                <DashboardInput
+                  value={String(draft.exchangeRateToCad)}
+                  onChange={(event) =>
+                    updateDraft(
+                      "exchangeRateToCad",
+                      Number(event.target.value) > 0
+                        ? Number(event.target.value)
+                        : DEFAULT_CHF_TO_CAD,
+                    )
+                  }
+                  type="number"
+                  min="0.0001"
+                  step="0.0001"
+                  placeholder="1.6600"
+                />
+              </DashboardField>
+            ) : (
+              <DashboardField label="Taux de change">
+                <DashboardInput value="1.0000" disabled />
+              </DashboardField>
+            )}
+            <DashboardField label="Devise">
+              <DashboardSelect
+                value={draft.currency}
+                onChange={(event) => updateDraftCurrency(event.target.value as Currency)}
+              >
+                {currencyOptions.map((currency) => (
+                  <option key={currency} value={currency}>
+                    {currency}
+                  </option>
+                ))}
+              </DashboardSelect>
+            </DashboardField>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => void saveDraft()}
+            disabled={isSaving}
+            className={`inline-flex h-10 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white ${dashboardPrimaryButtonClass}`}
+          >
+            Enregistrer
+          </button>
+          <button
+            type="button"
+            onClick={cancelDraft}
+            disabled={isSaving}
+            className={`inline-flex h-10 items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 ${dashboardSecondaryButtonClass}`}
+          >
+            Annuler
+          </button>
+        </div>
+      </>
+    );
+  };
+
   return (
     <main className="min-h-screen bg-[#f6f3ee] text-neutral-950">
       <AdminLockOverlay title="Accès Dashboard" storageKey="bs_dashboard_unlocked" />
@@ -658,84 +975,109 @@ export default function DashboardPage() {
           {errorMessage ? <p className="text-sm text-rose-700">{errorMessage}</p> : null}
         </header>
 
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          {stats.map((stat) => (
-            <article
-              key={stat.label}
-              className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-[0_10px_26px_rgba(15,23,42,0.04)]"
-            >
-              <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
-                {stat.label}
+        <section className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)]">
+          <article className="rounded-[28px] border border-neutral-200 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.26em] text-neutral-400">
+                  Projet
+                </p>
+                <h2 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-neutral-950">
+                  Vue des statuts projet
+                </h2>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+              {projectStats.map((stat) => (
+                <article
+                  key={stat.label}
+                  className="rounded-2xl border border-neutral-200 bg-[#faf8f5] px-4 py-3"
+                >
+                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+                    {stat.label}
+                  </p>
+                  <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-neutral-950">
+                    {stat.value}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </article>
+
+          <article className="rounded-[28px] border border-neutral-200 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+            <div className="mb-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-neutral-400">
+                Finance
               </p>
-              <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-neutral-950">
-                {stat.value}
-              </p>
-            </article>
-          ))}
+              <h2 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-neutral-950">
+                Vue des montants
+              </h2>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 pb-4 lg:hidden">
+              {[
+                "bg-orange-300",
+                "bg-sky-300",
+                "bg-emerald-300",
+                "bg-emerald-400",
+              ].map((dotColor, index) => (
+                <span
+                  key={dotColor}
+                  className={`rounded-full transition-all duration-300 ${
+                    activePaymentSlide === index
+                      ? `h-2.5 w-6 ${dotColor} shadow-[0_0_0_4px_rgba(255,255,255,0.7)]`
+                      : `h-2 w-2 ${dotColor} opacity-45`
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="overflow-hidden">
+              <section
+                ref={paymentCarouselRef}
+                className="grid auto-cols-[100%] grid-flow-col gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid-flow-row lg:grid-cols-2 lg:gap-4 lg:overflow-visible"
+              >
+                <article className="min-w-0 snap-center rounded-2xl border border-orange-200 bg-[linear-gradient(135deg,rgba(255,247,237,0.96),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)] lg:mr-0">
+                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+                    Finance
+                  </p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
+                    En attente
+                  </h2>
+                  <div className="mt-6">{renderCurrencySummary(totalPendingPayment)}</div>
+                </article>
+                <article className="min-w-0 snap-center rounded-2xl border border-sky-200 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+                    Finance
+                  </p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
+                    À facturer plus tard
+                  </h2>
+                  <div className="mt-6">{renderCurrencySummary(totalUpcoming)}</div>
+                </article>
+
+                <article className="min-w-0 snap-center rounded-2xl border border-emerald-200 bg-[linear-gradient(135deg,rgba(236,253,245,0.95),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+                    Finance
+                  </p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
+                    Payment reçu
+                  </h2>
+                  <div className="mt-6">{renderCurrencySummary(totalInvoiced)}</div>
+                </article>
+
+                <article className="min-w-0 snap-center rounded-2xl border-2 border-emerald-300 bg-[linear-gradient(135deg,rgba(220,252,231,0.96),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+                    Finance
+                  </p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
+                    Projection totale
+                  </h2>
+                  <div className="mt-6">{renderCurrencySummary(totalProjected)}</div>
+                </article>
+              </section>
+            </div>
+          </article>
         </section>
-
-        <div className="flex items-center justify-center gap-2 pb-4 lg:hidden">
-          {[
-            "bg-orange-300",
-            "bg-sky-300",
-            "bg-emerald-300",
-            "bg-emerald-400",
-          ].map((dotColor, index) => (
-            <span
-              key={dotColor}
-              className={`rounded-full transition-all duration-300 ${
-                activePaymentSlide === index
-                  ? `h-2.5 w-6 ${dotColor} shadow-[0_0_0_4px_rgba(255,255,255,0.7)]`
-                  : `h-2 w-2 ${dotColor} opacity-45`
-              }`}
-            />
-          ))}
-        </div>
-        <div className="overflow-hidden">
-          <section
-            ref={paymentCarouselRef}
-            className="grid auto-cols-[100%] grid-flow-col gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid-flow-row lg:grid-cols-4 lg:gap-4 lg:overflow-visible"
-          >
-          <article className="min-w-0 snap-center rounded-2xl border border-orange-200 bg-[linear-gradient(135deg,rgba(255,247,237,0.96),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)] lg:mr-0">
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
-              Payment
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
-              En attente
-            </h2>
-            <div className="mt-6">{renderCurrencySummary(totalPendingPayment)}</div>
-          </article>
-          <article className="min-w-0 snap-center rounded-2xl border border-sky-200 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
-              Payment
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
-              À facturer plus tard
-            </h2>
-            <div className="mt-6">{renderCurrencySummary(totalUpcoming)}</div>
-          </article>
-
-          <article className="min-w-0 snap-center rounded-2xl border border-emerald-200 bg-[linear-gradient(135deg,rgba(236,253,245,0.95),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
-              Payment
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
-              Payment reçu
-            </h2>
-            <div className="mt-6">{renderCurrencySummary(totalInvoiced)}</div>
-          </article>
-
-          <article className="min-w-0 snap-center rounded-2xl border-2 border-emerald-300 bg-[linear-gradient(135deg,rgba(220,252,231,0.96),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
-              Payment
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
-              Projection totale
-            </h2>
-            <div className="mt-6">{renderCurrencySummary(totalProjected)}</div>
-          </article>
-          </section>
-        </div>
 
         <section className="bg-transparent py-0 md:rounded-2xl md:border md:border-neutral-200 md:bg-white md:p-6 md:shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
           <div className="mb-5 flex flex-wrap items-start justify-between gap-4 md:items-start">
@@ -752,7 +1094,7 @@ export default function DashboardPage() {
               type="button"
               onClick={startAdd}
               disabled={isSaving}
-              className="mx-auto inline-flex h-11 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white transition hover:bg-neutral-800 md:mx-0"
+              className={`mx-auto inline-flex h-11 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white md:mx-0 ${dashboardPrimaryButtonClass}`}
             >
               Ajouter un projet
             </button>
@@ -784,227 +1126,9 @@ export default function DashboardPage() {
             </DashboardField>
           </div>
 
-          {draft && (isAdding || editingId !== null) ? (
+          {draft && isAdding ? (
             <div className="mb-4 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4">
-              {errorMessage ? (
-                <p className="mb-4 text-sm text-rose-700">{errorMessage}</p>
-              ) : null}
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <DashboardField
-                  label="Client"
-                  action={
-                    <button
-                      type="button"
-                      onClick={openClientPicker}
-                      disabled={teamClients.length === 0}
-                      className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-500 transition hover:bg-neutral-50"
-                      aria-label="Choisir un client existant"
-                      title={
-                        teamClients.length > 0
-                          ? "Choisir un client existant"
-                          : "Aucun client existant disponible"
-                      }
-                    >
-                      <Search size={12} />
-                    </button>
-                  }
-                >
-                  <div className="relative">
-                    <DashboardInput
-                      value={draft.clientName}
-                      onChange={(event) => {
-                        updateDraft("teamClientId", null);
-                        updateDraft("clientName", event.target.value);
-                      }}
-                      placeholder="Nom du client"
-                    />
-                    {showClientPicker && teamClients.length > 0 ? (
-                      <DashboardSelect
-                        ref={clientPickerRef}
-                        value={draft.teamClientId ?? ""}
-                        onChange={(event) => {
-                          if (!event.target.value) return;
-                          applyTeamClientToDraft(event.target.value);
-                        }}
-                        onBlur={() => setShowClientPicker(false)}
-                      >
-                        <option value="">{selectedClientLabel}</option>
-                        {teamClients.map((client) => (
-                          <option key={client.id} value={client.id}>
-                            {client.name || "Client sans nom"}
-                            {client.company ? ` - ${client.company}` : ""}
-                            {client.email ? ` - ${client.email}` : ""}
-                          </option>
-                        ))}
-                      </DashboardSelect>
-                    ) : null}
-                  </div>
-                </DashboardField>
-                <DashboardField label="Compagnie">
-                  <DashboardInput
-                    value={draft.clientCompany}
-                    onChange={(event) => {
-                      updateDraft("teamClientId", null);
-                      updateDraft("clientCompany", event.target.value);
-                    }}
-                    placeholder="Compagnie"
-                  />
-                </DashboardField>
-                <DashboardField label="Email">
-                  <DashboardInput
-                    value={draft.clientEmail}
-                    onChange={(event) => {
-                      updateDraft("teamClientId", null);
-                      updateDraft("clientEmail", event.target.value);
-                    }}
-                    type="email"
-                    placeholder="client@email.com"
-                  />
-                </DashboardField>
-                <DashboardField label="Téléphone">
-                  <DashboardInput
-                    value={draft.clientPhone}
-                    onChange={(event) => {
-                      updateDraft("teamClientId", null);
-                      updateDraft("clientPhone", event.target.value);
-                    }}
-                    placeholder="+41 ..."
-                  />
-                </DashboardField>
-                <DashboardField label="Projet">
-                  <DashboardInput
-                    value={draft.projectName}
-                    onChange={(event) => updateDraft("projectName", event.target.value)}
-                    placeholder="Nom du projet"
-                  />
-                </DashboardField>
-                <DashboardField label="Services effectués">
-                  <div className="relative md:col-span-2 xl:col-span-4">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowClientPicker(false);
-                        setShowServicesMenu((current) => !current);
-                      }}
-                      className="flex h-11 w-full items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 text-left text-sm text-neutral-950 outline-none transition hover:bg-neutral-50"
-                    >
-                      <span className="truncate">{selectedServicesLabel}</span>
-                      <span className="text-neutral-400">{showServicesMenu ? "▲" : "▼"}</span>
-                    </button>
-                    {showServicesMenu ? (
-                      <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 max-h-72 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-3 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                        <div className="grid gap-2">
-                          {DASHBOARD_SERVICE_OPTIONS.map((service) => (
-                            <label
-                              key={service}
-                              className="flex items-start gap-2 text-sm text-neutral-700"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={draft.serviceTypes.includes(service)}
-                                onChange={() => toggleDraftService(service)}
-                                className="mt-1 h-4 w-4 rounded border-neutral-300"
-                              />
-                              <span>{service}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                </DashboardField>
-                <DashboardField label="Statut">
-                  <DashboardSelect
-                    value={draft.status}
-                    onChange={(event) =>
-                      updateDraft("status", event.target.value as ProjectStatus)
-                    }
-                  >
-                    {statusOptions.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </DashboardSelect>
-                </DashboardField>
-                <DashboardField label="Payment reçu">
-                  <DashboardInput
-                    value={String(draft.invoicedAmount)}
-                    onChange={(event) =>
-                      updateDraft("invoicedAmount", Number(event.target.value) || 0)
-                    }
-                    type="number"
-                    min="0"
-                  />
-                </DashboardField>
-                <DashboardField label="À facturer">
-                  <DashboardInput
-                    value={String(draft.upcomingAmount)}
-                    onChange={(event) =>
-                      updateDraft("upcomingAmount", Number(event.target.value) || 0)
-                    }
-                    type="number"
-                    min="0"
-                  />
-                </DashboardField>
-                <DashboardField label="Date prévue">
-                  <DashboardInput
-                    value={draft.expectedDate}
-                    onChange={(event) => updateDraft("expectedDate", event.target.value)}
-                    type="date"
-                  />
-                </DashboardField>
-                <DashboardField label="Devise">
-                  <DashboardSelect
-                    value={draft.currency}
-                    onChange={(event) => updateDraftCurrency(event.target.value as Currency)}
-                  >
-                    {currencyOptions.map((currency) => (
-                      <option key={currency} value={currency}>
-                        {currency}
-                      </option>
-                    ))}
-                  </DashboardSelect>
-                </DashboardField>
-                {draft.currency === "CHF" ? (
-                  <DashboardField label="Taux CHF > CAD">
-                    <DashboardInput
-                      value={String(draft.exchangeRateToCad)}
-                      onChange={(event) =>
-                        updateDraft(
-                          "exchangeRateToCad",
-                          Number(event.target.value) > 0
-                            ? Number(event.target.value)
-                            : DEFAULT_CHF_TO_CAD,
-                        )
-                      }
-                      type="number"
-                      min="0.0001"
-                      step="0.0001"
-                      placeholder="1.6600"
-                    />
-                  </DashboardField>
-                ) : null}
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => void saveDraft()}
-                  disabled={isSaving}
-                  className="inline-flex h-10 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
-                >
-                  Enregistrer
-                </button>
-                <button
-                  type="button"
-                  onClick={cancelDraft}
-                  disabled={isSaving}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
-                >
-                  Annuler
-                </button>
-              </div>
+              {renderDraftEditor()}
             </div>
           ) : null}
 
@@ -1012,283 +1136,158 @@ export default function DashboardPage() {
             {isLoading ? (
               <p className="text-sm text-neutral-500">Chargement des projets...</p>
             ) : filteredProjects.length > 0 ? (
-              filteredProjects.map((project) => (
-                <article
-                  key={project.id}
-                  className="flex w-full flex-none snap-center justify-center px-3 p-0 sm:px-4 md:block md:h-full md:min-h-[20rem] md:w-full md:max-w-none md:border-b-2 md:border-black/15 md:px-0 md:py-6 md:last:border-b-0"
-                >
-                  <div className="w-full max-w-[40rem] rounded-[24px] border border-neutral-200 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)] md:hidden">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
-                          Client
-                        </p>
-                        <h3 className="mt-2 text-[1.36rem] font-semibold leading-[1.02] tracking-[-0.04em] text-neutral-950">
-                          {project.clientName || "Client sans nom"}
-                        </h3>
-                      </div>
-                      <span
-                        className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium ${statusStyles[project.status]}`}
-                      >
-                        {project.status}
-                      </span>
-                    </div>
+              filteredProjects.map((project) => {
+                const amountSummary = getAmountSummary(project);
+                const isEditingThisCard =
+                  editingId === project.id && draft !== null && !isAdding;
+                const displayAmount = formatCurrency(
+                  toDisplayCurrency(
+                    amountSummary.amount,
+                    project.currency,
+                    project.exchangeRateToCad,
+                  ),
+                  DISPLAY_CURRENCY,
+                );
 
-                    <details className="mt-5 rounded-[22px] bg-[#f8f5f0] p-4">
-                      <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
-                            Projet
-                          </p>
-                          <p className="mt-2 text-[1.18rem] font-semibold tracking-[-0.04em] text-neutral-950">
-                            {project.projectName || "Projet sans titre"}
-                          </p>
-                        </div>
-                        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-500">
-                          <Eye size={17} />
-                        </span>
-                      </summary>
-                      <div className="mt-4 border-t border-neutral-200/80 pt-4">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div className="min-w-0">
-                            <p className="text-[0.92rem] text-neutral-500">
-                              {formatDate(project.expectedDate)}
-                            </p>
-                            <p className="mt-3 text-[0.92rem] text-neutral-500">
-                              {project.clientCompany || "Aucune compagnie"}
-                            </p>
+                return (
+                  <article
+                    key={project.id}
+                    className="flex w-full flex-none snap-center justify-center px-3 p-0 sm:px-4 md:block md:w-full md:max-w-none md:border-b-2 md:border-black/15 md:px-0 md:py-4 md:last:border-b-0"
+                  >
+                    <details
+                      className="w-full rounded-[24px] border border-neutral-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)] group"
+                      open={isEditingThisCard ? true : undefined}
+                    >
+                      <summary className="flex cursor-pointer list-none items-center gap-3 p-4 sm:p-5 md:py-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="grid gap-3 md:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(0,1.05fr)_minmax(0,0.9fr)] md:items-center">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-500 group-open:bg-neutral-950 group-open:text-white ${dashboardDisclosureButtonClass}`}>
+                                <Eye size={15} />
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
+                                  Client
+                                </p>
+                                <p className="mt-1 truncate text-base font-semibold tracking-[-0.03em] text-neutral-950 sm:text-lg">
+                                  {project.clientName || "Client sans nom"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
+                                Entreprise
+                              </p>
+                              <p className="mt-1 truncate text-sm text-neutral-600 sm:text-base">
+                                {project.clientCompany || "Aucune entreprise"}
+                              </p>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
+                                Projet
+                              </p>
+                              <div className="mt-1 flex items-center gap-2 whitespace-nowrap">
+                                <p className="min-w-0 truncate text-sm text-neutral-600 sm:text-base">
+                                  {project.projectName || "Projet sans titre"}
+                                </p>
+                                <span className="inline-flex shrink-0 rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-neutral-600">
+                                  {project.status}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
+                                Finance
+                              </p>
+                              <div className="mt-1 flex items-center justify-start gap-2 whitespace-nowrap">
+                                <p className={`shrink-0 text-base font-semibold tracking-[-0.03em] sm:text-lg ${amountSummary.amountClass}`}>
+                                  {displayAmount}
+                                </p>
+                                <span
+                                  className={`inline-flex shrink-0 rounded-full px-3 py-1 text-[11px] font-medium ${amountSummary.badgeClass}`}
+                                >
+                                  {amountSummary.label}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <span className="inline-flex w-fit shrink-0 rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500">
-                            {project.currency}
-                            {project.currency === "CHF"
-                              ? ` ${project.exchangeRateToCad.toFixed(2)}`
-                              : null}
-                          </span>
                         </div>
-                        <p className="mt-4 text-[0.94rem] leading-6 text-neutral-600">
-                          {project.serviceTypes.length > 0
-                            ? project.serviceTypes.join(", ")
-                            : "Aucun service renseigné"}
-                        </p>
+                      </summary>
+
+                      <div className="border-t border-neutral-200/80 px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
+                        {isEditingThisCard ? (
+                          renderDraftEditor()
+                        ) : (
+                          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                            <div className="grid gap-3">
+                              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
+                                Projet
+                              </p>
+                              <div className="grid gap-2 text-sm text-neutral-600">
+                                <p>{project.projectName || "Projet sans titre"}</p>
+                                <p>{project.status}</p>
+                                <p>{formatDate(project.expectedDate)}</p>
+                                <p>{project.clientEmail || "Email non renseigné"}</p>
+                                <p>{project.clientPhone || "Téléphone non renseigné"}</p>
+                              </div>
+                            </div>
+
+                            <div className="grid gap-3">
+                              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
+                                Finance
+                              </p>
+                              <div className="flex flex-wrap items-start gap-2">
+                                <span className="inline-flex rounded-full border border-neutral-200 bg-white/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500">
+                                  {project.currency}
+                                  {project.currency === "CHF"
+                                    ? ` ${project.exchangeRateToCad.toFixed(2)}`
+                                    : null}
+                                </span>
+                                <span
+                                  className={`inline-flex rounded-full px-3 py-1 text-[11px] font-medium ${amountSummary.badgeClass}`}
+                                >
+                                  {amountSummary.label}
+                                </span>
+                              </div>
+                              <p className={`text-lg font-semibold tracking-[-0.03em] ${amountSummary.amountClass}`}>
+                                {displayAmount}
+                              </p>
+                              <p className="text-sm leading-6 text-neutral-600">
+                                {project.serviceTypes.length > 0
+                                  ? project.serviceTypes.join(", ")
+                                  : "Aucun service renseigné"}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-start gap-2 md:justify-end">
+                              <button
+                                type="button"
+                                onClick={() => startEdit(project)}
+                                disabled={isSaving}
+                                aria-label="Éditer le projet"
+                                title="Éditer"
+                                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 ${dashboardIconButtonClass}`}
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void deleteProject(project.id)}
+                                disabled={isSaving}
+                                aria-label="Supprimer le projet"
+                                title="Supprimer"
+                                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 ${dashboardDangerButtonClass}`}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </details>
-
-                    <div className="mt-5 grid gap-3">
-                      <div className="min-w-0 rounded-[18px] border border-emerald-200 bg-emerald-50/70 p-3">
-                        <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-neutral-400">
-                          Reçu
-                        </p>
-                        <p className="mt-2 text-[1.05rem] font-semibold leading-none tracking-[-0.03em] text-emerald-700">
-                          {formatCurrency(
-                            toDisplayCurrency(
-                              getReceivedAmount(project),
-                              project.currency,
-                              project.exchangeRateToCad,
-                            ),
-                            DISPLAY_CURRENCY,
-                          )}
-                        </p>
-                      </div>
-                      <div className="min-w-0 rounded-[18px] border border-orange-200 bg-orange-50/70 p-3">
-                        <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-neutral-400">
-                          Attente
-                        </p>
-                        <p className="mt-2 text-[1.05rem] font-semibold leading-none tracking-[-0.03em] text-orange-700">
-                          {formatCurrency(
-                            toDisplayCurrency(
-                              getPendingAmount(project),
-                              project.currency,
-                              project.exchangeRateToCad,
-                            ),
-                            DISPLAY_CURRENCY,
-                          )}
-                        </p>
-                      </div>
-                      <div className="min-w-0 rounded-[18px] border border-sky-200 bg-sky-50/70 p-3">
-                        <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-neutral-400">
-                          À facturer
-                        </p>
-                        <p className="mt-2 text-[1.05rem] font-semibold leading-none tracking-[-0.03em] text-sky-700">
-                          {formatCurrency(
-                            toDisplayCurrency(
-                              project.upcomingAmount,
-                              project.currency,
-                              project.exchangeRateToCad,
-                            ),
-                            DISPLAY_CURRENCY,
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 grid gap-2 text-[0.88rem] text-neutral-600">
-                      <div>{project.clientEmail || "Email non renseigné"}</div>
-                      <div>{project.clientPhone || "Téléphone non renseigné"}</div>
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => startEdit(project)}
-                        disabled={isSaving}
-                        aria-label="Éditer le projet"
-                        title="Éditer"
-                        className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[0.9rem] font-medium text-neutral-700 transition hover:bg-neutral-50"
-                      >
-                        Éditer
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void deleteProject(project.id)}
-                        disabled={isSaving}
-                        aria-label="Supprimer le projet"
-                        title="Supprimer"
-                        className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="hidden md:grid md:w-full md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(280px,0.9fr)] md:items-stretch md:gap-4">
-                    <section className="flex min-w-[18rem] flex-none snap-start flex-col rounded-2xl border border-neutral-200/80 bg-white/70 p-4 xl:min-w-0">
-                      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
-                        Information client
-                      </p>
-                      <div className="mt-4 flex flex-1 flex-col">
-                        <div className="min-h-[4.25rem]">
-                          <p className="text-lg font-semibold text-neutral-950">
-                            {project.clientName || "Client sans nom"}
-                          </p>
-                          <p className="mt-1 text-sm text-neutral-500 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
-                            {project.clientCompany || "Aucune compagnie"}
-                          </p>
-                        </div>
-                        <div className="mt-4 grid gap-2 text-sm text-neutral-600">
-                          <div className="truncate">{project.clientEmail || "Email non renseigné"}</div>
-                          <div className="truncate">{project.clientPhone || "Téléphone non renseigné"}</div>
-                        </div>
-                      </div>
-                    </section>
-
-                    <section className="flex min-w-[18rem] flex-none snap-start flex-col rounded-2xl border border-neutral-200/80 bg-white/70 p-4 xl:min-w-0">
-                      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
-                        Information projet
-                      </p>
-                      <div className="mt-4 flex flex-1 flex-col">
-                        <div className="min-h-[4.25rem]">
-                          <div className="flex flex-wrap items-center gap-3">
-                            <h3 className="text-lg font-semibold text-neutral-950">
-                              {project.projectName || "Projet sans titre"}
-                            </h3>
-                            <span
-                              className={`inline-flex rounded-full px-3 py-1 text-[11px] font-medium ${statusStyles[project.status]}`}
-                            >
-                              {project.status}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="min-h-[2.5rem] flex flex-wrap items-center gap-3 text-sm text-neutral-500">
-                          <span>{formatDate(project.expectedDate)}</span>
-                          <span className="inline-flex rounded-full border border-neutral-200 bg-white/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500">
-                            {project.currency}
-                            {project.currency === "CHF"
-                              ? ` ${project.exchangeRateToCad.toFixed(2)}`
-                              : null}
-                          </span>
-                        </div>
-                        <div className="mt-4 flex-1">
-                          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
-                            Services
-                          </p>
-                          <p className="mt-2 text-sm leading-6 text-neutral-600 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] overflow-hidden">
-                            {project.serviceTypes.length > 0
-                              ? project.serviceTypes.join(", ")
-                              : "Aucun service renseigné"}
-                          </p>
-                        </div>
-                      </div>
-                    </section>
-
-                    <section className="flex min-w-[18rem] flex-none snap-start flex-col rounded-2xl border border-neutral-200/80 bg-white/70 p-4 xl:min-w-0">
-                      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
-                        Finance
-                      </p>
-                      <div className="mt-4 flex flex-1 flex-col justify-between">
-                        <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-white/85 p-4">
-                          <div className="flex items-baseline justify-between gap-4">
-                            <span className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-                              Payment reçu
-                            </span>
-                            <strong className="text-[1.05rem] font-semibold text-emerald-700">
-                              {formatCurrency(
-                                toDisplayCurrency(
-                                  getReceivedAmount(project),
-                                  project.currency,
-                                  project.exchangeRateToCad,
-                                ),
-                                DISPLAY_CURRENCY,
-                              )}
-                            </strong>
-                          </div>
-                          <div className="flex items-baseline justify-between gap-4">
-                            <span className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-                              En attente
-                            </span>
-                            <strong className="text-[1.05rem] font-semibold text-orange-700">
-                              {formatCurrency(
-                                toDisplayCurrency(
-                                  getPendingAmount(project),
-                                  project.currency,
-                                  project.exchangeRateToCad,
-                                ),
-                                DISPLAY_CURRENCY,
-                              )}
-                            </strong>
-                          </div>
-                          <div className="flex items-baseline justify-between gap-4">
-                            <span className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-                              À facturer
-                            </span>
-                            <strong className="text-[1.05rem] font-semibold text-sky-700">
-                              {formatCurrency(
-                                toDisplayCurrency(
-                                  project.upcomingAmount,
-                                  project.currency,
-                                  project.exchangeRateToCad,
-                                ),
-                                DISPLAY_CURRENCY,
-                              )}
-                            </strong>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex flex-wrap items-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => startEdit(project)}
-                            disabled={isSaving}
-                            aria-label="Éditer le projet"
-                            title="Éditer"
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 transition hover:bg-neutral-50"
-                          >
-                            <Pencil size={16} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void deleteProject(project.id)}
-                            disabled={isSaving}
-                            aria-label="Supprimer le projet"
-                            title="Supprimer"
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </article>
-              ))
+                  </article>
+                );
+              })
             ) : (
               <p className="text-sm text-neutral-500">
                 {projects.length > 0
@@ -1316,7 +1315,7 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setShowNewClientForm((current) => !current)}
               disabled={isSaving}
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+              className={`inline-flex h-11 items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 ${dashboardSecondaryButtonClass}`}
             >
               {showNewClientForm ? "Fermer" : "Nouveau client"}
             </button>
@@ -1422,7 +1421,7 @@ export default function DashboardPage() {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="inline-flex h-10 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white transition hover:bg-neutral-800"
+                  className={`inline-flex h-10 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white ${dashboardPrimaryButtonClass}`}
                 >
                   Ajouter le client
                 </button>
@@ -1433,7 +1432,7 @@ export default function DashboardPage() {
                     setShowNewClientForm(false);
                     setNewClientDraft(emptyTeamClientDraft);
                   }}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+                  className={`inline-flex h-10 items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 ${dashboardSecondaryButtonClass}`}
                 >
                   Annuler
                 </button>

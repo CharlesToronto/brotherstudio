@@ -250,7 +250,7 @@ export default async function LocalizedPricePage({
             <ul className="servicesList" aria-label={messages.price.workflowTitle}>
               <li className="servicesItem">
                 {messages.price.workflowIncludesLabel}{" "}
-                <Link className="workflowLink" href="/mystudio">
+                <Link className="workflowLink" href="/myreview">
                   {messages.price.workflowLinkLabel}
                 </Link>
               </li>

@@ -249,7 +249,7 @@ function isMissingDrawingLayerTableError(error: unknown) {
 
 function buildDrawingLayerMigrationError() {
   return new Error(
-    "Run the latest myStudio drawing-layer SQL migration before saving drawings.",
+    "Run the latest MyReview drawing-layer SQL migration before saving drawings.",
   );
 }
 
@@ -302,7 +302,7 @@ function isMissingImageStatusColumnError(error: unknown) {
 
 function buildImageStatusMigrationError() {
   return new Error(
-    "Run the latest myStudio image-status SQL migration before approving images.",
+    "Run the latest MyReview image-status SQL migration before approving images.",
   );
 }
 

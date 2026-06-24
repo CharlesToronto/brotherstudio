@@ -16,13 +16,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
 
     entries.push({
-      url: toAbsoluteUrl(withLocalePath(locale, "/services")),
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    });
-
-    entries.push({
       url: toAbsoluteUrl(withLocalePath(locale, "/price")),
       lastModified: now,
       changeFrequency: "monthly",

@@ -27,7 +27,7 @@ function formatProjectDate(value: string) {
 }
 
 function getProjectUrl(projectId: string, origin?: string) {
-  const path = `/mystudio/${projectId}`;
+  const path = `/myreview/${projectId}`;
   return origin ? `${origin}${path}` : path;
 }
 
@@ -454,21 +454,21 @@ export function ClientProjectsAdmin({
         <div className="clientAdminSection">
           <div className="clientAdminHeader">
             <h1 id="clientAdminTitle" className="clientAdminTitle">
-              myStudio
+              MyReview
             </h1>
             <p className="clientAdminText">
               {!isConfigured
                 ? "Supabase is not configured in this environment."
                 : isLocalTlsIssue
                   ? "Local Node cannot verify the Supabase TLS certificate."
-                  : "The myStudio database setup is incomplete."}
+                  : "The MyReview database setup is incomplete."}
             </p>
             <p className="clientAdminText">
               {!isConfigured ? (
                 <>
-                  Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
-                  <code>SUPABASE_SERVICE_ROLE_KEY</code> before using the project
-                  review tool.
+            Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
+            <code>SUPABASE_SERVICE_ROLE_KEY</code> before using the project
+            review tool.
                 </>
               ) : isLocalTlsIssue ? (
                 <>
@@ -501,7 +501,7 @@ export function ClientProjectsAdmin({
       <div className="clientAdminSection">
         <div className="clientAdminHeader">
           <h1 id="clientAdminTitle" className="clientAdminTitle">
-            myStudio Admin
+            MyReview Admin
           </h1>
           <p className="clientAdminText">
             Create a project, copy the client link, then open the admin project page

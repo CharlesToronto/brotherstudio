@@ -64,9 +64,8 @@ export function PricePackagesSection({
 
       <ul className="servicesList" aria-label={title}>
         {visiblePackages.map((item) => (
-          <li key={item.name} className="servicesItem">
+          <li key={item.name} className="servicesItem packageListItem">
             <div className="servicesItemPriceRow packagePriceRow">
-              <span aria-hidden="true" />
               <span className="servicesItemPriceStack">
                 {item.comparePrice ? (
                   <span className="servicesItemComparePrice">({item.comparePrice}) </span>

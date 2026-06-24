@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import {
   createDashboardProject,
+  type DashboardPaymentStatus,
   listDashboardProjects,
   type DashboardProjectCurrency,
   type DashboardProjectStatus,
@@ -11,14 +12,21 @@ import { createTeamClient, type TeamClientRecord } from "@/lib/teamStore";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const noStoreHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  "Pragma": "no-cache",
+  "Expires": "0",
+  "Surrogate-Control": "no-store",
+};
+
 export async function GET() {
   try {
     const projects = await listDashboardProjects();
-    return NextResponse.json({ projects });
+    return NextResponse.json({ projects }, { headers: noStoreHeaders });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to load dashboard projects." },
-      { status: 400 },
+      { status: 400, headers: noStoreHeaders },
     );
   }
 }
@@ -30,10 +38,12 @@ export async function POST(request: Request) {
         clientCompany?: unknown;
         clientEmail?: unknown;
         clientPhone?: unknown;
+        clientWebsite?: unknown;
         projectName?: unknown;
         teamClientId?: unknown;
         serviceTypes?: unknown;
         status?: unknown;
+        paymentStatus?: unknown;
         invoicedAmount?: unknown;
         upcomingAmount?: unknown;
         expectedDate?: unknown;
@@ -75,12 +85,17 @@ export async function POST(request: Request) {
       clientCompany,
       clientEmail,
       clientPhone: typeof body?.clientPhone === "string" ? body.clientPhone : "",
+      clientWebsite: typeof body?.clientWebsite === "string" ? body.clientWebsite : "",
       projectName,
       teamClientId: teamClient?.id ?? teamClientId,
       serviceTypes: Array.isArray(body?.serviceTypes)
         ? body.serviceTypes.filter((value): value is string => typeof value === "string")
         : [],
       status: typeof body?.status === "string" ? (body.status as DashboardProjectStatus) : "À venir",
+      paymentStatus:
+        typeof body?.paymentStatus === "string"
+          ? (body.paymentStatus as DashboardPaymentStatus)
+          : "À facturer",
       invoicedAmount:
         typeof body?.invoicedAmount === "number"
           ? body.invoicedAmount
@@ -98,12 +113,12 @@ export async function POST(request: Request) {
           : Number(body?.exchangeRateToCad) || 1.66,
     });
 
-    return NextResponse.json({ project, teamClient }, { status: 201 });
+    return NextResponse.json({ project, teamClient }, { status: 201, headers: noStoreHeaders });
   } catch (error) {
     console.error("Failed to create dashboard project", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to create dashboard project." },
-      { status: 400 },
+      { status: 400, headers: noStoreHeaders },
     );
   }
 }

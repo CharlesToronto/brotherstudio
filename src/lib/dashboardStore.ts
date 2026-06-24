@@ -1,12 +1,14 @@
 import { getSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const DASHBOARD_PROJECT_STATUSES = [
-  "Réalisé",
   "En cours",
   "À venir",
-  "En attente",
-  "En attente de payment",
   "Terminé",
+] as const;
+export const DASHBOARD_PAYMENT_STATUSES = [
+  "Reçu",
+  "À facturer",
+  "En attente de payment",
 ] as const;
 
 export const DASHBOARD_PROJECT_CURRENCIES = ["CAD", "CHF"] as const;
@@ -26,6 +28,7 @@ export const DASHBOARD_SERVICE_OPTIONS = [
 
 export type DashboardProjectStatus = (typeof DASHBOARD_PROJECT_STATUSES)[number];
 export type DashboardProjectCurrency = (typeof DASHBOARD_PROJECT_CURRENCIES)[number];
+export type DashboardPaymentStatus = (typeof DASHBOARD_PAYMENT_STATUSES)[number];
 
 export type DashboardProjectRecord = {
   id: string;
@@ -34,9 +37,11 @@ export type DashboardProjectRecord = {
   clientCompany: string;
   clientEmail: string;
   clientPhone: string;
+  clientWebsite: string;
   projectName: string;
   serviceTypes: string[];
   status: DashboardProjectStatus;
+  paymentStatus: DashboardPaymentStatus;
   invoicedAmount: number;
   upcomingAmount: number;
   expectedDate: string;
@@ -53,9 +58,11 @@ type DashboardProjectRow = {
   client_company: string | null;
   client_email: string | null;
   client_phone: string | null;
+  client_website: string | null;
   project_name: string | null;
   service_types: string[] | null;
   status: string | null;
+  payment_status: string | null;
   invoiced_amount: number | string | null;
   upcoming_amount: number | string | null;
   expected_date: string | null;
@@ -89,9 +96,23 @@ function isMissingTableError(error: unknown, tableName: string) {
 }
 
 function normalizeStatus(value: string | null | undefined): DashboardProjectStatus {
+  if (value === "Réalisé") {
+    return "Terminé";
+  }
+
   return DASHBOARD_PROJECT_STATUSES.includes(value as DashboardProjectStatus)
     ? (value as DashboardProjectStatus)
     : "À venir";
+}
+
+function normalizePaymentStatus(value: string | null | undefined): DashboardPaymentStatus {
+  if (value === "En attente") {
+    return "À facturer";
+  }
+
+  return DASHBOARD_PAYMENT_STATUSES.includes(value as DashboardPaymentStatus)
+    ? (value as DashboardPaymentStatus)
+    : "À facturer";
 }
 
 function normalizeCurrency(value: string | null | undefined): DashboardProjectCurrency {
@@ -117,11 +138,13 @@ function normalizeProjectRow(row: DashboardProjectRow): DashboardProjectRecord {
     clientCompany: row.client_company?.trim() ?? "",
     clientEmail: row.client_email?.trim() ?? "",
     clientPhone: row.client_phone?.trim() ?? "",
+    clientWebsite: row.client_website?.trim() ?? "",
     projectName: row.project_name?.trim() ?? "",
     serviceTypes: Array.isArray(row.service_types)
       ? row.service_types.filter((value): value is string => typeof value === "string")
       : [],
     status: normalizeStatus(row.status),
+    paymentStatus: normalizePaymentStatus(row.payment_status),
     invoicedAmount: normalizeAmount(row.invoiced_amount),
     upcomingAmount: normalizeAmount(row.upcoming_amount),
     expectedDate: row.expected_date?.trim() ?? "",
@@ -146,9 +169,11 @@ function toProjectPayload(
     client_company: input.clientCompany.trim(),
     client_email: input.clientEmail.trim(),
     client_phone: input.clientPhone.trim(),
+    client_website: input.clientWebsite.trim(),
     project_name: input.projectName.trim(),
     service_types: input.serviceTypes,
     status: normalizeStatus(input.status),
+    payment_status: normalizePaymentStatus(input.paymentStatus),
     invoiced_amount: Number.isFinite(input.invoicedAmount) ? input.invoicedAmount : 0,
     upcoming_amount: Number.isFinite(input.upcomingAmount) ? input.upcomingAmount : 0,
     expected_date: input.expectedDate.trim() || null,
@@ -168,7 +193,7 @@ export async function listDashboardProjects(): Promise<DashboardProjectRecord[]>
   const { data, error } = await supabase
     .from("dashboard_projects")
     .select(
-      "id, team_client_id, client_name, client_company, client_email, client_phone, project_name, service_types, status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at",
+      "id, team_client_id, client_name, client_company, client_email, client_phone, client_website, project_name, service_types, status, payment_status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at",
     )
     .order("expected_date", { ascending: true })
     .order("created_at", { ascending: false });
@@ -192,7 +217,7 @@ export async function createDashboardProject(
     .from("dashboard_projects")
     .insert(toProjectPayload(input))
     .select(
-      "id, team_client_id, client_name, client_company, client_email, client_phone, project_name, service_types, status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at",
+      "id, team_client_id, client_name, client_company, client_email, client_phone, client_website, project_name, service_types, status, payment_status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at",
     )
     .single();
 
@@ -223,9 +248,15 @@ export async function updateDashboardProject(
   }
   if (typeof patch.clientEmail === "string") payload.client_email = patch.clientEmail.trim();
   if (typeof patch.clientPhone === "string") payload.client_phone = patch.clientPhone.trim();
+  if (typeof patch.clientWebsite === "string") {
+    payload.client_website = patch.clientWebsite.trim();
+  }
   if (typeof patch.projectName === "string") payload.project_name = patch.projectName.trim();
   if (Array.isArray(patch.serviceTypes)) payload.service_types = patch.serviceTypes;
   if (typeof patch.status === "string") payload.status = normalizeStatus(patch.status);
+  if (typeof patch.paymentStatus === "string") {
+    payload.payment_status = normalizePaymentStatus(patch.paymentStatus);
+  }
   if (typeof patch.invoicedAmount === "number" && Number.isFinite(patch.invoicedAmount)) {
     payload.invoiced_amount = patch.invoicedAmount;
   }
@@ -245,7 +276,7 @@ export async function updateDashboardProject(
     .update(payload)
     .eq("id", id)
     .select(
-      "id, team_client_id, client_name, client_company, client_email, client_phone, project_name, service_types, status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at",
+      "id, team_client_id, client_name, client_company, client_email, client_phone, client_website, project_name, service_types, status, payment_status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at",
     )
     .single();
 

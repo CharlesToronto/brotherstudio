@@ -26,7 +26,9 @@ type SiteHeaderProps = {
 export function SiteHeader({ initialTheme }: SiteHeaderProps) {
   const pathname = usePathname();
   const mobileNavRef = useRef<HTMLElement | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
   const [theme, setTheme] = useState<Theme>(initialTheme);
+  const [openSubmenuKey, setOpenSubmenuKey] = useState<string | null>(null);
   const localeFromPath = getLocaleFromPathname(pathname);
   const locale = localeFromPath ?? DEFAULT_LOCALE;
   const subpath = stripLocaleFromPathname(pathname);
@@ -38,13 +40,14 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
   const isGalleryPage = subpath === "/";
   const activeNavKey = isGalleryPage
     ? "gallery"
-    : subpath === "/services"
-      ? "services"
-      : subpath === "/price"
+    : subpath === "/services" || subpath === "/price"
         ? "price"
-      : subpath === "/mystudio" || subpath === "/myproject"
+      : subpath === "/myreview" ||
+          subpath === "/mystudio" ||
+          subpath === "/myproject" ||
+          subpath === "/mywebsite"
         ? "mystudio"
-      : subpath === "/about"
+        : subpath === "/about"
         ? "about"
         : subpath === "/contact"
           ? "contact"
@@ -95,6 +98,30 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     };
   }, [activeNavKey, pathname, theme]);
 
+  useEffect(() => {
+    if (!openSubmenuKey) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!(event.target instanceof Node)) return;
+      if (headerRef.current?.contains(event.target)) return;
+      setOpenSubmenuKey(null);
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpenSubmenuKey(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [openSubmenuKey]);
+
   const localizedHref = (target: string) => withLocalePath(locale, target);
 
   const toggleTheme = () => {
@@ -116,23 +143,32 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     },
     {
       key: "mystudio",
-      label: "myStudio",
-      href: "/mystudio",
-      isCurrent: subpath === "/mystudio" || subpath === "/myproject",
-      kind: "link" as const,
-    },
-    {
-      key: "services",
-      label: messages.nav.services,
-      href: localizedHref("/services"),
-      isCurrent: subpath === "/services",
-      kind: "link" as const,
+      label: "MYSTUDIO",
+      isCurrent:
+        subpath === "/myreview" ||
+        subpath === "/mystudio" ||
+        subpath === "/myproject" ||
+        subpath === "/mywebsite",
+      kind: "submenu" as const,
+      children: [
+        {
+          label: "MyReview",
+          href: "/myreview",
+          isCurrent:
+            subpath === "/myreview" || subpath === "/mystudio" || subpath === "/myproject",
+        },
+        {
+          label: "MyWebsite",
+          href: localizedHref("/mywebsite"),
+          isCurrent: subpath === "/mywebsite",
+        },
+      ],
     },
     {
       key: "price",
       label: messages.nav.price,
       href: localizedHref("/price"),
-      isCurrent: subpath === "/price",
+      isCurrent: subpath === "/price" || subpath === "/services",
       kind: "link" as const,
     },
     {
@@ -167,7 +203,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     ...navItems.filter((item) => item.key !== "theme"),
   ].filter((item) => item !== undefined);
 
-  const renderNavItems = (items: typeof navItems) =>
+  const renderNavItems = (items: typeof navItems, isMobile = false) =>
     items.map((item) => {
       const commonProps = {
         className: `siteNavLink${item.kind === "button" ? " themeToggle" : ""}`,
@@ -181,6 +217,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
             {...commonProps}
             href={item.href}
             aria-current={item.isCurrent ? "page" : undefined}
+            onClick={() => setOpenSubmenuKey(null)}
           >
             {item.label}
           </Link>
@@ -189,9 +226,51 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
 
       if (item.kind === "anchor") {
         return (
-          <a key={item.key} {...commonProps} href={item.href}>
+          <a key={item.key} {...commonProps} href={item.href} onClick={() => setOpenSubmenuKey(null)}>
             {item.label}
           </a>
+        );
+      }
+
+      if (item.kind === "submenu") {
+        const isOpen = openSubmenuKey === item.key;
+
+        return (
+          <div
+            key={item.key}
+            className="siteNavSubmenu"
+            data-nav-key={item.key}
+            data-open={isOpen ? "true" : "false"}
+            data-mobile={isMobile ? "true" : "false"}
+          >
+            <button
+              type="button"
+              className="siteNavLink siteNavSubmenuTrigger"
+              aria-expanded={isOpen}
+              aria-haspopup="menu"
+              data-current={item.isCurrent ? "true" : "false"}
+              onClick={() =>
+                setOpenSubmenuKey((current) => (current === item.key ? null : item.key))
+              }
+            >
+              <span>{item.label}</span>
+            </button>
+
+            <div className="siteNavSubmenuPanel" role="menu" aria-label={item.label}>
+              {item.children.map((child) => (
+                <Link
+                  key={child.href}
+                  className="siteNavSublink"
+                  href={child.href}
+                  role="menuitem"
+                  aria-current={child.isCurrent ? "page" : undefined}
+                  onClick={() => setOpenSubmenuKey(null)}
+                >
+                  {child.label}
+                </Link>
+              ))}
+            </div>
+          </div>
         );
       }
 
@@ -210,7 +289,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     });
 
   return (
-    <header className="siteHeader">
+    <header ref={headerRef} className="siteHeader">
       <div className="siteHeaderNotice">
         <span className="siteHeaderNoticeText">{headerNotice}</span>
       </div>
@@ -227,10 +306,10 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
           />
           <Image
             className="siteLogoImage siteLogoImageWhite"
-            src="/bs-logo-menu-cropped.png"
+            src="/bs-logo-menu-white.png"
             alt=""
-            width={2565}
-            height={570}
+            width={2511}
+            height={585}
             priority
             aria-hidden="true"
           />
@@ -242,7 +321,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
       </div>
 
       <nav ref={mobileNavRef} className="siteNavMobile" aria-label="Primary">
-        {renderNavItems(mobileNavItems)}
+        {renderNavItems(mobileNavItems, true)}
       </nav>
     </header>
   );

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  type DashboardPaymentStatus,
   deleteDashboardProject,
   updateDashboardProject,
   type DashboardProjectCurrency,
@@ -10,6 +11,13 @@ import { createTeamClient, type TeamClientRecord } from "@/lib/teamStore";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const noStoreHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  "Pragma": "no-cache",
+  "Expires": "0",
+  "Surrogate-Control": "no-store",
+};
 
 export async function PATCH(
   request: Request,
@@ -22,10 +30,12 @@ export async function PATCH(
         clientCompany?: unknown;
         clientEmail?: unknown;
         clientPhone?: unknown;
+        clientWebsite?: unknown;
         projectName?: unknown;
         teamClientId?: unknown;
         serviceTypes?: unknown;
         status?: unknown;
+        paymentStatus?: unknown;
         invoicedAmount?: unknown;
         upcomingAmount?: unknown;
         expectedDate?: unknown;
@@ -64,6 +74,9 @@ export async function PATCH(
         : null),
       ...(typeof body?.clientEmail === "string" ? { clientEmail: body.clientEmail } : null),
       ...(typeof body?.clientPhone === "string" ? { clientPhone: body.clientPhone } : null),
+      ...(typeof body?.clientWebsite === "string"
+        ? { clientWebsite: body.clientWebsite }
+        : null),
       ...(typeof body?.projectName === "string" ? { projectName: body.projectName } : null),
       ...(teamClient?.id
         ? { teamClientId: teamClient.id }
@@ -82,6 +95,9 @@ export async function PATCH(
       ...(typeof body?.status === "string"
         ? { status: body.status as DashboardProjectStatus }
         : null),
+      ...(typeof body?.paymentStatus === "string"
+        ? { paymentStatus: body.paymentStatus as DashboardPaymentStatus }
+        : null),
       ...(body?.invoicedAmount !== undefined
         ? { invoicedAmount: Number(body.invoicedAmount) || 0 }
         : null),
@@ -97,12 +113,12 @@ export async function PATCH(
         : null),
     });
 
-    return NextResponse.json({ project, teamClient });
+    return NextResponse.json({ project, teamClient }, { headers: noStoreHeaders });
   } catch (error) {
     console.error("Failed to update dashboard project", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to update dashboard project." },
-      { status: 400 },
+      { status: 400, headers: noStoreHeaders },
     );
   }
 }
@@ -114,12 +130,12 @@ export async function DELETE(
   try {
     const { projectId } = await params;
     await deleteDashboardProject(projectId);
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { headers: noStoreHeaders });
   } catch (error) {
     console.error("Failed to delete dashboard project", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to delete dashboard project." },
-      { status: 400 },
+      { status: 400, headers: noStoreHeaders },
     );
   }
 }

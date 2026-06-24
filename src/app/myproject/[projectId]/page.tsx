@@ -18,5 +18,5 @@ export default async function LegacyMyProjectFeedbackPage({
     ? resolvedSearchParams.viewer[0]
     : resolvedSearchParams.viewer;
   const query = viewerParam ? `?viewer=${encodeURIComponent(viewerParam)}` : "";
-  redirect(`/mystudio/${projectId}${query}`);
+  redirect(`/myreview/${projectId}${query}`);
 }

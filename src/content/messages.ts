@@ -283,7 +283,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         gallery: "Gallery",
         instagram: "Instagram",
         services: "Services",
-        price: "Price",
+        price: "Service & Price",
         about: "About",
         contact: "Contact",
       },
@@ -403,7 +403,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       ],
       videos: [
         {
-          name: "Video Walkthrough Marketing (50% reduction if images ordered)",
+          name: "Video Walkthrough Marketing (65% reduction if images ordered)",
           options: [
             { name: "1-4 rooms", price: "CHF 3500" },
             { name: "5-9 rooms", price: "CHF 4700" },
@@ -424,18 +424,18 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       ],
       websites: [
         {
-          name: "BS template for sale",
-          price: "CHF 2700",
+          name: "BS template sales website",
+          price: "CHF 1700",
         },
         {
           name: "Custom website",
-          price: "From CHF 4700",
+          price: "From CHF 3400",
         },
       ],
       packages: [
         {
           name: "Villa package",
-          price: "Sale price: 5400",
+          price: "CHF 5400",
           comparePrice: "7670 CHF",
           tier: "classic",
           details: [
@@ -443,19 +443,22 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
             "1-2 style focus images",
             "1x sales video (1080p)",
             "1-3 sales plans",
-            "myStudio review tool",
+            "BS template sales website",
+            "MyReview tool",
           ],
         },
         {
           name: "Website package",
-          price: "7700 CHF",
+          price: "CHF 7700",
           comparePrice: "17800 CHF",
           tier: "premium",
           details: [
             "8-12 images 4K",
             "3-4 focus / ambiance night variants 4K",
             "1 video (1080p)",
-            "site custom",
+            "1-5 sales plans",
+            "Custom sales website",
+            "MyReview tool",
           ],
         },
         {
@@ -474,7 +477,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Agreement based on mutual understanding (no formal contract).\nDiscounts are applied based on the total number of projects completed over the year.\nIf the agreed volume is not reached, a price adjustment may be applied to reflect the actual tier.",
       workflowIncludesLabel:
         "Includes: interactive review platform to validate and comment on visuals in real time >",
-      workflowLinkLabel: "myStudio",
+      workflowLinkLabel: "MyReview",
       workflowComingSoon:
         "Coming soon: immersive and cinematic digital experience to present and promote the project online.",
       ctaText: "For a custom quote, contact BrotherStudio.",
@@ -552,7 +555,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         gallery: "Galerie",
         instagram: "Instagram",
         services: "Services",
-        price: "Price",
+        price: "Service & Price",
         about: "A propos",
         contact: "Contact",
       },
@@ -672,7 +675,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       ],
       videos: [
         {
-          name: "Video Walkthrough Marketing (50% reduction si images commandees)",
+          name: "Video Walkthrough Marketing (65% reduction si images commandees)",
           options: [
             { name: "1-4 pieces", price: "CHF 3500" },
             { name: "5-9 pieces", price: "CHF 4700" },
@@ -693,18 +696,18 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       ],
       websites: [
         {
-          name: "BS template for sale",
-          price: "CHF 2700",
+          name: "BS template sales website",
+          price: "CHF 1700",
         },
         {
           name: "Custom website",
-          price: "From CHF 4700",
+          price: "From CHF 3400",
         },
       ],
       packages: [
         {
           name: "Villa forfait",
-          price: "Prix de vente : 5400",
+          price: "CHF 5400",
           comparePrice: "7670 CHF",
           tier: "classic",
           details: [
@@ -712,19 +715,22 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
             "1-2 images style focus",
             "1x video de vente (1080p)",
             "1-3 plan de vente",
-            "myStudio review tool",
+            "BS template sales website",
+            "MyReview tool",
           ],
         },
         {
           name: "Website forfait",
-          price: "7700 CHF",
+          price: "CHF 7700",
           comparePrice: "17800 CHF",
           tier: "premium",
           details: [
             "8-12 images 4K",
             "3-4 focus / ambiance night variantes 4K",
             "1 video (1080p)",
-            "site custom",
+            "1-5 sales plans",
+            "Site de vente custom",
+            "MyReview tool",
           ],
         },
         {
@@ -743,7 +749,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Agreement based on mutual understanding (no formal contract).\nDiscounts are applied based on the total number of projects completed over the year.\nIf the agreed volume is not reached, a price adjustment may be applied to reflect the actual tier.",
       workflowIncludesLabel:
         "Inclut : plateforme de review interactive pour valider et commenter les visuels en temps reel >",
-      workflowLinkLabel: "myStudio",
+      workflowLinkLabel: "MyReview",
       workflowComingSoon:
         "Coming soon : experience digitale immersive et cinematique pour presenter et promouvoir le projet en ligne",
       ctaText: "Pour un devis sur mesure, contactez BrotherStudio.",

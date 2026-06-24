@@ -15,32 +15,31 @@ export function SiteFooter({ locale }: { locale: Locale }) {
       ? {
           studio: "High-End Visualizations",
           navigation: "Navigation",
-          access: "Acces",
+          access: "Mystudio",
           admin: "Admin",
           contact: "Contact",
         }
       : {
           studio: "High-End Visualizations",
           navigation: "Navigation",
-          access: "Access",
+          access: "Mystudio",
           admin: "Admin",
           contact: "Contact",
         };
   const navigationLinks = [
     { label: messages.nav.gallery, href: withLocalePath(locale, "/") },
-    { label: messages.nav.services, href: withLocalePath(locale, "/services") },
     { label: messages.nav.price, href: withLocalePath(locale, "/price") },
     { label: messages.nav.about, href: withLocalePath(locale, "/about") },
     { label: messages.nav.contact, href: withLocalePath(locale, "/contact") },
   ];
   const accessLinks = [
-    { label: "myStudio", href: "/mystudio" },
+    { label: "MyReview", href: "/myreview" },
     { label: "myWebsite", href: withLocalePath(locale, "/mywebsite") },
   ];
   const adminLinks = [
     { label: "Team", href: withLocalePath(locale, "/team/call") },
     { label: "Dashboard", href: "/dashboard" },
-    { label: "myStudio Admin", href: "/admin/client-projects" },
+    { label: "MyReview Admin", href: "/admin/client-projects" },
   ];
   const contactLinks = [
     { label: site.contact.phone, href: `tel:${site.contact.phone}` },

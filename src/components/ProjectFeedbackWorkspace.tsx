@@ -415,7 +415,7 @@ export function ProjectFeedbackWorkspace({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [savedCommentColor, setSavedCommentColor] = useState(defaultCommentColor);
   const [viewerEmail, setViewerEmail] = useState("");
-  const resolvedSharePath = `/mystudio/${initialProject.id}`;
+  const resolvedSharePath = `/myreview/${initialProject.id}`;
   const [shareProjectUrl, setShareProjectUrl] = useState(resolvedSharePath);
   const [isCopyLinkCopied, setIsCopyLinkCopied] = useState(false);
   const [busyImageId, setBusyImageId] = useState<string | null>(null);

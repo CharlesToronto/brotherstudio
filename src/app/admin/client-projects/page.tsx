@@ -48,7 +48,7 @@ function formatSetupError(error: unknown) {
     if (message) return message;
   }
 
-  return "myStudio setup is incomplete.";
+  return "MyReview setup is incomplete.";
 }
 
 export default async function AdminClientProjectsPage() {

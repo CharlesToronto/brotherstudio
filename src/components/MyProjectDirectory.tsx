@@ -92,7 +92,7 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
         );
       }
 
-      router.push(`/mystudio/${projectId}`);
+      router.push(`/myreview/${projectId}`);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to open project.",

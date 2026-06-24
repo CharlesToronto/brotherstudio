@@ -154,7 +154,7 @@ export function ProjectFeedbackAccess({
         <div className="projectFeedbackHeader projectFeedbackLoadingState">
           <span className="projectFeedbackSpinner" aria-hidden="true" />
           <div className="projectFeedbackIntro">
-            <p className="projectFeedbackEyebrow">myStudio Review</p>
+            <p className="projectFeedbackEyebrow">MyReview</p>
             <h1 className="projectFeedbackTitle">
               {isSubmitting ? "Opening Review" : "Loading Review"}
             </h1>
@@ -172,7 +172,7 @@ export function ProjectFeedbackAccess({
       <section className="projectFeedbackShell">
         <div className="projectFeedbackHeader">
           <div className="projectFeedbackIntro">
-            <p className="projectFeedbackEyebrow">myStudio Review</p>
+            <p className="projectFeedbackEyebrow">MyReview</p>
             <h1 className="projectFeedbackTitle">Enter Your Email To Continue</h1>
             <p className="projectFeedbackVersionMeta">
               This shared review link opens in visitor mode.
@@ -222,7 +222,7 @@ export function ProjectFeedbackAccess({
     <section className="projectFeedbackShell">
       <div className="projectFeedbackHeader">
         <div className="projectFeedbackIntro">
-          <p className="projectFeedbackEyebrow">myStudio Review</p>
+          <p className="projectFeedbackEyebrow">MyReview</p>
           <h1 className="projectFeedbackTitle">Choose Access Type</h1>
           <p className="projectFeedbackVersionMeta">
             Team members can post edit requests and chat. Visitors can only view
