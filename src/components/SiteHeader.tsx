@@ -133,6 +133,11 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     } catch {}
   };
 
+  const openAssistant = () => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new Event("site-assistant:open"));
+  };
+
   const navItems = [
     {
       key: "gallery",
@@ -202,6 +207,8 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     navItems.find((item) => item.key === "theme"),
     ...navItems.filter((item) => item.key !== "theme"),
   ].filter((item) => item !== undefined);
+  const mobileThemeItem = mobileNavItems.find((item) => item.key === "theme");
+  const mobilePrimaryItems = mobileNavItems.filter((item) => item.key !== "theme");
 
   const renderNavItems = (items: typeof navItems, isMobile = false) =>
     items.map((item) => {
@@ -321,7 +328,17 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
       </div>
 
       <nav ref={mobileNavRef} className="siteNavMobile" aria-label="Primary">
-        {renderNavItems(mobileNavItems, true)}
+        {mobileThemeItem ? renderNavItems([mobileThemeItem], true) : null}
+        <button
+          type="button"
+          className="siteNavLink siteNavAssistantTrigger"
+          onClick={openAssistant}
+          aria-label="Open Q&A"
+        >
+          <span className="siteNavAssistantTriggerMark">?</span>
+          <span>Q&amp;A</span>
+        </button>
+        {renderNavItems(mobilePrimaryItems, true)}
       </nav>
     </header>
   );

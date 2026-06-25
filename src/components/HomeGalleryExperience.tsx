@@ -5,6 +5,10 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 
 import { Gallery } from "@/components/Gallery";
 import {
+  HomeMobileDisplayFilters,
+  HomeSceneFilters,
+} from "@/components/HomeGalleryControls";
+import {
   PROJECT_OPTIONS,
   type GalleryProjectKey,
 } from "@/lib/galleryProjects";
@@ -442,57 +446,29 @@ export function HomeGalleryExperience({
       ) : null}
 
       {!isMobileLayout && availableSceneFilters.length > 1 ? (
-        <section className="homeSceneFilters" aria-label={sceneFilterLabels.ariaLabel}>
-          {availableSceneFilters.map((filter) => (
-            <button
-              key={filter.key}
-              type="button"
-              className="homeSceneFilterButton"
-              data-active={effectiveSceneFilter === filter.key}
-              onClick={() => setActiveSceneFilter(filter.key)}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </section>
+        <HomeSceneFilters
+          activeFilter={effectiveSceneFilter}
+          ariaLabel={sceneFilterLabels.ariaLabel}
+          filters={availableSceneFilters}
+          onFilterChange={setActiveSceneFilter}
+        />
       ) : null}
 
       <div id="home-gallery-grid">
         {isMobileLayout ? (
           <>
-            <div className="homeMobileDisplayFilters" role="toolbar" aria-label="Mobile gallery display">
-              <button
-                type="button"
-                className="homeMobileDisplayButton"
-                data-active={mobileDisplayMode === "grid"}
-                onClick={() => setMobileDisplayMode("grid")}
-              >
-                Grille
-              </button>
-              <button
-                type="button"
-                className="homeMobileDisplayButton"
-                data-active={mobileDisplayMode === "projects"}
-                onClick={() => setMobileDisplayMode("projects")}
-              >
-                Projets
-              </button>
-            </div>
+            <HomeMobileDisplayFilters
+              activeMode={mobileDisplayMode}
+              onModeChange={setMobileDisplayMode}
+            />
 
             {availableSceneFilters.length > 1 && mobileDisplayMode === "grid" ? (
-              <section className="homeSceneFilters" aria-label={sceneFilterLabels.ariaLabel}>
-                {availableSceneFilters.map((filter) => (
-                  <button
-                    key={filter.key}
-                    type="button"
-                    className="homeSceneFilterButton"
-                    data-active={effectiveSceneFilter === filter.key}
-                    onClick={() => setActiveSceneFilter(filter.key)}
-                  >
-                    {filter.label}
-                  </button>
-                ))}
-              </section>
+              <HomeSceneFilters
+                activeFilter={effectiveSceneFilter}
+                ariaLabel={sceneFilterLabels.ariaLabel}
+                filters={availableSceneFilters}
+                onFilterChange={setActiveSceneFilter}
+              />
             ) : null}
 
             {mobileDisplayMode === "projects" ? (

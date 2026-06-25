@@ -412,6 +412,7 @@ export function ProjectFeedbackWorkspace({
   const [errorMessage, setErrorMessage] = useState("");
   const [isSavingComment, setIsSavingComment] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadTargetVersion, setUploadTargetVersion] = useState<number | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [savedCommentColor, setSavedCommentColor] = useState(defaultCommentColor);
   const [viewerEmail, setViewerEmail] = useState("");
@@ -570,7 +571,9 @@ export function ProjectFeedbackWorkspace({
   const canManageApprovedImages = allowImageManagement || canInteract;
 
   const busyNoticeLabel = isUploading
-    ? "Adding variant..."
+    ? uploadTargetVersion === null
+      ? "Adding variant..."
+      : `Adding image to V${uploadTargetVersion}...`
     : busyImageAction === "replace"
       ? "Replacing image..."
       : busyImageAction === "delete"
@@ -668,10 +671,14 @@ export function ProjectFeedbackWorkspace({
     }
   };
 
-  const handleUploadVersion = async (files: FileList | null) => {
+  const handleUploadVersion = async (
+    files: FileList | null,
+    targetVersion: number | null = null,
+  ) => {
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
+    setUploadTargetVersion(targetVersion);
     setStatusMessage("");
     setErrorMessage("");
 
@@ -685,6 +692,7 @@ export function ProjectFeedbackWorkspace({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           action: "prepare-upload",
+          version: targetVersion,
           files: selectedFiles.map((file) => ({
             name: file.name,
             type: file.type,
@@ -749,13 +757,20 @@ export function ProjectFeedbackWorkspace({
       }
 
       resetFeedbackState(commitPayload.project);
-      setStatusMessage(`Variant V${commitPayload.project.latestVersion} added.`);
+      setSelectedVersion(preparePayload.version);
+      setActiveWorkspaceTab("review");
+      setStatusMessage(
+        targetVersion === null
+          ? `Variant V${preparePayload.version} added.`
+          : `Image added to variant V${preparePayload.version}.`,
+      );
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to upload images.",
       );
     } finally {
       setIsUploading(false);
+      setUploadTargetVersion(null);
     }
   };
 
@@ -1318,6 +1333,39 @@ export function ProjectFeedbackWorkspace({
           <div className="projectFeedbackVersions">
             {activeVersionGroup ? (
               <div className="projectFeedbackVersion">
+                {allowImageManagement ? (
+                  <div className="projectFeedbackVersionHeader">
+                    <div>
+                      <h2 className="projectFeedbackVersionTitle">
+                        {`Variant V${activeVersionGroup.version}`}
+                      </h2>
+                      <p className="projectFeedbackVersionMeta">
+                        {`${activeVersionGroup.images.length} image(s)`}
+                      </p>
+                    </div>
+                    <label className="projectFeedbackUpload">
+                      <span>
+                        {isUploading &&
+                        uploadTargetVersion === activeVersionGroup.version
+                          ? "Adding..."
+                          : `Add image to V${activeVersionGroup.version}`}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        disabled={isUploading}
+                        onChange={(event) => {
+                          void handleUploadVersion(
+                            event.target.files,
+                            activeVersionGroup.version,
+                          );
+                          event.currentTarget.value = "";
+                        }}
+                      />
+                    </label>
+                  </div>
+                ) : null}
                 <div className="projectFeedbackVersionImages">
                   {activeVersionGroup.images.map(({ image, imageLabel }) => (
                     <ProjectFeedbackImageCard

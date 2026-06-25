@@ -9,7 +9,7 @@ import { getGalleryItems } from "@/lib/galleryStore";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 type LocalePageProps = {
   params: Promise<{ locale: string }>;

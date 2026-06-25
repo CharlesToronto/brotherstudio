@@ -26,26 +26,26 @@ type MyExperiencePageProps = {
 
 const HERO_IMAGE = "/myexperience-hero-night.webp";
 const HOUSE_PLAN_SLIDES = [
-  "/myexperience-house-plan-02.png",
-  "/myexperience-house-plan-01.png",
-  "/myexperience-house-plan-03.png",
+  "/myexperience-house-plan-02.webp",
+  "/myexperience-house-plan-01.webp",
+  "/myexperience-house-plan-03.webp",
 ] as const;
-const FLOORPLAN_IMAGE = "/myexperience-house-plan-sales-05.png";
+const FLOORPLAN_IMAGE = "/myexperience-house-plan-sales-05.webp";
 const LIFESTYLE_ACCESS_SLIDES = [
   {
-    src: "/myexperience-lifestyle-forest-malagnou.png",
+    src: "/myexperience-lifestyle-forest-malagnou.webp",
     alt: "Cadre de vie et accessibilite, sentier forestier de Malagnou",
   },
   {
-    src: "/myexperience-lifestyle-lakeside-evening.png",
+    src: "/myexperience-lifestyle-lakeside-evening.webp",
     alt: "Cadre de vie et accessibilite, animation au bord du lac au coucher du soleil",
   },
   {
-    src: "/myexperience-lifestyle-golf-view.png",
+    src: "/myexperience-lifestyle-golf-view.webp",
     alt: "Cadre de vie et accessibilite, vue aerienne sur le golf et le lac",
   },
   {
-    src: "/myexperience-lifestyle-street-sunset.png",
+    src: "/myexperience-lifestyle-street-sunset.webp",
     alt: "Cadre de vie et accessibilite, rue residentielle au coucher du soleil",
   },
 ] as const;

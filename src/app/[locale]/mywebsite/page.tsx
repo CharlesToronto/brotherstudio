@@ -31,7 +31,7 @@ function getWebsitePreviews(locale: Locale): WebsitePreview[] {
     },
     {
       title: "Maretset (coming soon)",
-      image: "/mywebsite-maretset-cover.png",
+      image: "/mywebsite-maretset-cover.webp",
       alt:
         locale === "fr"
           ? "Apercu du site de vente Maretset"
@@ -39,7 +39,7 @@ function getWebsitePreviews(locale: Locale): WebsitePreview[] {
     },
     {
       title: "Coming soon",
-      image: "/mywebsite-coming-soon-cover.png",
+      image: "/mywebsite-coming-soon-cover.webp",
       alt:
         locale === "fr"
           ? "Apercu d un prochain site de vente"

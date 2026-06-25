@@ -1336,18 +1336,18 @@ export async function uploadProjectVersion(
   const project = projectData as { id: string; name: string } | null;
   if (!project) throw new Error("Project not found.");
 
-  const { data: latestImageData, error: latestImageError } = await supabase
+  const { data: versionData, error: versionError } = await supabase
     .from("images")
     .select("version")
     .eq("project_id", projectId)
-    .order("version", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("version", { ascending: false });
 
-  if (latestImageError) throw latestImageError;
-  const latestImage = latestImageData as { version: number } | null;
+  if (versionError) throw versionError;
+  const existingVersions = new Set(
+    ((versionData ?? []) as Array<{ version: number }>).map((image) => image.version),
+  );
 
-  const latestVersion = latestImage?.version ?? 0;
+  const latestVersion = Math.max(0, ...existingVersions);
   const requestedVersion =
     typeof options?.targetVersion === "number" &&
     Number.isInteger(options.targetVersion) &&
@@ -1357,7 +1357,7 @@ export async function uploadProjectVersion(
 
   if (
     requestedVersion !== null &&
-    requestedVersion !== latestVersion &&
+    !existingVersions.has(requestedVersion) &&
     requestedVersion !== latestVersion + 1
   ) {
     throw new Error("Invalid target variant.");
@@ -1444,17 +1444,17 @@ export async function prepareProjectVersionUpload(
   if (projectError) throw projectError;
   if (!projectData) throw new Error("Project not found.");
 
-  const { data: latestImageData, error: latestImageError } = await supabase
+  const { data: versionData, error: versionError } = await supabase
     .from("images")
     .select("version")
     .eq("project_id", projectId)
-    .order("version", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("version", { ascending: false });
 
-  if (latestImageError) throw latestImageError;
-  const latestImage = latestImageData as { version: number } | null;
-  const latestVersion = latestImage?.version ?? 0;
+  if (versionError) throw versionError;
+  const existingVersions = new Set(
+    ((versionData ?? []) as Array<{ version: number }>).map((image) => image.version),
+  );
+  const latestVersion = Math.max(0, ...existingVersions);
   const requestedVersion =
     typeof options?.targetVersion === "number" &&
     Number.isInteger(options.targetVersion) &&
@@ -1464,7 +1464,7 @@ export async function prepareProjectVersionUpload(
 
   if (
     requestedVersion !== null &&
-    requestedVersion !== latestVersion &&
+    !existingVersions.has(requestedVersion) &&
     requestedVersion !== latestVersion + 1
   ) {
     throw new Error("Invalid target variant.");
@@ -1528,6 +1528,24 @@ export async function commitProjectVersionUpload(
   if (projectError) throw projectError;
   const project = projectData as { id: string; name: string } | null;
   if (!project) throw new Error("Project not found.");
+
+  const { data: versionData, error: versionError } = await supabase
+    .from("images")
+    .select("version")
+    .eq("project_id", projectId)
+    .order("version", { ascending: false });
+
+  if (versionError) throw versionError;
+  const existingVersions = new Set(
+    ((versionData ?? []) as Array<{ version: number }>).map((image) => image.version),
+  );
+  const latestVersion = Math.max(0, ...existingVersions);
+  if (
+    !existingVersions.has(input.version) &&
+    input.version !== latestVersion + 1
+  ) {
+    throw new Error("Invalid target variant.");
+  }
 
   const rowsToInsert = input.uploads.map((upload) => ({
     project_id: projectId,

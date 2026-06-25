@@ -1,6 +1,8 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+import { revalidateTag, unstable_cache } from "next/cache";
+
 import {
   DEFAULT_GALLERY_PROJECT,
   normalizeOptionalGalleryProject,
@@ -19,6 +21,7 @@ type GalleryData = {
 };
 
 const galleryFilePath = path.join(process.cwd(), "data", "gallery.json");
+const GALLERY_CACHE_TAG = "gallery-items";
 
 const defaultData: GalleryData = {
   items: [
@@ -130,10 +133,20 @@ async function readGalleryData(): Promise<GalleryData> {
 async function writeGalleryData(data: GalleryData) {
   await ensureGalleryFile();
   await fs.writeFile(galleryFilePath, JSON.stringify(data, null, 2) + "\n");
+  revalidateTag(GALLERY_CACHE_TAG, { expire: 0 });
 }
 
+const getCachedGalleryData = unstable_cache(
+  readGalleryData,
+  ["gallery-data"],
+  {
+    revalidate: 60 * 60,
+    tags: [GALLERY_CACHE_TAG],
+  },
+);
+
 export async function getGalleryItems() {
-  const data = await readGalleryData();
+  const data = await getCachedGalleryData();
   return data.items;
 }
 

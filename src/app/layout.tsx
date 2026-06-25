@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { SiteAssistantBubble } from "@/components/SiteAssistantBubble";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { site } from "@/content/site";
@@ -91,10 +92,15 @@ export default async function RootLayout({
             }),
           }}
         />
-        {isBareExperiencePage ? null : <SiteHeader initialTheme={theme} />}
-        <AnalyticsTracker />
-        {children}
-        {isBareExperiencePage ? null : <SiteFooter locale={locale} />}
+        <div className="siteShell">
+          <div className="siteChrome">
+            {isBareExperiencePage ? null : <SiteHeader initialTheme={theme} />}
+            <AnalyticsTracker />
+            {children}
+            {isBareExperiencePage ? null : <SiteFooter locale={locale} />}
+          </div>
+          {isBareExperiencePage ? null : <SiteAssistantBubble />}
+        </div>
         {shouldLoadAnalytics ? (
           <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />
         ) : null}
