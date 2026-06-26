@@ -58,11 +58,11 @@ type DashboardProjectRow = {
   client_company: string | null;
   client_email: string | null;
   client_phone: string | null;
-  client_website: string | null;
+  client_website?: string | null;
   project_name: string | null;
   service_types: string[] | null;
   status: string | null;
-  payment_status: string | null;
+  payment_status?: string | null;
   invoiced_amount: number | string | null;
   upcoming_amount: number | string | null;
   expected_date: string | null;
@@ -71,6 +71,15 @@ type DashboardProjectRow = {
   created_at: string;
   updated_at: string;
 };
+
+const DASHBOARD_PROJECT_SELECT =
+  "id, team_client_id, client_name, client_company, client_email, client_phone, client_website, project_name, service_types, status, payment_status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at";
+
+const DASHBOARD_PROJECT_LEGACY_SELECT =
+  "id, team_client_id, client_name, client_company, client_email, client_phone, project_name, service_types, status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at";
+
+const DASHBOARD_PROJECT_WITHOUT_WEBSITE_SELECT =
+  "id, team_client_id, client_name, client_company, client_email, client_phone, project_name, service_types, status, payment_status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at";
 
 function assertDashboardConfigured() {
   if (!isSupabaseConfigured()) {
@@ -93,6 +102,64 @@ function isMissingTableError(error: unknown, tableName: string) {
     combined.includes(`relation "${tableName.toLowerCase()}" does not exist`) ||
     combined.includes(`could not find the table 'public.${tableName.toLowerCase()}'`)
   );
+}
+
+function getStoreErrorDetails(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return { code: "", message: error instanceof Error ? error.message : "" };
+  }
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+  const message = [candidate.message, candidate.details, candidate.hint]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join(" ");
+
+  return {
+    code: typeof candidate.code === "string" ? candidate.code.trim() : "",
+    message,
+  };
+}
+
+function getMissingOptionalDashboardColumn(error: unknown) {
+  const { code, message } = getStoreErrorDetails(error);
+  const normalizedMessage = message.toLowerCase();
+  const column = normalizedMessage.includes("client_website")
+    ? "client_website"
+    : normalizedMessage.includes("payment_status")
+      ? "payment_status"
+      : null;
+
+  if (
+    column &&
+    (code === "42703" ||
+      code === "PGRST204" ||
+      normalizedMessage.includes("schema cache") ||
+      normalizedMessage.includes("does not exist"))
+  ) {
+    return column;
+  }
+
+  return null;
+}
+
+function isMissingOptionalDashboardColumn(error: unknown) {
+  return getMissingOptionalDashboardColumn(error) !== null;
+}
+
+function deriveLegacyPaymentStatus(row: DashboardProjectRow): DashboardPaymentStatus {
+  if (row.status === "En attente de payment") return "En attente de payment";
+  if (row.status === "À facturer" || row.status === "En attente") return "À facturer";
+
+  const invoicedAmount = normalizeAmount(row.invoiced_amount);
+  const upcomingAmount = normalizeAmount(row.upcoming_amount);
+
+  if (invoicedAmount > 0 && upcomingAmount <= 0) return "Reçu";
+  return "À facturer";
 }
 
 function normalizeStatus(value: string | null | undefined): DashboardProjectStatus {
@@ -144,7 +211,10 @@ function normalizeProjectRow(row: DashboardProjectRow): DashboardProjectRecord {
       ? row.service_types.filter((value): value is string => typeof value === "string")
       : [],
     status: normalizeStatus(row.status),
-    paymentStatus: normalizePaymentStatus(row.payment_status),
+    paymentStatus:
+      row.payment_status === undefined
+        ? deriveLegacyPaymentStatus(row)
+        : normalizePaymentStatus(row.payment_status),
     invoicedAmount: normalizeAmount(row.invoiced_amount),
     upcomingAmount: normalizeAmount(row.upcoming_amount),
     expectedDate: row.expected_date?.trim() ?? "",
@@ -187,16 +257,36 @@ function toProjectPayload(
   };
 }
 
+function toLegacyCompatiblePayload(
+  payload: Record<string, string | number | string[] | null>,
+) {
+  const legacyPayload = { ...payload };
+  delete legacyPayload.client_website;
+  delete legacyPayload.payment_status;
+  return legacyPayload;
+}
+
 export async function listDashboardProjects(): Promise<DashboardProjectRecord[]> {
   assertDashboardConfigured();
   const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
+  const result = await supabase
     .from("dashboard_projects")
-    .select(
-      "id, team_client_id, client_name, client_company, client_email, client_phone, client_website, project_name, service_types, status, payment_status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at",
-    )
+    .select(DASHBOARD_PROJECT_SELECT)
     .order("expected_date", { ascending: true })
     .order("created_at", { ascending: false });
+  let data = result.data as DashboardProjectRow[] | null;
+  let error: unknown = result.error;
+
+  if (error && isMissingOptionalDashboardColumn(error)) {
+    const legacyResult = await supabase
+      .from("dashboard_projects")
+      .select(DASHBOARD_PROJECT_LEGACY_SELECT)
+      .order("expected_date", { ascending: true })
+      .order("created_at", { ascending: false });
+
+    data = legacyResult.data as DashboardProjectRow[] | null;
+    error = legacyResult.error;
+  }
 
   if (error) {
     if (isMissingTableError(error, "dashboard_projects")) {
@@ -213,13 +303,26 @@ export async function createDashboardProject(
 ) {
   assertDashboardConfigured();
   const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
+  const payload = toProjectPayload(input);
+  const result = await supabase
     .from("dashboard_projects")
-    .insert(toProjectPayload(input))
-    .select(
-      "id, team_client_id, client_name, client_company, client_email, client_phone, client_website, project_name, service_types, status, payment_status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at",
-    )
+    .insert(payload)
+    .select(DASHBOARD_PROJECT_SELECT)
     .single();
+  let data = result.data as DashboardProjectRow | null;
+  let error: unknown = result.error;
+
+  if (error && isMissingOptionalDashboardColumn(error)) {
+    const legacyPayload = toLegacyCompatiblePayload(payload);
+    const legacyResult = await supabase
+      .from("dashboard_projects")
+      .insert(legacyPayload)
+      .select(DASHBOARD_PROJECT_LEGACY_SELECT)
+      .single();
+
+    data = legacyResult.data as DashboardProjectRow | null;
+    error = legacyResult.error;
+  }
 
   if (error) {
     if (isMissingTableError(error, "dashboard_projects")) {
@@ -271,14 +374,47 @@ export async function updateDashboardProject(
     payload.exchange_rate_to_cad = patch.exchangeRateToCad > 0 ? patch.exchangeRateToCad : 1.66;
   }
 
-  const { data, error } = await supabase
+  const result = await supabase
     .from("dashboard_projects")
     .update(payload)
     .eq("id", id)
-    .select(
-      "id, team_client_id, client_name, client_company, client_email, client_phone, client_website, project_name, service_types, status, payment_status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at",
-    )
+    .select(DASHBOARD_PROJECT_SELECT)
     .single();
+  let data = result.data as DashboardProjectRow | null;
+  let error: unknown = result.error;
+
+  if (error && getMissingOptionalDashboardColumn(error) === "client_website") {
+    const withoutWebsitePayload = { ...payload };
+    delete withoutWebsitePayload.client_website;
+    const withoutWebsiteResult = await supabase
+      .from("dashboard_projects")
+      .update(withoutWebsitePayload)
+      .eq("id", id)
+      .select(DASHBOARD_PROJECT_WITHOUT_WEBSITE_SELECT)
+      .single();
+
+    data = withoutWebsiteResult.data as DashboardProjectRow | null;
+    error = withoutWebsiteResult.error;
+  }
+
+  if (error && getMissingOptionalDashboardColumn(error) === "payment_status") {
+    if ("payment_status" in payload) {
+      throw new Error(
+        "La colonne payment_status manque dans Supabase. Exécutez la migration dashboard_projects_add_payment_status avant de modifier le statut du paiement.",
+      );
+    }
+
+    const legacyPayload = toLegacyCompatiblePayload(payload);
+    const legacyResult = await supabase
+      .from("dashboard_projects")
+      .update(legacyPayload)
+      .eq("id", id)
+      .select(DASHBOARD_PROJECT_LEGACY_SELECT)
+      .single();
+
+    data = legacyResult.data as DashboardProjectRow | null;
+    error = legacyResult.error;
+  }
 
   if (error) {
     if (isMissingTableError(error, "dashboard_projects")) {

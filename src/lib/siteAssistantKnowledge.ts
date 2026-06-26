@@ -1,4 +1,6 @@
+import { getMessages } from "@/content/messages";
 import { site } from "@/content/site";
+import { withLocalePath } from "@/lib/i18n";
 
 export type AssistantLocale = "fr" | "en";
 
@@ -19,6 +21,8 @@ export type AssistantCategory = {
   title: LocalizedText;
   items: AssistantQaItem[];
 };
+
+type AssistantPriceMessage = ReturnType<typeof getMessages>["price"];
 
 const RAW_ASSISTANT_CATEGORIES: AssistantCategory[] = [
   {
@@ -572,6 +576,213 @@ export function readAssistantText(text: LocalizedText, locale: AssistantLocale) 
   return locale === "fr" ? text.fr : text.en ?? text.fr;
 }
 
+function getAssistantPriceMessages(locale: AssistantLocale): AssistantPriceMessage {
+  return getMessages(locale).price;
+}
+
+function buildPriceRow(name: string, price: string) {
+  return `- ${name}: ${price}`;
+}
+
+function buildOptionRows(
+  options: Array<{ name: string; price: string }> | undefined,
+  locale: AssistantLocale,
+) {
+  if (!options?.length) return "";
+
+  return options
+    .map((option) =>
+      locale === "fr"
+        ? `  - ${option.name}: ${option.price}`
+        : `  - ${option.name}: ${option.price}`,
+    )
+    .join("\n");
+}
+
+function buildPricingKnowledgeContext(locale: AssistantLocale) {
+  const price = getAssistantPriceMessages(locale);
+  const pricePath = withLocalePath(locale, "/price");
+  const contactPath = withLocalePath(locale, "/contact");
+  const intro =
+    locale === "fr"
+      ? [
+          "Orientation tarifaire:",
+          "- Pour une question de prix, repondre simplement et donner le prix exact si disponible.",
+          `- Proposer aussi la page tarifs: ${pricePath}.`,
+          "- Preciser en une ligne que certaines reductions ou gains de cout peuvent s'appliquer selon les fichiers fournis et le niveau de preparation du dossier.",
+          "- Si le detail d'un ajustement n'est pas explicitement liste, dire qu'il est a confirmer selon les fichiers recus.",
+          "- Si utile, proposer d'expliquer le calcul dans le chat ou d'envoyer vers la page contact.",
+        ]
+      : [
+          "Pricing guidance:",
+          "- For pricing questions, answer simply and give the exact price when available.",
+          `- Also suggest the pricing page: ${pricePath}.`,
+          "- Mention in one line that some cost reductions or efficiency gains may apply depending on the files provided and the level of preparation.",
+          "- If an adjustment is not explicitly listed, say it must be confirmed after reviewing the files.",
+          "- When useful, offer to explain the estimate in the chat or direct the visitor to the contact page.",
+        ];
+
+  const sections = [
+    intro.join("\n"),
+    `${locale === "fr" ? "Page tarifs" : "Pricing page"}: ${pricePath}`,
+    `${locale === "fr" ? "Page contact" : "Contact page"}: ${contactPath}`,
+    `## ${price.imagesTitle}\n${price.images.map((item) => buildPriceRow(item.name, item.price)).join("\n")}\n${
+      locale === "fr"
+        ? `Note: ${price.imageNote}`
+        : `Note: ${price.imageNote}`
+    }`,
+    `## ${price.videosTitle}\n${price.videos
+      .map((video) => {
+        const header = buildPriceRow(
+          video.name,
+          video.price ?? (locale === "fr" ? "Voir options" : "See options"),
+        );
+        const options = buildOptionRows(video.options, locale);
+        return options ? `${header}\n${options}` : header;
+      })
+      .join("\n")}`,
+    `## ${price.websiteTitle}\n${price.websites
+      .map((item) => buildPriceRow(item.name, item.price))
+      .join("\n")}`,
+    `## ${price.packagesTitle}\n${price.packages
+      .map((item) => {
+        const details = item.details?.length
+          ? item.details.map((detail) => `  - ${detail}`).join("\n")
+          : "";
+        const compare = item.comparePrice
+          ? locale === "fr"
+            ? `\n  - Valeur standard: ${item.comparePrice}`
+            : `\n  - Standard value: ${item.comparePrice}`
+          : "";
+        return `${buildPriceRow(item.name, item.price)}${compare}${details ? `\n${details}` : ""}`;
+      })
+      .join("\n")}`,
+    `## ${price.includedTitle}\n${getMessages(locale).services.pricingIncludes
+      .map((item) => `- ${item}`)
+      .join("\n")}`,
+    `## ${price.partnershipTitle}\n${price.partnerships
+      .map((item) => `- ${item}`)
+      .join("\n")}\n${price.partnershipNote}`,
+    `## ${price.workflowTitle}\n- ${price.workflowIncludesLabel} ${price.workflowLinkLabel}\n- ${price.workflowComingSoon}`,
+    locale === "fr"
+      ? "## Remarque commerciale\n- Des reductions ou gains de cout peuvent s'appliquer selon les fichiers fournis (PDF, DWG, SketchUp, niveau de preparation du dossier). Si besoin, renvoyer vers la page tarifs ou proposer d'expliquer le calcul dans le chat."
+      : "## Commercial note\n- Some cost reductions or efficiency gains may apply depending on the files provided (PDF, DWG, SketchUp, level of preparation). When useful, direct the visitor to the pricing page or offer to explain the estimate in the chat.",
+  ];
+
+  return sections.join("\n\n");
+}
+
+function buildPricingFallbackReply(input: string, locale: AssistantLocale) {
+  const normalizedInput = normalizeAssistantText(input);
+  const price = getAssistantPriceMessages(locale);
+  const pricePath = withLocalePath(locale, "/price");
+  const reductionLine =
+    locale === "fr"
+      ? "Des reductions ou gains de cout peuvent s'appliquer selon les fichiers fournis."
+      : "Some cost reductions or efficiency gains may apply depending on the files provided.";
+  const closingLine =
+    locale === "fr"
+      ? `Liste complete: ${pricePath}. Je peux aussi vous detailler le calcul ici dans le chat.`
+      : `Full list: ${pricePath}. I can also break down the estimate here in the chat.`;
+
+  const isWebsite = /website|site web|site de vente|web/.test(normalizedInput);
+  const isVideo = /video|walkthrough|drone/.test(normalizedInput);
+  const isPackage = /package|forfait|pack/.test(normalizedInput);
+  const isImage = /image|render|rendu|plan|floorplan|drone view/.test(normalizedInput);
+  const isPricing = isAssistantPricingQuestion(input);
+
+  if (!isPricing && !isWebsite && !isVideo && !isPackage && !isImage) {
+    return null;
+  }
+
+  if (isWebsite) {
+    return [
+      locale === "fr"
+        ? "Voici les tarifs website les plus utiles:"
+        : "Here are the most relevant website prices:",
+      ...price.websites.map((item) => buildPriceRow(item.name, item.price)),
+      reductionLine,
+      closingLine,
+    ].join("\n");
+  }
+
+  if (isVideo) {
+    return [
+      locale === "fr"
+        ? "Voici les principaux tarifs video:"
+        : "Here are the main video prices:",
+      ...price.videos.flatMap((item) =>
+        item.options?.length
+          ? [buildPriceRow(item.name, locale === "fr" ? "Voir options" : "See options")].concat(
+              item.options.map((option) => `  - ${option.name}: ${option.price}`),
+            )
+          : [buildPriceRow(item.name, item.price ?? "")],
+      ),
+      reductionLine,
+      closingLine,
+    ].join("\n");
+  }
+
+  if (isPackage) {
+    return [
+      locale === "fr"
+        ? "Voici nos forfaits actuels:"
+        : "Here are our current packages:",
+      ...price.packages.map((item) => buildPriceRow(item.name, item.price)),
+      reductionLine,
+      closingLine,
+    ].join("\n");
+  }
+
+  if (isImage) {
+    return [
+      locale === "fr"
+        ? "Voici les principaux tarifs image:"
+        : "Here are the main image prices:",
+      ...price.images.map((item) => buildPriceRow(item.name, item.price)),
+      reductionLine,
+      closingLine,
+    ].join("\n");
+  }
+
+  return [
+    locale === "fr"
+      ? "Voici le resume tarifaire le plus utile:"
+      : "Here is the most useful pricing summary:",
+    ...price.images.slice(0, 3).map((item) => buildPriceRow(item.name, item.price)),
+    ...price.websites.map((item) => buildPriceRow(item.name, item.price)),
+    ...price.packages.map((item) => buildPriceRow(item.name, item.price)),
+    reductionLine,
+    closingLine,
+  ].join("\n");
+}
+
+export function isAssistantPricingQuestion(input: string) {
+  const normalizedInput = normalizeAssistantText(input);
+  return /prix|price|tarif|cost|cout|combien|quote|devis|budget|combien ca coute|how much/.test(
+    normalizedInput,
+  );
+}
+
+export function buildAssistantPricingPostscript(locale: AssistantLocale) {
+  const price = getAssistantPriceMessages(locale);
+  const pricePath = withLocalePath(locale, "/price");
+  const packageSummary =
+    locale === "fr"
+      ? `Forfaits: ${price.packages
+          .map((item) => `${item.name} ${item.price}`)
+          .join(" · ")}.`
+      : `Packages: ${price.packages
+          .map((item) => `${item.name} ${item.price}`)
+          .join(" · ")}.`;
+  const pageSummary =
+    locale === "fr"
+      ? `Liste complete: ${pricePath}.`
+      : `Full list: ${pricePath}.`;
+
+  return `${packageSummary} ${pageSummary}`;
+}
+
 export function findAssistantQaMatch(input: string, locale: AssistantLocale) {
   const normalizedInput = normalizeAssistantText(input);
   const allItems = ASSISTANT_CATEGORIES.flatMap((category) => category.items);
@@ -589,8 +800,16 @@ export function findAssistantQaMatch(input: string, locale: AssistantLocale) {
   });
 }
 
+export function buildAssistantLocalReply(input: string, locale: AssistantLocale) {
+  const pricingReply = buildPricingFallbackReply(input, locale);
+  if (pricingReply) return pricingReply;
+
+  const match = findAssistantQaMatch(input, locale);
+  return match ? readAssistantText(match.answer, locale) : null;
+}
+
 export function buildAssistantKnowledgeContext(locale: AssistantLocale) {
-  return ASSISTANT_CATEGORIES.map((category) => {
+  const faqContext = ASSISTANT_CATEGORIES.map((category) => {
     const title = readAssistantText(category.title, locale);
     const items = category.items
       .map((item) => {
@@ -602,4 +821,6 @@ export function buildAssistantKnowledgeContext(locale: AssistantLocale) {
 
     return `## ${title}\n${items}`;
   }).join("\n\n");
+
+  return `${faqContext}\n\n${buildPricingKnowledgeContext(locale)}`;
 }

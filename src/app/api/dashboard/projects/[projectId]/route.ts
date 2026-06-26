@@ -19,6 +19,20 @@ const noStoreHeaders = {
   "Surrogate-Control": "no-store",
 };
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim()) return error.message;
+  if (error && typeof error === "object") {
+    const candidate = error as { message?: unknown; details?: unknown };
+    if (typeof candidate.message === "string" && candidate.message.trim()) {
+      return candidate.message;
+    }
+    if (typeof candidate.details === "string" && candidate.details.trim()) {
+      return candidate.details;
+    }
+  }
+  return fallback;
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ projectId: string }> },
@@ -117,7 +131,7 @@ export async function PATCH(
   } catch (error) {
     console.error("Failed to update dashboard project", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to update dashboard project." },
+      { error: getErrorMessage(error, "Failed to update dashboard project.") },
       { status: 400, headers: noStoreHeaders },
     );
   }
@@ -134,7 +148,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Failed to delete dashboard project", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to delete dashboard project." },
+      { error: getErrorMessage(error, "Failed to delete dashboard project.") },
       { status: 400, headers: noStoreHeaders },
     );
   }

@@ -398,8 +398,10 @@ function GalleryScene({
   const handleWheel = useCallback(
     (event: WheelEvent) => {
       event.preventDefault();
-      progressRef.current += event.deltaY * 0.00092 * speed;
-      velocityRef.current += event.deltaY * 0.0078 * speed;
+      event.stopPropagation();
+      const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+      progressRef.current += delta * 0.00092 * speed;
+      velocityRef.current += delta * 0.0078 * speed;
       velocityRef.current = THREE.MathUtils.clamp(velocityRef.current, -1.65, 1.65);
       setAutoPlay(false);
       lastInteraction.current = Date.now();
@@ -422,6 +424,7 @@ function GalleryScene({
 
       const deltaY = previousTouchY - nextTouchY;
       event.preventDefault();
+      event.stopPropagation();
       progressRef.current += deltaY * 0.0016 * speed;
       velocityRef.current += deltaY * 0.0115 * speed;
       velocityRef.current = THREE.MathUtils.clamp(velocityRef.current, -2.1, 2.1);
@@ -452,30 +455,29 @@ function GalleryScene({
 
   useEffect(() => {
     const wheelTarget = wheelTargetRef.current;
-    if (wheelTarget) {
-      wheelTarget.addEventListener("wheel", handleWheel, { passive: false });
-      if (!isNarrow) {
-        wheelTarget.addEventListener("touchstart", handleTouchStart, { passive: true });
-        wheelTarget.addEventListener("touchmove", handleTouchMove, { passive: false });
-        wheelTarget.addEventListener("touchend", handleTouchEnd);
-        wheelTarget.addEventListener("touchcancel", handleTouchEnd);
-      }
+    const interactionTarget =
+      wheelTarget?.closest<HTMLElement>(".homeBlurWordSection") ?? wheelTarget;
+
+    if (interactionTarget) {
+      interactionTarget.addEventListener("wheel", handleWheel, { passive: false });
+      interactionTarget.addEventListener("touchstart", handleTouchStart, { passive: true });
+      interactionTarget.addEventListener("touchmove", handleTouchMove, { passive: false });
+      interactionTarget.addEventListener("touchend", handleTouchEnd);
+      interactionTarget.addEventListener("touchcancel", handleTouchEnd);
     }
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      if (wheelTarget) {
-        wheelTarget.removeEventListener("wheel", handleWheel);
-        if (!isNarrow) {
-          wheelTarget.removeEventListener("touchstart", handleTouchStart);
-          wheelTarget.removeEventListener("touchmove", handleTouchMove);
-          wheelTarget.removeEventListener("touchend", handleTouchEnd);
-          wheelTarget.removeEventListener("touchcancel", handleTouchEnd);
-        }
+      if (interactionTarget) {
+        interactionTarget.removeEventListener("wheel", handleWheel);
+        interactionTarget.removeEventListener("touchstart", handleTouchStart);
+        interactionTarget.removeEventListener("touchmove", handleTouchMove);
+        interactionTarget.removeEventListener("touchend", handleTouchEnd);
+        interactionTarget.removeEventListener("touchcancel", handleTouchEnd);
       }
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleKeyDown, handleTouchEnd, handleTouchMove, handleTouchStart, handleWheel, isNarrow, wheelTargetRef]);
+  }, [handleKeyDown, handleTouchEnd, handleTouchMove, handleTouchStart, handleWheel, wheelTargetRef]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {

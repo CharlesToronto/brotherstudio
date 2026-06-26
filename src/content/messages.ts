@@ -424,11 +424,11 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       ],
       websites: [
         {
-          name: "BS template sales website",
+          name: "BS template sales website · AI sales agent included",
           price: "CHF 1700",
         },
         {
-          name: "Custom website",
+          name: "Custom website · AI sales agent included",
           price: "From CHF 3400",
         },
       ],
@@ -696,11 +696,11 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       ],
       websites: [
         {
-          name: "BS template sales website",
+          name: "BS template sales website · Agent IA de vente inclus",
           price: "CHF 1700",
         },
         {
-          name: "Custom website",
+          name: "Site de vente custom · Agent IA de vente inclus",
           price: "From CHF 3400",
         },
       ],

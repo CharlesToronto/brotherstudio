@@ -93,6 +93,7 @@ export async function POST(request: Request) {
     "BrotherStudio <onboarding@resend.dev>";
 
   const submittedAt = new Date().toISOString();
+  const requestContext = project || (source ? source.replaceAll("-", " ") : "BrotherStudio");
   const lines = [
     `Name: ${name}`,
     `Email: ${email}`,
@@ -152,7 +153,7 @@ export async function POST(request: Request) {
   const clientText = [
     `Bonjour ${name},`,
     "",
-    "Nous avons bien recu votre demande concernant le projet Mesange.",
+    `Nous avons bien recu votre demande concernant ${requestContext}.`,
     "Notre equipe revient vers vous rapidement.",
     "",
     "Recapitulatif :",
@@ -166,7 +167,7 @@ export async function POST(request: Request) {
   const clientHtml = `
     <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111">
       <p>Bonjour ${escapeHtml(name)},</p>
-      <p>Nous avons bien recu votre demande concernant le projet Mesange.</p>
+      <p>Nous avons bien recu votre demande concernant ${escapeHtml(requestContext)}.</p>
       <p>Notre equipe revient vers vous rapidement.</p>
       <p><strong>Recapitulatif</strong><br />
       Email: ${escapeHtml(email)}<br />
@@ -187,7 +188,7 @@ export async function POST(request: Request) {
       to: [email],
       cc: ccEmail && ccEmail !== email ? [ccEmail] : undefined,
       reply_to: toEmail,
-      subject: "Confirmation de votre demande - Projet Mesange",
+      subject: `Confirmation de votre demande - ${requestContext}`,
       text: clientText,
       html: clientHtml,
     }),

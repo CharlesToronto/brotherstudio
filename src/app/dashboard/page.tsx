@@ -60,6 +60,27 @@ function createEmptyProject(): ProjectDraft {
   };
 }
 
+function buildProjectPatch(current: Project, next: ProjectDraft): Partial<ProjectDraft> {
+  const patch: Partial<ProjectDraft> = {};
+  const keys = Object.keys(next) as (keyof ProjectDraft)[];
+
+  for (const key of keys) {
+    const currentValue = current[key];
+    const nextValue = next[key];
+    const isEqual =
+      Array.isArray(currentValue) && Array.isArray(nextValue)
+        ? currentValue.length === nextValue.length &&
+          currentValue.every((value, index) => value === nextValue[index])
+        : currentValue === nextValue;
+
+    if (!isEqual) {
+      Object.assign(patch, { [key]: nextValue });
+    }
+  }
+
+  return patch;
+}
+
 function formatCurrency(amount: number, currency: Currency) {
   return new Intl.NumberFormat("fr-CA", {
     style: "currency",
@@ -140,6 +161,56 @@ function getAmountSummary(project: Project) {
     amount: getReceivedAmount(project),
     badgeClass: "bg-emerald-50 text-emerald-700 border border-emerald-200",
     amountClass: "text-emerald-700",
+  };
+}
+
+async function fetchDashboardProjects() {
+  let lastResponse: Response | null = null;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await fetch("/api/dashboard/projects", {
+        cache: "no-store",
+        headers: { "cache-control": "no-cache" },
+      });
+      lastResponse = response;
+
+      if (response.ok || response.status < 500 || attempt === 1) {
+        return response;
+      }
+    } catch (error) {
+      if (attempt === 1) throw error;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+
+  if (lastResponse) return lastResponse;
+  throw new Error("Failed to load dashboard projects.");
+}
+
+async function loadDashboardData() {
+  const [projectsResponse, clientsResponse] = await Promise.all([
+    fetchDashboardProjects(),
+    fetch("/api/team/clients", {
+      cache: "no-store",
+      headers: { "cache-control": "no-cache" },
+    }),
+  ]);
+  const projectsPayload = (await projectsResponse.json().catch(() => null)) as
+    | { projects?: Project[]; error?: string }
+    | null;
+  const clientsPayload = (await clientsResponse.json().catch(() => null)) as
+    | { clients?: TeamClientRecord[]; error?: string }
+    | null;
+
+  if (!projectsResponse.ok) {
+    throw new Error(projectsPayload?.error ?? "Failed to load dashboard projects.");
+  }
+
+  return {
+    projects: projectsPayload?.projects ?? [],
+    clients: clientsResponse.ok ? clientsPayload?.clients ?? [] : [],
   };
 }
 
@@ -232,35 +303,10 @@ export default function DashboardPage() {
   const [newClientDraft, setNewClientDraft] = useState(emptyTeamClientDraft);
   const [projectSearch, setProjectSearch] = useState("");
   const [projectStatusFilter, setProjectStatusFilter] = useState<"all" | ProjectStatus>("all");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<
+    "all" | PaymentStatus
+  >("all");
   const [activePaymentSlide, setActivePaymentSlide] = useState(0);
-
-  const loadDashboardData = async () => {
-    const [projectsResponse, clientsResponse] = await Promise.all([
-      fetch("/api/dashboard/projects", {
-        cache: "no-store",
-        headers: { "cache-control": "no-cache" },
-      }),
-      fetch("/api/team/clients", {
-        cache: "no-store",
-        headers: { "cache-control": "no-cache" },
-      }),
-    ]);
-    const projectsPayload = (await projectsResponse.json().catch(() => null)) as
-      | { projects?: Project[]; error?: string }
-      | null;
-    const clientsPayload = (await clientsResponse.json().catch(() => null)) as
-      | { clients?: TeamClientRecord[]; error?: string }
-      | null;
-
-    if (!projectsResponse.ok) {
-      throw new Error(projectsPayload?.error ?? "Failed to load dashboard projects.");
-    }
-
-    return {
-      projects: projectsPayload?.projects ?? [],
-      clients: clientsResponse.ok ? clientsPayload?.clients ?? [] : [],
-    };
-  };
 
   useEffect(() => {
     let isCancelled = false;
@@ -398,8 +444,11 @@ export default function DashboardPage() {
     return projects.filter((project) => {
       const matchesStatus =
         projectStatusFilter === "all" || project.status === projectStatusFilter;
+      const matchesPaymentStatus =
+        paymentStatusFilter === "all" ||
+        project.paymentStatus === paymentStatusFilter;
 
-      if (!matchesStatus) return false;
+      if (!matchesStatus || !matchesPaymentStatus) return false;
       if (!normalizedSearch) return true;
 
       const haystack = [
@@ -415,7 +464,7 @@ export default function DashboardPage() {
 
       return haystack.includes(normalizedSearch);
     });
-  }, [projectSearch, projectStatusFilter, projects]);
+  }, [paymentStatusFilter, projectSearch, projectStatusFilter, projects]);
 
   const projectStats = [
     { label: "Clients", value: clientsCount },
@@ -503,10 +552,16 @@ export default function DashboardPage() {
           ? "/api/dashboard/projects"
           : `/api/dashboard/projects/${editingId}`;
       const method = isAdding || editingId === null ? "POST" : "PATCH";
+      const currentProject =
+        editingId === null ? null : projects.find((project) => project.id === editingId) ?? null;
+      const requestBody =
+        method === "PATCH" && currentProject
+          ? buildProjectPatch(currentProject, normalizedProject)
+          : normalizedProject;
       const response = await fetch(endpoint, {
         method,
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(normalizedProject),
+        body: JSON.stringify(requestBody),
       });
       const payload = (await response.json().catch(() => null)) as
         | { project?: Project; teamClient?: TeamClientRecord; error?: string }
@@ -521,9 +576,9 @@ export default function DashboardPage() {
         );
       }
 
-      const { projects, clients } = await loadDashboardData();
-      setProjects(projects);
-      setTeamClients(clients);
+      const refreshedData = await loadDashboardData();
+      setProjects(refreshedData.projects);
+      setTeamClients(refreshedData.clients);
       setStatusMessage(isAdding ? "Projet créé." : "Projet mis à jour.");
 
       cancelDraft();
@@ -691,7 +746,7 @@ export default function DashboardPage() {
     return (
       <>
         {errorMessage ? <p className="mb-4 text-sm text-rose-700">{errorMessage}</p> : null}
-        <div className="grid gap-4 xl:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-3">
           <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
               Informations
@@ -1100,7 +1155,7 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          <div className="mb-5 grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4 md:grid-cols-[minmax(0,1.6fr)_240px]">
+          <div className="mb-5 grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4 md:grid-cols-[minmax(0,1fr)_220px_240px]">
             <DashboardField label="Recherche">
               <DashboardInput
                 value={projectSearch}
@@ -1109,7 +1164,7 @@ export default function DashboardPage() {
                 type="search"
               />
             </DashboardField>
-            <DashboardField label="Statut">
+            <DashboardField label="Statut du projet">
               <DashboardSelect
                 value={projectStatusFilter}
                 onChange={(event) =>
@@ -1118,6 +1173,21 @@ export default function DashboardPage() {
               >
                 <option value="all">Tous les statuts</option>
                 {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </DashboardSelect>
+            </DashboardField>
+            <DashboardField label="Statut du paiement">
+              <DashboardSelect
+                value={paymentStatusFilter}
+                onChange={(event) =>
+                  setPaymentStatusFilter(event.target.value as "all" | PaymentStatus)
+                }
+              >
+                <option value="all">Tous les paiements</option>
+                {paymentStatusOptions.map((status) => (
                   <option key={status} value={status}>
                     {status}
                   </option>

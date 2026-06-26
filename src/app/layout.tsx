@@ -72,6 +72,8 @@ export default async function RootLayout({
   const pathname = headerStore.get("x-site-pathname") ?? "/";
   const subpath = stripLocaleFromPathname(pathname);
   const isBareExperiencePage = subpath === "/myexperience" || subpath.startsWith("/myexperience/");
+  const isCampaignLandingPage = subpath === "/landing";
+  const hasStandardChrome = !isBareExperiencePage && !isCampaignLandingPage;
   const shouldLoadAnalytics =
     process.env.NODE_ENV === "production" && process.env.VERCEL === "1";
 
@@ -94,12 +96,12 @@ export default async function RootLayout({
         />
         <div className="siteShell">
           <div className="siteChrome">
-            {isBareExperiencePage ? null : <SiteHeader initialTheme={theme} />}
+            {hasStandardChrome ? <SiteHeader initialTheme={theme} /> : null}
             <AnalyticsTracker />
             {children}
-            {isBareExperiencePage ? null : <SiteFooter locale={locale} />}
+            {hasStandardChrome ? <SiteFooter locale={locale} /> : null}
           </div>
-          {isBareExperiencePage ? null : <SiteAssistantBubble />}
+          <SiteAssistantBubble hasMobileMenu={hasStandardChrome} />
         </div>
         {shouldLoadAnalytics ? (
           <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />

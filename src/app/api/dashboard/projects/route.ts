@@ -19,14 +19,29 @@ const noStoreHeaders = {
   "Surrogate-Control": "no-store",
 };
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim()) return error.message;
+  if (error && typeof error === "object") {
+    const candidate = error as { message?: unknown; details?: unknown };
+    if (typeof candidate.message === "string" && candidate.message.trim()) {
+      return candidate.message;
+    }
+    if (typeof candidate.details === "string" && candidate.details.trim()) {
+      return candidate.details;
+    }
+  }
+  return fallback;
+}
+
 export async function GET() {
   try {
     const projects = await listDashboardProjects();
     return NextResponse.json({ projects }, { headers: noStoreHeaders });
   } catch (error) {
+    console.error("Failed to load dashboard projects", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to load dashboard projects." },
-      { status: 400, headers: noStoreHeaders },
+      { error: getErrorMessage(error, "Failed to load dashboard projects.") },
+      { status: 500, headers: noStoreHeaders },
     );
   }
 }
@@ -117,7 +132,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Failed to create dashboard project", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to create dashboard project." },
+      { error: getErrorMessage(error, "Failed to create dashboard project.") },
       { status: 400, headers: noStoreHeaders },
     );
   }

@@ -4,6 +4,7 @@ import { BackToTopButton } from "@/components/BackToTopButton";
 import { HomeBlurWordSection } from "@/components/HomeBlurWordSection";
 import { HomeGalleryExperience } from "@/components/HomeGalleryExperience";
 import { HomeHeroHeaderController } from "@/components/HomeHeroHeaderController";
+import { TrustedCompanies } from "@/components/TrustedCompanies";
 import { getMessages } from "@/content/messages";
 import { getGalleryItems } from "@/lib/galleryStore";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
@@ -70,6 +71,7 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
           focusAmbiance: messages.home.sceneFilterLabels.focusAmbiance,
         }}
       />
+      <TrustedCompanies locale={locale} />
       <BackToTopButton
         label={messages.home.backToTopLabel}
         footerLabel={messages.home.backToFooterLabel}

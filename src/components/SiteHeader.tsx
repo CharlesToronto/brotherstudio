@@ -263,20 +263,22 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
               <span>{item.label}</span>
             </button>
 
-            <div className="siteNavSubmenuPanel" role="menu" aria-label={item.label}>
-              {item.children.map((child) => (
-                <Link
-                  key={child.href}
-                  className="siteNavSublink"
-                  href={child.href}
-                  role="menuitem"
-                  aria-current={child.isCurrent ? "page" : undefined}
-                  onClick={() => setOpenSubmenuKey(null)}
-                >
-                  {child.label}
-                </Link>
-              ))}
-            </div>
+            {isMobile ? null : (
+              <div className="siteNavSubmenuPanel" role="menu" aria-label={item.label}>
+                {item.children.map((child) => (
+                  <Link
+                    key={child.href}
+                    className="siteNavSublink"
+                    href={child.href}
+                    role="menuitem"
+                    aria-current={child.isCurrent ? "page" : undefined}
+                    onClick={() => setOpenSubmenuKey(null)}
+                  >
+                    {child.label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         );
       }
@@ -340,6 +342,37 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
         </button>
         {renderNavItems(mobilePrimaryItems, true)}
       </nav>
+
+      {openSubmenuKey === "mystudio" ? (
+        <div className="siteNavMobileSubmenuPanel" role="menu" aria-label="MYSTUDIO">
+          <Link
+            className="siteNavMobileSublink"
+            href="/myreview"
+            role="menuitem"
+            aria-current={
+              subpath === "/myreview" ||
+              subpath === "/mystudio" ||
+              subpath === "/myproject"
+                ? "page"
+                : undefined
+            }
+            onClick={() => setOpenSubmenuKey(null)}
+          >
+            <span>MyReview</span>
+            <span aria-hidden="true">↗</span>
+          </Link>
+          <Link
+            className="siteNavMobileSublink"
+            href={localizedHref("/mywebsite")}
+            role="menuitem"
+            aria-current={subpath === "/mywebsite" ? "page" : undefined}
+            onClick={() => setOpenSubmenuKey(null)}
+          >
+            <span>MyWebsite</span>
+            <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
+      ) : null}
     </header>
   );
 }

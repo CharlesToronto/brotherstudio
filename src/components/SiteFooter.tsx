@@ -37,9 +37,10 @@ export function SiteFooter({ locale }: { locale: Locale }) {
     { label: "myWebsite", href: withLocalePath(locale, "/mywebsite") },
   ];
   const adminLinks = [
+    { label: "MyReview Admin", href: "/admin/client-projects" },
+    { label: "Landing page", href: withLocalePath(locale, "/landing") },
     { label: "Team", href: withLocalePath(locale, "/team/call") },
     { label: "Dashboard", href: "/dashboard" },
-    { label: "MyReview Admin", href: "/admin/client-projects" },
   ];
   const contactLinks = [
     { label: site.contact.phone, href: `tel:${site.contact.phone}` },

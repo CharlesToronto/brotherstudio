@@ -4,7 +4,10 @@ import { NextResponse } from "next/server";
 import type { AssistantLocale } from "@/lib/siteAssistantKnowledge";
 import {
   buildAssistantKnowledgeContext,
+  buildAssistantLocalReply,
+  buildAssistantPricingPostscript,
   findAssistantQaMatch,
+  isAssistantPricingQuestion,
   readAssistantText,
 } from "@/lib/siteAssistantKnowledge";
 
@@ -21,6 +24,8 @@ function isLocale(value: unknown): value is AssistantLocale {
 }
 
 function buildInstructions(locale: AssistantLocale) {
+  const pricePath = locale === "fr" ? "/fr/price" : "/en/price";
+  const contactPath = locale === "fr" ? "/fr/contact" : "/en/contact";
   const localeRule =
     locale === "fr"
       ? "Reponds uniquement en francais."
@@ -38,9 +43,13 @@ function buildInstructions(locale: AssistantLocale) {
           "Base-toi d'abord sur la FAQ fournie.",
           "Tu peux reformuler, synthetiser et vendre plus clairement, mais sans ajouter de faits non confirmes.",
           "Si l'information n'est pas disponible, dis-le clairement puis propose de soumettre une demande de contact.",
-          "Reste concis: 2 a 5 phrases maximum sauf si une liste courte aide.",
+          "Reste concis: 2 a 4 phrases maximum sauf si une liste courte aide.",
           "Quand l'utilisateur demande des informations cles sous forme de liste, comparaison ou synthese, notamment services, tarifs, delais, etapes, formats de livraison, moyens de paiement ou types de clients, commence par une tres courte phrase d'introduction puis reponds avec une liste a puces ou numerotee.",
           "Pour ces reponses structurees, utilise 2 a 6 points maximum et garde chaque point court.",
+          `Pour les questions de prix, donne le prix exact si disponible, explique brievement le service ou forfait le plus pertinent, puis mentionne la page tarifs ${pricePath}.`,
+          "Quand c'est pertinent, ajoute en une seule ligne que certaines reductions ou gains de cout peuvent s'appliquer selon les fichiers fournis et le niveau de preparation du dossier.",
+          "Si l'utilisateur combine plusieurs services, additionne seulement les prix explicitement disponibles. Si une hypothese est necessaire, annonce-la clairement en une ligne.",
+          `Quand la conversion commerciale est utile, propose soit de continuer l'explication dans le chat, soit de passer par ${contactPath}.`,
           "Ton ton doit etre premium, direct, clair et rassurant.",
           "Quand c'est utile, termine par une suggestion courte du type: 'Je peux aussi vous aider a preparer une demande de devis.'",
         ]
@@ -49,9 +58,13 @@ function buildInstructions(locale: AssistantLocale) {
           "Use the provided FAQ as the primary source of truth.",
           "You may rephrase, summarize, and sell more clearly, but without adding unconfirmed facts.",
           "If the information is not available, say so clearly and suggest submitting a contact request.",
-          "Stay concise: 2 to 5 sentences max unless a short list helps.",
+          "Stay concise: 2 to 4 sentences max unless a short list helps.",
           "When the user asks for key information as a list, comparison, or summary, especially services, pricing, timelines, steps, delivery formats, payment methods, or client types, start with one short introductory sentence and then answer with bullets or a numbered list.",
           "For these structured answers, use 2 to 6 items maximum and keep each item short.",
+          `For pricing questions, give the exact price when available, briefly explain the most relevant service or package, then mention the pricing page ${pricePath}.`,
+          "When relevant, add one short line saying that some cost reductions or efficiency gains may apply depending on the files provided and the level of preparation.",
+          "If the user combines multiple services, only add prices that are explicitly available. If an assumption is required, state it clearly in one short line.",
+          `When helpful, offer either to continue the breakdown in the chat or to move to ${contactPath}.`,
           "Your tone must feel premium, direct, clear, and reassuring.",
           "When useful, end with a short suggestion such as: 'I can also help you prepare a quote request.'",
         ];
@@ -97,11 +110,13 @@ export async function POST(request: Request) {
     : [];
 
   const fallbackMatch = findAssistantQaMatch(message, locale);
-  const fallbackReply = fallbackMatch
-    ? readAssistantText(fallbackMatch.answer, locale)
-    : locale === "fr"
-      ? "Je n'ai pas de reponse certaine a partir de la FAQ. Le plus efficace est de soumettre une demande de contact avec vos plans, votre delai et le type de rendu souhaite."
-      : "I do not have a certain answer from the FAQ. The most efficient next step is to submit a contact request with your plans, timeline, and target deliverable.";
+  const fallbackReply =
+    buildAssistantLocalReply(message, locale) ??
+    (fallbackMatch
+      ? readAssistantText(fallbackMatch.answer, locale)
+      : locale === "fr"
+        ? "Je n'ai pas de reponse certaine a partir de la FAQ. Le plus efficace est de soumettre une demande de contact avec vos plans, votre delai et le type de rendu souhaite."
+        : "I do not have a certain answer from the FAQ. The most efficient next step is to submit a contact request with your plans, timeline, and target deliverable.");
 
   const apiKey =
     process.env.SITE_ASSISTANT_OPENAI_API_KEY?.trim() ||
@@ -123,7 +138,7 @@ export async function POST(request: Request) {
       instructions: buildInstructions(locale),
       input: `${transcript ? `${transcript}\n` : ""}User: ${message}`,
       text: {
-        verbosity: "medium",
+        verbosity: "low",
       },
       reasoning: {
         effort: "minimal",
@@ -135,7 +150,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply: fallbackReply, source: "local" });
     }
 
-    return NextResponse.json({ reply, source: "openai" });
+    const normalizedReply =
+      isAssistantPricingQuestion(message) &&
+      !reply.includes(locale === "fr" ? "/fr/price" : "/en/price")
+        ? `${reply}\n\n${buildAssistantPricingPostscript(locale)}`
+        : reply;
+
+    return NextResponse.json({ reply: normalizedReply, source: "openai" });
   } catch {
     return NextResponse.json({ reply: fallbackReply, source: "local" });
   }
