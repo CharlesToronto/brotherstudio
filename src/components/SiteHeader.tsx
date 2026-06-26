@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { getMessages } from "@/content/messages";
 import { site } from "@/content/site";
+import { CALENDLY_MEETING_URL } from "@/lib/calendly";
 import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE_KEY,
@@ -133,11 +134,6 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
     } catch {}
   };
 
-  const openAssistant = () => {
-    if (typeof window === "undefined") return;
-    window.dispatchEvent(new Event("site-assistant:open"));
-  };
-
   const navItems = [
     {
       key: "gallery",
@@ -191,10 +187,11 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
       kind: "link" as const,
     },
     {
-      key: "instagram",
-      label: messages.nav.instagram,
-      href: site.instagramUrl,
+      key: "book-meeting",
+      label: "Book a meeting",
+      href: CALENDLY_MEETING_URL,
       kind: "anchor" as const,
+      target: "_blank" as const,
     },
     {
       key: "theme",
@@ -204,11 +201,14 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
   ];
 
   const mobileNavItems = [
-    navItems.find((item) => item.key === "theme"),
     ...navItems.filter((item) => item.key !== "theme"),
+    navItems.find((item) => item.key === "theme"),
   ].filter((item) => item !== undefined);
+  const mobileBookingItem = mobileNavItems.find((item) => item.key === "book-meeting");
   const mobileThemeItem = mobileNavItems.find((item) => item.key === "theme");
-  const mobilePrimaryItems = mobileNavItems.filter((item) => item.key !== "theme");
+  const mobilePrimaryItems = mobileNavItems.filter(
+    (item) => item.key !== "theme" && item.key !== "book-meeting",
+  );
 
   const renderNavItems = (items: typeof navItems, isMobile = false) =>
     items.map((item) => {
@@ -233,7 +233,14 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
 
       if (item.kind === "anchor") {
         return (
-          <a key={item.key} {...commonProps} href={item.href} onClick={() => setOpenSubmenuKey(null)}>
+          <a
+            key={item.key}
+            {...commonProps}
+            href={item.href}
+            target={item.target}
+            rel={item.target === "_blank" ? "noreferrer" : undefined}
+            onClick={() => setOpenSubmenuKey(null)}
+          >
             {item.label}
           </a>
         );
@@ -325,22 +332,23 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
         </Link>
 
         <nav className="siteNav siteNavDesktop" aria-label="Primary">
-          {renderNavItems(navItems)}
+          {renderNavItems(navItems.filter((item) => item.key !== "book-meeting"))}
         </nav>
+
+        <a
+          className="siteHeaderBookingCta"
+          href={CALENDLY_MEETING_URL}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Book a meeting
+        </a>
       </div>
 
       <nav ref={mobileNavRef} className="siteNavMobile" aria-label="Primary">
-        {mobileThemeItem ? renderNavItems([mobileThemeItem], true) : null}
-        <button
-          type="button"
-          className="siteNavLink siteNavAssistantTrigger"
-          onClick={openAssistant}
-          aria-label="Open Q&A"
-        >
-          <span className="siteNavAssistantTriggerMark">?</span>
-          <span>Q&amp;A</span>
-        </button>
+        {mobileBookingItem ? renderNavItems([mobileBookingItem], true) : null}
         {renderNavItems(mobilePrimaryItems, true)}
+        {mobileThemeItem ? renderNavItems([mobileThemeItem], true) : null}
       </nav>
 
       {openSubmenuKey === "mystudio" ? (

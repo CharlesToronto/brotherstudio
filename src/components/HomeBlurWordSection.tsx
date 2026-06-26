@@ -39,6 +39,7 @@ export function HomeBlurWordSection({ items }: HomeBlurWordSectionProps) {
         <div className={`homeHeroCopy ${dongle.className}`}>
           <p className="homeHeroEyebrow">Selected Works</p>
           <h1 className="homeHeroTitle">BROTHERSTUDIO</h1>
+          <p className="homeHeroSubtitle">3D visualization rendering</p>
         </div>
         <button
           type="button"

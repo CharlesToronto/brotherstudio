@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 
 import { BackToTopButton } from "@/components/BackToTopButton";
+import { CalendlyEmbed } from "@/components/CalendlyEmbed";
 import { HomeBlurWordSection } from "@/components/HomeBlurWordSection";
 import { HomeGalleryExperience } from "@/components/HomeGalleryExperience";
 import { HomeHeroHeaderController } from "@/components/HomeHeroHeaderController";
 import { TrustedCompanies } from "@/components/TrustedCompanies";
+import { CALENDLY_MEETING_URL } from "@/lib/calendly";
 import { getMessages } from "@/content/messages";
 import { getGalleryItems } from "@/lib/galleryStore";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
@@ -49,6 +51,20 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
   const locale = await resolveLocaleParam(params);
   const messages = getMessages(locale);
   const items = await getGalleryItems();
+  const bookingCopy =
+    locale === "fr"
+      ? {
+          eyebrow: "Book a meeting",
+          title: "Planifie un appel rapide.",
+          text: "Bloque un creneau en ligne et recois automatiquement le lien Google Meet pour discuter de ton projet.",
+          frameTitle: "Reservation Calendly BrotherStudio",
+        }
+      : {
+          eyebrow: "Book a meeting",
+          title: "Schedule a quick meeting.",
+          text: "Pick a time online and automatically receive a Google Meet link to discuss your project.",
+          frameTitle: "BrotherStudio Calendly booking",
+        };
 
   return (
     <main className="siteMain">
@@ -72,6 +88,14 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
         }}
       />
       <TrustedCompanies locale={locale} />
+      <section className="homeBookingSection" aria-labelledby="homeBookingTitle">
+        <div className="homeBookingIntro">
+          <p>{bookingCopy.eyebrow}</p>
+          <h2 id="homeBookingTitle">{bookingCopy.title}</h2>
+          <span>{bookingCopy.text}</span>
+        </div>
+        <CalendlyEmbed title={bookingCopy.frameTitle} url={CALENDLY_MEETING_URL} />
+      </section>
       <BackToTopButton
         label={messages.home.backToTopLabel}
         footerLabel={messages.home.backToFooterLabel}

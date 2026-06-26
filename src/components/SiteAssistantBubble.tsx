@@ -15,10 +15,12 @@ function buildCopy(locale: AssistantLocale) {
   return locale === "fr"
     ? {
         bubbleLabel: "Q&A",
+        dockLabel: "MyAssitant",
         openAria: "Ouvrir l'assistant",
       }
     : {
         bubbleLabel: "Q&A",
+        dockLabel: "MyAssitant",
         openAria: "Open assistant",
       };
 }
@@ -62,7 +64,8 @@ export function SiteAssistantBubble({ hasMobileMenu = true }: SiteAssistantBubbl
         onClick={() => setIsOpen((current) => !current)}
       >
         <span className="siteAssistantBubbleButtonMark">?</span>
-        <span>{copy.bubbleLabel}</span>
+        <span className="siteAssistantBubbleButtonLabel">{copy.bubbleLabel}</span>
+        <span className="siteAssistantBubbleButtonDockLabel">{copy.dockLabel}</span>
       </button>
     </div>
   );

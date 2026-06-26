@@ -1,17 +1,19 @@
+import Image from "next/image";
+
 import type { Locale } from "@/lib/i18n";
 
 type TrustedCompaniesProps = {
   locale: Locale;
 };
 
-const placeholderLogos = [
-  { name: "NORTH", mark: "N", detail: "Architecture" },
-  { name: "ATELIER 04", mark: "A4", detail: "Design studio" },
-  { name: "FORM", mark: "F", detail: "Real estate" },
-  { name: "HABITAT", mark: "H", detail: "Development" },
-  { name: "AXIS", mark: "AX", detail: "Construction" },
-  { name: "MONOLITH", mark: "M", detail: "Architecture" },
-  { name: "STUDIO 27", mark: "27", detail: "Interiors" },
+const trustedLogos = [
+  { name: "Bon Plan", src: "/trusted-logos/1.png" },
+  { name: "Bner", src: "/trusted-logos/2.png" },
+  { name: "Buildner", src: "/trusted-logos/3.png" },
+  { name: "Courtage Immobilier", src: "/trusted-logos/4.png" },
+  { name: "SPC", src: "/trusted-logos/5.png" },
+  { name: "Batiplus", src: "/trusted-logos/6.png" },
+  { name: "Pearlman", src: "/trusted-logos/7.png" },
 ] as const;
 
 export function TrustedCompanies({ locale }: TrustedCompaniesProps) {
@@ -46,16 +48,19 @@ export function TrustedCompanies({ locale }: TrustedCompaniesProps) {
               className="trustedCompaniesLogoGroup"
               aria-hidden={groupIndex === 1 ? "true" : undefined}
             >
-              {placeholderLogos.map((logo) => (
+              {trustedLogos.map((logo) => (
                 <article
                   key={`${groupIndex}-${logo.name}`}
                   className="trustedCompaniesLogoCard"
                 >
-                  <span className="trustedCompaniesLogoMark">{logo.mark}</span>
-                  <span className="trustedCompaniesLogoCopy">
-                    <strong>{logo.name}</strong>
-                    <small>{logo.detail}</small>
-                  </span>
+                  <Image
+                    className="trustedCompaniesLogoImage"
+                    src={logo.src}
+                    alt={logo.name}
+                    width={320}
+                    height={180}
+                    sizes="(max-width: 768px) 160px, 220px"
+                  />
                 </article>
               ))}
             </div>
