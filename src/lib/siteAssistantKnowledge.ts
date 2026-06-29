@@ -241,7 +241,7 @@ const RAW_ASSISTANT_CATEGORIES: AssistantCategory[] = [
         id: "process-flow",
         question: { fr: "Comment se deroule un projet ?", en: "How does a project work?" },
         answer: {
-          fr: "Vous nous envoyez vos plans, nous realisons les visuels puis vous les validez sur notre plateforme MyReview.",
+          fr: "Vous nous envoyez vos plans, nous realisons les visuels puis vous les validez sur notre plateforme MyReview™.",
         },
         keywords: ["comment", "processus", "myreview", "project"],
       },
@@ -260,7 +260,7 @@ const RAW_ASSISTANT_CATEGORIES: AssistantCategory[] = [
       {
         id: "process-follow",
         question: { fr: "Puis-je suivre l'avancement ?", en: "Can I follow the progress?" },
-        answer: { fr: "Oui, grace a notre plateforme MyReview." },
+        answer: { fr: "Oui, grace a notre plateforme MyReview™." },
         keywords: ["avancement", "progress", "suivre", "myreview"],
       },
       {
@@ -644,17 +644,56 @@ function buildPricingKnowledgeContext(locale: AssistantLocale) {
     `## ${price.websiteTitle}\n${price.websites
       .map((item) => buildPriceRow(item.name, item.price))
       .join("\n")}`,
+    `## ${price.adsTitle}\n${price.ads
+      .map((item) => {
+        const header = buildPriceRow(
+          item.name,
+          item.price ?? (locale === "fr" ? "Voir options" : "See options"),
+        );
+        const options = buildOptionRows(
+          item.options?.filter(
+            (option): option is { name: string; price: string } => typeof option.price === "string",
+          ),
+          locale,
+        );
+        const optionNames = item.options?.length
+          ? `\n${item.options.map((option) => `  - ${option.name}`).join("\n")}`
+          : "";
+        return options ? `${header}\n${options}` : `${header}${optionNames}`;
+      })
+      .join("\n")}`,
     `## ${price.packagesTitle}\n${price.packages
       .map((item) => {
-        const details = item.details?.length
-          ? item.details.map((detail) => `  - ${detail}`).join("\n")
+        const summary = item.summary
+          ? locale === "fr"
+            ? `\n  - Sous-titre: ${item.summary}`
+            : `\n  - Subtitle: ${item.summary}`
+          : "";
+        const sectionLines = item.sections?.length
+          ? item.sections
+              .map(
+                (section) =>
+                  `  - ${section.title}\n${section.items.map((detail) => `    - ${detail}`).join("\n")}`,
+              )
+              .join("\n")
+          : "";
+        const included = item.included?.length
+          ? `\n  - ${price.packageIncludedLabel}\n${item.included
+              .map((detail) => `    - ${detail}`)
+              .join("\n")}`
+          : "";
+        const delivery = item.delivery?.length
+          ? `\n  - ${price.packageDeliveryLabel}\n${item.delivery
+              .map((detail) => `    - ${detail}`)
+              .join("\n")}`
           : "";
         const compare = item.comparePrice
           ? locale === "fr"
             ? `\n  - Valeur standard: ${item.comparePrice}`
             : `\n  - Standard value: ${item.comparePrice}`
           : "";
-        return `${buildPriceRow(item.name, item.price)}${compare}${details ? `\n${details}` : ""}`;
+        const note = item.note ? `\n  - Note: ${item.note}` : "";
+        return `${buildPriceRow(item.name, item.price)}${summary}${compare}${sectionLines ? `\n${sectionLines}` : ""}${included}${delivery}${note}`;
       })
       .join("\n")}`,
     `## ${price.includedTitle}\n${getMessages(locale).services.pricingIncludes
@@ -689,10 +728,61 @@ function buildPricingFallbackReply(input: string, locale: AssistantLocale) {
   const isVideo = /video|walkthrough|drone/.test(normalizedInput);
   const isPackage = /package|forfait|pack/.test(normalizedInput);
   const isImage = /image|render|rendu|plan|floorplan|drone view/.test(normalizedInput);
+  const isAds = /meta ads|ads|publicite|publicite meta|lead generation|facebook|instagram/.test(
+    normalizedInput,
+  );
   const isPricing = isAssistantPricingQuestion(input);
+  const mentionedPackage = price.packages.find((item) =>
+    normalizedInput.includes(normalizeAssistantText(item.name)),
+  );
 
-  if (!isPricing && !isWebsite && !isVideo && !isPackage && !isImage) {
+  if (!isPricing && !isWebsite && !isVideo && !isPackage && !isImage && !isAds && !mentionedPackage) {
     return null;
+  }
+
+  if (mentionedPackage) {
+    const sectionLines = mentionedPackage.sections?.length
+      ? mentionedPackage.sections
+          .map((section) => {
+            const details = section.items
+              .filter((detail) => detail.trim() !== "-")
+              .map((detail) => `  - ${detail}`)
+              .join("\n");
+            return details ? `- ${section.title}\n${details}` : `- ${section.title}`;
+          })
+          .join("\n")
+      : "";
+    const includedLines = mentionedPackage.included?.length
+      ? mentionedPackage.included
+          .filter((detail) => detail.trim() !== "-")
+          .map((detail) => `  - ${detail}`)
+          .join("\n")
+      : "";
+    const deliveryLines = mentionedPackage.delivery?.length
+      ? mentionedPackage.delivery.map((detail) => `  - ${detail}`).join("\n")
+      : "";
+
+    return [
+      locale === "fr"
+        ? `Voici le detail actuel de ${mentionedPackage.name}:`
+        : `Here is the current breakdown for ${mentionedPackage.name}:`,
+      buildPriceRow(mentionedPackage.name, mentionedPackage.price),
+      mentionedPackage.summary
+        ? locale === "fr"
+          ? `- Sous-titre: ${mentionedPackage.summary}`
+          : `- Subtitle: ${mentionedPackage.summary}`
+        : null,
+      includedLines
+        ? `${locale === "fr" ? `- ${price.packageIncludedLabel}` : `- ${price.packageIncludedLabel}`}\n${includedLines}`
+        : null,
+      sectionLines,
+      deliveryLines
+        ? `${locale === "fr" ? `- ${price.packageDeliveryLabel}` : `- ${price.packageDeliveryLabel}`}\n${deliveryLines}`
+        : null,
+      closingLine,
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
 
   if (isWebsite) {
@@ -718,6 +808,23 @@ function buildPricingFallbackReply(input: string, locale: AssistantLocale) {
             )
           : [buildPriceRow(item.name, item.price ?? "")],
       ),
+      reductionLine,
+      closingLine,
+    ].join("\n");
+  }
+
+  if (isAds) {
+    return [
+      locale === "fr"
+        ? "Voici les principaux details Meta Ads Lead Generation:"
+        : "Here are the main Meta Ads Lead Generation details:",
+      ...price.ads.flatMap((item) => {
+        const rows = [buildPriceRow(item.name, item.price ?? "")];
+        if (item.options?.length) {
+          rows.push(...item.options.map((option) => `  - ${option.name}${option.price ? `: ${option.price}` : ""}`));
+        }
+        return rows;
+      }),
       reductionLine,
       closingLine,
     ].join("\n");

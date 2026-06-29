@@ -78,6 +78,7 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
         }}
         sceneFilterLabels={{
           ariaLabel: messages.home.sceneFilterAriaLabel,
+          video: messages.home.sceneFilterLabels.video,
           all: messages.home.sceneFilterLabels.all,
           bedroom: messages.home.sceneFilterLabels.bedroom,
           livingRoom: messages.home.sceneFilterLabels.livingRoom,

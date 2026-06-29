@@ -55,40 +55,29 @@ export default async function LandingPage({ params }: LandingPageProps) {
     project: getGalleryProjectLabel(item.project) || "BrotherStudio",
   }));
 
-  const standardVideos = messages.price.videos
-    .filter((service) => service.subsectionTitle !== messages.price.walkthroughTitle)
-    .flatMap((service) => {
-      if (service.options?.length) {
-        return service.options.map((option) => ({
-          name: `${service.name} · ${option.name}`,
-          price: option.price,
-        }));
-      }
-      return service.price ? [{ name: service.name, price: service.price }] : [];
-    });
+  const standardVideos = messages.price.videos.filter(
+    (service) => service.subsectionTitle !== messages.price.walkthroughTitle,
+  );
 
-  const walkthroughs = messages.price.videos
-    .filter((service) => service.subsectionTitle === messages.price.walkthroughTitle)
-    .flatMap((service) => {
-      if (service.options?.length) {
-        return service.options.map((option) => ({
-          name: `${service.name} · ${option.name}`,
-          price: option.price,
-        }));
-      }
-      return service.price ? [{ name: service.name, price: service.price }] : [];
-    });
+  const walkthroughs = messages.price.videos.filter(
+    (service) => service.subsectionTitle === messages.price.walkthroughTitle,
+  );
 
   const pricing = {
     imagesTitle: messages.price.imagesTitle,
     videosTitle: messages.price.videosTitle,
     walkthroughTitle: messages.price.walkthroughTitle,
     websiteTitle: messages.price.websiteTitle,
+    adsTitle: messages.price.adsTitle,
     packagesTitle: messages.price.packagesTitle,
+    includedLabel: messages.price.packageIncludedLabel,
+    deliveryLabel: messages.price.packageDeliveryLabel,
+    imageNote: messages.price.imageNote,
     images: messages.price.images,
     videos: standardVideos,
     walkthroughs,
     websites: messages.price.websites,
+    ads: messages.price.ads,
     packages: messages.price.packages,
   };
 

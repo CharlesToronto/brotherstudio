@@ -153,7 +153,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
       kind: "submenu" as const,
       children: [
         {
-          label: "MyReview",
+          label: "MyReview™",
           href: "/myreview",
           isCurrent:
             subpath === "/myreview" || subpath === "/mystudio" || subpath === "/myproject",
@@ -366,7 +366,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
             }
             onClick={() => setOpenSubmenuKey(null)}
           >
-            <span>MyReview</span>
+            <span>MyReview™</span>
             <span aria-hidden="true">↗</span>
           </Link>
           <Link

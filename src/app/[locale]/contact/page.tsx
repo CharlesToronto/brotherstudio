@@ -45,33 +45,80 @@ export default async function LocalizedContactPage({
 }: LocaleContactPageProps) {
   const locale = await resolveLocaleParam(params);
   const messages = getMessages(locale);
+  const contactCopy =
+    locale === "fr"
+      ? {
+          eyebrow: "Contact",
+          title: "Parlons de votre projet immobilier.",
+          intro:
+            "Envoyez vos plans, vos objectifs de vente ou une reference visuelle. Nous vous repondons avec la meilleure approche pour vos images, votre video ou votre site de vente.",
+          highlights: ["Reponse sous 24h", "Plans PDF bienvenus", "Google Meet disponible"],
+          directTitle: "Contact direct",
+          directText:
+            "Pour une demande precise, ajoutez le type de projet, le nombre d'images souhaitees et votre deadline.",
+        }
+      : {
+          eyebrow: "Contact",
+          title: "Let’s discuss your real estate project.",
+          intro:
+            "Send your plans, sales goals, or visual references. We will reply with the right approach for imagery, video, or a sales website.",
+          highlights: ["Reply within 24h", "PDF plans welcome", "Google Meet available"],
+          directTitle: "Direct contact",
+          directText:
+            "For a precise request, include the project type, image quantity, and your deadline.",
+        };
   const bookingCopy =
     locale === "fr"
       ? {
           eyebrow: "Book a meeting",
-          title: "Reserve un appel Google Meet.",
-          text: "Choisis un creneau disponible. Le rendez-vous est ajoute au calendrier avec le lien Google Meet cree automatiquement.",
+          title: "Planifie un appel rapide.",
+          text: "Bloque un creneau en ligne et recois automatiquement le lien Google Meet pour discuter de ton projet.",
           frameTitle: "Reservation Calendly BrotherStudio",
         }
       : {
           eyebrow: "Book a meeting",
-          title: "Book a Google Meet call.",
-          text: "Choose an available time slot. The meeting is added to the calendar with the Google Meet link created automatically.",
+          title: "Schedule a quick meeting.",
+          text: "Pick a time online and automatically receive a Google Meet link to discuss your project.",
           frameTitle: "BrotherStudio Calendly booking",
         };
 
   return (
-    <main className="siteMain">
+    <main className="siteMain contactPageMain">
       <section className="contactPageStack">
-        <ScrollReveal as="section" className="contactLayout" aria-labelledby="contactTitle">
-          <div className="contactBlock contactBlockDetails">
-            <h1 id="contactTitle" className="contactTitle contactAccent">
-              {messages.contact.title}
-            </h1>
-            <p className="contactIntro">
-              {bookingCopy.text}
-            </p>
-            <address className="contactText contactAccent">
+        <ScrollReveal as="section" className="contactHero" aria-labelledby="contactTitle">
+          <p className="contactHeroEyebrow">{contactCopy.eyebrow}</p>
+          <h1 id="contactTitle" className="contactHeroTitle">
+            {contactCopy.title}
+          </h1>
+          <p className="contactHeroIntro">{contactCopy.intro}</p>
+          <div className="contactHeroHighlights" aria-label="Contact highlights">
+            {contactCopy.highlights.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal
+          as="section"
+          className="contactLayout contactLayoutRefined"
+          aria-labelledby="contactFormTitle"
+          delay={80}
+        >
+          <div className="contactBlock contactFormPanel">
+            <p className="contactPanelEyebrow">{messages.contact.title}</p>
+            <h2 id="contactFormTitle" className="contactPanelTitle">
+              {messages.contact.detailsTitle}
+            </h2>
+            <ContactForm messages={messages.contact.form} />
+          </div>
+
+          <aside className="contactBlock contactInfoPanel" aria-labelledby="contactDirectTitle">
+            <p className="contactPanelEyebrow">{contactCopy.directTitle}</p>
+            <h2 id="contactDirectTitle" className="contactPanelTitle">
+              BrotherStudio
+            </h2>
+            <p className="contactInfoText">{contactCopy.directText}</p>
+            <address className="contactText">
               {site.contact.addressLines.map((line) => (
                 <div key={line}>{line}</div>
               ))}
@@ -83,20 +130,21 @@ export default async function LocalizedContactPage({
                 <a href={`tel:${site.contact.phone}`}>{site.contact.phone}</a>
               </div>
             </address>
-          </div>
-
-          <div className="contactBlock">
-            <p className="bookingEyebrow">{bookingCopy.eyebrow}</p>
-            <h2 className="bookingTitle">{bookingCopy.title}</h2>
-            <CalendlyEmbed title={bookingCopy.frameTitle} url={CALENDLY_MEETING_URL} />
-          </div>
+          </aside>
         </ScrollReveal>
 
-        <ScrollReveal as="section" className="contactBlock" aria-labelledby="contactFormTitle">
-          <h2 id="contactFormTitle" className="contactTitle contactAccent">
-            {messages.contact.detailsTitle}
-          </h2>
-          <ContactForm messages={messages.contact.form} />
+        <ScrollReveal
+          as="section"
+          className="homeBookingSection"
+          aria-labelledby="contactBookingTitle"
+          delay={140}
+        >
+          <div className="homeBookingIntro">
+            <p>{bookingCopy.eyebrow}</p>
+            <h2 id="contactBookingTitle">{bookingCopy.title}</h2>
+            <span>{bookingCopy.text}</span>
+          </div>
+          <CalendlyEmbed title={bookingCopy.frameTitle} url={CALENDLY_MEETING_URL} />
         </ScrollReveal>
       </section>
     </main>

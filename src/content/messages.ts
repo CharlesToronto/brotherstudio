@@ -55,6 +55,7 @@ export type SiteMessages = {
     projectFilterAriaLabel: string;
     sceneFilterAriaLabel: string;
     sceneFilterLabels: {
+      video: string;
       all: string;
       bedroom: string;
       livingRoom: string;
@@ -90,12 +91,15 @@ export type SiteMessages = {
     videosTitle: string;
     walkthroughTitle: string;
     websiteTitle: string;
+    adsTitle: string;
     packagesTitle: string;
     packageTabLabels: {
       ariaLabel: string;
       classic: string;
       premium: string;
     };
+    packageIncludedLabel: string;
+    packageDeliveryLabel: string;
     partnershipTitle: string;
     workflowTitle: string;
     includedTitle: string;
@@ -117,12 +121,29 @@ export type SiteMessages = {
       name: string;
       price: string;
     }>;
+    ads: Array<{
+      name: string;
+      price?: string;
+      options?: Array<{
+        name: string;
+        price?: string;
+      }>;
+    }>;
     packages: Array<{
       name: string;
       price: string;
       comparePrice?: string;
-      tier?: "classic" | "premium" | "other";
-      details?: string[];
+      period?: string;
+      badge?: string;
+      summary?: string;
+      featured?: boolean;
+      sections?: Array<{
+        title: string;
+        items: string[];
+      }>;
+      included?: string[];
+      delivery?: string[];
+      note?: string;
     }>;
     partnerships: string[];
     partnershipNote: string;
@@ -306,7 +327,8 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       projectFilterAriaLabel: "Project filters",
       sceneFilterAriaLabel: "Image type filters",
       sceneFilterLabels: {
-        all: "All",
+        video: "All Video",
+        all: "All Image",
         bedroom: "Bedroom",
         livingRoom: "Living room",
         kitchen: "Kitchen",
@@ -364,12 +386,15 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       videosTitle: "Video",
       walkthroughTitle: "Walkthrough",
       websiteTitle: "Website",
-      packagesTitle: "Packages",
+      adsTitle: "Meta Ads Lead Generation",
+      packagesTitle: "Sales Packages",
       packageTabLabels: {
         ariaLabel: "Package tiers",
         classic: 'Package "classic"',
         premium: 'Package "premium"',
       },
+      packageIncludedLabel: "Overview",
+      packageDeliveryLabel: "Delivery",
       partnershipTitle: "Partnership",
       workflowTitle: "Workflow",
       includedTitle: "Included in pricing",
@@ -432,40 +457,329 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
           price: "From CHF 3400",
         },
       ],
+      ads: [
+        {
+          name: "Campaign setup",
+          price: "CHF 670 + your ads budget",
+          options: [
+            { name: "Meta Ads campaign creation" },
+            { name: "Pixel & tracking setup" },
+            { name: "Content creation" },
+            { name: "Profile targeting" },
+            { name: "Retargeting" },
+            { name: "Lookalike strategy" },
+            { name: "Performance dashboard & report" },
+          ],
+        },
+      ],
       packages: [
         {
-          name: "Villa package",
-          price: "CHF 5400",
+          name: "MyStart",
+          summary: "Perfect for single residential projects",
+          price: "CHF 2990",
           comparePrice: "7670 CHF",
-          tier: "classic",
-          details: [
-            "4-6 interior images",
-            "1-2 style focus images",
-            "1x sales video (1080p)",
-            "1-3 sales plans",
-            "BS template sales website",
-            "MyReview tool",
+          period: "Per project",
+          sections: [
+            {
+              title: "3D Visualization",
+              items: [
+                "4 interior / exterior images",
+                "2 focus images",
+                "Lighting",
+                "Materials & furnishing",
+                "3 revisions",
+                "Up to 4K",
+              ],
+            },
+            {
+              title: "Cinematic Video",
+              items: [
+                "1 Video Walkthrough Marketing (1080p)",
+                "Smooth Cinematic Camera Movements",
+                "Realistic Lighting & Atmosphere",
+                "Optimized for Website & Social Media",
+                "Custom Project Branding",
+              ],
+            },
+            {
+              title: "Real Estate Sales Website",
+              items: [
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+              ],
+            },
+            {
+              title: "3D / 2D Floor Plans",
+              items: ["-", "-", "-", "-"],
+            },
+            {
+              title: "Sales Agent AI (on website)",
+              items: [
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+              ],
+            },
+            {
+              title: "Meta Ads Lead Generation",
+              items: [],
+            },
+            {
+              title: "MyReview Platform",
+              items: [
+                "MyReview™ platform",
+                "Centralized project review",
+                "Comment directly on images",
+                "Faster approvals",
+                "Reduced email exchanges",
+              ],
+            },
+          ],
+          included: [
+            "4 interior / exterior images",
+            "2 focus images",
+            "-",
+            "1 Video Walkthrough Marketing (1080p)",
+            "-",
+            "-",
+            "-",
+            "-",
+            "-",
+            "MyReview Platform",
+          ],
+          delivery: [
+            "4-5 days",
+            "Images: 1 day per image",
+            "High resolution files",
+            "Web optimized files",
+            "Ready for marketing",
           ],
         },
         {
-          name: "Website package",
-          price: "CHF 7700",
+          name: "MySales",
+          summary: "Most popular for villas & small developments",
+          price: "CHF 5990",
           comparePrice: "17800 CHF",
-          tier: "premium",
-          details: [
-            "8-12 images 4K",
-            "3-4 focus / ambiance night variants 4K",
-            "1 video (1080p)",
-            "1-5 sales plans",
-            "Custom sales website",
-            "MyReview tool",
+          period: "Per project",
+          badge: "Main offer",
+          featured: true,
+          sections: [
+            {
+              title: "3D Visualization",
+              items: [
+                "8 interior / exterior images",
+                "3-4 focus images",
+                "Lighting",
+                "Materials & furnishing",
+                "3 revisions",
+                "Up to 4K",
+              ],
+            },
+            {
+              title: "Cinematic Video",
+              items: [
+                "1 Video Walkthrough Marketing (1080p)",
+                "Smooth Cinematic Camera Movements",
+                "Realistic Lighting & Atmosphere",
+                "Optimized for Website & Social Media",
+                "Custom Project Branding",
+              ],
+            },
+            {
+              title: "Real Estate Sales Website",
+              items: [
+                "AI Sales Assistant trained on your project",
+                "Interactive Gallery & Videos",
+                "Documentation Centre",
+                "Lead Capture & Contact Forms",
+                "Google Maps Integration",
+                "Mobile & Tablet Optimized",
+                "SEO Ready",
+                "Real-Time Weather",
+                "12-month maintenance",
+                "Domain name",
+                "Private & secure cloud",
+              ],
+            },
+            {
+              title: "3D / 2D Floor Plans",
+              items: ["-", "-", "-", "-"],
+            },
+            {
+              title: "Sales Agent AI (on website)",
+              items: [
+                "Available 24/7",
+                "Trained on Your Project",
+                "Instant Buyer Assistance",
+                "Answers Frequently Asked Questions",
+                "Shares Project Information",
+                "Guides Buyers Through the Project",
+                "Smart Lead Qualification",
+              ],
+            },
+            {
+              title: "Meta Ads Lead Generation",
+              items: [
+                "Meta Ads campaign creation",
+                "Pixel & tracking setup",
+                "Content creation",
+                "Profile targeting",
+                "Retargeting",
+                "Lookalike strategy",
+                "Performance dashboard",
+              ],
+            },
+            {
+              title: "MyReview Platform",
+              items: [
+                "MyReview™ platform",
+                "Centralized project review",
+                "Comment directly on images",
+                "Faster approvals",
+                "Reduced email exchanges",
+              ],
+            },
+          ],
+          included: [
+            "8 interior / exterior images",
+            "3-4 focus images",
+            "1 ambiance image (rain, snow, night, etc.)",
+            "1 Video Walkthrough Marketing (1080p)",
+            "Website template",
+            "Sales Agent AI",
+            "Meta Ads Lead Generation",
+            "-",
+            "-",
+            "MyReview Platform",
+          ],
+          delivery: [
+            "2-3 weeks for the full package",
+            "Images: 1 day per image",
+            "High resolution files",
+            "Web optimized files",
+            "Ready for marketing",
           ],
         },
         {
-          name: "Building package",
-          price: "On request",
-          tier: "other",
-          details: ["Project size review required before pricing."],
+          name: "MySignature",
+          summary: "For premium developments & large-scale projects",
+          price: "CHF 8990",
+          period: "Per project",
+          sections: [
+            {
+              title: "3D Visualization",
+              items: [
+                "14 interior / exterior images",
+                "6-7 focus images",
+                "Lighting",
+                "Materials & furnishing",
+                "3 revisions",
+                "Up to 4K",
+              ],
+            },
+            {
+              title: "Cinematic Video",
+              items: [
+                "1 Video Walkthrough Marketing (1080p)",
+                "Smooth Cinematic Camera Movements",
+                "Realistic Lighting & Atmosphere",
+                "Optimized for Website & Social Media",
+                "Custom Project Branding",
+              ],
+            },
+            {
+              title: "Real Estate Sales Website",
+              items: [
+                "AI Sales Assistant trained on your project",
+                "Interactive Gallery & Videos",
+                "Documentation Centre",
+                "Lead Capture & Contact Forms",
+                "Google Maps Integration",
+                "Mobile & Tablet Optimized",
+                "SEO Ready",
+                "Real-Time Weather",
+                "12-month maintenance",
+                "Domain name",
+                "Private & secure cloud",
+              ],
+            },
+            {
+              title: "3D / 2D Floor Plans",
+              items: [
+                "Textures",
+                "Shadow",
+                "Furnishing",
+                "Project Branding colors",
+              ],
+            },
+            {
+              title: "Sales Agent AI (on website)",
+              items: [
+                "Available 24/7",
+                "Trained on Your Project",
+                "Instant Buyer Assistance",
+                "Answers Frequently Asked Questions",
+                "Shares Project Information",
+                "Guides Buyers Through the Project",
+                "Smart Lead Qualification",
+              ],
+            },
+            {
+              title: "Meta Ads Lead Generation",
+              items: [
+                "Meta Ads campaign creation",
+                "Pixel & tracking setup",
+                "Content creation",
+                "Profile targeting",
+                "Retargeting",
+                "Lookalike strategy",
+                "Performance dashboard",
+              ],
+            },
+            {
+              title: "MyReview Platform",
+              items: [
+                "MyReview™ platform",
+                "Centralized project review",
+                "Comment directly on images",
+                "Faster approvals",
+                "Reduced email exchanges",
+              ],
+            },
+          ],
+          included: [
+            "14 interior / exterior images",
+            "6-7 focus images",
+            "2 ambiance images (rain, snow, night, etc.)",
+            "1 Video Walkthrough Marketing (1080p)",
+            "Custom website",
+            "Sales Agent AI",
+            "Meta Ads Lead Generation",
+            "Installment payment available",
+            "3D / 2D Floor Plans",
+            "MyReview Platform",
+          ],
+          delivery: [
+            "3-4 weeks for the full package",
+            "Images: 1 day per image",
+            "High resolution files",
+            "Web optimized files",
+            "Ready for marketing",
+            "Ready for campaigns",
+          ],
         },
       ],
       partnerships: [
@@ -477,7 +791,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Agreement based on mutual understanding (no formal contract).\nDiscounts are applied based on the total number of projects completed over the year.\nIf the agreed volume is not reached, a price adjustment may be applied to reflect the actual tier.",
       workflowIncludesLabel:
         "Includes: interactive review platform to validate and comment on visuals in real time >",
-      workflowLinkLabel: "MyReview",
+      workflowLinkLabel: "MyReview™",
       workflowComingSoon:
         "Coming soon: immersive and cinematic digital experience to present and promote the project online.",
       ctaText: "For a custom quote, contact BrotherStudio.",
@@ -578,7 +892,8 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       projectFilterAriaLabel: "Filtres de projet",
       sceneFilterAriaLabel: "Filtres de type d'image",
       sceneFilterLabels: {
-        all: "Toutes",
+        video: "Toutes les vidéos",
+        all: "Toutes les images",
         bedroom: "Chambre",
         livingRoom: "Living room",
         kitchen: "Cuisine",
@@ -636,12 +951,15 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       videosTitle: "Videos",
       walkthroughTitle: "Walkthrough",
       websiteTitle: "Website",
-      packagesTitle: "Forfait",
+      adsTitle: "Meta Ads Lead Generation",
+      packagesTitle: "Packages de vente",
       packageTabLabels: {
         ariaLabel: "Niveaux de forfait",
         classic: 'Package "classic"',
         premium: 'Package "premium"',
       },
+      packageIncludedLabel: "Aperçu",
+      packageDeliveryLabel: "Livraison",
       partnershipTitle: "Partenariat",
       workflowTitle: "Workflow",
       includedTitle: "Inclus dans mes prix",
@@ -704,40 +1022,329 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
           price: "From CHF 3400",
         },
       ],
+      ads: [
+        {
+          name: "Setup de campagne",
+          price: "CHF 670 + votre budget pub",
+          options: [
+            { name: "Creation de campagne Meta Ads" },
+            { name: "Pixel & tracking setup" },
+            { name: "Creation de contenu" },
+            { name: "Profile targeting" },
+            { name: "Retargeting" },
+            { name: "Lookalike strategy" },
+            { name: "Performance dashboard & report" },
+          ],
+        },
+      ],
       packages: [
         {
-          name: "Villa forfait",
-          price: "CHF 5400",
+          name: "MyStart",
+          summary: "Ideal pour les projets residentiels uniques",
+          price: "CHF 2990",
           comparePrice: "7670 CHF",
-          tier: "classic",
-          details: [
-            "4-6 images interieures",
-            "1-2 images style focus",
-            "1x video de vente (1080p)",
-            "1-3 plan de vente",
-            "BS template sales website",
-            "MyReview tool",
+          period: "Par projet",
+          sections: [
+            {
+              title: "3D Visualization",
+              items: [
+                "4 images interieures / exterieures",
+                "2 images focus",
+                "Lumiere",
+                "Materiaux & fourniture",
+                "3 revisions",
+                "Jusqu'a 4K",
+              ],
+            },
+            {
+              title: "Video cinematographique",
+              items: [
+                "1 Video Walkthrough Marketing (1080p)",
+                "Mouvements de camera cinematographiques fluides",
+                "Lumiere & ambiance realistes",
+                "Optimise pour website & reseaux sociaux",
+                "Branding projet personnalise",
+              ],
+            },
+            {
+              title: "Site web de vente immobiliere",
+              items: [
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+              ],
+            },
+            {
+              title: "3D / 2D Floor Plans",
+              items: ["-", "-", "-", "-"],
+            },
+            {
+              title: "Agent IA de vente (sur le site web)",
+              items: [
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+              ],
+            },
+            {
+              title: "Meta Ads Lead Generation",
+              items: [],
+            },
+            {
+              title: "Plateforme MyReview",
+              items: [
+                "Plateforme MyReview™",
+                "Review centralisee du projet",
+                "Commentaires directs sur les images",
+                "Approvals plus rapides",
+                "Moins d'emails",
+              ],
+            },
+          ],
+          included: [
+            "4 images interieures / exterieures",
+            "2 images focus",
+            "-",
+            "1 Video Walkthrough Marketing (1080p)",
+            "-",
+            "-",
+            "-",
+            "-",
+            "-",
+            "Plateforme MyReview",
+          ],
+          delivery: [
+            "4-5 jours",
+            "Images : 1 jour par image",
+            "Fichiers haute resolution",
+            "Fichiers optimises pour le web",
+            "Pret pour le marketing",
           ],
         },
         {
-          name: "Website forfait",
-          price: "CHF 7700",
+          name: "MySales",
+          summary: "Le plus populaire pour les villas et petits developpements",
+          price: "CHF 5990",
           comparePrice: "17800 CHF",
-          tier: "premium",
-          details: [
-            "8-12 images 4K",
-            "3-4 focus / ambiance night variantes 4K",
-            "1 video (1080p)",
-            "1-5 sales plans",
-            "Site de vente custom",
-            "MyReview tool",
+          period: "Par projet",
+          badge: "Offre principale",
+          featured: true,
+          sections: [
+            {
+              title: "3D Visualization",
+              items: [
+                "8 images interieures / exterieures",
+                "3-4 images focus",
+                "Lumiere",
+                "Materiaux & fourniture",
+                "3 revisions",
+                "Jusqu'a 4K",
+              ],
+            },
+            {
+              title: "Video cinematographique",
+              items: [
+                "1 Video Walkthrough Marketing (1080p)",
+                "Mouvements de camera cinematographiques fluides",
+                "Lumiere & ambiance realistes",
+                "Optimise pour website & reseaux sociaux",
+                "Branding projet personnalise",
+              ],
+            },
+            {
+              title: "Site web de vente immobiliere",
+              items: [
+                "Agent IA de vente entraine sur votre projet",
+                "Galerie interactive & videos",
+                "Centre de documentation",
+                "Capture de leads & formulaires de contact",
+                "Integration Google Maps",
+                "Optimise mobile & tablette",
+                "SEO ready",
+                "Meteo en temps reel",
+                "Maintenance 12 mois",
+                "Nom de domaine",
+                "Cloud prive et securise",
+              ],
+            },
+            {
+              title: "3D / 2D Floor Plans",
+              items: ["-", "-", "-", "-"],
+            },
+            {
+              title: "Agent IA de vente (sur le site web)",
+              items: [
+                "Disponible 24/7",
+                "Entraine sur votre projet",
+                "Assistance acheteur instantanee",
+                "Repond aux questions frequentes",
+                "Partage les informations du projet",
+                "Guide les acheteurs a travers le projet",
+                "Qualification intelligente des leads",
+              ],
+            },
+            {
+              title: "Meta Ads Lead Generation",
+              items: [
+                "Creation de campagne Meta Ads",
+                "Pixel et tracking setup",
+                "Creation de contenu",
+                "Ciblage de profils",
+                "Retargeting",
+                "Strategie lookalike",
+                "Dashboard de performance",
+              ],
+            },
+            {
+              title: "Plateforme MyReview",
+              items: [
+                "Plateforme MyReview™",
+                "Review centralisee du projet",
+                "Commentaires directs sur les images",
+                "Approvals plus rapides",
+                "Moins d'emails",
+              ],
+            },
+          ],
+          included: [
+            "8 images interieures / exterieures",
+            "3-4 images focus",
+            "1 image ambiance (pluie, neige, nuit, etc.)",
+            "1 Video Walkthrough Marketing (1080p)",
+            "Website Template",
+            "Sales Agent AI",
+            "Meta Ads Lead Generation",
+            "-",
+            "-",
+            "Plateforme MyReview",
+          ],
+          delivery: [
+            "Compter 2-3 semaines pour le package complet",
+            "Images : 1 jour par image",
+            "Fichiers haute resolution",
+            "Fichiers optimises pour le web",
+            "Pret pour le marketing",
           ],
         },
         {
-          name: "Immeuble forfait",
-          price: "Sur demande",
-          tier: "other",
-          details: ["Besoin de voir la taille du projet."],
+          name: "MySignature",
+          summary: "Pour les developpements premium et projets de grande envergure",
+          price: "CHF 8990",
+          period: "Par projet",
+          sections: [
+            {
+              title: "3D Visualization",
+              items: [
+                "14 images interieures / exterieures",
+                "6-7 images focus",
+                "Lumiere",
+                "Materiaux & fourniture",
+                "3 revisions",
+                "Jusqu'a 4K",
+              ],
+            },
+            {
+              title: "Video cinematographique",
+              items: [
+                "1 Video Walkthrough Marketing (1080p)",
+                "Mouvements de camera cinematographiques fluides",
+                "Lumiere & ambiance realistes",
+                "Optimise pour website & reseaux sociaux",
+                "Branding projet personnalise",
+              ],
+            },
+            {
+              title: "Site web de vente immobiliere",
+              items: [
+                "Agent IA de vente entraine sur votre projet",
+                "Galerie interactive & videos",
+                "Centre de documentation",
+                "Capture de leads & formulaires de contact",
+                "Integration Google Maps",
+                "Optimise mobile & tablette",
+                "SEO ready",
+                "Meteo en temps reel",
+                "Maintenance 12 mois",
+                "Nom de domaine",
+                "Cloud prive et securise",
+              ],
+            },
+            {
+              title: "3D / 2D Floor Plans",
+              items: [
+                "Textures",
+                "Ombre",
+                "Fournitures",
+                "Couleurs de branding projet",
+              ],
+            },
+            {
+              title: "Agent IA de vente (sur le site web)",
+              items: [
+                "Disponible 24/7",
+                "Entraine sur votre projet",
+                "Assistance acheteur instantanee",
+                "Repond aux questions frequentes",
+                "Partage les informations du projet",
+                "Guide les acheteurs a travers le projet",
+                "Qualification intelligente des leads",
+              ],
+            },
+            {
+              title: "Meta Ads Lead Generation",
+              items: [
+                "Creation de campagne Meta Ads",
+                "Pixel et tracking setup",
+                "Creation de contenu",
+                "Ciblage de profils",
+                "Retargeting",
+                "Strategie lookalike",
+                "Dashboard de performance",
+              ],
+            },
+            {
+              title: "Plateforme MyReview",
+              items: [
+                "Plateforme MyReview™",
+                "Review centralisee du projet",
+                "Commentaires directs sur les images",
+                "Approvals plus rapides",
+                "Moins d'emails",
+              ],
+            },
+          ],
+          included: [
+            "14 images interieures / exterieures",
+            "6-7 images focus",
+            "2 images ambiance (pluie, neige, nuit, etc.)",
+            "1 Video Walkthrough Marketing (1080p)",
+            "Website Custom",
+            "Sales Agent AI",
+            "Meta Ads Lead Generation",
+            "Paiement echelonne",
+            "3D / 2D Floor Plans",
+            "Plateforme MyReview",
+          ],
+          delivery: [
+            "3-4 semaines pour le package complet",
+            "Images : 1 jour par image",
+            "Fichiers haute resolution",
+            "Fichiers optimises pour le web",
+            "Pret pour le marketing",
+            "Pret pour les campagnes",
+          ],
         },
       ],
       partnerships: [
@@ -749,7 +1356,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         "Agreement based on mutual understanding (no formal contract).\nDiscounts are applied based on the total number of projects completed over the year.\nIf the agreed volume is not reached, a price adjustment may be applied to reflect the actual tier.",
       workflowIncludesLabel:
         "Inclut : plateforme de review interactive pour valider et commenter les visuels en temps reel >",
-      workflowLinkLabel: "MyReview",
+      workflowLinkLabel: "MyReview™",
       workflowComingSoon:
         "Coming soon : experience digitale immersive et cinematique pour presenter et promouvoir le projet en ligne",
       ctaText: "Pour un devis sur mesure, contactez BrotherStudio.",

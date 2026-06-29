@@ -33,11 +33,11 @@ export function SiteFooter({ locale }: { locale: Locale }) {
     { label: messages.nav.contact, href: withLocalePath(locale, "/contact") },
   ];
   const accessLinks = [
-    { label: "MyReview", href: "/myreview" },
+    { label: "MyReview™", href: "/myreview" },
     { label: "myWebsite", href: withLocalePath(locale, "/mywebsite") },
   ];
   const adminLinks = [
-    { label: "MyReview Admin", href: "/admin/client-projects" },
+    { label: "MyReview™ Admin", href: "/admin/client-projects" },
     { label: "Landing page", href: withLocalePath(locale, "/landing") },
     { label: "Team", href: withLocalePath(locale, "/team/call") },
     { label: "Dashboard", href: "/dashboard" },

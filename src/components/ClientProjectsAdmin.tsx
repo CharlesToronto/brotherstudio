@@ -454,7 +454,7 @@ export function ClientProjectsAdmin({
         <div className="clientAdminSection">
           <div className="clientAdminHeader">
             <h1 id="clientAdminTitle" className="clientAdminTitle">
-              MyReview
+              MyReview™
             </h1>
             <p className="clientAdminText">
               {!isConfigured
@@ -501,7 +501,7 @@ export function ClientProjectsAdmin({
       <div className="clientAdminSection">
         <div className="clientAdminHeader">
           <h1 id="clientAdminTitle" className="clientAdminTitle">
-            MyReview Admin
+            MyReview™ Admin
           </h1>
           <p className="clientAdminText">
             Create a project, copy the client link, then open the admin project page

@@ -7,7 +7,7 @@ import {
 } from "@/lib/projectFeedbackStore";
 
 export const metadata: Metadata = {
-  title: "MyReview",
+  title: "MyReview™",
   robots: {
     index: false,
     follow: false,

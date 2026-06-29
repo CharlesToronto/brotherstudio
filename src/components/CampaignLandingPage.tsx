@@ -2,21 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import {
-  ChevronDown,
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
-  CalendarDays,
   Check,
-  Clock3,
   Mail,
   MessageCircle,
   Play,
 } from "lucide-react";
 
+import { CalendlyEmbed } from "@/components/CalendlyEmbed";
+import { PriceOfferTabs } from "@/components/PriceOfferTabs";
 import { SiteAssistantPanelContent } from "@/components/SiteAssistantPanelContent";
+import { SiteFooter } from "@/components/SiteFooter";
+import { CALENDLY_MEETING_URL } from "@/lib/calendly";
 import type { AssistantLocale } from "@/lib/siteAssistantKnowledge";
 import type { Locale } from "@/lib/i18n";
 
@@ -29,14 +30,28 @@ type LandingImage = {
 
 type LandingService = {
   name: string;
-  price: string;
+  price?: string;
+  options?: Array<{
+    name: string;
+    price?: string;
+  }>;
 };
 
 type LandingPackage = {
   name: string;
   price: string;
   comparePrice?: string;
-  details?: string[];
+  period?: string;
+  badge?: string;
+  summary?: string;
+  featured?: boolean;
+  sections?: Array<{
+    title: string;
+    items: string[];
+  }>;
+  included?: string[];
+  delivery?: string[];
+  note?: string;
 };
 
 type LandingPricingData = {
@@ -44,11 +59,16 @@ type LandingPricingData = {
   videosTitle: string;
   walkthroughTitle: string;
   websiteTitle: string;
+  adsTitle: string;
   packagesTitle: string;
+  includedLabel: string;
+  deliveryLabel: string;
+  imageNote: string;
   images: LandingService[];
   videos: LandingService[];
   walkthroughs: LandingService[];
   websites: LandingService[];
+  ads: LandingService[];
   packages: LandingPackage[];
 };
 
@@ -79,17 +99,16 @@ function getCopy(locale: Locale) {
         "BrotherStudio transforme vos plans en images, vidéos et expériences digitales conçues pour présenter, convaincre et vendre.",
       heroPrimary: "Booker un appel",
       heroSecondary: "Voir mon travail",
-      heroMetricOne: "Jusqu’à 6K",
-      heroMetricOneText: "Images prêtes pour le marketing",
-      heroMetricTwo: "3 révisions",
-      heroMetricTwoText: "Incluses dans le processus",
+      heroMetricOne: "300+",
+      heroMetricOneText: "images realisees pour des clients",
+      heroMetricTwoText: "personnes visitent le site en ce moment",
       aboutEyebrow: "Qui suis-je",
       aboutTitle: "Une expertise architecturale au service de votre communication.",
       aboutText:
         "Je suis Charles, dessinateur en architecture diplômé en Suisse et fondateur de BrotherStudio. Je combine précision technique, sens de la composition et visual storytelling pour donner à chaque projet une présence claire, crédible et désirable.",
       aboutPointOne: "Formation et expérience en architecture",
       aboutPointTwo: "Approche photoréaliste orientée vente",
-      aboutPointThree: "Suivi des révisions avec MyReview",
+      aboutPointThree: "Suivi des révisions avec MyReview™",
       workEyebrow: "Mon travail",
       workTitle: "Des univers visuels construits autour de votre projet.",
       workText:
@@ -126,15 +145,8 @@ function getCopy(locale: Locale) {
       bookingEyebrow: "Agenda",
       bookingTitle: "Réserver un appel découverte.",
       bookingText:
-        "Choisissez votre date et votre heure préférées. Vous recevrez une confirmation par email.",
-      bookingDate: "Date souhaitée",
-      bookingTime: "Heure souhaitée",
-      bookingTimezone: "Fuseau horaire",
-      bookingNote: "Sujet de l’appel",
-      bookingNotePlaceholder: "Quelques mots sur le projet…",
-      bookingSubmit: "Demander ce créneau",
-      bookingSending: "Réservation…",
-      bookingSuccess: "Votre demande de rendez-vous a été envoyée.",
+        "Bloque un creneau en ligne et recois automatiquement le lien Google Meet pour discuter de ton projet.",
+      bookingFrameTitle: "Reservation Calendly BrotherStudio",
       chatTitle: "Une question avant l’appel ?",
       chatText:
         "MyAssistant répond aux questions courantes sur les délais, les prix et les livrables.",
@@ -156,17 +168,16 @@ function getCopy(locale: Locale) {
       "BrotherStudio transforms plans into images, videos, and digital experiences designed to present, convince, and sell.",
     heroPrimary: "Book a call",
     heroSecondary: "View my work",
-    heroMetricOne: "Up to 6K",
-    heroMetricOneText: "Marketing-ready imagery",
-    heroMetricTwo: "3 revisions",
-    heroMetricTwoText: "Included in the process",
+    heroMetricOne: "300+",
+    heroMetricOneText: "images delivered for clients",
+    heroMetricTwoText: "people visiting the site right now",
     aboutEyebrow: "Who I am",
     aboutTitle: "Architectural expertise serving your communication.",
     aboutText:
       "I am Charles, a Swiss-trained architectural draftsman and the founder of BrotherStudio. I combine technical precision, composition, and visual storytelling to give every project a clear, credible, and desirable presence.",
     aboutPointOne: "Architectural training and experience",
     aboutPointTwo: "Sales-focused photorealistic approach",
-    aboutPointThree: "Revision tracking through MyReview",
+    aboutPointThree: "Revision tracking through MyReview™",
     workEyebrow: "My work",
     workTitle: "Visual worlds built around your project.",
     workText: "Browse a recent selection. Every image preserves its original format.",
@@ -200,15 +211,9 @@ function getCopy(locale: Locale) {
     formError: "The request could not be sent.",
     bookingEyebrow: "Calendar",
     bookingTitle: "Book a discovery call.",
-    bookingText: "Choose your preferred date and time. You will receive confirmation by email.",
-    bookingDate: "Preferred date",
-    bookingTime: "Preferred time",
-    bookingTimezone: "Time zone",
-    bookingNote: "Call topic",
-    bookingNotePlaceholder: "A few words about the project…",
-    bookingSubmit: "Request this time",
-    bookingSending: "Booking…",
-    bookingSuccess: "Your meeting request has been sent.",
+    bookingText:
+      "Pick a time online and automatically receive a Google Meet link to discuss your project.",
+    bookingFrameTitle: "BrotherStudio Calendly booking",
     chatTitle: "A question before the call?",
     chatText: "MyAssistant answers common questions about timelines, pricing, and deliverables.",
     footer: "Architectural visualization designed to present and sell.",
@@ -250,15 +255,38 @@ export function CampaignLandingPage({
 }: CampaignLandingPageProps) {
   const copy = getCopy(locale);
   const carouselRef = useRef<HTMLDivElement | null>(null);
-  const [showPricing, setShowPricing] = useState(false);
+  const [liveVisitors, setLiveVisitors] = useState(3);
   const [contactStatus, setContactStatus] = useState<FormStatus>({
     state: "idle",
     message: "",
   });
-  const [bookingStatus, setBookingStatus] = useState<FormStatus>({
-    state: "idle",
-    message: "",
-  });
+
+  useEffect(() => {
+    const intervals = [3000, 8000, 20000];
+    let timeoutId: number | null = null;
+
+    const scheduleNextTick = () => {
+      const nextDelay = intervals[Math.floor(Math.random() * intervals.length)];
+      timeoutId = window.setTimeout(() => {
+        setLiveVisitors((current) => {
+          let nextValue = current;
+          while (nextValue === current) {
+            nextValue = Math.floor(Math.random() * 5) + 1;
+          }
+          return nextValue;
+        });
+        scheduleNextTick();
+      }, nextDelay);
+    };
+
+    scheduleNextTick();
+
+    return () => {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, []);
 
   const scrollCarousel = (direction: -1 | 1) => {
     const carousel = carouselRef.current;
@@ -280,40 +308,6 @@ export function CampaignLandingPage({
       setContactStatus({ state: "success", message: copy.formSuccess });
     } catch (error) {
       setContactStatus({
-        state: "error",
-        message: error instanceof Error ? error.message : copy.formError,
-      });
-    }
-  };
-
-  const handleBookingSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    const date = String(formData.get("date") ?? "");
-    const time = String(formData.get("time") ?? "");
-    const timezone = String(formData.get("timezone") ?? "");
-    const note = String(formData.get("note") ?? "");
-    const hiddenMessage = form.elements.namedItem("message") as HTMLTextAreaElement | null;
-
-    if (hiddenMessage) {
-      hiddenMessage.value = [
-        "Discovery call request",
-        `Preferred date: ${date}`,
-        `Preferred time: ${time}`,
-        `Time zone: ${timezone}`,
-        `Topic: ${note || "-"}`,
-      ].join("\n");
-    }
-
-    setBookingStatus({ state: "sending", message: "" });
-
-    try {
-      await submitLandingForm(form, "campaign-landing-booking", copy.formError);
-      form.reset();
-      setBookingStatus({ state: "success", message: copy.bookingSuccess });
-    } catch (error) {
-      setBookingStatus({
         state: "error",
         message: error instanceof Error ? error.message : copy.formError,
       });
@@ -380,8 +374,8 @@ export function CampaignLandingPage({
             <strong>{copy.heroMetricOne}</strong>
             <span>{copy.heroMetricOneText}</span>
           </div>
-          <div>
-            <strong>{copy.heroMetricTwo}</strong>
+          <div data-live="true">
+            <strong>{liveVisitors}</strong>
             <span>{copy.heroMetricTwoText}</span>
           </div>
         </div>
@@ -438,12 +432,7 @@ export function CampaignLandingPage({
           {images.map((image, index) => (
             <figure key={image.id} className="campaignLandingWorkCard">
               <div className="campaignLandingWorkImage">
-                <Image
-                  src={image.src}
-                  alt={image.alt}
-                  fill
-                  sizes="(max-width: 760px) 82vw, 52vw"
-                />
+                <img src={image.src} alt={image.alt} loading="lazy" />
               </div>
               <figcaption>
                 <span>{String(index + 1).padStart(2, "0")}</span>
@@ -459,25 +448,7 @@ export function CampaignLandingPage({
         </div>
         <div className="campaignLandingVideoGrid">
           <article className="campaignLandingVideoCard">
-            <video
-              src="/myexperience-hero/mesange-hero-loop.mp4"
-              muted
-              loop
-              playsInline
-              controls
-              poster="/myexperience-hero-night.webp"
-            />
-            <div className="campaignLandingVideoLabel">
-              <Play size={15} fill="currentColor" />
-              <span>{copy.videoOne}</span>
-            </div>
-          </article>
-          <article className="campaignLandingVideoPlaceholder">
-            <span className="campaignLandingPlayMark">
-              <Play size={21} fill="currentColor" />
-            </span>
-            <strong>{copy.videoTwo}</strong>
-            <small>{copy.videoPlaceholder}</small>
+            <video src="/videos/bs-maretset-2.mp4" muted loop playsInline controls />
           </article>
         </div>
       </section>
@@ -487,83 +458,32 @@ export function CampaignLandingPage({
           <p className="campaignLandingEyebrow">{copy.servicesEyebrow}</p>
           <h2>{copy.servicesTitle}</h2>
           <p>{copy.servicesText}</p>
-          <button
-            type="button"
-            className="campaignLandingButton campaignLandingButtonGhost"
-            onClick={() => setShowPricing((current) => !current)}
-            aria-expanded={showPricing}
-            aria-controls="campaignLandingPricingPanel"
-          >
-            {showPricing ? copy.servicesToggleOpen : copy.servicesToggleClosed}
-            <ChevronDown
-              size={17}
-              className={showPricing ? "campaignLandingChevronOpen" : undefined}
-            />
-          </button>
           <a className="campaignLandingButton campaignLandingButtonLight" href="#contact">
             {copy.servicesCta}
             <ArrowUpRight size={17} />
           </a>
         </div>
-        <div
-          id="campaignLandingPricingPanel"
-          className="campaignLandingPricingPanel"
-          data-open={showPricing ? "true" : "false"}
-        >
-          {showPricing ? (
-            <div className="campaignLandingPricingGroups">
-              {[
-                { title: pricing.imagesTitle, items: pricing.images },
-                { title: pricing.videosTitle, items: pricing.videos },
-                { title: pricing.walkthroughTitle, items: pricing.walkthroughs },
-                { title: pricing.websiteTitle, items: pricing.websites },
-              ].map((group) => (
-                <section key={group.title} className="campaignLandingPricingGroup">
-                  <header className="campaignLandingPricingGroupHeader">
-                    <p>{group.title}</p>
-                  </header>
-                  <ol className="campaignLandingServiceList">
-                    {group.items.map((service, index) => (
-                      <li key={`${group.title}-${service.name}-${service.price}`}>
-                        <span>{String(index + 1).padStart(2, "0")}</span>
-                        <strong>{service.name}</strong>
-                        <em>{service.price}</em>
-                      </li>
-                    ))}
-                  </ol>
-                </section>
-              ))}
-
-              <section className="campaignLandingPricingGroup campaignLandingPricingGroup--packages">
-                <header className="campaignLandingPricingGroupHeader">
-                  <p>{pricing.packagesTitle}</p>
-                </header>
-                <div className="campaignLandingPackageGrid">
-                  {pricing.packages.map((item) => (
-                    <article
-                      key={`${item.name}-${item.price}`}
-                      className="campaignLandingPackageCard"
-                    >
-                      <div className="campaignLandingPackageTop">
-                        <strong>{item.name}</strong>
-                        <span>{item.price}</span>
-                      </div>
-                      {item.comparePrice ? (
-                        <p className="campaignLandingPackageCompare">{item.comparePrice}</p>
-                      ) : null}
-                      {item.details?.length ? (
-                        <ul className="campaignLandingPackageDetails">
-                          {item.details.map((detail) => (
-                            <li key={detail}>{detail}</li>
-                          ))}
-                        </ul>
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
-              </section>
-            </div>
-          ) : null}
+        <div id="campaignLandingPricingPanel" className="campaignLandingPricingPanel">
+          <PriceOfferTabs
+            packagesTitle={pricing.packagesTitle}
+            packagesTitleId="campaignLandingPackagesTitle"
+            packages={pricing.packages}
+            includedLabel={pricing.includedLabel}
+            deliveryLabel={pricing.deliveryLabel}
+            classicLabel="Prix classique"
+            classicTitleId="campaignLandingClassicTitle"
+            imageTitle={pricing.imagesTitle}
+            imageNote={pricing.imageNote}
+            images={pricing.images}
+            videoTitle={pricing.videosTitle}
+            videos={pricing.videos}
+            walkthroughTitle={pricing.walkthroughTitle}
+            walkthroughs={pricing.walkthroughs}
+            websiteTitle={pricing.websiteTitle}
+            websites={pricing.websites}
+            adsTitle={pricing.adsTitle}
+            ads={pricing.ads}
+          />
         </div>
       </section>
 
@@ -654,70 +574,8 @@ export function CampaignLandingPage({
           <p className="campaignLandingEyebrow">{copy.bookingEyebrow}</p>
           <h2>{copy.bookingTitle}</h2>
           <p>{copy.bookingText}</p>
-          <div className="campaignLandingBookingMeta">
-            <span>
-              <Clock3 size={16} />
-              30 min
-            </span>
-            <span>
-              <CalendarDays size={16} />
-              Google Meet / Phone
-            </span>
-          </div>
         </div>
-        <form className="campaignLandingBookingForm" onSubmit={handleBookingSubmit}>
-          <label>
-            <span>{copy.formName}</span>
-            <input name="name" type="text" autoComplete="name" required />
-          </label>
-          <label>
-            <span>{copy.formEmail}</span>
-            <input name="email" type="email" autoComplete="email" required />
-          </label>
-          <label>
-            <span>{copy.formPhone}</span>
-            <input name="phone" type="tel" autoComplete="tel" />
-          </label>
-          <label>
-            <span>{copy.bookingDate}</span>
-            <input name="date" type="date" required />
-          </label>
-          <label>
-            <span>{copy.bookingTime}</span>
-            <input name="time" type="time" required />
-          </label>
-          <label>
-            <span>{copy.bookingTimezone}</span>
-            <select name="timezone" defaultValue="America/Toronto">
-              <option value="America/Toronto">Toronto · EST/EDT</option>
-              <option value="Europe/Zurich">Suisse · CET/CEST</option>
-              <option value="America/Vancouver">Vancouver · PST/PDT</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
-          <label className="campaignLandingFormWide">
-            <span>{copy.bookingNote}</span>
-            <textarea name="note" rows={3} placeholder={copy.bookingNotePlaceholder} />
-          </label>
-          <textarea className="campaignLandingHoneypot" name="message" readOnly aria-hidden />
-          <input className="campaignLandingHoneypot" name="website" tabIndex={-1} aria-hidden />
-          <button
-            className="campaignLandingButton campaignLandingButtonBlue campaignLandingFormWide"
-            type="submit"
-            disabled={bookingStatus.state === "sending"}
-          >
-            {bookingStatus.state === "sending" ? copy.bookingSending : copy.bookingSubmit}
-            <ArrowUpRight size={17} />
-          </button>
-          {bookingStatus.message ? (
-            <p
-              className="campaignLandingFormWide campaignLandingFormStatus"
-              data-state={bookingStatus.state}
-            >
-              {bookingStatus.message}
-            </p>
-          ) : null}
-        </form>
+        <CalendlyEmbed title={copy.bookingFrameTitle} url={CALENDLY_MEETING_URL} />
       </section>
 
       <section id="landing-assistant" className="campaignLandingChatCta">
@@ -739,16 +597,7 @@ export function CampaignLandingPage({
         </div>
       </section>
 
-      <footer className="campaignLandingFooter">
-        <Image
-          src="/bs-logo-menu-cropped.png"
-          alt="BrotherStudio"
-          width={2565}
-          height={570}
-        />
-        <p>{copy.footer}</p>
-        <span>© {new Date().getFullYear()} BrotherStudio</span>
-      </footer>
+      <SiteFooter locale={locale} />
     </main>
   );
 }

@@ -22,6 +22,7 @@ type HomeGalleryExperienceProps = {
   };
   sceneFilterLabels: {
     ariaLabel: string;
+    video: string;
     all: string;
     bedroom: string;
     livingRoom: string;
@@ -38,6 +39,7 @@ const MOBILE_PRIORITY_PROJECT_KEYS: GalleryProjectKey[] = ["tourelle", "maretset
 const MOBILE_GALLERY_MEDIA_QUERY = "(max-width: 640px)";
 type MobileDisplayMode = "projects" | "grid";
 type SceneFilterKey =
+  | "video"
   | "all"
   | "bedroom"
   | "living-room"
@@ -54,7 +56,7 @@ function normalizeSceneValue(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-function getSceneFilterForItem(item: GalleryItem): Exclude<SceneFilterKey, "all"> | null {
+function getSceneFilterForItem(item: GalleryItem): Exclude<SceneFilterKey, "all" | "video"> | null {
   const value = normalizeSceneValue(item.architect);
 
   if (
@@ -156,6 +158,7 @@ export function HomeGalleryExperience({
   const singleLoopWidthRef = useRef(0);
   const lightboxPreviewRefs = useRef(new Map<string, HTMLButtonElement>());
   const sceneFilters = [
+    { key: "video", label: sceneFilterLabels.video },
     { key: "all", label: sceneFilterLabels.all },
     { key: "bedroom", label: sceneFilterLabels.bedroom },
     { key: "living-room", label: sceneFilterLabels.livingRoom },
@@ -177,6 +180,7 @@ export function HomeGalleryExperience({
   const availableSceneFilters = sceneFilters.filter(
     (filter) =>
       filter.key === "all" ||
+      filter.key === "video" ||
       projectFilteredItems.some((item) => getSceneFilterForItem(item) === filter.key),
   );
   const resolvedSceneFilter = availableSceneFilters.some(
@@ -186,9 +190,12 @@ export function HomeGalleryExperience({
     : "all";
   const effectiveSceneFilter =
     isMobileLayout && mobileDisplayMode === "projects" ? "all" : resolvedSceneFilter;
+  const isVideoFilterActive = effectiveSceneFilter === "video";
   const visibleItems =
     effectiveSceneFilter === "all"
       ? projectFilteredItems
+      : effectiveSceneFilter === "video"
+        ? []
       : projectFilteredItems.filter((item) => getSceneFilterForItem(item) === effectiveSceneFilter);
   const orderedMobileProjects = [
     ...MOBILE_PRIORITY_PROJECT_KEYS
@@ -455,7 +462,13 @@ export function HomeGalleryExperience({
       ) : null}
 
       <div id="home-gallery-grid">
-        {isMobileLayout ? (
+        {isVideoFilterActive ? (
+          <div className="homeVideoGallery" role="list" aria-label={sceneFilterLabels.video}>
+            <article className="homeVideoGalleryCard" role="listitem">
+              <video src="/videos/bs-maretset-2.mp4" muted loop playsInline controls />
+            </article>
+          </div>
+        ) : isMobileLayout ? (
           <>
             <HomeMobileDisplayFilters
               activeMode={mobileDisplayMode}
