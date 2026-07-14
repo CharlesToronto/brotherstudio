@@ -12,6 +12,7 @@ export const PROJECT_OPTIONS = [
   { key: "hdm6", label: "HDM6" },
   { key: "violette", label: "Violette" },
   { key: "cfoc", label: "CFOC" },
+  { key: "plantaz", label: "Plantaz" },
   { key: "three-peaks", label: "Three Peaks" },
   { key: "others", label: "Others" },
 ] as const;

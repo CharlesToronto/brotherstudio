@@ -36,6 +36,7 @@ const GALLERY_IMAGE_SIZES =
 const ALWAYS_VISIBLE_PROJECT_KEYS = new Set<GalleryProjectKey>(["flanthey", "arbaz"]);
 const INITIAL_GALLERY_BATCH = 12;
 const GALLERY_BATCH_SIZE = 12;
+const PUBLIC_GALLERY_PREVIEW_COUNT = 28;
 
 function arraysEqual(a: string[], b: string[]) {
   if (a.length !== b.length) return false;
@@ -106,6 +107,34 @@ function TrashIcon() {
   );
 }
 
+function PlusIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+        d="M12 5v14M5 12h14"
+      />
+    </svg>
+  );
+}
+
+function MinusIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+        d="M5 12h14"
+      />
+    </svg>
+  );
+}
+
 function LightboxArrow({
   direction,
 }: {
@@ -168,8 +197,9 @@ export function Gallery({
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(() =>
-    Math.min(items.length, INITIAL_GALLERY_BATCH),
+    Math.min(items.length, editable ? INITIAL_GALLERY_BATCH : PUBLIC_GALLERY_PREVIEW_COUNT),
   );
+  const [isGalleryExpanded, setIsGalleryExpanded] = useState(editable);
   const [revealedIds, setRevealedIds] = useState<string[]>([]);
   const [loadedIds, setLoadedIds] = useState<string[]>([]);
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
@@ -220,13 +250,19 @@ export function Gallery({
     () => filteredItems.slice(0, visibleCount),
     [filteredItems, visibleCount],
   );
+  const shouldClampGallery =
+    !editable && !isGalleryExpanded && filteredItems.length > 16;
 
   useEffect(() => {
-    const nextInitialCount = Math.min(filteredItems.length, INITIAL_GALLERY_BATCH);
+    const nextInitialCount = Math.min(
+      filteredItems.length,
+      editable ? INITIAL_GALLERY_BATCH : PUBLIC_GALLERY_PREVIEW_COUNT,
+    );
 
     if (previousProjectRef.current !== activeProject) {
       previousProjectRef.current = activeProject;
       setVisibleCount(nextInitialCount);
+      setIsGalleryExpanded(editable);
       setRevealedIds([]);
       setLoadedIds([]);
       return;
@@ -235,10 +271,12 @@ export function Gallery({
     setVisibleCount((current) =>
       current > filteredItems.length ? nextInitialCount : Math.max(current, nextInitialCount),
     );
-  }, [activeProject, filteredItems.length]);
+    if (!editable) setIsGalleryExpanded(false);
+  }, [activeProject, editable, filteredItems.length]);
 
   useEffect(() => {
     const sentinel = loadMoreRef.current;
+    if (!editable && !isGalleryExpanded) return undefined;
     if (!sentinel || visibleCount >= filteredItems.length) return undefined;
 
     const observer = new IntersectionObserver(
@@ -257,7 +295,7 @@ export function Gallery({
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [filteredItems.length, visibleCount]);
+  }, [editable, filteredItems.length, isGalleryExpanded, visibleCount]);
 
   useEffect(() => {
     if (renderedItems.length === 0) return undefined;
@@ -557,123 +595,128 @@ export function Gallery({
       ) : null}
 
       <div
-        className="gallery"
-        data-active-project={galleryState?.activeProject ?? activeProject}
-        data-visible-count={galleryState?.visibleCount ?? filteredItems.length}
-        role="list"
-        onDragOver={(event) => {
-          if (!editable || busyId !== null) return;
-          event.preventDefault();
-        }}
-        onDrop={(event) => {
-          if (!editable || busyId !== null) return;
-          event.preventDefault();
-          const fromId = dragId ?? event.dataTransfer.getData("text/plain") ?? null;
-          if (!fromId) return;
-
-          const previousAll = localItems;
-          const previousVisible = filteredItems;
-          const nextVisible = moveToEnd(previousVisible, fromId);
-          if (nextVisible === previousVisible) return;
-
-          const nextAll = mergeVisibleOrder(previousAll, previousVisible, nextVisible);
-
-          setLocalItems(nextAll);
-          setDragId(null);
-          setDragOverId(null);
-          void saveOrder(nextAll, previousAll);
-        }}
+        className="galleryRevealShell"
+        data-expanded={isGalleryExpanded ? "true" : "false"}
+        data-clamped={shouldClampGallery ? "true" : "false"}
       >
-        {renderedItems.map((item, index) => {
-          const isDropTarget =
-            editable && dragId !== null && dragId !== item.id && dragOverId === item.id;
-          const isPriorityImage = index < 2;
-          const isSvgImage = item.src.toLowerCase().endsWith(".svg");
-          const isRevealed = revealedIds.includes(item.id);
-          const isLoaded = loadedIds.includes(item.id);
-          return (
-            <div
-              key={item.id}
-              className={`galleryItem${isDropTarget ? " galleryItemDropTarget" : ""}`}
-              role="listitem"
-              ref={(node) => {
-                if (node) {
-                  revealItemRefs.current.set(item.id, node);
-                } else {
-                  revealItemRefs.current.delete(item.id);
-                }
-              }}
-              data-gallery-id={item.id}
-              data-revealed={isRevealed ? "true" : "false"}
-              onDragOver={(event) => {
-                if (!editable || busyId !== null) return;
-                event.preventDefault();
-                if (dragId && dragId !== item.id) setDragOverId(item.id);
-              }}
-              onDrop={(event) => {
-                if (!editable || busyId !== null) return;
-                event.preventDefault();
-                event.stopPropagation();
+        <div
+          className="gallery"
+          data-active-project={galleryState?.activeProject ?? activeProject}
+          data-visible-count={galleryState?.visibleCount ?? filteredItems.length}
+          role="list"
+          onDragOver={(event) => {
+            if (!editable || busyId !== null) return;
+            event.preventDefault();
+          }}
+          onDrop={(event) => {
+            if (!editable || busyId !== null) return;
+            event.preventDefault();
+            const fromId = dragId ?? event.dataTransfer.getData("text/plain") ?? null;
+            if (!fromId) return;
 
-                const fromId = dragId ?? event.dataTransfer.getData("text/plain") ?? null;
-                if (!fromId || fromId === item.id) return;
+            const previousAll = localItems;
+            const previousVisible = filteredItems;
+            const nextVisible = moveToEnd(previousVisible, fromId);
+            if (nextVisible === previousVisible) return;
 
-                const previousAll = localItems;
-                const previousVisible = filteredItems;
-                const nextVisible = reorderById(previousVisible, fromId, item.id);
-                if (nextVisible === previousVisible) return;
+            const nextAll = mergeVisibleOrder(previousAll, previousVisible, nextVisible);
 
-                const nextAll = mergeVisibleOrder(
-                  previousAll,
-                  previousVisible,
-                  nextVisible,
-                );
-
-                setLocalItems(nextAll);
-                setDragId(null);
-                setDragOverId(null);
-                void saveOrder(nextAll, previousAll);
-              }}
-            >
-              <button
-                className="galleryImageButton"
-                type="button"
-                onClick={() => setActiveId(item.id)}
-                aria-label="Open image"
-                data-loaded={isLoaded ? "true" : "false"}
-                draggable={editable && busyId === null}
-                onDragStart={(event) => {
-                  if (!editable || busyId !== null) return;
-                  setDragId(item.id);
-                  setDragOverId(null);
-                  event.dataTransfer.effectAllowed = "move";
-                  event.dataTransfer.setData("text/plain", item.id);
+            setLocalItems(nextAll);
+            setDragId(null);
+            setDragOverId(null);
+            void saveOrder(nextAll, previousAll);
+          }}
+        >
+          {renderedItems.map((item, index) => {
+            const isDropTarget =
+              editable && dragId !== null && dragId !== item.id && dragOverId === item.id;
+            const isPriorityImage = index < 2;
+            const isSvgImage = item.src.toLowerCase().endsWith(".svg");
+            const isRevealed = revealedIds.includes(item.id);
+            const isLoaded = loadedIds.includes(item.id);
+            return (
+              <div
+                key={item.id}
+                className={`galleryItem${isDropTarget ? " galleryItemDropTarget" : ""}`}
+                role="listitem"
+                ref={(node) => {
+                  if (node) {
+                    revealItemRefs.current.set(item.id, node);
+                  } else {
+                    revealItemRefs.current.delete(item.id);
+                  }
                 }}
-                onDragEnd={() => {
-                  if (!editable) return;
+                data-gallery-id={item.id}
+                data-revealed={isRevealed ? "true" : "false"}
+                onDragOver={(event) => {
+                  if (!editable || busyId !== null) return;
+                  event.preventDefault();
+                  if (dragId && dragId !== item.id) setDragOverId(item.id);
+                }}
+                onDrop={(event) => {
+                  if (!editable || busyId !== null) return;
+                  event.preventDefault();
+                  event.stopPropagation();
+
+                  const fromId = dragId ?? event.dataTransfer.getData("text/plain") ?? null;
+                  if (!fromId || fromId === item.id) return;
+
+                  const previousAll = localItems;
+                  const previousVisible = filteredItems;
+                  const nextVisible = reorderById(previousVisible, fromId, item.id);
+                  if (nextVisible === previousVisible) return;
+
+                  const nextAll = mergeVisibleOrder(
+                    previousAll,
+                    previousVisible,
+                    nextVisible,
+                  );
+
+                  setLocalItems(nextAll);
                   setDragId(null);
                   setDragOverId(null);
+                  void saveOrder(nextAll, previousAll);
                 }}
               >
-                <Image
-                  className="galleryImage"
-                  src={item.src}
-                  alt={item.architect}
-                  width={1600}
-                  height={1600}
-                  sizes={GALLERY_IMAGE_SIZES}
-                  quality={78}
-                  priority={isPriorityImage}
-                  loading={isPriorityImage ? undefined : "lazy"}
-                  decoding="async"
-                  unoptimized={isSvgImage}
-                  onLoad={() =>
-                    setLoadedIds((current) =>
-                      current.includes(item.id) ? current : [...current, item.id],
-                    )
-                  }
-                />
-              </button>
+                <button
+                  className="galleryImageButton"
+                  type="button"
+                  onClick={() => setActiveId(item.id)}
+                  aria-label="Open image"
+                  data-loaded={isLoaded ? "true" : "false"}
+                  draggable={editable && busyId === null}
+                  onDragStart={(event) => {
+                    if (!editable || busyId !== null) return;
+                    setDragId(item.id);
+                    setDragOverId(null);
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("text/plain", item.id);
+                  }}
+                  onDragEnd={() => {
+                    if (!editable) return;
+                    setDragId(null);
+                    setDragOverId(null);
+                  }}
+                >
+                  <Image
+                    className="galleryImage"
+                    src={item.src}
+                    alt={item.architect}
+                    width={1600}
+                    height={1600}
+                    sizes={GALLERY_IMAGE_SIZES}
+                    quality={78}
+                    priority={isPriorityImage}
+                    loading={isPriorityImage ? undefined : "lazy"}
+                    decoding="async"
+                    unoptimized={isSvgImage}
+                    onLoad={() =>
+                      setLoadedIds((current) =>
+                        current.includes(item.id) ? current : [...current, item.id],
+                      )
+                    }
+                  />
+                </button>
 
               {editable ? (
                 <div className="galleryControls" aria-label="Edit image">
@@ -771,29 +814,60 @@ export function Gallery({
                   ) : null}
                 </div>
               )}
-            </div>
-          );
-        })}
+              </div>
+            );
+          })}
 
-        {editable ? (
+          {editable ? (
+            <button
+              type="button"
+              className="galleryAddItem"
+              onClick={() => openAddPicker()}
+              disabled={busyId !== null}
+            >
+              Add
+            </button>
+          ) : null}
+
+          {(editable || isGalleryExpanded) && visibleCount < filteredItems.length ? (
+            <div
+              ref={loadMoreRef}
+              className="galleryLoadMoreSentinel"
+              aria-hidden="true"
+            />
+          ) : null}
+        </div>
+
+        {shouldClampGallery ? (
           <button
             type="button"
-            className="galleryAddItem"
-            onClick={() => openAddPicker()}
-            disabled={busyId !== null}
+            className="galleryRevealButton"
+            aria-label="Show all gallery images"
+            onClick={() => {
+              setIsGalleryExpanded(true);
+              setVisibleCount(filteredItems.length);
+            }}
           >
-            Add
+            <PlusIcon />
           </button>
         ) : null}
-
-        {visibleCount < filteredItems.length ? (
-          <div
-            ref={loadMoreRef}
-            className="galleryLoadMoreSentinel"
-            aria-hidden="true"
-          />
-        ) : null}
       </div>
+
+      {!editable && isGalleryExpanded && filteredItems.length > 16 ? (
+        <div className="galleryCollapseControl">
+          <button
+            type="button"
+            className="galleryCollapseButton"
+            aria-label="Reduce gallery"
+            onClick={() => {
+              setIsGalleryExpanded(false);
+              setVisibleCount(Math.min(filteredItems.length, PUBLIC_GALLERY_PREVIEW_COUNT));
+            }}
+          >
+            <MinusIcon />
+          </button>
+        </div>
+      ) : null}
 
       {activeItem ? (
         <div

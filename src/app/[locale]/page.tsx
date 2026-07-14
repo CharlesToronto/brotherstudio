@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { CalendlyEmbed } from "@/components/CalendlyEmbed";
-import { HomeBlurWordSection } from "@/components/HomeBlurWordSection";
 import { HomeGalleryExperience } from "@/components/HomeGalleryExperience";
 import { HomeHeroHeaderController } from "@/components/HomeHeroHeaderController";
+import { HomeVideoHero } from "@/components/HomeVideoHero";
 import { TrustedCompanies } from "@/components/TrustedCompanies";
 import { CALENDLY_MEETING_URL } from "@/lib/calendly";
 import { getMessages } from "@/content/messages";
@@ -69,7 +69,7 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
   return (
     <main className="siteMain">
       <HomeHeroHeaderController />
-      <HomeBlurWordSection items={items} />
+      <HomeVideoHero />
       <HomeGalleryExperience
         items={items}
         filterLabels={{

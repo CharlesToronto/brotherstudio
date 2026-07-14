@@ -218,12 +218,6 @@ export function PricePackagesSection({
                   <div className="packagePlanPriceRow">
                     <strong className="packagePlanPrice">{amount}</strong>
                   </div>
-                  <span
-                    className="packagePlanComparePrice"
-                    data-empty={item.comparePrice ? "false" : "true"}
-                  >
-                    {item.comparePrice ?? " "}
-                  </span>
                 </div>
               </header>
               <div className="packagePlanDivider" aria-hidden="true" />

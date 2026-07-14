@@ -34,10 +34,6 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
   const locale = localeFromPath ?? DEFAULT_LOCALE;
   const subpath = stripLocaleFromPathname(pathname);
   const messages = getMessages(locale).header;
-  const headerNotice =
-    locale === "fr"
-      ? "New : des 4 images commandees, site web de vente inclu dans la livraison"
-      : "New: from 4 images ordered, a sales website is included in the delivery";
   const isGalleryPage = subpath === "/";
   const activeNavKey = isGalleryPage
     ? "gallery"
@@ -306,10 +302,6 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
 
   return (
     <header ref={headerRef} className="siteHeader">
-      <div className="siteHeaderNotice">
-        <span className="siteHeaderNoticeText">{headerNotice}</span>
-      </div>
-
       <div className="siteHeaderMain">
         <Link className="siteLogo" href={localizedHref("/")}>
           <Image

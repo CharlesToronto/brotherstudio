@@ -3,36 +3,23 @@
 import { Dongle } from "next/font/google";
 import { ArrowDown } from "lucide-react";
 
-import InfiniteGallery from "@/components/ui/3d-gallery-photography";
-import type { GalleryItem } from "@/lib/galleryStore";
-
 const dongle = Dongle({
   subsets: ["latin"],
   weight: ["300"],
 });
 
-type HomeBlurWordSectionProps = {
-  items: GalleryItem[];
-};
-
-export function HomeBlurWordSection({ items }: HomeBlurWordSectionProps) {
-  const heroImages = items
-    .filter((item) => item.architect.trim().toUpperCase() !== "BS")
-    .slice(0, 8)
-    .map((item) => ({
-      src: item.src,
-      alt: item.architect?.trim() || "BrotherStudio gallery image",
-    }));
-
+export function HomeVideoHero() {
   return (
-    <section className="homeBlurWordSection" aria-label="BrotherStudio gallery hero">
-      <InfiniteGallery
-        images={heroImages}
-        speed={1.8}
-        zSpacing={3}
-        visibleCount={3}
-        falloff={{ near: 0.8, far: 14 }}
-        className="homeHero3dGallery"
+    <section className="homeBlurWordSection" aria-label="BrotherStudio video hero">
+      <video
+        className="homeVideoHeroMedia"
+        src="/videos/bs-home-hero.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
       />
 
       <div className="homeHeroOverlay">
@@ -46,6 +33,7 @@ export function HomeBlurWordSection({ items }: HomeBlurWordSectionProps) {
             </p>
           </div>
         </div>
+
         <button
           type="button"
           className="homeHeroScrollButton"

@@ -1,17 +1,34 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  BarChart3,
+  Building2,
+  Clapperboard,
+  Gem,
+  Globe,
+  Handshake,
+  Megaphone,
+  Rocket,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 import { Gallery } from "@/components/Gallery";
 import {
+  HomeGalleryPrimaryTabs,
   HomeMobileDisplayFilters,
   HomeSceneFilters,
 } from "@/components/HomeGalleryControls";
 import {
-  PROJECT_OPTIONS,
-  type GalleryProjectKey,
-} from "@/lib/galleryProjects";
+  getLocaleFromPathname,
+  type Locale,
+  withLocalePath,
+} from "@/lib/i18n";
+import { PROJECT_OPTIONS, type GalleryProjectKey } from "@/lib/galleryProjects";
 import type { GalleryItem } from "@/lib/galleryStore";
 
 type HomeGalleryExperienceProps = {
@@ -37,9 +54,9 @@ const ALWAYS_VISIBLE_MARQUEE_PROJECT_KEYS = new Set<GalleryProjectKey>(["hdm6"])
 const MOBILE_HIDDEN_PROJECT_KEYS = new Set<GalleryProjectKey>(["jolimont", "markham"]);
 const MOBILE_PRIORITY_PROJECT_KEYS: GalleryProjectKey[] = ["tourelle", "maretset"];
 const MOBILE_GALLERY_MEDIA_QUERY = "(max-width: 640px)";
+const MOBILE_GALLERY_PREVIEW_COUNT = 10;
 type MobileDisplayMode = "projects" | "grid";
 type SceneFilterKey =
-  | "video"
   | "all"
   | "bedroom"
   | "living-room"
@@ -47,6 +64,134 @@ type SceneFilterKey =
   | "exterior"
   | "bathroom"
   | "focus-ambiance";
+type GalleryPrimaryTabKey = "videos" | "images" | "sales-plans" | "website";
+
+type WebsitePreview = {
+  title: string;
+  href?: string;
+  image: string;
+  alt: string;
+};
+
+type SalesPlanPreview = {
+  title: string;
+  image: string;
+  alt: string;
+};
+
+const HOME_CAPABILITIES: Array<{
+  label: string;
+  icon: LucideIcon;
+  description: string;
+}> = [
+  {
+    label: "Branding Project",
+    icon: Building2,
+    description:
+      "A clear visual identity for your project, with naming, positioning, and art direction aligned to the audience you want to attract.",
+  },
+  {
+    label: "Images & Videos",
+    icon: Clapperboard,
+    description:
+      "High-end CGI imagery and cinematic content designed to present the development with clarity, atmosphere, and commercial appeal.",
+  },
+  {
+    label: "Sales Plan",
+    icon: BarChart3,
+    description:
+      "A structured sales narrative that organizes the offer, highlights key value points, and supports a smoother conversion journey.",
+  },
+  {
+    label: "Customs Website",
+    icon: Globe,
+    description:
+      "A dedicated website built around your project, tailored to showcase the product, capture attention, and drive qualified inquiries.",
+  },
+  {
+    label: "Meta Advertising",
+    icon: Megaphone,
+    description:
+      "Targeted paid campaigns across Meta platforms to generate awareness, reach the right segments, and feed the sales pipeline.",
+  },
+  {
+    label: "Lead Generation",
+    icon: Users,
+    description:
+      "Lead capture systems and acquisition flows designed to transform interest into measurable contacts ready for follow-up.",
+  },
+];
+
+const HOME_DEVELOPER_REASONS: Array<{
+  title: string;
+  description: string;
+  icon: LucideIcon;
+}> = [
+  {
+    title: "Launch Faster",
+    description:
+      "Bring your development to market with everything ready for a successful launch.",
+    icon: Rocket,
+  },
+  {
+    title: "Generate Qualified Buyers",
+    description:
+      "Attract buyers actively looking for new developments through targeted digital marketing.",
+    icon: Gem,
+  },
+  {
+    title: "One Team. One Strategy.",
+    description:
+      "Branding, CGI, websites and advertising working together from day one.",
+    icon: Handshake,
+  },
+];
+
+const HOME_SALES_PLANS: SalesPlanPreview[] = Array.from({ length: 11 }, (_, index) => {
+  const fileNumber = index + 2;
+  return {
+    title: `Plan de vente ${index + 1}`,
+    image: `/gallery/sales-plans/${fileNumber}.png`,
+    alt: `Plan de vente ${index + 1}`,
+  };
+});
+
+const HOME_GALLERY_VIDEOS = [
+  { src: "/videos/bs-maretset-2.mp4", label: "Maretset video" },
+  { src: "/videos/bs-ads-video.mp4", label: "BS Ads video" },
+] as const;
+
+function getWebsitePreviews(locale: Locale): WebsitePreview[] {
+  const mesangeHref = withLocalePath(locale, "/myexperience");
+  const websiteHref = withLocalePath(locale, "/mywebsite");
+
+  return [
+    {
+      title: "Mesange",
+      href: mesangeHref,
+      image: "/myexperience-hero-night.webp",
+      alt:
+        locale === "fr"
+          ? "Apercu du site de vente Mesange avec facade au crepuscule"
+          : "Preview of the Mesange sales website with dusk exterior view",
+    },
+    {
+      title: "Maretset",
+      href: websiteHref,
+      image: "/mywebsite-maretset-cover.webp",
+      alt: locale === "fr" ? "Apercu du site de vente Maretset" : "Preview of the Maretset sales website",
+    },
+    {
+      title: "Coming soon",
+      href: websiteHref,
+      image: "/mywebsite-coming-soon-cover.webp",
+      alt:
+        locale === "fr"
+          ? "Apercu d un prochain site de vente"
+          : "Preview of an upcoming sales website",
+    },
+  ];
+}
 
 function normalizeSceneValue(value: string) {
   return value
@@ -133,32 +278,93 @@ function LightboxCloseIcon() {
   );
 }
 
+function GalleryPlusIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+        d="M12 5v14M5 12h14"
+      />
+    </svg>
+  );
+}
+
+function GalleryMinusIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+        d="M5 12h14"
+      />
+    </svg>
+  );
+}
+
+export function HomeProjectMarquee({
+  projects,
+  activeProject,
+  onProjectToggle,
+}: {
+  projects: typeof PROJECT_OPTIONS;
+  activeProject: GalleryProjectKey | "all";
+  onProjectToggle: (project: GalleryProjectKey) => void;
+}) {
+  const marqueeProjects = [...projects, ...projects];
+
+  if (marqueeProjects.length === 0) return null;
+
+  return (
+    <section className="homeProjectMarquee" aria-label="Selected projects">
+      <div className="homeProjectMarqueeViewport">
+        <div className="homeProjectMarqueeTrack">
+          {marqueeProjects.map((project, index) => (
+            <button
+              key={`${project.key}-${index}`}
+              className="homeProjectMarqueeItem"
+              type="button"
+              data-active={activeProject === project.key ? "true" : "false"}
+              aria-pressed={activeProject === project.key}
+              onClick={() => onProjectToggle(project.key)}
+            >
+              {project.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function HomeGalleryExperience({
   items,
   filterLabels,
   sceneFilterLabels,
 }: HomeGalleryExperienceProps) {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname) ?? "en";
   const [isMobileLayout, setIsMobileLayout] = useState(false);
   const [mobileDisplayMode, setMobileDisplayMode] = useState<MobileDisplayMode>("grid");
+  const [activePrimaryTab, setActivePrimaryTab] = useState<GalleryPrimaryTabKey>("images");
   const [activeProject, setActiveProject] = useState<GalleryProjectKey | "all">("all");
   const [activeSceneFilter, setActiveSceneFilter] = useState<SceneFilterKey>("all");
   const [activeMobileItem, setActiveMobileItem] = useState<GalleryItem | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const viewportRef = useRef<HTMLDivElement | null>(null);
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const frameRef = useRef<number | null>(null);
-  const lastFrameTimeRef = useRef<number | null>(null);
-  const offsetRef = useRef(0);
-  const pointerIdRef = useRef<number | null>(null);
-  const dragStartXRef = useRef(0);
-  const dragStartOffsetRef = useRef(0);
-  const didDragRef = useRef(false);
-  const suppressClickRef = useRef(false);
-  const singleLoopWidthRef = useRef(0);
+  const [isMobileGalleryExpanded, setIsMobileGalleryExpanded] = useState(false);
   const lightboxPreviewRefs = useRef(new Map<string, HTMLButtonElement>());
+  const postHeroSpotlightRef = useRef<HTMLDivElement | null>(null);
+  const galleryHeadingRef = useRef<HTMLDivElement | null>(null);
+  const primaryTabs = [
+    { key: "images", label: "Images" },
+    { key: "videos", label: "Videos" },
+    { key: "sales-plans", label: "Plan de vente" },
+    { key: "website", label: "Website" },
+  ] as const;
   const sceneFilters = [
-    { key: "video", label: sceneFilterLabels.video },
     { key: "all", label: sceneFilterLabels.all },
     { key: "bedroom", label: sceneFilterLabels.bedroom },
     { key: "living-room", label: sceneFilterLabels.livingRoom },
@@ -171,7 +377,7 @@ export function HomeGalleryExperience({
     ALWAYS_VISIBLE_MARQUEE_PROJECT_KEYS.has(option.key) ||
     items.some((item) => item.project === option.key),
   );
-  const marqueeProjects = [...availableProjects, ...availableProjects];
+  const websitePreviews = getWebsitePreviews(locale);
   const effectiveActiveProject = isMobileLayout ? "all" : activeProject;
   const projectFilteredItems =
     effectiveActiveProject === "all"
@@ -179,9 +385,7 @@ export function HomeGalleryExperience({
       : items.filter((item) => item.project === effectiveActiveProject);
   const availableSceneFilters = sceneFilters.filter(
     (filter) =>
-      filter.key === "all" ||
-      filter.key === "video" ||
-      projectFilteredItems.some((item) => getSceneFilterForItem(item) === filter.key),
+      filter.key === "all" || projectFilteredItems.some((item) => getSceneFilterForItem(item) === filter.key),
   );
   const resolvedSceneFilter = availableSceneFilters.some(
     (filter) => filter.key === activeSceneFilter,
@@ -190,12 +394,13 @@ export function HomeGalleryExperience({
     : "all";
   const effectiveSceneFilter =
     isMobileLayout && mobileDisplayMode === "projects" ? "all" : resolvedSceneFilter;
-  const isVideoFilterActive = effectiveSceneFilter === "video";
+  const isVideoFilterActive = activePrimaryTab === "videos";
+  const isImagesTabActive = activePrimaryTab === "images";
+  const isSalesPlansTabActive = activePrimaryTab === "sales-plans";
+  const isWebsiteTabActive = activePrimaryTab === "website";
   const visibleItems =
     effectiveSceneFilter === "all"
       ? projectFilteredItems
-      : effectiveSceneFilter === "video"
-        ? []
       : projectFilteredItems.filter((item) => getSceneFilterForItem(item) === effectiveSceneFilter);
   const orderedMobileProjects = [
     ...MOBILE_PRIORITY_PROJECT_KEYS
@@ -215,6 +420,15 @@ export function HomeGalleryExperience({
     ...mobileProjectGroups.flatMap((group) => group.items),
     ...visibleItems.filter((item) => item.project === null),
   ];
+  const shouldClampMobileGallery =
+    isMobileLayout &&
+    isImagesTabActive &&
+    mobileDisplayMode === "grid" &&
+    !isMobileGalleryExpanded &&
+    mobileVisibleItems.length > MOBILE_GALLERY_PREVIEW_COUNT;
+  const mobileRenderedItems = shouldClampMobileGallery
+    ? mobileVisibleItems.slice(0, MOBILE_GALLERY_PREVIEW_COUNT)
+    : mobileVisibleItems;
   const mobileLightboxItems =
     mobileDisplayMode === "projects"
       ? mobileProjectGroups.flatMap((group) => group.items)
@@ -238,131 +452,6 @@ export function HomeGalleryExperience({
       mediaQuery.removeEventListener("change", syncMobileLayout);
     };
   }, []);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track || availableProjects.length === 0) return;
-
-    const updateMetrics = () => {
-      const singleLoopWidth = track.scrollWidth / 2;
-      singleLoopWidthRef.current = singleLoopWidth;
-      if (!singleLoopWidth) return;
-      if (offsetRef.current === 0) {
-        offsetRef.current = -singleLoopWidth;
-      } else if (offsetRef.current <= -singleLoopWidth || offsetRef.current > 0) {
-        offsetRef.current = ((offsetRef.current % singleLoopWidth) + singleLoopWidth) % singleLoopWidth;
-        offsetRef.current -= singleLoopWidth;
-      }
-      track.style.transform = `translate3d(${offsetRef.current}px, 0, 0)`;
-    };
-
-    updateMetrics();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateMetrics();
-    });
-
-    resizeObserver.observe(track);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [availableProjects.length]);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track || availableProjects.length === 0) return;
-
-    const step = (time: number) => {
-      if (lastFrameTimeRef.current === null) {
-        lastFrameTimeRef.current = time;
-      }
-
-      const delta = time - lastFrameTimeRef.current;
-      lastFrameTimeRef.current = time;
-
-      if (activeProject === "all" && !isHovered && !isDragging) {
-        const singleLoopWidth = singleLoopWidthRef.current;
-        if (singleLoopWidth > 0) {
-          let nextOffset = offsetRef.current + delta * 0.035;
-          if (nextOffset >= 0) {
-            nextOffset -= singleLoopWidth;
-          }
-          offsetRef.current = nextOffset;
-          track.style.transform = `translate3d(${nextOffset}px, 0, 0)`;
-        }
-      }
-
-      frameRef.current = window.requestAnimationFrame(step);
-    };
-
-    frameRef.current = window.requestAnimationFrame(step);
-
-    return () => {
-      if (frameRef.current !== null) {
-        window.cancelAnimationFrame(frameRef.current);
-      }
-      frameRef.current = null;
-      lastFrameTimeRef.current = null;
-    };
-  }, [activeProject, availableProjects.length, isDragging, isHovered]);
-
-  const toggleProject = (project: GalleryProjectKey) => {
-    setActiveProject((current) => (current === project ? "all" : project));
-  };
-
-  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
-    if ((event.target as HTMLElement).closest("button")) return;
-    pointerIdRef.current = event.pointerId;
-    dragStartXRef.current = event.clientX;
-    dragStartOffsetRef.current = offsetRef.current;
-    didDragRef.current = false;
-    setIsDragging(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!isDragging || pointerIdRef.current !== event.pointerId) return;
-    const singleLoopWidth = singleLoopWidthRef.current;
-    if (!singleLoopWidth) return;
-
-    const deltaX = event.clientX - dragStartXRef.current;
-    if (Math.abs(deltaX) > 4) {
-      didDragRef.current = true;
-    }
-
-    let nextOffset = dragStartOffsetRef.current + deltaX;
-    while (nextOffset > 0) {
-      nextOffset -= singleLoopWidth;
-    }
-    while (nextOffset <= -singleLoopWidth) {
-      nextOffset += singleLoopWidth;
-    }
-
-    offsetRef.current = nextOffset;
-    const track = trackRef.current;
-    if (track) {
-      track.style.transform = `translate3d(${nextOffset}px, 0, 0)`;
-    }
-  };
-
-  const finishDragging = () => {
-    if (
-      pointerIdRef.current !== null &&
-      viewportRef.current?.hasPointerCapture(pointerIdRef.current)
-    ) {
-      viewportRef.current.releasePointerCapture(pointerIdRef.current);
-    }
-    if (didDragRef.current) {
-      suppressClickRef.current = true;
-      window.setTimeout(() => {
-        suppressClickRef.current = false;
-      }, 0);
-    }
-    setIsDragging(false);
-    pointerIdRef.current = null;
-  };
 
   useEffect(() => {
     if (!activeMobileItem) return;
@@ -406,68 +495,235 @@ export function HomeGalleryExperience({
     });
   }, [activeMobileItem]);
 
+  useEffect(() => {
+    setIsMobileGalleryExpanded(false);
+  }, [activePrimaryTab, effectiveSceneFilter, mobileDisplayMode]);
+
+  useEffect(() => {
+    const heading = galleryHeadingRef.current;
+    if (!heading) return;
+
+    let frame = 0;
+    const root = document.documentElement;
+    const body = document.body;
+
+    const syncGalleryBackground = () => {
+      frame = 0;
+      const rect = heading.getBoundingClientRect();
+      const start = window.innerHeight * 0.62;
+      const end = window.innerHeight * 0.42;
+      const progress = Math.min(1, Math.max(0, (start - rect.top) / (start - end)));
+      const channel = Math.round(progress * 255);
+      const textChannel = progress > 0.58 ? 17 : 255;
+      const borderAlpha = 0.08 + progress * 0.08;
+      const backgroundRgb = `${channel} ${channel} ${channel}`;
+
+      root.style.setProperty("--site-background-rgb", backgroundRgb);
+      root.style.setProperty("--home-gallery-bg-rgb", backgroundRgb);
+      body.style.setProperty("--site-background-rgb", backgroundRgb);
+      body.style.setProperty("--home-gallery-bg-rgb", backgroundRgb);
+      heading.style.setProperty("--home-gallery-bg-rgb", backgroundRgb);
+      heading.style.setProperty(
+        "--home-gallery-title-rgb",
+        `${textChannel} ${textChannel} ${textChannel}`,
+      );
+      heading.style.setProperty("--home-gallery-progress", progress.toFixed(3));
+      heading.style.setProperty("--home-gallery-border-alpha", borderAlpha.toFixed(3));
+    };
+
+    const requestSync = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(syncGalleryBackground);
+    };
+
+    syncGalleryBackground();
+    window.addEventListener("scroll", requestSync, { passive: true });
+    window.addEventListener("resize", requestSync);
+
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      root.style.removeProperty("--site-background-rgb");
+      root.style.removeProperty("--home-gallery-bg-rgb");
+      body.style.removeProperty("--site-background-rgb");
+      body.style.removeProperty("--home-gallery-bg-rgb");
+      window.removeEventListener("scroll", requestSync);
+      window.removeEventListener("resize", requestSync);
+    };
+  }, []);
+
+  const handlePostHeroPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const section = postHeroSpotlightRef.current;
+    if (!section) return;
+
+    const rect = section.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+    section.style.setProperty("--home-spotlight-x", `${x.toFixed(2)}%`);
+    section.style.setProperty("--home-spotlight-y", `${y.toFixed(2)}%`);
+    section.style.setProperty("--home-spotlight-opacity", "1");
+  };
+
+  const handlePostHeroPointerLeave = () => {
+    const section = postHeroSpotlightRef.current;
+    if (!section) return;
+
+    section.style.setProperty("--home-spotlight-opacity", "0.42");
+  };
+
   return (
     <section id="home-gallery-start">
-      {!isMobileLayout && marqueeProjects.length > 0 ? (
+      <div
+        ref={postHeroSpotlightRef}
+        className="homePostHeroDark"
+        onPointerMove={handlePostHeroPointerMove}
+        onPointerLeave={handlePostHeroPointerLeave}
+      >
         <section
-          className="homeProjectMarquee"
-          aria-label="Selected projects"
-          data-paused={activeProject !== "all" || isHovered || isDragging ? "true" : "false"}
-          data-dragging={isDragging ? "true" : "false"}
+          className="homeCapabilitiesStrip"
+          aria-labelledby="home-capabilities-title"
         >
-          <div
-            ref={viewportRef}
-            className="homeProjectMarqueeViewport"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => {
-              setIsHovered(false);
-            }}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={finishDragging}
-            onPointerCancel={finishDragging}
-          >
-            <div ref={trackRef} className="homeProjectMarqueeTrack">
-              {marqueeProjects.map((project, index) => (
-                <button
-                  key={`${project.key}-${index}`}
-                  className="homeProjectMarqueeItem"
-                  type="button"
-                  data-active={activeProject === project.key ? "true" : "false"}
-                  aria-pressed={activeProject === project.key}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    if (suppressClickRef.current) {
-                      event.preventDefault();
-                      return;
-                    }
-                    toggleProject(project.key);
-                  }}
-                >
-                  {project.label}
-                </button>
-              ))}
-            </div>
+          <div className="homeCapabilitiesIntro">
+            <p className="homeCapabilitiesKicker">We do it for you</p>
+            <h2 id="home-capabilities-title" className="homeCapabilitiesTitle">
+              Everything you need to sell your development
+            </h2>
+          </div>
+          <div className="homeCapabilitiesRail" role="list" aria-label="Development marketing services">
+            {HOME_CAPABILITIES.map(({ label, icon: Icon, description }) => (
+              <article key={label} className="homeCapabilitiesItem" role="listitem">
+                <span className="homeCapabilitiesIcon" aria-hidden="true">
+                  <Icon size={32} strokeWidth={1.8} />
+                </span>
+                <span className="homeCapabilitiesLabel">{label}</span>
+                <span className="homeCapabilitiesDescription">{description}</span>
+              </article>
+            ))}
           </div>
         </section>
-      ) : null}
 
-      {!isMobileLayout && availableSceneFilters.length > 1 ? (
-        <HomeSceneFilters
-          activeFilter={effectiveSceneFilter}
-          ariaLabel={sceneFilterLabels.ariaLabel}
-          filters={availableSceneFilters}
-          onFilterChange={setActiveSceneFilter}
-        />
-      ) : null}
-
-      <div id="home-gallery-grid">
-        {isVideoFilterActive ? (
-          <div className="homeVideoGallery" role="list" aria-label={sceneFilterLabels.video}>
-            <article className="homeVideoGalleryCard" role="listitem">
-              <video src="/videos/bs-maretset-2.mp4" muted loop playsInline controls />
-            </article>
+        <section
+          className="homeDeveloperValueSection"
+          aria-labelledby="home-developer-value-title"
+        >
+          <div className="homeDeveloperValueIntro">
+            <p className="homeDeveloperValueKicker">Business impact</p>
+            <h2 id="home-developer-value-title" className="homeDeveloperValueTitle">
+              Why Developers Choose Brother Studio
+            </h2>
           </div>
+          <div className="homeDeveloperValueGrid" role="list">
+            {HOME_DEVELOPER_REASONS.map(({ title, description }, index) => (
+              <article key={title} className="homeDeveloperValueCard" role="listitem">
+                <span className="homeDeveloperValueIndex" aria-hidden="true">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div className="homeDeveloperValueCopy">
+                  <h3>{title}</h3>
+                  <p>{description}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section ref={galleryHeadingRef} className="homeGallerySection">
+        <div className="homeGalleryIntro">
+          <div className="homeGalleryHeading">
+            <h2 className="homeGalleryTitle">Gallery</h2>
+          </div>
+
+          <HomeGalleryPrimaryTabs
+            activeTab={activePrimaryTab}
+            ariaLabel="Gallery sections"
+            tabs={primaryTabs}
+            onTabChange={setActivePrimaryTab}
+          />
+        </div>
+
+        <div className="homeGalleryStage">
+          {!isMobileLayout && isImagesTabActive && availableSceneFilters.length > 1 ? (
+            <HomeSceneFilters
+              activeFilter={effectiveSceneFilter}
+              ariaLabel={sceneFilterLabels.ariaLabel}
+              filters={availableSceneFilters}
+              onFilterChange={setActiveSceneFilter}
+            />
+          ) : null}
+
+          <div id="home-gallery-grid">
+            {isVideoFilterActive ? (
+              <div className="homeVideoGallery" role="list" aria-label={sceneFilterLabels.video}>
+                {HOME_GALLERY_VIDEOS.map((video) => (
+                  <article key={video.src} className="homeVideoGalleryCard" role="listitem">
+                    <video
+                      src={video.src}
+                      muted
+                      loop
+                      playsInline
+                      controls
+                      aria-label={video.label}
+                    />
+                  </article>
+                ))}
+              </div>
+            ) : isSalesPlansTabActive ? (
+              <section className="homeSalesPlansGallery" aria-label="Plan de vente">
+            {HOME_SALES_PLANS.map((plan) => (
+              <article key={plan.image} className="homeSalesPlanCard">
+                <Image
+                  src={plan.image}
+                  alt={plan.alt}
+                  width={1600}
+                  height={1000}
+                  sizes="(max-width: 900px) 100vw, 33vw"
+                  className="homeSalesPlanImage"
+                />
+              </article>
+            ))}
+          </section>
+        ) : isWebsiteTabActive ? (
+          <section className="homeWebsiteGallery" aria-label="Website previews">
+            {websitePreviews.map((preview, index) => (
+              <article
+                key={`${preview.title}-${index}`}
+                className={`myWebsiteCard${preview.href ? " myWebsiteCardLink" : ""}`}
+              >
+                {preview.href ? (
+                  <Link className="myWebsiteCardInner" href={preview.href}>
+                    <div className="myWebsiteCardMedia">
+                      <Image
+                        src={preview.image}
+                        alt={preview.alt}
+                        fill
+                        sizes="(max-width: 900px) 100vw, 33vw"
+                        className="myWebsiteCardImage"
+                      />
+                    </div>
+                    <div className="myWebsiteCardFooter">
+                      <span className="myWebsiteCardTitle">{preview.title}</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="myWebsiteCardInner" aria-label={preview.alt}>
+                    <div className="myWebsiteCardMedia">
+                      <Image
+                        src={preview.image}
+                        alt={preview.alt}
+                        fill
+                        sizes="(max-width: 900px) 100vw, 33vw"
+                        className="myWebsiteCardImage"
+                      />
+                    </div>
+                    <div className="myWebsiteCardFooter">
+                      <span className="myWebsiteCardTitle">{preview.title}</span>
+                    </div>
+                  </div>
+                )}
+              </article>
+            ))}
+          </section>
         ) : isMobileLayout ? (
           <>
             <HomeMobileDisplayFilters
@@ -475,7 +731,7 @@ export function HomeGalleryExperience({
               onModeChange={setMobileDisplayMode}
             />
 
-            {availableSceneFilters.length > 1 && mobileDisplayMode === "grid" ? (
+            {isImagesTabActive && availableSceneFilters.length > 1 && mobileDisplayMode === "grid" ? (
               <HomeSceneFilters
                 activeFilter={effectiveSceneFilter}
                 ariaLabel={sceneFilterLabels.ariaLabel}
@@ -525,28 +781,60 @@ export function HomeGalleryExperience({
                 ))}
               </div>
             ) : (
-              <div className="homeMobileGalleryGrid" role="list" aria-label={filterLabels.ariaLabel}>
-                {mobileVisibleItems.map((item, index) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className="homeMobileGalleryGridCard"
-                    role="listitem"
-                    onClick={() => setActiveMobileItem(item)}
-                    aria-label={`Image ${index + 1}`}
-                  >
-                    <Image
-                      className="homeMobileGalleryGridImage"
-                      src={item.src}
-                      alt={item.architect || `Image ${index + 1}`}
-                      width={1600}
-                      height={1600}
-                      sizes="(max-width: 640px) calc((100vw - 54px) / 2), 240px"
-                      quality={78}
-                    />
-                  </button>
-                ))}
-              </div>
+              <>
+                <div
+                  className="galleryRevealShell homeMobileGalleryRevealShell"
+                  data-expanded={isMobileGalleryExpanded ? "true" : "false"}
+                  data-clamped={shouldClampMobileGallery ? "true" : "false"}
+                >
+                  <div className="homeMobileGalleryGrid" role="list" aria-label={filterLabels.ariaLabel}>
+                    {mobileRenderedItems.map((item, index) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className="homeMobileGalleryGridCard"
+                        role="listitem"
+                        onClick={() => setActiveMobileItem(item)}
+                        aria-label={`Image ${index + 1}`}
+                      >
+                        <Image
+                          className="homeMobileGalleryGridImage"
+                          src={item.src}
+                          alt={item.architect || `Image ${index + 1}`}
+                          width={1600}
+                          height={1600}
+                          sizes="(max-width: 640px) calc((100vw - 54px) / 2), 240px"
+                          quality={78}
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  {shouldClampMobileGallery ? (
+                    <button
+                      type="button"
+                      className="galleryRevealButton"
+                      aria-label="Show all gallery images"
+                      onClick={() => setIsMobileGalleryExpanded(true)}
+                    >
+                      <GalleryPlusIcon />
+                    </button>
+                  ) : null}
+                </div>
+
+                {isMobileGalleryExpanded && mobileVisibleItems.length > MOBILE_GALLERY_PREVIEW_COUNT ? (
+                  <div className="galleryCollapseControl">
+                    <button
+                      type="button"
+                      className="galleryCollapseButton"
+                      aria-label="Reduce gallery"
+                      onClick={() => setIsMobileGalleryExpanded(false)}
+                    >
+                      <GalleryMinusIcon />
+                    </button>
+                  </div>
+                ) : null}
+              </>
             )}
           </>
         ) : (
@@ -561,7 +849,9 @@ export function HomeGalleryExperience({
             }}
           />
         )}
-      </div>
+          </div>
+        </div>
+      </section>
 
       {activeMobileItem ? (
         <div

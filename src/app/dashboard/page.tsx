@@ -576,9 +576,33 @@ export default function DashboardPage() {
         );
       }
 
-      const refreshedData = await loadDashboardData();
-      setProjects(refreshedData.projects);
-      setTeamClients(refreshedData.clients);
+      setProjects((current) => {
+        const nextProject = payload.project as Project;
+
+        if (isAdding || editingId === null) {
+          return [nextProject, ...current];
+        }
+
+        return current.map((project) =>
+          String(project.id) === String(nextProject.id) ? nextProject : project,
+        );
+      });
+      if (payload.teamClient) {
+        setTeamClients((current) => {
+          const existingIndex = current.findIndex(
+            (client) => client.id === payload.teamClient?.id,
+          );
+          if (existingIndex === -1) {
+            return [payload.teamClient as TeamClientRecord, ...current];
+          }
+
+          return current.map((client) =>
+            client.id === payload.teamClient?.id
+              ? (payload.teamClient as TeamClientRecord)
+              : client,
+          );
+        });
+      }
       setStatusMessage(isAdding ? "Projet créé." : "Projet mis à jour.");
 
       cancelDraft();

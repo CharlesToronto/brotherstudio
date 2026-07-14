@@ -558,6 +558,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
             "-",
             "-",
             "-",
+            "-",
             "MyReview Platform",
           ],
           delivery: [
@@ -634,6 +635,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
               title: "Meta Ads Lead Generation",
               items: [
                 "Meta Ads campaign creation",
+                "Advertising budget included: CAD 700",
                 "Pixel & tracking setup",
                 "Content creation",
                 "Profile targeting",
@@ -661,6 +663,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
             "Website template",
             "Sales Agent AI",
             "Meta Ads Lead Generation",
+            "Advertising budget included: CAD 700",
             "-",
             "-",
             "MyReview Platform",
@@ -741,6 +744,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
               title: "Meta Ads Lead Generation",
               items: [
                 "Meta Ads campaign creation",
+                "Advertising budget included: CAD 1500",
                 "Pixel & tracking setup",
                 "Content creation",
                 "Profile targeting",
@@ -768,6 +772,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
             "Custom website",
             "Sales Agent AI",
             "Meta Ads Lead Generation",
+            "Advertising budget included: CAD 1500",
             "Installment payment available",
             "3D / 2D Floor Plans",
             "MyReview Platform",
@@ -1123,6 +1128,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
             "-",
             "-",
             "-",
+            "-",
             "Plateforme MyReview",
           ],
           delivery: [
@@ -1199,6 +1205,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
               title: "Meta Ads Lead Generation",
               items: [
                 "Creation de campagne Meta Ads",
+                "Budget publicitaire inclu : CAD 700",
                 "Pixel et tracking setup",
                 "Creation de contenu",
                 "Ciblage de profils",
@@ -1226,6 +1233,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
             "Website Template",
             "Sales Agent AI",
             "Meta Ads Lead Generation",
+            "Budget publicitaire inclu : CAD 700",
             "-",
             "-",
             "Plateforme MyReview",
@@ -1306,6 +1314,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
               title: "Meta Ads Lead Generation",
               items: [
                 "Creation de campagne Meta Ads",
+                "Budget publicitaire inclu : CAD 1500",
                 "Pixel et tracking setup",
                 "Creation de contenu",
                 "Ciblage de profils",
@@ -1333,6 +1342,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
             "Website Custom",
             "Sales Agent AI",
             "Meta Ads Lead Generation",
+            "Budget publicitaire inclu : CAD 1500",
             "Paiement echelonne",
             "3D / 2D Floor Plans",
             "Plateforme MyReview",
