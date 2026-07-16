@@ -81,6 +81,65 @@ function buildProjectPatch(current: Project, next: ProjectDraft): Partial<Projec
   return patch;
 }
 
+function buildProjectUpdatePayload(current: Project, next: ProjectDraft): Partial<ProjectDraft> {
+  return {
+    ...buildProjectPatch(current, next),
+    status: next.status,
+    paymentStatus: next.paymentStatus,
+    invoicedAmount: next.invoicedAmount,
+    upcomingAmount: next.upcomingAmount,
+  };
+}
+
+function doesProjectMatchPatch(project: Project, patch: Partial<ProjectDraft>) {
+  const keys = Object.keys(patch) as (keyof ProjectDraft)[];
+
+  return keys.every((key) => {
+    const persistedValue = project[key];
+    const expectedValue = patch[key];
+
+    if (Array.isArray(persistedValue) && Array.isArray(expectedValue)) {
+      return (
+        persistedValue.length === expectedValue.length &&
+        persistedValue.every((value, index) => value === expectedValue[index])
+      );
+    }
+
+    if (typeof persistedValue === "number" && typeof expectedValue === "number") {
+      return Math.abs(persistedValue - expectedValue) < 0.01;
+    }
+
+    return persistedValue === expectedValue;
+  });
+}
+
+function normalizeDraftForPaymentStatus(draft: ProjectDraft): ProjectDraft {
+  const hasInvoicedAmount = Number.isFinite(draft.invoicedAmount) && draft.invoicedAmount > 0;
+  const hasUpcomingAmount = Number.isFinite(draft.upcomingAmount) && draft.upcomingAmount > 0;
+
+  if (
+    (draft.paymentStatus === "Reçu" || draft.paymentStatus === "En attente de payment") &&
+    !hasInvoicedAmount &&
+    hasUpcomingAmount
+  ) {
+    return {
+      ...draft,
+      invoicedAmount: draft.upcomingAmount,
+      upcomingAmount: 0,
+    };
+  }
+
+  if (draft.paymentStatus === "À facturer" && hasInvoicedAmount && !hasUpcomingAmount) {
+    return {
+      ...draft,
+      invoicedAmount: 0,
+      upcomingAmount: draft.invoicedAmount,
+    };
+  }
+
+  return draft;
+}
+
 function formatCurrency(amount: number, currency: Currency) {
   return new Intl.NumberFormat("fr-CA", {
     style: "currency",
@@ -130,7 +189,8 @@ function getAwaitingPaymentAmount(project: Project) {
 }
 
 function getReceivedAmount(project: Project) {
-  return project.paymentStatus === "Reçu" ? project.invoicedAmount : 0;
+  if (project.paymentStatus !== "Reçu") return 0;
+  return project.invoicedAmount > 0 ? project.invoicedAmount : project.upcomingAmount;
 }
 
 function getNotReceivedAmount(project: Project) {
@@ -214,17 +274,53 @@ async function loadDashboardData() {
   };
 }
 
-function renderCurrencySummary(total: number, emptyLabel = "Aucun montant") {
+async function loadDashboardDataWithConfirmedProject(
+  projectId: string,
+  expectedPatch: Partial<ProjectDraft>,
+) {
+  let latestData: Awaited<ReturnType<typeof loadDashboardData>> | null = null;
+  let latestProject: Project | null = null;
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const data = await loadDashboardData();
+    const project =
+      data.projects.find((entry) => String(entry.id) === String(projectId)) ?? null;
+
+    latestData = data;
+    latestProject = project;
+
+    if (project && doesProjectMatchPatch(project, expectedPatch)) {
+      return { data, project, confirmed: true };
+    }
+
+    if (attempt < 3) {
+      await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+    }
+  }
+
+  return {
+    data: latestData ?? (await loadDashboardData()),
+    project: latestProject,
+    confirmed: false,
+  };
+}
+
+function renderCurrencySummary(
+  total: number,
+  emptyLabel = "Aucun montant",
+  amountClassName = "text-neutral-950",
+  labelClassName = "text-neutral-400",
+) {
   if (total <= 0) {
-    return <p className="text-sm text-neutral-400">{emptyLabel}</p>;
+    return <p className={`text-sm ${labelClassName}`}>{emptyLabel}</p>;
   }
 
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <span className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-400">
+      <span className={`text-xs font-semibold uppercase tracking-[0.22em] ${labelClassName}`}>
         {DISPLAY_CURRENCY}
       </span>
-      <span className="text-xl font-semibold text-neutral-950">
+      <span className={`text-xl font-semibold ${amountClassName}`}>
         {formatCurrency(total, DISPLAY_CURRENCY)}
       </span>
     </div>
@@ -411,6 +507,14 @@ export default function DashboardPage() {
     () => sumInDisplayCurrency(projects, (project) => getReceivedAmount(project)),
     [projects],
   );
+  const receivedPaymentAllocation = useMemo(
+    () => [
+      { label: "Church", percentage: 10, amount: totalInvoiced * 0.1 },
+      { label: "Taxes", percentage: 20, amount: totalInvoiced * 0.2 },
+      { label: "Cashflow", percentage: 70, amount: totalInvoiced * 0.7 },
+    ],
+    [totalInvoiced],
+  );
   const totalUpcoming = useMemo(
     () => sumInDisplayCurrency(projects, (project) => getNotReceivedAmount(project)),
     [projects],
@@ -521,24 +625,30 @@ export default function DashboardPage() {
   const saveDraft = async () => {
     if (!draft) return;
 
+    const normalizedDraft = normalizeDraftForPaymentStatus(draft);
     const normalizedProject: ProjectDraft = {
-      ...draft,
-      teamClientId: draft.teamClientId,
-      clientName: draft.clientName.trim(),
-      clientCompany: draft.clientCompany.trim(),
-      clientEmail: draft.clientEmail.trim(),
-      clientPhone: draft.clientPhone.trim(),
-      clientWebsite: draft.clientWebsite.trim(),
-      projectName: draft.projectName.trim(),
-      serviceTypes: draft.serviceTypes,
-      expectedDate: draft.expectedDate,
-      invoicedAmount: Number.isFinite(draft.invoicedAmount) ? draft.invoicedAmount : 0,
-      upcomingAmount: Number.isFinite(draft.upcomingAmount) ? draft.upcomingAmount : 0,
+      ...normalizedDraft,
+      teamClientId: normalizedDraft.teamClientId,
+      clientName: normalizedDraft.clientName.trim(),
+      clientCompany: normalizedDraft.clientCompany.trim(),
+      clientEmail: normalizedDraft.clientEmail.trim(),
+      clientPhone: normalizedDraft.clientPhone.trim(),
+      clientWebsite: normalizedDraft.clientWebsite.trim(),
+      projectName: normalizedDraft.projectName.trim(),
+      serviceTypes: normalizedDraft.serviceTypes,
+      expectedDate: normalizedDraft.expectedDate,
+      invoicedAmount: Number.isFinite(normalizedDraft.invoicedAmount)
+        ? normalizedDraft.invoicedAmount
+        : 0,
+      upcomingAmount: Number.isFinite(normalizedDraft.upcomingAmount)
+        ? normalizedDraft.upcomingAmount
+        : 0,
       exchangeRateToCad:
-        draft.currency === "CAD"
+        normalizedDraft.currency === "CAD"
           ? 1
-          : Number.isFinite(draft.exchangeRateToCad) && draft.exchangeRateToCad > 0
-            ? draft.exchangeRateToCad
+          : Number.isFinite(normalizedDraft.exchangeRateToCad) &&
+              normalizedDraft.exchangeRateToCad > 0
+            ? normalizedDraft.exchangeRateToCad
             : DEFAULT_CHF_TO_CAD,
     };
 
@@ -556,8 +666,16 @@ export default function DashboardPage() {
         editingId === null ? null : projects.find((project) => project.id === editingId) ?? null;
       const requestBody =
         method === "PATCH" && currentProject
-          ? buildProjectPatch(currentProject, normalizedProject)
+          ? buildProjectUpdatePayload(currentProject, normalizedProject)
           : normalizedProject;
+      const patchedFields = requestBody as Partial<ProjectDraft>;
+
+      if (method === "PATCH" && Object.keys(patchedFields).length === 0) {
+        setStatusMessage("Aucun changement à sauvegarder.");
+        cancelDraft();
+        return;
+      }
+
       const response = await fetch(endpoint, {
         method,
         headers: { "content-type": "application/json" },
@@ -576,33 +694,34 @@ export default function DashboardPage() {
         );
       }
 
-      setProjects((current) => {
-        const nextProject = payload.project as Project;
+      const confirmation =
+        method === "PATCH"
+          ? await loadDashboardDataWithConfirmedProject(payload.project.id, patchedFields)
+          : {
+              data: await loadDashboardData(),
+              project: payload.project,
+              confirmed: true,
+            };
+      const persistedProject =
+        confirmation.data.projects.find(
+          (project) => String(project.id) === String(payload.project?.id),
+        ) ?? null;
 
-        if (isAdding || editingId === null) {
-          return [nextProject, ...current];
-        }
+      setProjects(confirmation.data.projects);
+      setTeamClients(confirmation.data.clients);
 
-        return current.map((project) =>
-          String(project.id) === String(nextProject.id) ? nextProject : project,
+      if (!persistedProject) {
+        throw new Error(
+          "Le projet a répondu à la sauvegarde, mais il est introuvable après rechargement.",
         );
-      });
-      if (payload.teamClient) {
-        setTeamClients((current) => {
-          const existingIndex = current.findIndex(
-            (client) => client.id === payload.teamClient?.id,
-          );
-          if (existingIndex === -1) {
-            return [payload.teamClient as TeamClientRecord, ...current];
-          }
-
-          return current.map((client) =>
-            client.id === payload.teamClient?.id
-              ? (payload.teamClient as TeamClientRecord)
-              : client,
-          );
-        });
       }
+
+      if (method === "PATCH" && !confirmation.confirmed) {
+        throw new Error(
+          "La sauvegarde n'a pas été confirmée après rechargement. Réessaie, puis vérifie la migration Supabase du dashboard si le problème revient.",
+        );
+      }
+
       setStatusMessage(isAdding ? "Projet créé." : "Projet mis à jour.");
 
       cancelDraft();
@@ -648,6 +767,17 @@ export default function DashboardPage() {
 
   const updateDraft = <K extends keyof ProjectDraft>(key: K, value: ProjectDraft[K]) => {
     setDraft((current) => (current ? { ...current, [key]: value } : current));
+  };
+
+  const updateDraftPaymentStatus = (paymentStatus: PaymentStatus) => {
+    setDraft((current) =>
+      current
+        ? normalizeDraftForPaymentStatus({
+            ...current,
+            paymentStatus,
+          })
+        : current,
+    );
   };
 
   const addTeamClient = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -966,7 +1096,7 @@ export default function DashboardPage() {
               <DashboardSelect
                 value={draft.paymentStatus}
                 onChange={(event) =>
-                  updateDraft("paymentStatus", event.target.value as PaymentStatus)
+                  updateDraftPaymentStatus(event.target.value as PaymentStatus)
                 }
               >
                 {paymentStatusOptions.map((status) => (
@@ -1037,7 +1167,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f6f3ee] text-neutral-950">
+    <main className="dashboardPage min-h-screen bg-black text-white">
       <AdminLockOverlay title="Accès Dashboard" storageKey="bs_dashboard_unlocked" />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10 sm:px-8 lg:px-10">
         <header className="space-y-3">
@@ -1116,55 +1246,113 @@ export default function DashboardPage() {
                 className="grid auto-cols-[100%] grid-flow-col gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid-flow-row lg:grid-cols-2 lg:gap-4 lg:overflow-visible"
               >
                 <article className="min-w-0 snap-center rounded-2xl border border-orange-200 bg-[linear-gradient(135deg,rgba(255,247,237,0.96),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)] lg:mr-0">
-                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-orange-300">
                     Finance
                   </p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
+                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-orange-200">
                     En attente
                   </h2>
-                  <div className="mt-6">{renderCurrencySummary(totalPendingPayment)}</div>
+                  <div className="mt-6">
+                    {renderCurrencySummary(
+                      totalPendingPayment,
+                      "Aucun montant",
+                      "text-orange-200",
+                      "text-orange-300/80",
+                    )}
+                  </div>
                 </article>
                 <article className="min-w-0 snap-center rounded-2xl border border-sky-200 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
-                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-sky-300">
                     Finance
                   </p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
+                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-sky-200">
                     À facturer plus tard
                   </h2>
-                  <div className="mt-6">{renderCurrencySummary(totalUpcoming)}</div>
+                  <div className="mt-6">
+                    {renderCurrencySummary(
+                      totalUpcoming,
+                      "Aucun montant",
+                      "text-sky-200",
+                      "text-sky-300/80",
+                    )}
+                  </div>
                 </article>
 
                 <article className="min-w-0 snap-center rounded-2xl border border-emerald-200 bg-[linear-gradient(135deg,rgba(236,253,245,0.95),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
-                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-emerald-300">
                     Finance
                   </p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
+                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-emerald-200">
                     Payment reçu
                   </h2>
-                  <div className="mt-6">{renderCurrencySummary(totalInvoiced)}</div>
+                  <div className="mt-6">
+                    {renderCurrencySummary(
+                      totalInvoiced,
+                      "Aucun montant",
+                      "text-emerald-200",
+                      "text-emerald-300/80",
+                    )}
+                  </div>
                 </article>
 
                 <article className="min-w-0 snap-center rounded-2xl border-2 border-emerald-300 bg-[linear-gradient(135deg,rgba(220,252,231,0.96),rgba(255,255,255,0.98))] p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
-                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-lime-300">
                     Finance
                   </p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
+                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-lime-200">
                     Projection totale
                   </h2>
-                  <div className="mt-6">{renderCurrencySummary(totalProjected)}</div>
+                  <div className="mt-6">
+                    {renderCurrencySummary(
+                      totalProjected,
+                      "Aucun montant",
+                      "text-lime-200",
+                      "text-lime-300/80",
+                    )}
+                  </div>
                 </article>
               </section>
             </div>
           </article>
         </section>
 
-        <section className="bg-transparent py-0 md:rounded-2xl md:border md:border-neutral-200 md:bg-white md:p-6 md:shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+        <section className="rounded-[28px] border border-neutral-200 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+          <div className="mb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-neutral-400">
+              Allocation
+            </p>
+            <h2 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-neutral-950">
+              Répartition du payment reçu
+            </h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {receivedPaymentAllocation.map((item) => (
+              <article
+                key={item.label}
+                className="rounded-2xl border border-neutral-200 bg-[#faf8f5] p-6"
+              >
+                <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+                  {item.percentage}% de Payment reçu
+                </p>
+                <h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
+                  {item.label}
+                </h3>
+                <div className="mt-6">
+                  {renderCurrencySummary(item.amount)}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="dashboardOverviewSection bg-transparent py-0 md:rounded-2xl md:border md:border-neutral-200 md:bg-white md:p-6 md:shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
           <div className="mb-5 flex flex-wrap items-start justify-between gap-4 md:items-start">
             <div className="w-full space-y-2 text-center md:w-auto md:text-left">
-              <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+              <p className="text-xs font-medium uppercase tracking-[0.22em] text-sky-300">
                 Vue d&apos;ensemble
               </p>
-              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
+              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-sky-100">
                 Liste des clients / projets
               </h2>
             </div>
@@ -1256,41 +1444,41 @@ export default function DashboardPage() {
                         <div className="min-w-0 flex-1">
                           <div className="grid gap-3 md:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(0,1.05fr)_minmax(0,0.9fr)] md:items-center">
                             <div className="flex min-w-0 items-center gap-3">
-                              <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-500 group-open:bg-neutral-950 group-open:text-white ${dashboardDisclosureButtonClass}`}>
+                              <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-sky-200 group-open:bg-neutral-950 group-open:text-sky-200 ${dashboardDisclosureButtonClass}`}>
                                 <Eye size={15} />
                               </span>
                               <div className="min-w-0">
-                                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
+                                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-sky-300">
                                   Client
                                 </p>
-                                <p className="mt-1 truncate text-base font-semibold tracking-[-0.03em] text-neutral-950 sm:text-lg">
+                                <p className="mt-1 truncate text-base font-semibold tracking-[-0.03em] text-white sm:text-lg">
                                   {project.clientName || "Client sans nom"}
                                 </p>
                               </div>
                             </div>
                             <div className="min-w-0">
-                              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
+                              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-violet-300">
                                 Entreprise
                               </p>
-                              <p className="mt-1 truncate text-sm text-neutral-600 sm:text-base">
+                              <p className="mt-1 truncate text-sm text-violet-100/80 sm:text-base">
                                 {project.clientCompany || "Aucune entreprise"}
                               </p>
                             </div>
                             <div className="min-w-0">
-                              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
+                              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-pink-300">
                                 Projet
                               </p>
                               <div className="mt-1 flex items-center gap-2 whitespace-nowrap">
-                                <p className="min-w-0 truncate text-sm text-neutral-600 sm:text-base">
+                                <p className="min-w-0 truncate text-sm font-semibold text-pink-200 sm:text-base">
                                   {project.projectName || "Projet sans titre"}
                                 </p>
-                                <span className="inline-flex shrink-0 rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-neutral-600">
+                                <span className="inline-flex shrink-0 rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-pink-100">
                                   {project.status}
                                 </span>
                               </div>
                             </div>
                             <div className="min-w-0">
-                              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
+                              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-emerald-300">
                                 Finance
                               </p>
                               <div className="mt-1 flex items-center justify-start gap-2 whitespace-nowrap">
@@ -1314,12 +1502,14 @@ export default function DashboardPage() {
                         ) : (
                           <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
                             <div className="grid gap-3">
-                              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
+                              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-pink-300">
                                 Projet
                               </p>
-                              <div className="grid gap-2 text-sm text-neutral-600">
-                                <p>{project.projectName || "Projet sans titre"}</p>
-                                <p>{project.status}</p>
+                              <div className="grid gap-2 text-sm text-sky-100/75">
+                                <p className="font-semibold text-pink-200">
+                                  {project.projectName || "Projet sans titre"}
+                                </p>
+                                <p className="text-pink-100/80">{project.status}</p>
                                 <p>{formatDate(project.expectedDate)}</p>
                                 <p>{project.clientEmail || "Email non renseigné"}</p>
                                 <p>{project.clientPhone || "Téléphone non renseigné"}</p>
@@ -1327,11 +1517,11 @@ export default function DashboardPage() {
                             </div>
 
                             <div className="grid gap-3">
-                              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-neutral-400">
+                              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-emerald-300">
                                 Finance
                               </p>
                               <div className="flex flex-wrap items-start gap-2">
-                                <span className="inline-flex rounded-full border border-neutral-200 bg-white/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500">
+                                <span className="inline-flex rounded-full border border-neutral-200 bg-white/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-sky-100">
                                   {project.currency}
                                   {project.currency === "CHF"
                                     ? ` ${project.exchangeRateToCad.toFixed(2)}`
@@ -1346,7 +1536,7 @@ export default function DashboardPage() {
                               <p className={`text-lg font-semibold tracking-[-0.03em] ${amountSummary.amountClass}`}>
                                 {displayAmount}
                               </p>
-                              <p className="text-sm leading-6 text-neutral-600">
+                              <p className="text-sm leading-6 text-sky-100/75">
                                 {project.serviceTypes.length > 0
                                   ? project.serviceTypes.join(", ")
                                   : "Aucun service renseigné"}

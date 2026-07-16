@@ -902,7 +902,10 @@ export function ProjectFeedbackWorkspace({
     setErrorMessage("");
 
     try {
-      const response = await fetch(`/api/project/${project.id}/status`, {
+      const statusRoute = allowImageManagement
+        ? `/api/projects/${project.id}`
+        : `/api/project/${project.id}/status`;
+      const response = await fetch(statusRoute, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ status: "approved" }),

@@ -16,19 +16,12 @@ import {
   withLocalePath,
 } from "@/lib/i18n";
 
-type Theme = "light" | "dark";
-const THEME_COOKIE_KEY = "theme";
 const MOBILE_NAV_BREAKPOINT = 980;
 
-type SiteHeaderProps = {
-  initialTheme: Theme;
-};
-
-export function SiteHeader({ initialTheme }: SiteHeaderProps) {
+export function SiteHeader() {
   const pathname = usePathname();
   const mobileNavRef = useRef<HTMLElement | null>(null);
   const headerRef = useRef<HTMLElement | null>(null);
-  const [theme, setTheme] = useState<Theme>(initialTheme);
   const [openSubmenuKey, setOpenSubmenuKey] = useState<string | null>(null);
   const localeFromPath = getLocaleFromPathname(pathname);
   const locale = localeFromPath ?? DEFAULT_LOCALE;
@@ -93,7 +86,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
       window.removeEventListener("resize", handleResize);
       window.cancelAnimationFrame(frame);
     };
-  }, [activeNavKey, pathname, theme]);
+  }, [activeNavKey, pathname]);
 
   useEffect(() => {
     if (!openSubmenuKey) return;
@@ -120,15 +113,6 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
   }, [openSubmenuKey]);
 
   const localizedHref = (target: string) => withLocalePath(locale, target);
-
-  const toggleTheme = () => {
-    const next: Theme = theme === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
-    setTheme(next);
-    try {
-      document.cookie = `${THEME_COOKIE_KEY}=${next}; path=/; max-age=31536000; samesite=lax`;
-    } catch {}
-  };
 
   const navItems = [
     {
@@ -189,27 +173,18 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
       kind: "anchor" as const,
       target: "_blank" as const,
     },
-    {
-      key: "theme",
-      label: theme === "dark" ? messages.themeLabels.dark : messages.themeLabels.light,
-      kind: "button" as const,
-    },
   ];
 
-  const mobileNavItems = [
-    ...navItems.filter((item) => item.key !== "theme"),
-    navItems.find((item) => item.key === "theme"),
-  ].filter((item) => item !== undefined);
+  const mobileNavItems = navItems;
   const mobileBookingItem = mobileNavItems.find((item) => item.key === "book-meeting");
-  const mobileThemeItem = mobileNavItems.find((item) => item.key === "theme");
   const mobilePrimaryItems = mobileNavItems.filter(
-    (item) => item.key !== "theme" && item.key !== "book-meeting",
+    (item) => item.key !== "book-meeting",
   );
 
   const renderNavItems = (items: typeof navItems, isMobile = false) =>
     items.map((item) => {
       const commonProps = {
-        className: `siteNavLink${item.kind === "button" ? " themeToggle" : ""}`,
+        className: "siteNavLink",
         "data-nav-key": item.key,
       };
 
@@ -286,18 +261,7 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
         );
       }
 
-      return (
-        <button
-          key={item.key}
-          {...commonProps}
-          type="button"
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-          aria-pressed={theme === "dark"}
-        >
-          {item.label}
-        </button>
-      );
+      return null;
     });
 
   return (
@@ -340,7 +304,6 @@ export function SiteHeader({ initialTheme }: SiteHeaderProps) {
       <nav ref={mobileNavRef} className="siteNavMobile" aria-label="Primary">
         {mobileBookingItem ? renderNavItems([mobileBookingItem], true) : null}
         {renderNavItems(mobilePrimaryItems, true)}
-        {mobileThemeItem ? renderNavItems([mobileThemeItem], true) : null}
       </nav>
 
       {openSubmenuKey === "mystudio" ? (

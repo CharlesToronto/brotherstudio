@@ -147,6 +147,33 @@ const HOME_DEVELOPER_REASONS: Array<{
   },
 ];
 
+const HOME_PROCESS_STEPS = [
+  {
+    title: "Project Branding",
+    description: "Position the development with a clear identity, message, and visual direction.",
+  },
+  {
+    title: "Images / Videos",
+    description: "Create premium visuals that make the project feel real before construction.",
+  },
+  {
+    title: "Website",
+    description: "Build a sales-focused destination that presents the offer and captures demand.",
+  },
+  {
+    title: "Meta Campaigns",
+    description: "Launch targeted campaigns that put the project in front of the right audience.",
+  },
+  {
+    title: "Qualified Buyers",
+    description: "Filter interest into serious leads ready for commercial follow-up.",
+  },
+  {
+    title: "Sales Partner (Optional)",
+    description: "Support the sales cycle with assets, data, and a coherent launch system.",
+  },
+] as const;
+
 const HOME_SALES_PLANS: SalesPlanPreview[] = Array.from({ length: 11 }, (_, index) => {
   const fileNumber = index + 2;
   return {
@@ -351,10 +378,11 @@ export function HomeGalleryExperience({
   const [isMobileLayout, setIsMobileLayout] = useState(false);
   const [mobileDisplayMode, setMobileDisplayMode] = useState<MobileDisplayMode>("grid");
   const [activePrimaryTab, setActivePrimaryTab] = useState<GalleryPrimaryTabKey>("images");
-  const [activeProject, setActiveProject] = useState<GalleryProjectKey | "all">("all");
+  const [activeProject] = useState<GalleryProjectKey | "all">("all");
   const [activeSceneFilter, setActiveSceneFilter] = useState<SceneFilterKey>("all");
   const [activeMobileItem, setActiveMobileItem] = useState<GalleryItem | null>(null);
   const [isMobileGalleryExpanded, setIsMobileGalleryExpanded] = useState(false);
+  const [activeProcessStep, setActiveProcessStep] = useState(0);
   const lightboxPreviewRefs = useRef(new Map<string, HTMLButtonElement>());
   const postHeroSpotlightRef = useRef<HTMLDivElement | null>(null);
   const galleryHeadingRef = useRef<HTMLDivElement | null>(null);
@@ -496,7 +524,11 @@ export function HomeGalleryExperience({
   }, [activeMobileItem]);
 
   useEffect(() => {
-    setIsMobileGalleryExpanded(false);
+    const timeoutId = window.setTimeout(() => {
+      setIsMobileGalleryExpanded(false);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [activePrimaryTab, effectiveSceneFilter, mobileDisplayMode]);
 
   useEffect(() => {
@@ -946,6 +978,49 @@ export function HomeGalleryExperience({
           ) : null}
         </div>
       ) : null}
+
+      <section className="homeProcessSection" aria-labelledby="home-process-title">
+        <div className="homeProcessHeader">
+          <h2 id="home-process-title" className="homeProcessTitle">
+            Our Process
+          </h2>
+          <p className="homeProcessLead">
+            A complete launch system from positioning to qualified buyers.
+          </p>
+        </div>
+
+        <div className="homeProcessList" role="list">
+          {HOME_PROCESS_STEPS.map((step, index) => (
+            <div key={step.title} className="homeProcessStepGroup" role="listitem">
+              <button
+                type="button"
+                className="homeProcessStep"
+                data-active={activeProcessStep === index ? "true" : "false"}
+                aria-pressed={activeProcessStep === index}
+                onClick={() => setActiveProcessStep(index)}
+                onFocus={() => setActiveProcessStep(index)}
+                onMouseEnter={() => setActiveProcessStep(index)}
+              >
+                <span className="homeProcessNumber">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="homeProcessStepCopy">
+                  <span className="homeProcessStepTitle">{step.title}</span>
+                  <span className="homeProcessStepDescription">
+                    {step.description}
+                  </span>
+                </span>
+                <span className="homeProcessStepSignal" aria-hidden="true" />
+              </button>
+              {index < HOME_PROCESS_STEPS.length - 1 ? (
+                <span className="homeProcessArrow" aria-hidden="true">
+                  →
+                </span>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </section>
 
       <div id="home-gallery-end" aria-hidden="true" />
     </section>

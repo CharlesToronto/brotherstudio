@@ -28,8 +28,9 @@ export function HomeVideoHero() {
           <h1 className="homeHeroTitle">BROTHERSTUDIO</h1>
           <div className="homeHeroValue">
             <p className="homeHeroValueText">
-              We help property developers launch, market and sell their developments through
-              premium branding, visualization, websites and lead generation.
+              Brother Studio is a property marketing company that helps developers launch,
+              commercialize and sell new real estate developments through branding, CGI,
+              websites, advertising and qualified lead generation.
             </p>
           </div>
         </div>

@@ -13,6 +13,7 @@ export const PROJECT_OPTIONS = [
   { key: "violette", label: "Violette" },
   { key: "cfoc", label: "CFOC" },
   { key: "plantaz", label: "Plantaz" },
+  { key: "soleil", label: "Soleil" },
   { key: "three-peaks", label: "Three Peaks" },
   { key: "others", label: "Others" },
 ] as const;

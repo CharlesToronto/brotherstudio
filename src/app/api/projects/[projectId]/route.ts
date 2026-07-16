@@ -4,7 +4,9 @@ import {
   deleteProject,
   isProjectFeedbackConfigured,
   updateProjectSettings,
+  updateProjectStatus,
 } from "@/lib/projectFeedbackStore";
+import type { ProjectStatus } from "@/lib/projectFeedbackTypes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,18 +27,25 @@ export async function PATCH(
     | {
         name?: unknown;
         accessPassword?: unknown;
+        status?: unknown;
       }
     | null;
 
   const name = typeof body?.name === "string" ? body.name : undefined;
   const accessPassword =
     typeof body?.accessPassword === "string" ? body.accessPassword : undefined;
+  const status =
+    body?.status === "approved" || body?.status === "in_review"
+      ? (body.status as ProjectStatus)
+      : undefined;
 
   try {
-    const project = await updateProjectSettings(projectId, {
-      name,
-      accessPassword,
-    });
+    const project = status
+      ? await updateProjectStatus(projectId, status)
+      : await updateProjectSettings(projectId, {
+          name,
+          accessPassword,
+        });
 
     return NextResponse.json({ project });
   } catch (error) {

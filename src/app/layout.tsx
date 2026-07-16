@@ -64,7 +64,6 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const headerStore = await headers();
-  const theme = cookieStore.get("theme")?.value === "dark" ? "dark" : "light";
   const locale =
     normalizeLocale(headerStore.get("x-site-locale")) ??
     normalizeLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value ?? null) ??
@@ -78,7 +77,7 @@ export default async function RootLayout({
     process.env.NODE_ENV === "production" && process.env.VERCEL === "1";
 
   return (
-    <html lang={locale} data-theme={theme}>
+    <html lang={locale} data-theme="light">
       <body>
         <script
           type="application/ld+json"
@@ -96,7 +95,7 @@ export default async function RootLayout({
         />
         <div className="siteShell">
           <div className="siteChrome">
-            {hasStandardChrome ? <SiteHeader initialTheme={theme} /> : null}
+            {hasStandardChrome ? <SiteHeader /> : null}
             <AnalyticsTracker />
             {children}
             {hasStandardChrome ? <SiteFooter locale={locale} /> : null}
