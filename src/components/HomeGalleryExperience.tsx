@@ -659,7 +659,6 @@ export function HomeGalleryExperience({
                   <article key={video.src} className="homeVideoGalleryCard" role="listitem">
                     <video
                       src={video.src}
-                      muted
                       loop
                       playsInline
                       controls
