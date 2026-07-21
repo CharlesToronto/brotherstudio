@@ -94,7 +94,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         <div className="siteFooterBrandHeader">
           <Image
             className="siteFooterLogo"
-            src="/bs-logo-menu-cropped.png"
+            src="/bs-logo-menu-white.png"
             alt={site.name}
             width={2565}
             height={570}

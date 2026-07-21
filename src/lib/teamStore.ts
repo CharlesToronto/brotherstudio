@@ -226,6 +226,23 @@ function isMissingTableError(error: unknown, tableName: string) {
   return code === "42P01" || code === "PGRST205" || combined.includes(tableName.toLowerCase());
 }
 
+function isMissingColumnError(error: unknown, columnName: string) {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { code?: unknown; message?: unknown; details?: unknown; hint?: unknown };
+  const code = typeof candidate.code === "string" ? candidate.code.trim() : "";
+  const combined = [candidate.message, candidate.details, candidate.hint]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    code === "42703" ||
+    code === "PGRST204" ||
+    combined.includes(columnName.toLowerCase()) ||
+    combined.includes("schema cache")
+  );
+}
+
 function assertTeamConfigured() {
   if (!isSupabaseConfigured()) {
     throw new Error("Supabase is not configured.");
@@ -382,6 +399,57 @@ export async function updateTeamClient(id: string, patch: Partial<Omit<TeamClien
   }
 
   return normalizeClientRow(data as TeamClientRow);
+}
+
+export async function deleteTeamClient(id: string) {
+  assertTeamConfigured();
+  const supabase = getSupabaseAdminClient();
+
+  const { error: dashboardProjectsError } = await supabase
+    .from("dashboard_projects")
+    .update({ team_client_id: null })
+    .eq("team_client_id", id);
+
+  if (
+    dashboardProjectsError &&
+    !isMissingTableError(dashboardProjectsError, "dashboard_projects") &&
+    !isMissingColumnError(dashboardProjectsError, "team_client_id")
+  ) {
+    throw dashboardProjectsError;
+  }
+
+  const { error: contactsError } = await supabase
+    .from("team_client_contacts")
+    .delete()
+    .eq("client_id", id);
+
+  if (contactsError && !isMissingTableError(contactsError, "team_client_contacts")) {
+    throw contactsError;
+  }
+
+  const { error: notesError } = await supabase.from("team_notes").delete().eq("client_id", id);
+
+  if (notesError && !isMissingTableError(notesError, "team_notes")) {
+    throw notesError;
+  }
+
+  const { data, error } = await supabase
+    .from("team_clients")
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingTableError(error, "team_clients")) {
+      throw new Error("Missing Supabase table: team_clients.");
+    }
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error("Client not found or already deleted.");
+  }
 }
 
 function normalizeClientContactRow(row: TeamClientContactRow): TeamClientContactRecord {

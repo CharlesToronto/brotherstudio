@@ -3,14 +3,22 @@
 import { Dongle } from "next/font/google";
 import { ArrowDown } from "lucide-react";
 
+import { useHeroScrollBridge } from "@/hooks/useHeroScrollBridge";
+
 const dongle = Dongle({
   subsets: ["latin"],
   weight: ["300"],
 });
 
 export function HomeVideoHero() {
+  const heroScrollBridgeRef = useHeroScrollBridge<HTMLElement>();
+
   return (
-    <section className="homeBlurWordSection" aria-label="BrotherStudio video hero">
+    <section
+      ref={heroScrollBridgeRef}
+      className="homeBlurWordSection"
+      aria-label="BrotherStudio video hero"
+    >
       <video
         className="homeVideoHeroMedia"
         src="/videos/bs-home-hero.mp4"

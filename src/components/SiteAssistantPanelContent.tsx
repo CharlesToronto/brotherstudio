@@ -15,7 +15,6 @@ type ChatMessage = {
   id: string;
   role: "assistant" | "user";
   text: string;
-  showContactCta?: boolean;
 };
 
 type SubmitState =
@@ -24,6 +23,9 @@ type SubmitState =
   | { status: "error"; message: string };
 
 type AssistantTab = "chat" | "questions";
+type AssistantMessageSegment =
+  | { kind: "paragraph"; text: string }
+  | { kind: "list"; items: string[] };
 
 type SiteAssistantPanelContentProps = {
   locale: AssistantLocale;
@@ -88,6 +90,106 @@ function buildCopy(locale: AssistantLocale) {
       "I do not have a precise answer for that question. The most efficient next step is to send your project details, timeline, and target deliverables.",
     viewContactPage: "Open contact page",
   };
+}
+
+function splitAssistantMessage(text: string): AssistantMessageSegment[] {
+  const blocks = text
+    .trim()
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  return blocks.flatMap((block) => {
+    const lines = block
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (lines.length === 0) return [];
+
+    const bulletLines = lines.filter((line) => /^[-•]\s+/.test(line));
+    const introLines = lines.filter((line) => !/^[-•]\s+/.test(line));
+
+    if (bulletLines.length === lines.length) {
+      return [
+        {
+          kind: "list" as const,
+          items: bulletLines.map((line) => line.replace(/^[-•]\s+/, "")),
+        },
+      ];
+    }
+
+    if (bulletLines.length > 0) {
+      return [
+        ...(introLines.length > 0
+          ? [{ kind: "paragraph" as const, text: introLines.join(" ") }]
+          : []),
+        {
+          kind: "list" as const,
+          items: bulletLines.map((line) => line.replace(/^[-•]\s+/, "")),
+        },
+      ];
+    }
+
+    return [{ kind: "paragraph" as const, text: lines.join(" ") }];
+  });
+}
+
+function renderTextWithPriceBadges(text: string) {
+  const pricePattern =
+    /(CHF\s*\d+(?:[.,]\d+)?(?:\s*(?:[–—-]|\/)\s*(?:CHF\s*)?\d+(?:[.,]\d+)?)*(?:\s*\/\s*[\p{L}]+)?)/giu;
+  const parts = text.split(pricePattern);
+
+  return parts.map((part, index) =>
+    /^CHF\s*\d/i.test(part) ? (
+      <span key={`${part}-${index}`} className="siteAssistantPriceBadge">
+        {part.trim()}
+      </span>
+    ) : (
+      <span key={`${part}-${index}`}>{part}</span>
+    ),
+  );
+}
+
+function renderAssistantListItem(item: string) {
+  const [label, ...rest] = item.split(/\s:\s/);
+  const hasLabel = rest.length > 0 && label.length <= 52;
+  const body = hasLabel ? rest.join(" : ") : item;
+
+  return (
+    <>
+      {hasLabel ? <span className="siteAssistantMessageItemTitle">{label}</span> : null}
+      <span className="siteAssistantMessageItemText">{renderTextWithPriceBadges(body)}</span>
+    </>
+  );
+}
+
+function AssistantFormattedMessage({ text }: { text: string }) {
+  const segments = splitAssistantMessage(text);
+
+  if (segments.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="siteAssistantMessageFormatted">
+      {segments.map((segment, index) =>
+        segment.kind === "list" ? (
+          <ul key={`list-${index}`} className="siteAssistantMessageList">
+            {segment.items.map((item, itemIndex) => (
+              <li key={`${item}-${itemIndex}`} className="siteAssistantMessageItem">
+                {renderAssistantListItem(item)}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p key={`paragraph-${index}`} className="siteAssistantMessageParagraph">
+            {renderTextWithPriceBadges(segment.text)}
+          </p>
+        ),
+      )}
+    </div>
+  );
 }
 
 export function SiteAssistantPanelContent({
@@ -177,7 +279,6 @@ export function SiteAssistantPanelContent({
           id: `assistant-${current.length + 1}`,
           role: "assistant",
           text: safeReply,
-          showContactCta: true,
         },
       ]);
     } catch {
@@ -187,7 +288,6 @@ export function SiteAssistantPanelContent({
           id: `assistant-${current.length + 1}`,
           role: "assistant",
           text: buildLocalFallback(value, forcedAnswer),
-          showContactCta: true,
         },
       ]);
     } finally {
@@ -309,22 +409,17 @@ export function SiteAssistantPanelContent({
                     key={message.id}
                     className={`siteAssistantMessage siteAssistantMessage--${message.role}`}
                   >
-                    <p>{message.text}</p>
-                    {message.role === "assistant" && message.showContactCta ? (
-                      <button
-                        type="button"
-                        className="siteAssistantInlineCta"
-                        onClick={() => setShowContactForm(true)}
-                      >
-                        {copy.contactButton}
-                      </button>
-                    ) : null}
+                    {message.role === "assistant" ? (
+                      <AssistantFormattedMessage text={message.text} />
+                    ) : (
+                      <p>{message.text}</p>
+                    )}
                   </div>
                 ))}
 
                 {isReplying ? (
                   <div className="siteAssistantMessage siteAssistantMessage--assistant">
-                    <p>{copy.replyingLabel}</p>
+                    <p className="siteAssistantReplyingText">{copy.replyingLabel}</p>
                   </div>
                 ) : null}
                 <div ref={messagesEndRef} />

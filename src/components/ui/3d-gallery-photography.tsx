@@ -45,10 +45,7 @@ interface InfiniteGalleryProps {
   style?: React.CSSProperties;
 }
 
-interface GallerySceneProps
-  extends Omit<InfiniteGalleryProps, "className" | "style"> {
-  wheelTargetRef: React.RefObject<HTMLDivElement | null>;
-}
+type GallerySceneProps = Omit<InfiniteGalleryProps, "className" | "style">;
 
 interface PlaneData {
   index: number;
@@ -326,7 +323,6 @@ function GalleryScene({
   images,
   speed = 1,
   visibleCount = PLANE_COUNT,
-  wheelTargetRef,
   blurSettings = {
     blurIn: { start: 0.0, end: 0.1 },
     blurOut: { start: 0.9, end: 1.0 },
@@ -338,7 +334,6 @@ function GalleryScene({
   const lastInteraction = useRef(0);
   const velocityRef = useRef(0.58 * speed);
   const progressRef = useRef(0.36);
-  const touchYRef = useRef<number | null>(null);
 
   const planeCount = Math.max(1, Math.min(PLANE_COUNT, visibleCount, images.length || PLANE_COUNT));
   const isNarrow = size.width < 900;
@@ -395,49 +390,6 @@ function GalleryScene({
     setRenderQueue([...queueRef.current]);
   }, [blurSettings.maxBlur, normalizedImages.length, planeCount]);
 
-  const handleWheel = useCallback(
-    (event: WheelEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
-      progressRef.current += delta * 0.00092 * speed;
-      velocityRef.current += delta * 0.0078 * speed;
-      velocityRef.current = THREE.MathUtils.clamp(velocityRef.current, -1.65, 1.65);
-      setAutoPlay(false);
-      lastInteraction.current = Date.now();
-    },
-    [speed],
-  );
-
-  const handleTouchStart = useCallback((event: TouchEvent) => {
-    touchYRef.current = event.touches[0]?.clientY ?? null;
-  }, []);
-
-  const handleTouchMove = useCallback(
-    (event: TouchEvent) => {
-      const nextTouchY = event.touches[0]?.clientY;
-      if (typeof nextTouchY !== "number") return;
-
-      const previousTouchY = touchYRef.current;
-      touchYRef.current = nextTouchY;
-      if (previousTouchY === null) return;
-
-      const deltaY = previousTouchY - nextTouchY;
-      event.preventDefault();
-      event.stopPropagation();
-      progressRef.current += deltaY * 0.0016 * speed;
-      velocityRef.current += deltaY * 0.0115 * speed;
-      velocityRef.current = THREE.MathUtils.clamp(velocityRef.current, -2.1, 2.1);
-      setAutoPlay(false);
-      lastInteraction.current = Date.now();
-    },
-    [speed],
-  );
-
-  const handleTouchEnd = useCallback(() => {
-    touchYRef.current = null;
-  }, []);
-
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
@@ -454,30 +406,12 @@ function GalleryScene({
   );
 
   useEffect(() => {
-    const wheelTarget = wheelTargetRef.current;
-    const interactionTarget =
-      wheelTarget?.closest<HTMLElement>(".homeBlurWordSection") ?? wheelTarget;
-
-    if (interactionTarget) {
-      interactionTarget.addEventListener("wheel", handleWheel, { passive: false });
-      interactionTarget.addEventListener("touchstart", handleTouchStart, { passive: true });
-      interactionTarget.addEventListener("touchmove", handleTouchMove, { passive: false });
-      interactionTarget.addEventListener("touchend", handleTouchEnd);
-      interactionTarget.addEventListener("touchcancel", handleTouchEnd);
-    }
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      if (interactionTarget) {
-        interactionTarget.removeEventListener("wheel", handleWheel);
-        interactionTarget.removeEventListener("touchstart", handleTouchStart);
-        interactionTarget.removeEventListener("touchmove", handleTouchMove);
-        interactionTarget.removeEventListener("touchend", handleTouchEnd);
-        interactionTarget.removeEventListener("touchcancel", handleTouchEnd);
-      }
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleKeyDown, handleTouchEnd, handleTouchMove, handleTouchStart, handleWheel, wheelTargetRef]);
+  }, [handleKeyDown]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -620,7 +554,6 @@ export default function InfiniteGallery({
     maxBlur: 6.8,
   },
 }: InfiniteGalleryProps) {
-  const wheelTargetRef = useRef<HTMLDivElement>(null);
   const [webglSupported] = useState(() => {
     try {
       if (typeof document === "undefined") {
@@ -643,13 +576,12 @@ export default function InfiniteGallery({
   }
 
   return (
-    <div ref={wheelTargetRef} className={className} style={style}>
+    <div className={className} style={style}>
       <Canvas camera={{ position: [0, 0, 8], fov: 45 }} gl={{ antialias: true, alpha: true }}>
         <GalleryScene
           images={images}
           speed={speed}
           visibleCount={visibleCount}
-          wheelTargetRef={wheelTargetRef}
           blurSettings={blurSettings}
         />
       </Canvas>

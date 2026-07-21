@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { Eye, Pencil, Search, Trash2 } from "lucide-react";
+import { Eye, Pencil, Search, Trash2, UserPlus, X } from "lucide-react";
 
 import { AdminLockOverlay } from "@/components/AdminLockOverlay";
 import {
@@ -39,6 +39,33 @@ const emptyTeamClientDraft = {
   status: "new" as TeamClientStatus,
   nextFollowUp: "",
 };
+
+function createTeamClientDraftFromProject(draft: ProjectDraft | null) {
+  if (!draft) return emptyTeamClientDraft;
+
+  return {
+    ...emptyTeamClientDraft,
+    name: draft.clientName,
+    company: draft.clientCompany,
+    phone: draft.clientPhone,
+    email: draft.clientEmail,
+    project: draft.projectName,
+  };
+}
+
+function createTeamClientDraftFromClient(client: TeamClientRecord) {
+  return {
+    name: client.name,
+    company: client.company,
+    address: client.address,
+    country: client.country,
+    phone: client.phone,
+    email: client.email,
+    project: client.project,
+    status: client.status as TeamClientStatus,
+    nextFollowUp: client.nextFollowUp,
+  };
+}
 
 function createEmptyProject(): ProjectDraft {
   return {
@@ -396,6 +423,7 @@ export default function DashboardPage() {
   const [showClientPicker, setShowClientPicker] = useState(false);
   const [showServicesMenu, setShowServicesMenu] = useState(false);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
+  const [editingTeamClientId, setEditingTeamClientId] = useState<string | null>(null);
   const [newClientDraft, setNewClientDraft] = useState(emptyTeamClientDraft);
   const [projectSearch, setProjectSearch] = useState("");
   const [projectStatusFilter, setProjectStatusFilter] = useState<"all" | ProjectStatus>("all");
@@ -482,6 +510,27 @@ export default function DashboardPage() {
       window.removeEventListener("resize", updateActiveSlide);
     };
   }, []);
+
+  useEffect(() => {
+    if (!showNewClientForm) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowNewClientForm(false);
+        setEditingTeamClientId(null);
+        setNewClientDraft(emptyTeamClientDraft);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showNewClientForm]);
 
   const clientsCount = useMemo(
     () =>
@@ -584,6 +633,9 @@ export default function DashboardPage() {
     setDraft(createEmptyProject());
     setShowClientPicker(false);
     setShowServicesMenu(false);
+    setShowNewClientForm(false);
+    setEditingTeamClientId(null);
+    setNewClientDraft(emptyTeamClientDraft);
     setEditingId(null);
     setIsAdding(true);
   };
@@ -610,6 +662,9 @@ export default function DashboardPage() {
     });
     setShowClientPicker(false);
     setShowServicesMenu(false);
+    setShowNewClientForm(false);
+    setEditingTeamClientId(null);
+    setNewClientDraft(emptyTeamClientDraft);
     setEditingId(project.id);
     setIsAdding(false);
   };
@@ -618,6 +673,9 @@ export default function DashboardPage() {
     setDraft(null);
     setShowClientPicker(false);
     setShowServicesMenu(false);
+    setShowNewClientForm(false);
+    setEditingTeamClientId(null);
+    setNewClientDraft(emptyTeamClientDraft);
     setEditingId(null);
     setIsAdding(false);
   };
@@ -780,7 +838,7 @@ export default function DashboardPage() {
     );
   };
 
-  const addTeamClient = async (event: React.FormEvent<HTMLFormElement>) => {
+  const saveTeamClient = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!newClientDraft.name.trim()) return;
 
@@ -789,8 +847,12 @@ export default function DashboardPage() {
     setStatusMessage("");
 
     try {
-      const response = await fetch("/api/team/clients", {
-        method: "POST",
+      const isEditingTeamClient = editingTeamClientId !== null;
+      const endpoint = isEditingTeamClient
+        ? `/api/team/clients/${editingTeamClientId}`
+        : "/api/team/clients";
+      const response = await fetch(endpoint, {
+        method: isEditingTeamClient ? "PATCH" : "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(newClientDraft),
       });
@@ -802,10 +864,88 @@ export default function DashboardPage() {
         throw new Error(payload?.error ?? "Failed to create team client.");
       }
 
-      setTeamClients((current) => [payload.client!, ...current]);
+      if (isEditingTeamClient) {
+        const linkedProjects = projects.filter(
+          (project) => project.teamClientId === payload.client!.id,
+        );
+
+        await Promise.all(
+          linkedProjects.map((project) =>
+            fetch(`/api/dashboard/projects/${project.id}`, {
+              method: "PATCH",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                teamClientId: payload.client!.id,
+                clientName: payload.client!.name,
+                clientCompany: payload.client!.company,
+                clientEmail: payload.client!.email,
+                clientPhone: payload.client!.phone,
+              }),
+            }).then(async (projectResponse) => {
+              if (!projectResponse.ok) {
+                const projectPayload = (await projectResponse.json().catch(() => null)) as
+                  | { error?: string }
+                  | null;
+                throw new Error(
+                  projectPayload?.error ?? "Failed to update linked dashboard project.",
+                );
+              }
+            }),
+          ),
+        );
+
+        const data = await loadDashboardData();
+        setProjects(data.projects);
+        setTeamClients(data.clients);
+        setDraft((current) =>
+          current?.teamClientId === payload.client!.id
+            ? {
+                ...current,
+                clientName: payload.client!.name,
+                clientCompany: payload.client!.company,
+                clientEmail: payload.client!.email,
+                clientPhone: payload.client!.phone,
+                projectName: current.projectName || payload.client!.project,
+              }
+            : current,
+        );
+        setEditingTeamClientId(null);
+        setNewClientDraft(emptyTeamClientDraft);
+        setShowNewClientForm(false);
+        setStatusMessage("Client mis à jour.");
+        return;
+      }
+
+      const refreshedClientsResponse = await fetch("/api/team/clients", {
+        cache: "no-store",
+        headers: { "cache-control": "no-cache" },
+      });
+      const refreshedClientsPayload = (await refreshedClientsResponse.json().catch(() => null)) as
+        | { clients?: TeamClientRecord[]; error?: string }
+        | null;
+
+      setTeamClients((current) =>
+        refreshedClientsResponse.ok && refreshedClientsPayload?.clients
+          ? refreshedClientsPayload.clients
+          : [payload.client!, ...current.filter((client) => client.id !== payload.client!.id)],
+      );
+      setDraft((current) =>
+        current
+          ? {
+              ...current,
+              teamClientId: payload.client!.id,
+              clientName: payload.client!.name,
+              clientCompany: payload.client!.company,
+              clientEmail: payload.client!.email,
+              clientPhone: payload.client!.phone,
+              projectName: current.projectName || payload.client!.project,
+            }
+          : current,
+      );
       setNewClientDraft(emptyTeamClientDraft);
+      setEditingTeamClientId(null);
       setShowNewClientForm(false);
-      setStatusMessage("Client ajouté.");
+      setStatusMessage(draft ? "Contact créé et lié au projet." : "Client ajouté.");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to create team client.");
     } finally {
@@ -894,6 +1034,215 @@ export default function DashboardPage() {
     });
   };
 
+  const openNewClientFormFromDraft = () => {
+    setShowClientPicker(false);
+    setShowServicesMenu(false);
+    setEditingTeamClientId(null);
+    setNewClientDraft(createTeamClientDraftFromProject(draft));
+    setShowNewClientForm(true);
+  };
+
+  const openStandaloneNewClientForm = () => {
+    setShowClientPicker(false);
+    setShowServicesMenu(false);
+    setEditingTeamClientId(null);
+    setNewClientDraft(emptyTeamClientDraft);
+    setShowNewClientForm(true);
+  };
+
+  const openTeamClientEditor = (client: TeamClientRecord) => {
+    setShowClientPicker(false);
+    setShowServicesMenu(false);
+    setEditingTeamClientId(client.id);
+    setNewClientDraft(createTeamClientDraftFromClient(client));
+    setShowNewClientForm(true);
+  };
+
+  const deleteTeamClientFromDashboard = async (client: TeamClientRecord) => {
+    const confirmed = window.confirm(
+      `Supprimer le client "${client.name || "Client sans nom"}" ? Les projets liés seront conservés, mais détachés de ce client.`,
+    );
+
+    if (!confirmed) return;
+
+    setIsSaving(true);
+    setErrorMessage("");
+    setStatusMessage("");
+
+    try {
+      const linkedProjects = projects.filter((project) => project.teamClientId === client.id);
+
+      await Promise.all(
+        linkedProjects.map((project) =>
+          fetch(`/api/dashboard/projects/${project.id}`, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ teamClientId: null }),
+          }).then(async (projectResponse) => {
+            if (!projectResponse.ok) {
+              const projectPayload = (await projectResponse.json().catch(() => null)) as
+                | { error?: string }
+                | null;
+              throw new Error(
+                projectPayload?.error ?? "Failed to detach linked dashboard project.",
+              );
+            }
+          }),
+        ),
+      );
+
+      const response = await fetch(`/api/team/clients/${client.id}`, {
+        method: "DELETE",
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Failed to delete team client.");
+      }
+
+      setTeamClients((current) => current.filter((entry) => entry.id !== client.id));
+      setProjects((current) =>
+        current.map((project) =>
+          project.teamClientId === client.id ? { ...project, teamClientId: null } : project,
+        ),
+      );
+
+      const data = await loadDashboardData();
+      setProjects(data.projects);
+      setTeamClients(data.clients);
+      if (editingTeamClientId === client.id) {
+        closeNewClientForm();
+      }
+      setStatusMessage("Client supprimé.");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to delete team client.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const closeNewClientForm = () => {
+    setShowNewClientForm(false);
+    setEditingTeamClientId(null);
+    setNewClientDraft(emptyTeamClientDraft);
+  };
+
+  const renderNewClientForm = (submitLabel = "Ajouter le client") => (
+    <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" onSubmit={saveTeamClient}>
+      <DashboardField label="Nom du client">
+        <DashboardInput
+          value={newClientDraft.name}
+          onChange={(event) =>
+            setNewClientDraft((current) => ({ ...current, name: event.target.value }))
+          }
+          placeholder="Nom du client"
+          required
+        />
+      </DashboardField>
+      <DashboardField label="Entreprise">
+        <DashboardInput
+          value={newClientDraft.company}
+          onChange={(event) =>
+            setNewClientDraft((current) => ({ ...current, company: event.target.value }))
+          }
+          placeholder="Entreprise"
+        />
+      </DashboardField>
+      <DashboardField label="Adresse">
+        <DashboardInput
+          value={newClientDraft.address}
+          onChange={(event) =>
+            setNewClientDraft((current) => ({ ...current, address: event.target.value }))
+          }
+          placeholder="Adresse"
+        />
+      </DashboardField>
+      <DashboardField label="Pays">
+        <DashboardInput
+          value={newClientDraft.country}
+          onChange={(event) =>
+            setNewClientDraft((current) => ({ ...current, country: event.target.value }))
+          }
+          placeholder="Pays"
+        />
+      </DashboardField>
+      <DashboardField label="Téléphone">
+        <DashboardInput
+          value={newClientDraft.phone}
+          onChange={(event) =>
+            setNewClientDraft((current) => ({ ...current, phone: event.target.value }))
+          }
+          placeholder="+41 ..."
+        />
+      </DashboardField>
+      <DashboardField label="Email">
+        <DashboardInput
+          value={newClientDraft.email}
+          onChange={(event) =>
+            setNewClientDraft((current) => ({ ...current, email: event.target.value }))
+          }
+          type="email"
+          placeholder="client@email.com"
+        />
+      </DashboardField>
+      <DashboardField label="Projet">
+        <DashboardInput
+          value={newClientDraft.project}
+          onChange={(event) =>
+            setNewClientDraft((current) => ({ ...current, project: event.target.value }))
+          }
+          placeholder="Projet"
+        />
+      </DashboardField>
+      <DashboardField label="Statut">
+        <DashboardSelect
+          value={newClientDraft.status}
+          onChange={(event) =>
+            setNewClientDraft((current) => ({
+              ...current,
+              status: event.target.value as TeamClientStatus,
+            }))
+          }
+        >
+          {TEAM_CLIENT_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </DashboardSelect>
+      </DashboardField>
+      <DashboardField label="Prochain suivi">
+        <DashboardInput
+          value={newClientDraft.nextFollowUp}
+          onChange={(event) =>
+            setNewClientDraft((current) => ({
+              ...current,
+              nextFollowUp: event.target.value,
+            }))
+          }
+          type="date"
+        />
+      </DashboardField>
+      <div className="flex flex-wrap gap-3 pt-2 md:col-span-2 xl:col-span-4">
+        <button
+          type="submit"
+          disabled={isSaving}
+          className={`inline-flex h-10 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white ${dashboardPrimaryButtonClass}`}
+        >
+          {submitLabel}
+        </button>
+        <button
+          type="button"
+          disabled={isSaving}
+          onClick={closeNewClientForm}
+          className={`inline-flex h-10 items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 ${dashboardSecondaryButtonClass}`}
+        >
+          Annuler
+        </button>
+      </div>
+    </form>
+  );
+
   const renderDraftEditor = () => {
     if (!draft) return null;
 
@@ -902,9 +1251,20 @@ export default function DashboardPage() {
         {errorMessage ? <p className="mb-4 text-sm text-rose-700">{errorMessage}</p> : null}
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
-              Informations
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
+                Informations
+              </p>
+              <button
+                type="button"
+                onClick={openNewClientFormFromDraft}
+                disabled={isSaving}
+                className={`inline-flex h-8 items-center justify-center gap-2 rounded-full border border-neutral-200 bg-white px-3 text-xs font-medium text-neutral-700 ${dashboardSecondaryButtonClass}`}
+              >
+                <UserPlus size={13} />
+                Créer un contact
+              </button>
+            </div>
             <DashboardField
               label="Client"
               action={
@@ -1589,142 +1949,154 @@ export default function DashboardPage() {
                 Clients
               </p>
               <h2 className="text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
-                Ajouter un nouveau client
+                Liste des clients
               </h2>
               <p className="max-w-2xl text-sm text-neutral-600">
-                Crée un client dans le même système que la page team.
+                Gère les informations enregistrées dans Supabase. Les projets liés sont mis à
+                jour quand tu modifies un client.
               </p>
             </div>
             <button
               type="button"
-              onClick={() => setShowNewClientForm((current) => !current)}
+              onClick={openStandaloneNewClientForm}
               disabled={isSaving}
               className={`inline-flex h-11 items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 ${dashboardSecondaryButtonClass}`}
             >
-              {showNewClientForm ? "Fermer" : "Nouveau client"}
+              Nouveau client
             </button>
           </div>
 
-          {showNewClientForm ? (
-            <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" onSubmit={addTeamClient}>
-              <DashboardField label="Nom du client">
-                <DashboardInput
-                  value={newClientDraft.name}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, name: event.target.value }))
-                  }
-                  placeholder="Nom du client"
-                  required
-                />
-              </DashboardField>
-              <DashboardField label="Entreprise">
-                <DashboardInput
-                  value={newClientDraft.company}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, company: event.target.value }))
-                  }
-                  placeholder="Entreprise"
-                />
-              </DashboardField>
-              <DashboardField label="Adresse">
-                <DashboardInput
-                  value={newClientDraft.address}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, address: event.target.value }))
-                  }
-                  placeholder="Adresse"
-                />
-              </DashboardField>
-              <DashboardField label="Pays">
-                <DashboardInput
-                  value={newClientDraft.country}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, country: event.target.value }))
-                  }
-                  placeholder="Pays"
-                />
-              </DashboardField>
-              <DashboardField label="Téléphone">
-                <DashboardInput
-                  value={newClientDraft.phone}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, phone: event.target.value }))
-                  }
-                  placeholder="+41 ..."
-                />
-              </DashboardField>
-              <DashboardField label="Email">
-                <DashboardInput
-                  value={newClientDraft.email}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, email: event.target.value }))
-                  }
-                  type="email"
-                  placeholder="client@email.com"
-                />
-              </DashboardField>
-              <DashboardField label="Projet">
-                <DashboardInput
-                  value={newClientDraft.project}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({ ...current, project: event.target.value }))
-                  }
-                  placeholder="Projet"
-                />
-              </DashboardField>
-              <DashboardField label="Statut">
-                <DashboardSelect
-                  value={newClientDraft.status}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({
-                      ...current,
-                      status: event.target.value as TeamClientStatus,
-                    }))
-                  }
-                >
-                  {TEAM_CLIENT_STATUSES.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </DashboardSelect>
-              </DashboardField>
-              <DashboardField label="Prochain suivi">
-                <DashboardInput
-                  value={newClientDraft.nextFollowUp}
-                  onChange={(event) =>
-                    setNewClientDraft((current) => ({
-                      ...current,
-                      nextFollowUp: event.target.value,
-                    }))
-                  }
-                  type="date"
-                />
-              </DashboardField>
-              <div className="md:col-span-2 xl:col-span-4 flex flex-wrap gap-3 pt-2">
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className={`inline-flex h-10 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white ${dashboardPrimaryButtonClass}`}
-                >
-                  Ajouter le client
-                </button>
-                <button
-                  type="button"
-                  disabled={isSaving}
-                  onClick={() => {
-                    setShowNewClientForm(false);
-                    setNewClientDraft(emptyTeamClientDraft);
-                  }}
-                  className={`inline-flex h-10 items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 ${dashboardSecondaryButtonClass}`}
-                >
-                  Annuler
-                </button>
-              </div>
-            </form>
-          ) : null}
+          <div className="grid gap-3">
+            {isLoading ? (
+              <p className="text-sm text-neutral-500">Chargement des clients...</p>
+            ) : teamClients.length > 0 ? (
+              teamClients.map((client) => {
+                const linkedProjects = projects.filter((project) => {
+                  if (project.teamClientId === client.id) return true;
+                  return (
+                    !project.teamClientId &&
+                    Boolean(client.email.trim()) &&
+                    project.clientEmail.trim().toLowerCase() === client.email.trim().toLowerCase()
+                  );
+                });
+
+                return (
+                  <article
+                    key={client.id}
+                    className="grid gap-4 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:items-center"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400">
+                        Client
+                      </p>
+                      <h3 className="mt-1 truncate text-lg font-semibold tracking-[-0.03em] text-neutral-950">
+                        {client.name || "Client sans nom"}
+                      </h3>
+                      <p className="mt-1 truncate text-sm text-neutral-600">
+                        {client.company || "Aucune entreprise"}
+                      </p>
+                    </div>
+
+                    <div className="min-w-0 text-sm leading-6 text-neutral-600">
+                      <p className="truncate">{client.email || "Email non renseigné"}</p>
+                      <p className="truncate">{client.phone || "Téléphone non renseigné"}</p>
+                      <p className="truncate">
+                        {client.project || "Projet client non renseigné"}
+                      </p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-neutral-400">
+                        {linkedProjects.length} projet{linkedProjects.length > 1 ? "s" : ""} lié
+                        {linkedProjects.length > 1 ? "s" : ""}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                      <span className="inline-flex rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500">
+                        {client.status}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => openTeamClientEditor(client)}
+                        disabled={isSaving}
+                        aria-label="Modifier le client"
+                        title="Modifier"
+                        className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 ${dashboardIconButtonClass}`}
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void deleteTeamClientFromDashboard(client)}
+                        disabled={isSaving}
+                        aria-label="Supprimer le client"
+                        title="Supprimer"
+                        className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 ${dashboardDangerButtonClass}`}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </article>
+                );
+              })
+            ) : (
+              <p className="rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4 text-sm text-neutral-500">
+                Aucun client enregistré pour le moment.
+              </p>
+            )}
+          </div>
         </section>
       </div>
+      {showNewClientForm ? (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/65 px-4 py-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dashboardNewClientModalTitle"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeNewClientForm();
+            }
+          }}
+        >
+          <div className="max-h-[88vh] w-full max-w-5xl overflow-y-auto rounded-[28px] border border-neutral-200 bg-white p-5 text-neutral-950 shadow-[0_28px_90px_rgba(0,0,0,0.35)] sm:p-6">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
+                  Contact
+                </p>
+                <h2
+                  id="dashboardNewClientModalTitle"
+                  className="text-2xl font-semibold tracking-[-0.04em] text-neutral-950"
+                >
+                  {editingTeamClientId ? "Modifier le client" : "Ajouter un nouveau client"}
+                </h2>
+                <p className="max-w-2xl text-sm text-neutral-600">
+                  {editingTeamClientId
+                    ? "Modifie les informations du client. Les projets liés seront synchronisés."
+                    : draft
+                      ? "Le contact sera créé dans Supabase, puis relié automatiquement à ce projet."
+                      : "Remplis les informations du client. La donnée sera enregistrée dans Supabase."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeNewClientForm}
+                disabled={isSaving}
+                className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-700 ${dashboardIconButtonClass}`}
+                aria-label="Fermer le popup"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            {renderNewClientForm(
+              editingTeamClientId
+                ? "Enregistrer les modifications"
+                : draft
+                  ? "Créer et lier le contact"
+                  : "Ajouter le client",
+            )}
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

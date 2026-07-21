@@ -163,7 +163,10 @@ export type SiteMessages = {
       collapse: string;
     };
     intro: string;
-    paragraphs: string[];
+    paragraphs: Array<{
+      title: string;
+      text: string;
+    }>;
     highlightsTitle: string;
     highlights: string[];
     portraitAlt: string;
@@ -806,21 +809,43 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       title: "About",
       location: "Ajax, Canada",
       metadataDescription:
-        "Biography of Charles, founder of BrotherStudio, an architectural visualization studio based in Ajax, Canada.",
+        "Biography of Charles, founder of BrotherStudio, a real estate marketing agency for property developers.",
       biographyTitle: "Biography",
       biographyButtons: {
         expand: "Read more",
         collapse: "Show less",
       },
       intro:
-        "Charles is an architectural draftsman and the founder of BrotherStudio, a studio specializing in high-end architectural visualization, landscape atmospheres, and real estate presentation.",
+        "Charles is an architectural draftsman, digital marketing specialist, and the founder of BrotherStudio, a marketing agency dedicated to helping property developers successfully launch and sell real estate projects.",
       paragraphs: [
-        "He obtained his Architectural Drafting Diploma in 2017 in Sion, Switzerland, beginning his career working on residential architecture projects including luxury chalets, apartment buildings, and neighborhood developments. These early experiences shaped his design sensibility through the strong influence of European architectural culture: precision, balanced proportions, refined materials, and clean spatial composition.",
-        "From 2017 to 2022, he contributed to multiple residential developments, translating architectural concepts into clear technical drawings and visual presentations used for design coordination, planning approvals, and project communication.",
-        "After relocating to Canada in 2022, he expanded his work beyond technical drafting into architectural visualization and design presentation, while also serving as Mission Director in community initiatives.",
-        "In December 2024, he founded BrotherStudio, focusing on photorealistic architectural imagery, marketing floor plans, and visual storytelling for architects, developers, and real estate professionals.",
-        "His work explores not only buildings themselves but the complete environments in which architecture exists. Through landscape composition, outdoor living design, and atmospheric visualization, he translates clients' estates and dream homes into immersive environments where gardens, terraces, light, and surrounding landscapes complement and elevate the architectural structures.",
-        "By combining European architectural discipline with modern visualization techniques, Charles helps transform architectural concepts into compelling, emotionally engaging, and market-ready visual experiences.",
+        {
+          title: "Architectural foundation",
+          text: "He earned his Architectural Drafting Diploma in 2017 in Sion, Switzerland, where he began his career working on luxury chalets, apartment buildings, and residential developments. These years shaped his understanding of architecture through the influence of European design principles: precision, balanced proportions, refined materials, and timeless composition.",
+        },
+        {
+          title: "Real estate experience",
+          text: "From 2017 to 2022, he contributed to numerous residential projects, producing technical drawings and architectural documentation while developing a deep understanding of the real estate development process.",
+        },
+        {
+          title: "Digital marketing background",
+          text: "Alongside his architectural career, Charles spent more than three years building businesses in e-commerce, specializing in digital marketing, online advertising, sales funnels, and lead generation. This experience allowed him to master customer acquisition strategies, performance marketing, and conversion optimization—skills that now play a central role in BrotherStudio's approach.",
+        },
+        {
+          title: "A new real estate service",
+          text: "After relocating to Canada in 2022, he combined his architectural expertise with his marketing background to create a new type of service for the real estate industry.",
+        },
+        {
+          title: "BrotherStudio",
+          text: "Founded in December 2024, BrotherStudio has evolved beyond architectural visualization into a real estate marketing partner. Rather than simply producing beautiful images, the studio helps developers transform projects into market-ready brands by combining photorealistic renderings, cinematic videos, project websites, digital advertising campaigns, and lead generation systems designed to attract qualified buyers before construction is completed.",
+        },
+        {
+          title: "Marketing philosophy",
+          text: "Charles believes that exceptional architecture deserves exceptional marketing. His philosophy is that visual presentation is only the beginning—the ultimate objective is generating interest, qualified leads, and successful property sales.",
+        },
+        {
+          title: "From concept to sale",
+          text: "Today, BrotherStudio combines European architectural discipline with modern digital marketing strategies to help property developers move seamlessly from concept to sale.",
+        },
       ],
       highlightsTitle: "Team",
       highlights: [
@@ -1376,21 +1401,43 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       title: "A propos",
       location: "Ajax, Canada",
       metadataDescription:
-        "Biographie de Charles, fondateur de BrotherStudio, un studio de visualisation architecturale base a Ajax, Canada.",
+        "Biography of Charles, founder of BrotherStudio, a real estate marketing agency for property developers.",
       biographyTitle: "Biographie",
       biographyButtons: {
         expand: "Lire la suite",
         collapse: "Reduire",
       },
       intro:
-        "Charles est dessinateur en architecture et fondateur de BrotherStudio, un studio specialise dans la visualisation architecturale haut de gamme, les atmospheres paysageres et la presentation immobiliere.",
+        "Charles is an architectural draftsman, digital marketing specialist, and the founder of BrotherStudio, a marketing agency dedicated to helping property developers successfully launch and sell real estate projects.",
       paragraphs: [
-        "Il a obtenu son diplome de dessin architectural en 2017 a Sion, en Suisse, commencant sa carriere sur des projets residentiels incluant des chalets de luxe, des immeubles a appartements et des developpements de quartier. Ces premieres experiences ont faconne sa sensibilite du design sous l'influence forte de la culture architecturale europeenne : precision, proportions equilibrees, materiaux raffines et composition spatiale epuree.",
-        "De 2017 a 2022, il a contribue a plusieurs developpements residentiels, traduisant des concepts architecturaux en dessins techniques clairs et en presentations visuelles utilisees pour la coordination de design, les approbations et la communication de projet.",
-        "Apres son arrivee au Canada en 2022, il a etendu son travail au-dela du dessin technique vers la visualisation architecturale et la presentation de design, tout en servant egalement comme Mission Director dans des initiatives communautaires.",
-        "En decembre 2024, il a fonde BrotherStudio, avec un focus sur les images architecturales photorealistes, les floor plans marketing et le visual storytelling pour les architectes, developpeurs et professionnels de l'immobilier.",
-        "Son travail explore non seulement les batiments eux-memes, mais aussi les environnements complets dans lesquels l'architecture existe. A travers la composition paysagere, le design d'espaces de vie exterieurs et la visualisation atmospherique, il traduit les estates et dream homes de ses clients en environnements immersifs ou jardins, terrasses, lumiere et paysages environnants completent et elevent les structures architecturales.",
-        "En combinant la rigueur architecturale europeenne avec les techniques modernes de visualisation, Charles aide a transformer des concepts architecturaux en experiences visuelles fortes, engageantes et pretes pour le marche.",
+        {
+          title: "Architectural foundation",
+          text: "He earned his Architectural Drafting Diploma in 2017 in Sion, Switzerland, where he began his career working on luxury chalets, apartment buildings, and residential developments. These years shaped his understanding of architecture through the influence of European design principles: precision, balanced proportions, refined materials, and timeless composition.",
+        },
+        {
+          title: "Real estate experience",
+          text: "From 2017 to 2022, he contributed to numerous residential projects, producing technical drawings and architectural documentation while developing a deep understanding of the real estate development process.",
+        },
+        {
+          title: "Digital marketing background",
+          text: "Alongside his architectural career, Charles spent more than three years building businesses in e-commerce, specializing in digital marketing, online advertising, sales funnels, and lead generation. This experience allowed him to master customer acquisition strategies, performance marketing, and conversion optimization—skills that now play a central role in BrotherStudio's approach.",
+        },
+        {
+          title: "A new real estate service",
+          text: "After relocating to Canada in 2022, he combined his architectural expertise with his marketing background to create a new type of service for the real estate industry.",
+        },
+        {
+          title: "BrotherStudio",
+          text: "Founded in December 2024, BrotherStudio has evolved beyond architectural visualization into a real estate marketing partner. Rather than simply producing beautiful images, the studio helps developers transform projects into market-ready brands by combining photorealistic renderings, cinematic videos, project websites, digital advertising campaigns, and lead generation systems designed to attract qualified buyers before construction is completed.",
+        },
+        {
+          title: "Marketing philosophy",
+          text: "Charles believes that exceptional architecture deserves exceptional marketing. His philosophy is that visual presentation is only the beginning—the ultimate objective is generating interest, qualified leads, and successful property sales.",
+        },
+        {
+          title: "From concept to sale",
+          text: "Today, BrotherStudio combines European architectural discipline with modern digital marketing strategies to help property developers move seamlessly from concept to sale.",
+        },
       ],
       highlightsTitle: "Team",
       highlights: [

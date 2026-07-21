@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { updateTeamClient, type TeamClientStatus } from "@/lib/teamStore";
+import { deleteTeamClient, updateTeamClient, type TeamClientStatus } from "@/lib/teamStore";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const noStoreHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  "Pragma": "no-cache",
+  "Expires": "0",
+  "Surrogate-Control": "no-store",
+};
 
 export async function PATCH(
   request: Request,
@@ -37,11 +44,27 @@ export async function PATCH(
       ...(typeof body?.nextFollowUp === "string" ? { nextFollowUp: body.nextFollowUp } : null),
     });
 
-    return NextResponse.json({ client });
+    return NextResponse.json({ client }, { headers: noStoreHeaders });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to update team client." },
-      { status: 400 },
+      { status: 400, headers: noStoreHeaders },
+    );
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ clientId: string }> },
+) {
+  try {
+    const { clientId } = await params;
+    await deleteTeamClient(clientId);
+    return NextResponse.json({ ok: true }, { headers: noStoreHeaders });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to delete team client." },
+      { status: 400, headers: noStoreHeaders },
     );
   }
 }

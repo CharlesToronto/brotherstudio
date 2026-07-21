@@ -4,6 +4,7 @@ import { Dongle } from "next/font/google";
 import { ArrowDown } from "lucide-react";
 
 import InfiniteGallery from "@/components/ui/3d-gallery-photography";
+import { useHeroScrollBridge } from "@/hooks/useHeroScrollBridge";
 import type { GalleryItem } from "@/lib/galleryStore";
 
 const dongle = Dongle({
@@ -16,6 +17,7 @@ type HomeBlurWordSectionProps = {
 };
 
 export function HomeBlurWordSection({ items }: HomeBlurWordSectionProps) {
+  const heroScrollBridgeRef = useHeroScrollBridge<HTMLElement>();
   const heroImages = items
     .filter((item) => item.architect.trim().toUpperCase() !== "BS")
     .slice(0, 8)
@@ -25,7 +27,11 @@ export function HomeBlurWordSection({ items }: HomeBlurWordSectionProps) {
     }));
 
   return (
-    <section className="homeBlurWordSection" aria-label="BrotherStudio gallery hero">
+    <section
+      ref={heroScrollBridgeRef}
+      className="homeBlurWordSection"
+      aria-label="BrotherStudio gallery hero"
+    >
       <InfiniteGallery
         images={heroImages}
         speed={1.8}

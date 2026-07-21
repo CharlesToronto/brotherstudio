@@ -4,7 +4,10 @@ import { useState } from "react";
 
 type AboutBiographyProps = {
   intro: string;
-  paragraphs: string[];
+  paragraphs: Array<{
+    title: string;
+    text: string;
+  }>;
   buttons: {
     expand: string;
     collapse: string;
@@ -17,24 +20,21 @@ export function AboutBiography({
   buttons,
 }: AboutBiographyProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [firstParagraph, ...remainingParagraphs] = paragraphs;
 
   return (
     <>
       <p className="aboutIntro">{intro}</p>
-      {firstParagraph ? (
-        <p className="aboutParagraph">{firstParagraph}</p>
-      ) : null}
-      {isExpanded && remainingParagraphs.length > 0 ? (
+      {isExpanded && paragraphs.length > 0 ? (
         <div className="aboutBiographyContent">
-          {remainingParagraphs.map((paragraph) => (
-            <p key={paragraph} className="aboutParagraph">
-              {paragraph}
-            </p>
+          {paragraphs.map((paragraph) => (
+            <article key={paragraph.title} className="aboutBiographyBlock">
+              <h3 className="aboutBiographyBlockTitle">{paragraph.title}</h3>
+              <p className="aboutParagraph">{paragraph.text}</p>
+            </article>
           ))}
         </div>
       ) : null}
-      {remainingParagraphs.length > 0 ? (
+      {paragraphs.length > 0 ? (
         <button
           className="aboutBiographyButton"
           type="button"

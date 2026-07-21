@@ -2845,8 +2845,8 @@ body:has(.homeBlurWordSection) {
   margin: 0 calc(var(--page-padding) * -1);
   padding: 0;
   overflow: hidden;
-  overscroll-behavior: none;
-  touch-action: none;
+  overscroll-behavior-y: auto;
+  touch-action: pan-y;
   background: #000;
 }
 
@@ -2858,6 +2858,12 @@ body:has(.homeBlurWordSection) {
 
 .homeHero3dGallery canvas {
   display: block;
+}
+
+.homeHero3dGallery,
+.homeHero3dGallery canvas,
+.homeVideoHeroMedia {
+  pointer-events: none;
 }
 
 .homeVideoHeroMedia {
@@ -5166,7 +5172,7 @@ html[data-theme="dark"] .homeCapabilitiesItem:focus-within .homeCapabilitiesPlus
 .homeCapabilitiesIntro {
   justify-items: start;
   text-align: left;
-  padding: 0;
+  padding-left: clamp(32px, 5vw, 88px);
 }
 
 .homeCapabilitiesKicker {
@@ -5892,6 +5898,9 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
 }
 
 .homeVideoGalleryCard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   margin: 0;
   overflow: hidden;
@@ -5900,9 +5909,11 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
 
 .homeVideoGalleryCard video {
   display: block;
-  width: 100%;
-  max-height: min(62vw, 430px);
-  object-fit: cover;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(76vh, 720px);
+  object-fit: contain;
 }
 
 .homeProjectCarouselMeta {
@@ -5965,6 +5976,7 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
   .homeCapabilitiesIntro {
     justify-items: start;
     text-align: left;
+    padding-left: 18px;
   }
 
   .homeDeveloperValueSection {
@@ -8055,8 +8067,8 @@ html[data-theme="dark"] .homeBookingIntro span {
 
 .siteAssistantMessages {
   display: grid;
-  gap: 12px;
-  padding: 20px 0 8px;
+  gap: 14px;
+  padding: 18px 0 10px;
 }
 
 .siteAssistantChatView {
@@ -8065,11 +8077,11 @@ html[data-theme="dark"] .homeBookingIntro span {
 
 .siteAssistantMessage {
   display: grid;
-  gap: 10px;
-  padding: 16px 16px 15px;
-  border-radius: 22px;
+  gap: 12px;
+  padding: 15px;
+  border-radius: 24px;
   font-size: 14px;
-  line-height: 1.58;
+  line-height: 1.52;
 }
 
 .siteAssistantMessage p {
@@ -8078,16 +8090,98 @@ html[data-theme="dark"] .homeBookingIntro span {
 }
 
 .siteAssistantMessage--assistant {
-  background: rgb(255 255 255 / 0.78);
-  border: 1px solid rgb(15 15 15 / 0.06);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8);
+  margin-right: 10px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.96) 0%, rgb(255 255 255 / 0.86) 100%);
+  border: 1px solid rgb(15 15 15 / 0.07);
+  box-shadow:
+    0 12px 28px rgb(15 15 15 / 0.045),
+    inset 0 1px 0 rgb(255 255 255 / 0.9);
 }
 
 .siteAssistantMessage--user {
-  margin-left: 34px;
+  margin-left: 54px;
   background: linear-gradient(180deg, rgb(214 128 59 / 0.96) 0%, rgb(191 103 37 / 0.94) 100%);
   border: 1px solid rgb(180 96 34 / 0.2);
   color: #fff;
+}
+
+.siteAssistantMessageFormatted {
+  display: grid;
+  gap: 14px;
+}
+
+.siteAssistantMessageParagraph {
+  color: rgb(17 17 17 / 0.92);
+  font-size: 14.5px;
+  line-height: 1.58;
+}
+
+.siteAssistantMessageList {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.siteAssistantMessageItem {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 11px 12px 11px 34px;
+  border: 1px solid rgb(15 15 15 / 0.06);
+  border-radius: 16px;
+  background: rgb(248 248 247 / 0.86);
+}
+
+.siteAssistantMessageItem::before {
+  content: "";
+  position: absolute;
+  top: 17px;
+  left: 15px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1f5cff, #42d7ff);
+  box-shadow: 0 0 0 4px rgb(31 92 255 / 0.08);
+}
+
+.siteAssistantMessageItemTitle {
+  color: #1f5cff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.siteAssistantMessageItemText {
+  color: rgb(17 17 17 / 0.82);
+  font-size: 13.5px;
+  line-height: 1.48;
+}
+
+.siteAssistantPriceBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 21px;
+  margin: 0 2px;
+  padding: 1px 7px;
+  border: 1px solid rgb(31 92 255 / 0.18);
+  border-radius: 999px;
+  background: rgb(31 92 255 / 0.08);
+  color: #1f5cff;
+  font-size: 0.92em;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.siteAssistantReplyingText {
+  color: rgb(17 17 17 / 0.48);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .siteAssistantInlineCta,
@@ -8252,9 +8346,9 @@ html[data-theme="dark"] .homeBookingIntro span {
 }
 
 .siteAssistantInput {
-  min-height: 92px;
-  max-height: 190px;
-  resize: vertical;
+  min-height: 56px;
+  max-height: 132px;
+  resize: none;
   line-height: 1.5;
 }
 
@@ -8301,11 +8395,11 @@ html[data-theme="dark"] .homeBookingIntro span {
 
 .siteAssistantComposer {
   flex: 0 0 auto;
-  margin-top: 10px;
-  padding-top: 14px;
+  margin-top: 8px;
+  padding-top: 12px;
   border-top: 1px solid rgb(15 15 15 / 0.08);
   background:
-    linear-gradient(180deg, rgb(247 244 239 / 0) 0%, rgb(247 244 239 / 0.82) 18%, rgb(247 244 239 / 0.98) 100%);
+    linear-gradient(180deg, rgb(247 244 239 / 0) 0%, rgb(247 244 239 / 0.88) 22%, rgb(247 244 239 / 1) 100%);
 }
 
 .siteAssistantContactLink {
@@ -10250,9 +10344,10 @@ body:has(.campaignLanding) .campaignLandingNav,
 
 .aboutLayout {
   display: grid;
-  grid-template-columns: minmax(280px, 360px) minmax(320px, 1fr);
-  gap: 34px;
-  max-width: 1080px;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: clamp(38px, 5vw, 86px);
+  width: min(100%, 1560px);
+  max-width: none;
   align-items: start;
 }
 
@@ -10286,8 +10381,8 @@ body:has(.campaignLanding) .campaignLandingNav,
 
 .aboutContent {
   display: grid;
-  gap: 14px;
-  max-width: 72ch;
+  gap: 18px;
+  max-width: min(100%, 1040px);
 }
 
 .aboutEyebrow {
@@ -10309,14 +10404,34 @@ body:has(.campaignLanding) .campaignLandingNav,
 
 .aboutIntro {
   margin: 0;
-  max-width: 40ch;
-  font-size: 15px;
-  line-height: 1.55;
+  max-width: 82ch;
+  font-size: clamp(16px, 1.2vw, 20px);
+  line-height: 1.62;
+  text-align: justify;
+  text-wrap: pretty;
 }
 
 .aboutParagraph {
   margin: 0;
-  line-height: 1.6;
+  max-width: 92ch;
+  font-size: clamp(14px, 0.95vw, 17px);
+  line-height: 1.7;
+  text-align: justify;
+  text-wrap: pretty;
+}
+
+.aboutBiographyBlock {
+  display: grid;
+  gap: 6px;
+}
+
+.aboutBiographyBlockTitle {
+  margin: 0;
+  color: #1f5cff;
+  font-size: clamp(15px, 1.5vw, 20px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .aboutSection {
@@ -10350,7 +10465,8 @@ body:has(.campaignLanding) .campaignLandingNav,
 
 .aboutBiographyContent {
   display: grid;
-  gap: 10px;
+  gap: 22px;
+  max-width: 1040px;
 }
 
 .pageCta {
@@ -20827,14 +20943,19 @@ body:has(.dashboardPage),
   border-color: rgb(255 255 255 / 0.28) !important;
 }
 
-.siteHeader,
-.siteFooter {
+.siteHeader {
   background: #fff !important;
   color: #000 !important;
 }
 
 .siteHeader {
   border-bottom: 1px solid rgb(0 0 0 / 0.08);
+}
+
+.siteFooter {
+  background: #242424 !important;
+  color: #fff !important;
+  border-top: 1px solid rgb(255 255 255 / 0.12);
 }
 
 .siteNav,
@@ -20848,14 +20969,20 @@ body:has(.dashboardPage),
 .siteNavLink,
 .siteNavSubmenuTrigger,
 .siteNavSublink,
-.siteNavMobileSublink,
+.siteNavMobileSublink {
+  color: #000 !important;
+}
+
 .siteFooterName,
+.siteFooterLink,
+.siteFooterAccordionSummary {
+  color: #fff !important;
+}
+
 .siteFooterText,
 .siteFooterGroupTitle,
-.siteFooterLink,
-.siteFooterAccordionSummary,
 .siteFooterAccordionBody .siteFooterLink {
-  color: #000 !important;
+  color: rgb(255 255 255 / 0.76) !important;
 }
 
 .siteNavLink[data-nav-key="book-meeting"],

@@ -5,14 +5,21 @@ import { createTeamClient, listTeamClients, type TeamClientStatus } from "@/lib/
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const noStoreHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  "Pragma": "no-cache",
+  "Expires": "0",
+  "Surrogate-Control": "no-store",
+};
+
 export async function GET() {
   try {
     const clients = await listTeamClients();
-    return NextResponse.json({ clients });
+    return NextResponse.json({ clients }, { headers: noStoreHeaders });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to load team clients." },
-      { status: 400 },
+      { status: 400, headers: noStoreHeaders },
     );
   }
 }
@@ -35,7 +42,10 @@ export async function POST(request: Request) {
   try {
     const name = typeof body?.name === "string" ? body.name.trim() : "";
     if (!name) {
-      return NextResponse.json({ error: "Client name is required." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Client name is required." },
+        { status: 400, headers: noStoreHeaders },
+      );
     }
 
     const client = await createTeamClient({
@@ -50,11 +60,11 @@ export async function POST(request: Request) {
       nextFollowUp: typeof body?.nextFollowUp === "string" ? body.nextFollowUp : "",
     });
 
-    return NextResponse.json({ client }, { status: 201 });
+    return NextResponse.json({ client }, { status: 201, headers: noStoreHeaders });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to create team client." },
-      { status: 400 },
+      { status: 400, headers: noStoreHeaders },
     );
   }
 }
