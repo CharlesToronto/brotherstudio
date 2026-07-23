@@ -17,12 +17,13 @@ type WebsitePreview = {
 };
 
 function getWebsitePreviews(locale: Locale): WebsitePreview[] {
-  const href = withLocalePath(locale, "/myexperience");
+  const mesangeHref = withLocalePath(locale, "/myexperience");
+  const maretsetHref = withLocalePath(locale, "/mywebsite/maretset");
 
   return [
     {
       title: "Mesange",
-      href,
+      href: mesangeHref,
       image: "/myexperience-hero-night.webp",
       alt:
         locale === "fr"
@@ -30,7 +31,8 @@ function getWebsitePreviews(locale: Locale): WebsitePreview[] {
           : "Preview of the Mesange sales website with dusk exterior view",
     },
     {
-      title: "Maretset (coming soon)",
+      title: "Maretset",
+      href: maretsetHref,
       image: "/mywebsite-maretset-cover.webp",
       alt:
         locale === "fr"

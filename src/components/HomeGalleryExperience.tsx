@@ -191,6 +191,7 @@ const HOME_GALLERY_VIDEOS = [
 function getWebsitePreviews(locale: Locale): WebsitePreview[] {
   const mesangeHref = withLocalePath(locale, "/myexperience");
   const websiteHref = withLocalePath(locale, "/mywebsite");
+  const maretsetHref = withLocalePath(locale, "/mywebsite/maretset");
 
   return [
     {
@@ -204,7 +205,7 @@ function getWebsitePreviews(locale: Locale): WebsitePreview[] {
     },
     {
       title: "Maretset",
-      href: websiteHref,
+      href: maretsetHref,
       image: "/mywebsite-maretset-cover.webp",
       alt: locale === "fr" ? "Apercu du site de vente Maretset" : "Preview of the Maretset sales website",
     },

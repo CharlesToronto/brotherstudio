@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 
 const MESANGE_LATITUDE = Number(process.env.MESANGE_LATITUDE) || 46.4192167;
 const MESANGE_LONGITUDE = Number(process.env.MESANGE_LONGITUDE) || 6.2758194;
+const DEFAULT_TIMEZONE = "Europe/Zurich";
 
 type OpenMeteoResponse = {
   current?: {
@@ -38,10 +39,39 @@ function getWeatherLabel(code: number | undefined) {
   return "Conditions variables";
 }
 
-export async function GET() {
+function getFiniteCoordinate(value: string | null, fallback: number) {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : fallback;
+}
+
+function clampCoordinate(value: number, min: number, max: number, fallback: number) {
+  if (value < min || value > max) return fallback;
+  return value;
+}
+
+export async function GET(request: Request) {
+  const requestUrl = new URL(request.url);
+  const latitude = clampCoordinate(
+    getFiniteCoordinate(requestUrl.searchParams.get("latitude"), MESANGE_LATITUDE),
+    -90,
+    90,
+    MESANGE_LATITUDE,
+  );
+  const longitude = clampCoordinate(
+    getFiniteCoordinate(
+      requestUrl.searchParams.get("longitude") ?? requestUrl.searchParams.get("lng"),
+      MESANGE_LONGITUDE,
+    ),
+    -180,
+    180,
+    MESANGE_LONGITUDE,
+  );
+  const location = requestUrl.searchParams.get("location")?.trim() || "Mesange, Gland";
+  const timezone = requestUrl.searchParams.get("timezone")?.trim() || DEFAULT_TIMEZONE;
+
   const url = new URL("https://api.open-meteo.com/v1/forecast");
-  url.searchParams.set("latitude", String(MESANGE_LATITUDE));
-  url.searchParams.set("longitude", String(MESANGE_LONGITUDE));
+  url.searchParams.set("latitude", String(latitude));
+  url.searchParams.set("longitude", String(longitude));
   url.searchParams.set(
     "current",
     [
@@ -62,7 +92,7 @@ export async function GET() {
     ].join(","),
   );
   url.searchParams.set("forecast_days", "1");
-  url.searchParams.set("timezone", "Europe/Zurich");
+  url.searchParams.set("timezone", timezone);
 
   try {
     const response = await fetch(url, { cache: "no-store" });
@@ -75,7 +105,7 @@ export async function GET() {
     const daily = payload.daily;
 
     return NextResponse.json({
-      location: "Mesange, Gland",
+      location,
       temperature: Math.round(current?.temperature_2m ?? 0),
       apparentTemperature: Math.round(current?.apparent_temperature ?? 0),
       weatherCode: current?.weather_code ?? null,

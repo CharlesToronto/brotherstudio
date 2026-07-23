@@ -42,6 +42,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.65,
     });
+
+    entries.push({
+      url: toAbsoluteUrl(withLocalePath(locale, "/mywebsite/maretset")),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.62,
+    });
   }
 
   return entries;
