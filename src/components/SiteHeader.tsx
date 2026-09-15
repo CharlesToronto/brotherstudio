@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import { getMessages } from "@/content/messages";
 import { site } from "@/content/site";
@@ -21,15 +21,13 @@ const MOBILE_NAV_BREAKPOINT = 980;
 export function SiteHeader() {
   const pathname = usePathname();
   const mobileNavRef = useRef<HTMLElement | null>(null);
-  const headerRef = useRef<HTMLElement | null>(null);
-  const [openSubmenuKey, setOpenSubmenuKey] = useState<string | null>(null);
   const localeFromPath = getLocaleFromPathname(pathname);
   const locale = localeFromPath ?? DEFAULT_LOCALE;
   const subpath = stripLocaleFromPathname(pathname);
   const messages = getMessages(locale).header;
   const isGalleryPage = subpath === "/";
   const activeNavKey = isGalleryPage
-    ? "gallery"
+    ? "home"
     : subpath === "/services" || subpath === "/price"
         ? "price"
       : subpath === "/myreview" ||
@@ -88,62 +86,33 @@ export function SiteHeader() {
     };
   }, [activeNavKey, pathname]);
 
-  useEffect(() => {
-    if (!openSubmenuKey) return;
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!(event.target instanceof Node)) return;
-      if (headerRef.current?.contains(event.target)) return;
-      setOpenSubmenuKey(null);
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpenSubmenuKey(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [openSubmenuKey]);
-
   const localizedHref = (target: string) => withLocalePath(locale, target);
 
   const navItems = [
     {
-      key: "gallery",
-      label: messages.nav.gallery,
+      key: "home",
+      label: messages.nav.home,
       href: localizedHref("/"),
       isCurrent: isGalleryPage,
       kind: "link" as const,
     },
     {
+      key: "gallery",
+      label: messages.nav.gallery,
+      href: `${localizedHref("/")}#home-gallery-section`,
+      isCurrent: false,
+      kind: "link" as const,
+    },
+    {
       key: "mystudio",
       label: "MYSTUDIO",
+      href: localizedHref("/mystudio"),
       isCurrent:
         subpath === "/myreview" ||
         subpath === "/mystudio" ||
         subpath === "/myproject" ||
         subpath === "/mywebsite",
-      kind: "submenu" as const,
-      children: [
-        {
-          label: "MyReview™",
-          href: "/myreview",
-          isCurrent:
-            subpath === "/myreview" || subpath === "/mystudio" || subpath === "/myproject",
-        },
-        {
-          label: "MyWebsite",
-          href: localizedHref("/mywebsite"),
-          isCurrent: subpath === "/mywebsite",
-        },
-      ],
+      kind: "link" as const,
     },
     {
       key: "price",
@@ -181,7 +150,7 @@ export function SiteHeader() {
     (item) => item.key !== "book-meeting",
   );
 
-  const renderNavItems = (items: typeof navItems, isMobile = false) =>
+  const renderNavItems = (items: typeof navItems) =>
     items.map((item) => {
       const commonProps = {
         className: "siteNavLink",
@@ -195,7 +164,6 @@ export function SiteHeader() {
             {...commonProps}
             href={item.href}
             aria-current={item.isCurrent ? "page" : undefined}
-            onClick={() => setOpenSubmenuKey(null)}
           >
             {item.label}
           </Link>
@@ -210,54 +178,9 @@ export function SiteHeader() {
             href={item.href}
             target={item.target}
             rel={item.target === "_blank" ? "noreferrer" : undefined}
-            onClick={() => setOpenSubmenuKey(null)}
           >
             {item.label}
           </a>
-        );
-      }
-
-      if (item.kind === "submenu") {
-        const isOpen = openSubmenuKey === item.key;
-
-        return (
-          <div
-            key={item.key}
-            className="siteNavSubmenu"
-            data-nav-key={item.key}
-            data-open={isOpen ? "true" : "false"}
-            data-mobile={isMobile ? "true" : "false"}
-          >
-            <button
-              type="button"
-              className="siteNavLink siteNavSubmenuTrigger"
-              aria-expanded={isOpen}
-              aria-haspopup="menu"
-              data-current={item.isCurrent ? "true" : "false"}
-              onClick={() =>
-                setOpenSubmenuKey((current) => (current === item.key ? null : item.key))
-              }
-            >
-              <span>{item.label}</span>
-            </button>
-
-            {isMobile ? null : (
-              <div className="siteNavSubmenuPanel" role="menu" aria-label={item.label}>
-                {item.children.map((child) => (
-                  <Link
-                    key={child.href}
-                    className="siteNavSublink"
-                    href={child.href}
-                    role="menuitem"
-                    aria-current={child.isCurrent ? "page" : undefined}
-                    onClick={() => setOpenSubmenuKey(null)}
-                  >
-                    {child.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
         );
       }
 
@@ -265,7 +188,7 @@ export function SiteHeader() {
     });
 
   return (
-    <header ref={headerRef} className="siteHeader">
+    <header className="siteHeader">
       <div className="siteHeaderMain">
         <Link className="siteLogo" href={localizedHref("/")}>
           <Image
@@ -302,40 +225,10 @@ export function SiteHeader() {
       </div>
 
       <nav ref={mobileNavRef} className="siteNavMobile" aria-label="Primary">
-        {mobileBookingItem ? renderNavItems([mobileBookingItem], true) : null}
-        {renderNavItems(mobilePrimaryItems, true)}
+        {mobileBookingItem ? renderNavItems([mobileBookingItem]) : null}
+        {renderNavItems(mobilePrimaryItems)}
       </nav>
 
-      {openSubmenuKey === "mystudio" ? (
-        <div className="siteNavMobileSubmenuPanel" role="menu" aria-label="MYSTUDIO">
-          <Link
-            className="siteNavMobileSublink"
-            href="/myreview"
-            role="menuitem"
-            aria-current={
-              subpath === "/myreview" ||
-              subpath === "/mystudio" ||
-              subpath === "/myproject"
-                ? "page"
-                : undefined
-            }
-            onClick={() => setOpenSubmenuKey(null)}
-          >
-            <span>MyReview™</span>
-            <span aria-hidden="true">↗</span>
-          </Link>
-          <Link
-            className="siteNavMobileSublink"
-            href={localizedHref("/mywebsite")}
-            role="menuitem"
-            aria-current={subpath === "/mywebsite" ? "page" : undefined}
-            onClick={() => setOpenSubmenuKey(null)}
-          >
-            <span>MyWebsite</span>
-            <span aria-hidden="true">↗</span>
-          </Link>
-        </div>
-      ) : null}
     </header>
   );
 }

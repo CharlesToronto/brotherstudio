@@ -31,6 +31,7 @@ export type ContactFormMessages = {
 export type SiteMessages = {
   header: {
     nav: {
+      home: string;
       gallery: string;
       instagram: string;
       services: string;
@@ -304,6 +305,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
   en: {
     header: {
       nav: {
+        home: "Home",
         gallery: "Gallery",
         instagram: "Instagram",
         services: "Services",
@@ -851,8 +853,8 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       highlights: [
         "Alexa D. / Administration",
         "Veronique P. / Real estate broker",
-        "Muriella R. / Design & Assistance",
-        "Elsa R. / Sales representative",
+        "Muriella R. / Project manager & assistance",
+        "Dylan R. / 3D Artist",
       ],
       portraitAlt: "Portrait of Charles, founder of BrotherStudio",
       portraitCaption: "Charles, founder of BrotherStudio.",
@@ -896,6 +898,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
   fr: {
     header: {
       nav: {
+        home: "Accueil",
         gallery: "Galerie",
         instagram: "Instagram",
         services: "Services",
@@ -1398,53 +1401,53 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
       ctaLinkLabel: "Contact",
     },
     about: {
-      title: "A propos",
+      title: "À propos",
       location: "Ajax, Canada",
       metadataDescription:
-        "Biography of Charles, founder of BrotherStudio, a real estate marketing agency for property developers.",
+        "Biographie de Charles, fondateur de BrotherStudio, une agence de marketing immobilier pour les promoteurs.",
       biographyTitle: "Biographie",
       biographyButtons: {
         expand: "Lire la suite",
-        collapse: "Reduire",
+        collapse: "Réduire",
       },
       intro:
-        "Charles is an architectural draftsman, digital marketing specialist, and the founder of BrotherStudio, a marketing agency dedicated to helping property developers successfully launch and sell real estate projects.",
+        "Charles est dessinateur en architecture, spécialiste du marketing numérique et fondateur de BrotherStudio, une agence dédiée à aider les promoteurs à lancer et vendre leurs projets immobiliers avec succès.",
       paragraphs: [
         {
-          title: "Architectural foundation",
-          text: "He earned his Architectural Drafting Diploma in 2017 in Sion, Switzerland, where he began his career working on luxury chalets, apartment buildings, and residential developments. These years shaped his understanding of architecture through the influence of European design principles: precision, balanced proportions, refined materials, and timeless composition.",
+          title: "Fondation architecturale",
+          text: "Il a obtenu son diplôme de dessinateur en architecture en 2017 à Sion, en Suisse, où il a commencé sa carrière en travaillant sur des chalets haut de gamme, des immeubles résidentiels et des développements immobiliers. Ces années ont façonné sa compréhension de l’architecture, influencée par les principes du design européen : précision, proportions équilibrées, matériaux raffinés et compositions intemporelles.",
         },
         {
-          title: "Real estate experience",
-          text: "From 2017 to 2022, he contributed to numerous residential projects, producing technical drawings and architectural documentation while developing a deep understanding of the real estate development process.",
+          title: "Expérience immobilière",
+          text: "De 2017 à 2022, il a contribué à de nombreux projets résidentiels en produisant des dessins techniques et de la documentation architecturale, tout en développant une compréhension approfondie du processus de développement immobilier.",
         },
         {
-          title: "Digital marketing background",
-          text: "Alongside his architectural career, Charles spent more than three years building businesses in e-commerce, specializing in digital marketing, online advertising, sales funnels, and lead generation. This experience allowed him to master customer acquisition strategies, performance marketing, and conversion optimization—skills that now play a central role in BrotherStudio's approach.",
+          title: "Parcours en marketing numérique",
+          text: "En parallèle de sa carrière en architecture, Charles a consacré plus de trois ans au développement d’entreprises dans le commerce en ligne, en se spécialisant dans le marketing numérique, la publicité en ligne, les tunnels de vente et la génération de prospects. Cette expérience lui a permis de maîtriser les stratégies d’acquisition client, le marketing de performance et l’optimisation des conversions — des compétences qui occupent aujourd’hui une place centrale dans l’approche de BrotherStudio.",
         },
         {
-          title: "A new real estate service",
-          text: "After relocating to Canada in 2022, he combined his architectural expertise with his marketing background to create a new type of service for the real estate industry.",
+          title: "Un nouveau service immobilier",
+          text: "Après son installation au Canada en 2022, il a combiné son expertise architecturale et son expérience en marketing pour créer un nouveau type de service destiné à l’industrie immobilière.",
         },
         {
           title: "BrotherStudio",
-          text: "Founded in December 2024, BrotherStudio has evolved beyond architectural visualization into a real estate marketing partner. Rather than simply producing beautiful images, the studio helps developers transform projects into market-ready brands by combining photorealistic renderings, cinematic videos, project websites, digital advertising campaigns, and lead generation systems designed to attract qualified buyers before construction is completed.",
+          text: "Fondé en décembre 2024, BrotherStudio a évolué au-delà de la visualisation architecturale pour devenir un partenaire en marketing immobilier. Plutôt que de produire uniquement de belles images, le studio aide les promoteurs à transformer leurs projets en marques prêtes pour le marché, en combinant rendus photoréalistes, vidéos cinématiques, sites web de projet, campagnes publicitaires numériques et systèmes de génération de prospects conçus pour attirer des acheteurs qualifiés avant la fin de la construction.",
         },
         {
-          title: "Marketing philosophy",
-          text: "Charles believes that exceptional architecture deserves exceptional marketing. His philosophy is that visual presentation is only the beginning—the ultimate objective is generating interest, qualified leads, and successful property sales.",
+          title: "Philosophie marketing",
+          text: "Charles croit qu’une architecture exceptionnelle mérite un marketing exceptionnel. Selon lui, la présentation visuelle n’est que le début : l’objectif ultime est de susciter l’intérêt, de générer des prospects qualifiés et de contribuer à la réussite des ventes immobilières.",
         },
         {
-          title: "From concept to sale",
-          text: "Today, BrotherStudio combines European architectural discipline with modern digital marketing strategies to help property developers move seamlessly from concept to sale.",
+          title: "Du concept à la vente",
+          text: "Aujourd’hui, BrotherStudio combine la rigueur architecturale européenne et les stratégies modernes de marketing numérique pour aider les promoteurs à faire évoluer leurs projets du concept jusqu’à la vente.",
         },
       ],
-      highlightsTitle: "Team",
+      highlightsTitle: "Équipe",
       highlights: [
         "Alexa D. / Administration",
-        "Veronique P. / Courtiere immobiliere",
-        "Muriella R. / Design & Assistance",
-        "Elsa R. / Representante des ventes",
+        "Véronique P. / Courtière immobilière",
+        "Muriella R. / Gestionnaire de projet & assistance",
+        "Dylan R. / Graphiste 3D",
       ],
       portraitAlt: "Portrait de Charles, fondateur de BrotherStudio",
       portraitCaption: "Charles, fondateur de BrotherStudio.",

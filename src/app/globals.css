@@ -55,6 +55,8 @@ body:has(.homeBlurWordSection) {
 }
 
 .siteChrome {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
   min-width: 0;
   transition:
@@ -64,8 +66,10 @@ body:has(.homeBlurWordSection) {
 }
 
 .siteShell {
-  display: block;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
   background: rgb(var(--site-background-rgb, 255 255 255));
   transition: background-color 80ms linear;
 }
@@ -3380,14 +3384,14 @@ html[data-theme="dark"] .siteLogoImageWhite {
   min-width: 156px;
   padding: 10px;
   border: 1px solid rgb(0 0 0 / 0.08);
-  background: rgb(255 255 255 / 0.94);
+  background: #fff;
   opacity: 0;
   pointer-events: none;
   transform: translateX(-50%) translateY(-6px);
   transition:
     opacity 160ms ease,
     transform 160ms ease;
-  backdrop-filter: blur(18px);
+  backdrop-filter: none;
   box-shadow: 0 16px 34px rgb(0 0 0 / 0.08);
 }
 
@@ -3622,6 +3626,205 @@ body:has(.brochureStudioPageMain .brochureStudioLayout[data-sidebar-collapsed="t
 
 .myWebsitePage {
   padding: 3.5rem clamp(1.25rem, 4vw, 3.5rem) 5rem;
+}
+
+.myStudioPage {
+  padding: 0 clamp(18px, 3.2vw, 50px) 28px;
+}
+
+.myStudioShell {
+  width: min(100%, 1500px);
+  margin: 0 auto;
+}
+
+.myStudioHeader {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 20px 0 24px;
+  text-align: center;
+}
+
+.myStudioHeader p,
+.myStudioHeader h1,
+.myStudioHeader span {
+  margin: 0;
+}
+
+.myStudioHeader p {
+  color: rgb(17 17 17 / 0.58);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.myStudioHeader h1 {
+  font-size: clamp(54px, 6vw, 84px);
+  font-weight: 700;
+  line-height: 0.92;
+  letter-spacing: -0.07em;
+}
+
+.myStudioHeader span {
+  color: rgb(17 17 17 / 0.62);
+  font-size: clamp(20px, 2.2vw, 29px);
+  line-height: 1.1;
+}
+
+.myStudioGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.myStudioCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  min-height: 0;
+  padding: 14px;
+  border: 1px solid rgb(17 17 17 / 0.16);
+  border-radius: 16px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.myStudioCard:hover,
+.myStudioCard:focus-visible {
+  border-color: rgb(17 17 17 / 0.42);
+  box-shadow: 0 14px 30px rgb(17 17 17 / 0.08);
+  transform: translateY(-2px);
+}
+
+.myStudioVisual {
+  position: relative;
+  align-self: start;
+  width: 100%;
+  aspect-ratio: 5 / 4;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 9px;
+}
+
+.myStudioVisual > img {
+  object-fit: cover;
+}
+
+.myStudioVisualReview::after,
+.myStudioVisualWebsite::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.04), transparent 60%);
+}
+
+.myStudioPin,
+.myStudioNote {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 0.2);
+}
+
+.myStudioPin {
+  width: 26px;
+  height: 26px;
+  background: #d64b66;
+  color: #fff;
+  font-weight: 700;
+}
+
+.myStudioPinOne { left: 18%; bottom: 19%; }
+.myStudioPinTwo { left: 60%; top: 28%; background: #d5bb45; }
+
+.myStudioNote {
+  min-width: 106px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.myStudioNoteTop { right: 5%; top: 5%; }
+.myStudioNoteBottom { left: 28%; bottom: 4%; }
+
+.myStudioVisualWallis {
+  background: #edf2f9;
+}
+
+.myStudioRoad {
+  position: absolute;
+  display: block;
+  width: 150%;
+  height: 22px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(150 170 195 / 0.18);
+  transform: rotate(-28deg);
+}
+
+.myStudioRoadOne { top: 30%; left: -20%; }
+.myStudioRoadTwo { bottom: 13%; left: -10%; transform: rotate(18deg); }
+.myStudioParcel { position: absolute; left: 40%; top: 28%; width: 30%; height: 40%; border: 2px solid #4a9ff1; background: rgb(105 183 255 / 0.2); transform: rotate(-10deg); }
+.myStudioMapPin { position: absolute; left: 51%; top: 46%; width: 13px; height: 13px; border: 4px solid rgb(255 255 255 / 0.72); border-radius: 50%; background: #315cf5; box-shadow: 0 0 0 5px rgb(49 92 245 / 0.16); }
+.myStudioMapNote { position: absolute; top: 10%; right: 7%; padding: 11px 16px; border-radius: 9px; background: #fff; color: #111; font-size: 10px; font-weight: 700; box-shadow: 0 8px 16px rgb(17 17 17 / 0.08); }
+
+.myStudioCardContent {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 20px;
+  padding: 8px 12px 12px;
+  text-align: center;
+}
+
+.myStudioCardContent h2,
+.myStudioCardContent p { margin: 0; }
+.myStudioCardContent h2 { font-size: clamp(26px, 2.4vw, 40px); line-height: 1; letter-spacing: -0.055em; }
+.myStudioCardContent p { max-width: 20ch; margin-top: 12px; color: rgb(17 17 17 / 0.62); font-size: clamp(16px, 1.35vw, 21px); line-height: 1.25; }
+.myStudioDiscover {
+  padding: 10px 26px;
+  border: 1px solid #111;
+  border-radius: 3px;
+  color: #111;
+  font-size: 13px;
+  font-weight: 700;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.myStudioCard:hover .myStudioDiscover,
+.myStudioCard:focus-visible .myStudioDiscover {
+  background: #111;
+  color: #fff;
+}
+
+@media (max-width: 980px) {
+  .myStudioGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .myStudioCardContent { padding: 6px 12px 10px; }
+}
+
+@media (max-width: 640px) {
+  .myStudioPage { padding-inline: 12px; }
+  .myStudioHeader { padding-block: 24px 28px; }
+  .myStudioHeader h1 { font-size: 58px; }
+  .myStudioGrid { grid-template-columns: 1fr; gap: 12px; }
+  .myStudioCard { min-height: 0; padding: 10px; }
+  .myStudioCardContent { gap: 18px; }
+  .myStudioCardContent h2 { font-size: 30px; }
 }
 
 .myWebsiteShell {
@@ -6296,33 +6499,6 @@ html[data-theme="dark"] .galleryFilterButton:focus-visible {
   scroll-snap-align: start;
 }
 
-.homeProcessStepGroup::before {
-  content: "";
-  position: absolute;
-  top: 42px;
-  left: 50%;
-  right: 0;
-  z-index: 1;
-  height: 2px;
-  background: var(--home-process-accent);
-  opacity: 0;
-  transform: scaleX(0.25);
-  transform-origin: left center;
-  transition:
-    opacity 180ms ease,
-    transform 220ms ease;
-}
-
-.homeProcessStepGroup:hover::before,
-.homeProcessStepGroup:focus-within::before {
-  opacity: 1;
-  transform: scaleX(1);
-}
-
-.homeProcessStepGroup:last-child::before {
-  content: none;
-}
-
 .homeProcessStepGroup:nth-child(1) {
   --home-process-accent: #0057ff;
 }
@@ -7343,7 +7519,7 @@ html[data-theme="dark"] .homeDeveloperValueKicker {
 
 .homeDeveloperValueCard:nth-child(3) {
   --developer-value-accent: 255 0 110;
-  --developer-value-accent-soft: 127 72 255;
+  --developer-value-accent-soft: 255 0 110;
 }
 
 .homeDeveloperValueIndex {
@@ -7407,7 +7583,7 @@ html[data-theme="dark"] .homeDeveloperValueCard {
 html[data-theme="dark"] .homeDeveloperValueCard:hover,
 html[data-theme="dark"] .homeDeveloperValueCard:focus-within {
   transform: translateX(8px);
-  border-color: rgb(var(--developer-value-accent) / 0.72);
+  border-color: rgb(var(--developer-value-accent-soft));
   background: transparent;
 }
 
@@ -12367,6 +12543,13 @@ body:has(.campaignLanding) .campaignLandingNav,
   align-items: start;
 }
 
+.siteChrome:has(.aboutLayout) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 .aboutPortraitSection {
   display: grid;
   gap: 10px;
@@ -15446,6 +15629,11 @@ body:has(.campaignLanding) .campaignLandingNav,
   gap: 14px;
   align-items: stretch;
   box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid rgb(17 17 17 / 0.12);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 18px 34px rgb(17 17 17 / 0.1);
 }
 
 .projectFeedbackImageCard[data-team-chat="true"] {
@@ -21076,6 +21264,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   min-height: 220px;
   overflow: visible;
   border: 1px solid rgb(127 127 127 / 0.35);
+  border-radius: 14px;
   background: #f3f3f3;
   cursor: crosshair;
 }
@@ -21096,6 +21285,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   display: block;
   width: 100%;
   height: auto;
+  border-radius: inherit;
 }
 
 .projectFeedbackApprovalWatermark {
@@ -22969,7 +23159,7 @@ body:has(.dashboardPage),
 }
 
 .siteFooter {
-  background: #242424 !important;
+  background: #000 !important;
   color: #fff !important;
   border-top: 1px solid rgb(255 255 255 / 0.12);
 }

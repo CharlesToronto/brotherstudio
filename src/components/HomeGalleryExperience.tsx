@@ -661,7 +661,11 @@ export function HomeGalleryExperience({
         </section>
       </div>
 
-      <section ref={galleryHeadingRef} className="homeGallerySection">
+      <section
+        id="home-gallery-section"
+        ref={galleryHeadingRef}
+        className="homeGallerySection"
+      >
         <div className="homeGalleryIntro">
           <div className="homeGalleryHeading">
             <h2 className="homeGalleryTitle">Gallery</h2>
