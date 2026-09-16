@@ -27,6 +27,9 @@ export async function PATCH(
     | {
         name?: unknown;
         accessPassword?: unknown;
+        address?: unknown;
+        latitude?: unknown;
+        longitude?: unknown;
         status?: unknown;
       }
     | null;
@@ -34,6 +37,11 @@ export async function PATCH(
   const name = typeof body?.name === "string" ? body.name : undefined;
   const accessPassword =
     typeof body?.accessPassword === "string" ? body.accessPassword : undefined;
+  const address = typeof body?.address === "string" ? body.address : undefined;
+  const latitude =
+    body?.latitude === null || typeof body?.latitude === "number" ? body.latitude : undefined;
+  const longitude =
+    body?.longitude === null || typeof body?.longitude === "number" ? body.longitude : undefined;
   const status =
     body?.status === "approved" || body?.status === "in_review"
       ? (body.status as ProjectStatus)
@@ -43,9 +51,12 @@ export async function PATCH(
     const project = status
       ? await updateProjectStatus(projectId, status)
       : await updateProjectSettings(projectId, {
-          name,
-          accessPassword,
-        });
+        name,
+        accessPassword,
+        address,
+        latitude,
+        longitude,
+      });
 
     return NextResponse.json({ project });
   } catch (error) {

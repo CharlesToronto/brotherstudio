@@ -1,0 +1,51 @@
+<svg width="550" height="385" viewBox="0 0 550 385" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="background" x1="275" y1="0" x2="275" y2="385" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#123CA9"/>
+      <stop offset="1" stop-color="#142B87"/>
+    </linearGradient>
+    <linearGradient id="headline" x1="164" y1="60" x2="390" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#15C8FF"/>
+      <stop offset="1" stop-color="#B477FF"/>
+    </linearGradient>
+    <linearGradient id="upload" x1="275" y1="182" x2="275" y2="255" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2BA9FF"/>
+      <stop offset="1" stop-color="#5858FF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="550" height="385" fill="url(#background)"/>
+  <text x="275" y="50" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="39" font-weight="700" text-anchor="middle" letter-spacing="-1.5">Tous vos fichiers.</text>
+  <text x="275" y="91" fill="url(#headline)" font-family="Arial, Helvetica, sans-serif" font-size="39" font-weight="700" text-anchor="middle" letter-spacing="-1.5">Un seul endroit.</text>
+  <text x="275" y="117" fill="#C8D3F2" font-family="Arial, Helvetica, sans-serif" font-size="10" text-anchor="middle">Éditez, convertissez, compressez ou envoyez vos fichiers.</text>
+  <text x="275" y="133" fill="#C8D3F2" font-family="Arial, Helvetica, sans-serif" font-size="10" text-anchor="middle">Simple, rapide et gratuit.</text>
+  <text x="275" y="153" fill="#E5EAFE" font-family="Arial, Helvetica, sans-serif" font-size="7" text-anchor="middle">Gratuit · Sans inscription · Jusqu’à 1 Go par transfert</text>
+
+  <rect x="61" y="171" width="428" height="165" rx="20" fill="#1B48A7" stroke="#70BBFF" stroke-width="1.2"/>
+  <rect x="68" y="178" width="414" height="151" rx="16" stroke="#9ACBFF" stroke-opacity="0.8" stroke-dasharray="5 4"/>
+  <circle cx="275" cy="218" r="26" fill="url(#upload)"/>
+  <path d="M266 222C263 222 261 220 261 217C261 213 264 210 268 210C269 206 272 204 276 204C281 204 285 208 285 213C289 213 292 216 292 220C292 224 289 226 285 226H267" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <path d="M276 214V225M272 218L276 214L280 218" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="275" y="264" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle">Glissez &amp; déposez vos fichiers ici</text>
+  <text x="275" y="280" fill="#BFD3FF" font-family="Arial, Helvetica, sans-serif" font-size="8" text-anchor="middle">ou cliquez pour parcourir</text>
+
+  <g font-family="Arial, Helvetica, sans-serif" font-size="7" text-anchor="middle">
+    <rect x="180" y="297" width="23" height="21" rx="4" fill="#3455B8" stroke="#7D9DEA"/>
+    <text x="191.5" y="310" fill="#F8D7E7">PDF</text>
+    <rect x="208" y="297" width="23" height="21" rx="4" fill="#3455B8" stroke="#7D9DEA"/>
+    <text x="219.5" y="310" fill="#8CE9FF">IMG</text>
+    <rect x="236" y="297" width="23" height="21" rx="4" fill="#3455B8" stroke="#7D9DEA"/>
+    <text x="247.5" y="310" fill="white">W</text>
+    <rect x="264" y="297" width="23" height="21" rx="4" fill="#3455B8" stroke="#7D9DEA"/>
+    <text x="275.5" y="310" fill="white">X</text>
+    <rect x="292" y="297" width="23" height="21" rx="4" fill="#3455B8" stroke="#7D9DEA"/>
+    <text x="303.5" y="310" fill="white">P</text>
+    <rect x="320" y="297" width="27" height="21" rx="4" fill="#3455B8" stroke="#7D9DEA"/>
+    <text x="333.5" y="310" fill="white">ZIP</text>
+    <text x="363" y="310" fill="#D3DEFF" text-anchor="start">et plus</text>
+  </g>
+
+  <text x="275" y="350" fill="#AEBFEF" font-family="Arial, Helvetica, sans-serif" font-size="7" text-anchor="middle">Traitement sécurisé. Vos fichiers sont automatiquement supprimés après 14 jours. Les outils PDF fonctionnent</text>
+  <text x="275" y="362" fill="#AEBFEF" font-family="Arial, Helvetica, sans-serif" font-size="7" text-anchor="middle">directement dans votre navigateur.</text>
+  <text x="275" y="377" fill="#CFD9FA" font-family="Arial, Helvetica, sans-serif" font-size="7" text-anchor="middle">Maximum 50 fichiers · 1 Go par transfert</text>
+</svg>

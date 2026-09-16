@@ -15099,7 +15099,7 @@ body:has(.campaignLanding) .campaignLandingNav,
 .projectFeedbackShell {
   display: grid;
   gap: 18px;
-  padding: 0 var(--page-padding) var(--page-padding);
+  padding: clamp(28px, 4vw, 52px) var(--page-padding) var(--page-padding);
 }
 
 .projectDirectoryShell {
@@ -15119,6 +15119,17 @@ body:has(.campaignLanding) .campaignLandingNav,
 .projectFeedbackShell[data-admin-view="true"] .projectFeedbackHeader,
 .projectFeedbackShell[data-admin-view="true"] .projectFeedbackEmpty {
   border-color: #c40018;
+}
+
+.projectFeedbackHeader {
+  border: 0;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 20px 42px rgb(17 17 17 / 0.12);
+}
+
+.projectFeedbackShell[data-admin-view="true"] .projectFeedbackHeader {
+  border: 0;
 }
 
 .projectFeedbackShell[data-admin-view="true"] .projectFeedbackVersion {
@@ -15230,6 +15241,7 @@ body:has(.campaignLanding) .campaignLandingNav,
   min-height: 36px;
   padding: 10px 12px;
   border: 1px solid rgb(127 127 127 / 0.35);
+  border-radius: 999px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -15262,6 +15274,51 @@ body:has(.campaignLanding) .campaignLandingNav,
 .projectFeedbackUpload,
 .projectFeedbackAction {
   cursor: pointer;
+}
+
+.projectFeedbackAction {
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.projectFeedbackAction:hover:not(:disabled),
+.projectFeedbackAction:focus-visible:not(:disabled) {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.projectFeedbackActionIcon {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+.projectFeedbackActionIcon[data-copied="true"]::after {
+  content: "Project link copied";
+  position: absolute;
+  top: calc(100% + 9px);
+  right: 0;
+  z-index: 5;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  box-shadow: 0 10px 20px rgb(17 17 17 / 0.16);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.projectFeedbackActionIcon svg {
+  flex: 0 0 auto;
 }
 
 .projectFeedbackUpload,
@@ -15363,13 +15420,17 @@ body:has(.campaignLanding) .campaignLandingNav,
 .projectFeedbackVersionTabs {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
+  width: 100%;
 }
 
 .projectFeedbackWorkspaceTabs {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
+  width: 100%;
 }
 
 .projectFeedbackWorkspaceTab {
@@ -15380,7 +15441,8 @@ body:has(.campaignLanding) .campaignLandingNav,
   min-height: 34px;
   padding: 8px 12px;
   border: 1px solid rgb(127 127 127 / 0.35);
-  background: transparent;
+  border-radius: 999px;
+  background: #fff;
   color: inherit;
   font: inherit;
   font-size: 10px;
@@ -15388,6 +15450,19 @@ body:has(.campaignLanding) .campaignLandingNav,
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.projectFeedbackWorkspaceTab:hover,
+.projectFeedbackVersionTab:hover {
+  border-color: #111;
+  background: #f4f4f4;
+}
+
+.projectFeedbackWorkspaceTab:focus-visible,
+.projectFeedbackVersionTab:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 2px;
 }
 
 .projectFeedbackWorkspaceTab span {
@@ -15409,24 +15484,26 @@ body:has(.campaignLanding) .campaignLandingNav,
 }
 
 .projectFeedbackWorkspaceTab[data-active="true"] {
-  border-color: rgb(127 127 127 / 0.35);
-  background: #ececec;
-  color: #111;
+  border-color: #111;
+  background: #111;
+  color: #fff;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.14);
 }
 
 .projectFeedbackWorkspaceTab[data-active="true"] span {
-  background: rgb(127 127 127 / 0.14);
+  background: rgb(255 255 255 / 0.18);
+  color: #fff;
 }
 
 .projectFeedbackWorkspaceTab[data-active="true"] span[data-empty="true"] {
-  background: #ececec;
-  color: #6f6f6f;
+  background: rgb(255 255 255 / 0.18);
+  color: #fff;
 }
 
 .projectFeedbackShell[data-admin-view="true"] .projectFeedbackWorkspaceTab[data-active="true"] {
-  border-color: rgb(127 127 127 / 0.35);
-  background: #ececec;
-  color: #111;
+  border-color: #111;
+  background: #111;
+  color: #fff;
 }
 
 .projectFeedbackVersionTab {
@@ -15436,7 +15513,8 @@ body:has(.campaignLanding) .campaignLandingNav,
   min-height: 34px;
   padding: 8px 12px;
   border: 1px solid rgb(127 127 127 / 0.35);
-  background: transparent;
+  border-radius: 999px;
+  background: #fff;
   color: inherit;
   font: inherit;
   font-size: 10px;
@@ -15444,17 +15522,19 @@ body:has(.campaignLanding) .campaignLandingNav,
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
 }
 
 .projectFeedbackVersionTab[data-active="true"] {
-  border-color: rgb(127 127 127 / 0.35);
-  background: #ececec;
-  color: #111;
+  border-color: #111;
+  background: #111;
+  color: #fff;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.14);
 }
 
 .projectFeedbackShell[data-admin-view="true"] .projectFeedbackVersionTab[data-active="true"] {
-  border-color: #c40018;
-  background: #c40018;
+  border-color: #111;
+  background: #111;
   color: #fff;
 }
 
@@ -15630,7 +15710,7 @@ body:has(.campaignLanding) .campaignLandingNav,
   align-items: stretch;
   box-sizing: border-box;
   padding: 14px;
-  border: 1px solid rgb(17 17 17 / 0.12);
+  border: 0;
   border-radius: 18px;
   background: #fff;
   box-shadow: 0 18px 34px rgb(17 17 17 / 0.1);
@@ -15641,12 +15721,12 @@ body:has(.campaignLanding) .campaignLandingNav,
   grid-template-areas:
     "header header"
     "image side";
-  border: 1px solid rgb(127 127 127 / 0.35);
+  border: 0;
   padding: 14px;
 }
 
 .projectFeedbackShell[data-admin-view="true"] .projectFeedbackImageCard {
-  border: 1px solid #c40018;
+  border: 0;
 }
 
 .projectDirectoryGrid {
@@ -21218,7 +21298,8 @@ html[data-theme="dark"] .myStudioGuideArrow {
   min-height: 32px;
   padding: 8px 10px;
   border: 1px solid rgb(127 127 127 / 0.35);
-  background: transparent;
+  border-radius: 999px;
+  background: #fff;
   color: inherit;
   font: inherit;
   font-size: 10px;
@@ -21227,6 +21308,12 @@ html[data-theme="dark"] .myStudioGuideArrow {
   text-decoration: none;
   text-transform: uppercase;
   cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 .projectFeedbackMiniAction svg {
@@ -21248,6 +21335,16 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .projectFeedbackMiniActionDanger {
   border-color: rgb(196 59 47 / 0.35);
   color: #c43b2f;
+}
+
+.projectFeedbackMiniAction:hover:not(:disabled),
+.projectFeedbackMiniAction:focus-visible:not(:disabled) {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+  box-shadow: 0 8px 18px rgb(17 17 17 / 0.16);
+  transform: translateY(-1px);
+  outline: none;
 }
 
 .projectFeedbackMiniAction:disabled {
@@ -21377,14 +21474,17 @@ html[data-theme="dark"] .myStudioGuideArrow {
 
 .projectFeedbackDraft {
   z-index: 2;
-  width: min(280px, calc(100% - 24px), calc(100vw - 56px));
+  width: min(360px, calc(100% - 24px), calc(100vw - 40px));
   display: grid;
   gap: 8px;
-  padding: 10px;
-  border: 1px solid rgb(127 127 127 / 0.28);
-  background: #fff;
+  padding: 16px;
+  border: 1px solid rgb(255 255 255 / 0.72);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 0.58);
   color: #111;
-  box-shadow: 0 12px 30px rgb(0 0 0 / 0.22);
+  box-shadow: 0 18px 42px rgb(0 0 0 / 0.2);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   transform: translate(
     var(--draft-translate-x, -50%),
     var(--draft-translate-y, 12px)
@@ -21397,7 +21497,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   min-height: 34px;
   padding: 8px 10px;
   border: 1px solid rgb(127 127 127 / 0.22);
-  background: #f5f5f5;
+  background: rgb(255 255 255 / 0.42);
   color: #555;
   font-size: 11px;
   line-height: 1.45;
@@ -21527,7 +21627,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .projectFeedbackDraft .projectFeedbackInput,
 .projectFeedbackDraft .projectFeedbackTextarea {
   border-color: rgb(127 127 127 / 0.22);
-  background: #f5f5f5;
+  background: rgb(255 255 255 / 0.42);
   color: #111;
 }
 
@@ -21767,6 +21867,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   min-height: 34px;
   padding: 8px 12px;
   border: 1px solid rgb(127 127 127 / 0.35);
+  border-radius: 999px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -21776,6 +21877,19 @@ html[data-theme="dark"] .myStudioGuideArrow {
   text-transform: uppercase;
   white-space: nowrap;
   cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.projectFeedbackSidePanelTab:hover,
+.projectFeedbackSidePanelTab:focus-visible {
+  border-color: #111;
+  background: #f3f3f3;
+  color: #111;
+  transform: translateY(-1px);
 }
 
 .projectFeedbackSidePanelTab span {
@@ -21797,9 +21911,9 @@ html[data-theme="dark"] .myStudioGuideArrow {
 }
 
 .projectFeedbackSidePanelTab[data-active="true"] {
-  border-color: rgb(127 127 127 / 0.35);
-  background: #ececec;
-  color: #111;
+  border-color: #111;
+  background: #111;
+  color: #fff;
 }
 
 .projectFeedbackSidePanelTab[data-active="true"] span {
@@ -22972,6 +23086,11 @@ html[data-theme="dark"] .myStudioGuideArrow {
     width: 100%;
   }
 
+  .projectFeedbackActions .projectFeedbackActionIcon {
+    align-self: center;
+    width: 40px;
+  }
+
   .projectFeedbackWorkspaceTabs {
     width: 100%;
   }
@@ -23213,4 +23332,1347 @@ body:has(.dashboardPage),
 
 .siteLogoImageWhite {
   display: none !important;
+}
+
+.projectClientReferences {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+  padding: clamp(18px, 3vw, 30px);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 0.74);
+  box-shadow: 0 18px 38px rgb(17 17 17 / 0.08);
+}
+
+.projectClientReferencesHeader,
+.projectClientReferencesToolbar,
+.projectClientReferencesFoldersHeader,
+.projectClientReferencesCardHeading,
+.projectClientReferencesCardActions,
+.projectClientReferencesModalHeader,
+.projectClientReferencesUploadFilename {
+  display: flex;
+  align-items: center;
+}
+
+.projectClientReferencesHeader,
+.projectClientReferencesToolbar,
+.projectClientReferencesModalHeader {
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.projectClientReferencesHeader h2,
+.projectClientReferencesModalHeader h3,
+.projectClientReferenceCard h3,
+.projectClientReferencesEmpty h3 {
+  margin: 0;
+}
+
+.projectClientReferencesHeader .projectFeedbackVersionMeta {
+  max-width: 620px;
+  margin: 6px 0 0;
+}
+
+.projectClientReferencesActions,
+.projectClientReferencesToolbarControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.projectClientReferencesButton {
+  gap: 8px;
+}
+
+.projectClientReferencesUploadButton {
+  animation: projectClientReferencesUploadPulse 2.8s ease-in-out infinite;
+}
+
+.projectFeedbackReferenceTab {
+  position: relative;
+  isolation: isolate;
+  border-color: transparent;
+  box-shadow: 0 0 10px rgb(54 139 255 / 0.08);
+}
+
+@property --project-feedback-reference-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.projectFeedbackReferenceTab::before {
+  position: absolute;
+  inset: -1px;
+  z-index: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--project-feedback-reference-angle),
+    #2f8cff,
+    #65d7ff,
+    #d16dff,
+    #ff72bc,
+    #ff4f91,
+    #2f8cff
+  );
+  content: "";
+  animation: projectFeedbackReferenceNeonSpin 3.2s linear infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+@keyframes projectFeedbackReferenceNeonSpin {
+  to {
+    --project-feedback-reference-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projectFeedbackReferenceTab::before {
+    animation: none;
+  }
+}
+
+@keyframes projectClientReferencesUploadPulse {
+  0%,
+  58%,
+  100% {
+    box-shadow: 0 4px 12px rgb(17 17 17 / 0.08);
+    transform: translateY(0);
+  }
+
+  68% {
+    box-shadow: 0 0 0 6px rgb(17 17 17 / 0.08), 0 8px 18px rgb(17 17 17 / 0.14);
+    transform: translateY(-2px);
+  }
+
+  78% {
+    box-shadow: 0 0 0 2px rgb(17 17 17 / 0.04), 0 6px 14px rgb(17 17 17 / 0.1);
+    transform: translateY(0);
+  }
+}
+
+.projectClientReferencesUploadButton:disabled {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projectClientReferencesUploadButton {
+    animation: none;
+  }
+}
+
+.projectClientReferencesHiddenInput {
+  display: none;
+}
+
+.projectClientReferencesLayout {
+  display: grid;
+  grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.projectClientReferencesFolders {
+  align-self: start;
+  padding: 12px;
+  border: 1px solid rgb(127 127 127 / 0.16);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 0.54);
+  box-shadow: 0 12px 26px rgb(17 17 17 / 0.08);
+}
+
+.projectClientReferencesFoldersHeader {
+  justify-content: space-between;
+  padding: 4px 8px 10px;
+  color: #777;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.projectClientReferencesFolderRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px;
+  align-items: center;
+}
+
+.projectClientReferencesFolderButton,
+.projectClientReferencesFolderActions button,
+.projectClientReferencesViewToggle button,
+.projectClientReferenceCardActions button,
+.projectClientReferenceCardActions a,
+.projectClientReferencesModalHeader > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+}
+
+.projectClientReferencesFolderButton {
+  min-width: 0;
+  gap: 8px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  background: transparent;
+  color: #4f4f4f;
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+}
+
+.projectClientReferencesFolderButton span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectClientReferencesFolderButton small {
+  margin-inline-start: auto;
+  color: #999;
+  font-size: 10px;
+}
+
+.projectClientReferencesFolderButton:hover,
+.projectClientReferencesFolderButton[data-active="true"] {
+  background: #111;
+  color: #fff;
+}
+
+.projectClientReferencesFolderButton[data-active="true"] small {
+  color: rgb(255 255 255 / 0.72);
+}
+
+.projectClientReferencesFolderActions {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.projectClientReferencesFolderActions button,
+.projectClientReferencesModalHeader > button {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: transparent;
+  color: #777;
+}
+
+.projectClientReferencesFolderActions button:hover,
+.projectClientReferencesModalHeader > button:hover {
+  background: #111;
+  color: #fff;
+}
+
+.projectClientReferencesContent {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.projectClientReferencesToolbar {
+  flex-wrap: wrap;
+  padding-bottom: 2px;
+}
+
+.projectClientReferencesCurrentFolder {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+  color: #111;
+  font-size: 13px;
+}
+
+.projectClientReferencesSearch {
+  display: flex;
+  flex: 1 1 190px;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgb(127 127 127 / 0.2);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.68);
+  color: #777;
+}
+
+.projectClientReferencesSearch input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #111;
+  font: inherit;
+  font-size: 11px;
+}
+
+.projectClientReferencesSearch input::placeholder {
+  color: #999;
+}
+
+.projectClientReferencesSort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #777;
+  font-size: 10px;
+}
+
+.projectClientReferencesSort select,
+.projectClientReferenceMove select {
+  max-width: 150px;
+  border: 1px solid rgb(127 127 127 / 0.2);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.68);
+  color: #111;
+  font: inherit;
+  font-size: 10px;
+}
+
+.projectClientReferencesSort select {
+  padding: 7px 10px;
+}
+
+.projectClientReferencesViewToggle {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgb(127 127 127 / 0.12);
+}
+
+.projectClientReferencesViewToggle button {
+  width: 29px;
+  height: 29px;
+  border-radius: 999px;
+  background: transparent;
+  color: #777;
+}
+
+.projectClientReferencesViewToggle button[data-active="true"],
+.projectClientReferencesViewToggle button:hover {
+  background: #111;
+  color: #fff;
+}
+
+.projectClientReferencesFiles {
+  display: grid;
+  gap: 14px;
+}
+
+.projectClientReferencesFiles--grid {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+
+.projectClientReferencesFiles--list {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.projectClientReferenceCard {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgb(127 127 127 / 0.16);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 0.76);
+  box-shadow: 0 8px 20px rgb(17 17 17 / 0.04);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.projectClientReferenceCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgb(17 17 17 / 0.1);
+}
+
+.projectClientReferencesFiles--list .projectClientReferenceCard {
+  grid-template-columns: 150px minmax(0, 1fr);
+  grid-template-rows: none;
+}
+
+.projectClientReferencePreview {
+  display: grid;
+  min-height: 132px;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgb(235 239 244 / 0.86), rgb(248 248 248 / 0.72));
+  color: #617086;
+  text-decoration: none;
+}
+
+.projectClientReferencesFiles--list .projectClientReferencePreview {
+  min-height: 100%;
+}
+
+.projectClientReferencePreview img {
+  display: block;
+  width: 100%;
+  height: 132px;
+  object-fit: cover;
+}
+
+.projectClientReferencesFiles--list .projectClientReferencePreview img {
+  height: 100%;
+  min-height: 104px;
+}
+
+.projectReferenceFileTypeIcon svg {
+  width: 38px;
+  height: 38px;
+  stroke-width: 1.25;
+}
+
+.projectClientReferenceCardBody {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+}
+
+.projectClientReferenceCardHeading {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.projectClientReferenceCardHeading h3 {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectClientReferenceCardHeading p {
+  display: -webkit-box;
+  margin: 5px 0 0;
+  overflow: hidden;
+  color: #777;
+  font-size: 10px;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.projectClientReferenceMenu {
+  flex: 0 0 auto;
+  padding: 4px 6px;
+  border-radius: 999px;
+  background: rgb(127 127 127 / 0.1);
+  color: #888;
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.projectClientReferenceMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  color: #999;
+  font-size: 9px;
+}
+
+.projectClientReferenceMeta span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectClientReferenceCardActions {
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.projectClientReferenceCardActions button,
+.projectClientReferenceCardActions a {
+  width: 29px;
+  height: 29px;
+  border-radius: 999px;
+  background: rgb(127 127 127 / 0.1);
+  color: #555;
+  text-decoration: none;
+}
+
+.projectClientReferenceCardActions button:hover,
+.projectClientReferenceCardActions a:hover {
+  background: #111;
+  color: #fff;
+}
+
+.projectClientReferenceMove {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-end: auto;
+  color: #888;
+}
+
+.projectClientReferenceMove select {
+  max-width: 110px;
+  padding: 6px 8px;
+}
+
+.projectClientReferencesEmpty {
+  display: grid;
+  min-height: 230px;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  border: 1px dashed rgb(127 127 127 / 0.25);
+  border-radius: 18px;
+  color: #8a8a8a;
+  text-align: center;
+}
+
+.projectClientReferencesEmpty h3 {
+  color: #444;
+  font-size: 14px;
+}
+
+.projectClientReferencesEmpty p {
+  margin: 0;
+  font-size: 11px;
+}
+
+.projectClientReferencesModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(17 17 17 / 0.3);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.projectClientReferencesModal {
+  display: grid;
+  gap: 16px;
+  width: min(640px, 100%);
+  max-height: min(760px, calc(100vh - 40px));
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid rgb(255 255 255 / 0.7);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 0.88);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 0.2);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.projectClientReferencesFolderModal {
+  width: min(420px, 100%);
+}
+
+.projectClientReferencesModalHeader {
+  align-items: flex-start;
+}
+
+.projectClientReferencesModalHeader h3 {
+  font-size: 18px;
+}
+
+.projectClientReferencesUploadDrafts {
+  display: grid;
+  gap: 12px;
+}
+
+.projectClientReferencesUploadDraft {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgb(127 127 127 / 0.15);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.46);
+}
+
+.projectClientReferencesUploadFilename {
+  gap: 8px;
+  min-width: 0;
+  color: #333;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.projectClientReferencesUploadFilename svg {
+  flex: 0 0 auto;
+  color: #617086;
+}
+
+.projectClientReferencesUploadFilename span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectClientReferencesUploadFilename small {
+  margin-inline-start: auto;
+  color: #999;
+  font-size: 9px;
+  font-weight: 400;
+}
+
+@media (max-width: 760px) {
+  .projectClientReferences {
+    padding: 16px 12px;
+  }
+
+  .projectClientReferencesHeader,
+  .projectClientReferencesToolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .projectClientReferencesActions,
+  .projectClientReferencesToolbarControls {
+    justify-content: flex-start;
+  }
+
+  .projectClientReferencesLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .projectClientReferencesFolders {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px;
+  }
+
+  .projectClientReferencesFoldersHeader {
+    display: none;
+  }
+
+  .projectClientReferencesFolderRow {
+    flex: 0 0 auto;
+  }
+
+  .projectClientReferencesFolderButton {
+    white-space: nowrap;
+  }
+
+  .projectClientReferencesFolderActions {
+    display: none;
+  }
+
+  .projectClientReferencesFiles--grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .projectClientReferencesFiles--list .projectClientReferenceCard {
+    grid-template-columns: 104px minmax(0, 1fr);
+  }
+
+  .projectClientReferenceCardBody {
+    padding: 11px;
+  }
+
+  .projectClientReferenceMove select {
+    max-width: 92px;
+  }
+}
+
+@media (max-width: 460px) {
+  .projectClientReferencesFiles--grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .projectClientReferencesActions .projectClientReferencesButton {
+    flex: 1 1 0;
+  }
+}
+
+.projectClientReferencesFolderRow {
+  border-radius: 14px;
+  transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.projectClientReferencesFolderRow[data-drag-over="true"] {
+  background: rgb(47 140 255 / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(47 140 255 / 0.45);
+}
+
+.projectClientReferenceCard[data-dragging="true"] {
+  opacity: 0.52;
+  transform: scale(0.98);
+}
+
+.projectClientReferencePreview {
+  position: relative;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: inherit;
+}
+
+.projectClientReferencePreview::after {
+  position: absolute;
+  inset: 0;
+  background: rgb(17 17 17 / 0.12);
+  content: "";
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.projectClientReferencePreview:hover::after,
+.projectClientReferencePreview:focus-visible::after {
+  opacity: 1;
+}
+
+.projectClientReferencePreviewBadge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgb(17 17 17 / 0.78);
+  color: #fff;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.projectClientReferencePreview:hover .projectClientReferencePreviewBadge,
+.projectClientReferencePreview:focus-visible .projectClientReferencePreviewBadge {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.projectReferenceFileTypeIcon {
+  display: grid;
+  place-items: center;
+  gap: 5px;
+}
+
+.projectReferenceFileTypeIcon small {
+  color: #8793a3;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.projectClientReferencesUploadProgress {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid rgb(47 140 255 / 0.22);
+  border-radius: 14px;
+  background: rgb(47 140 255 / 0.06);
+  color: #536174;
+  font-size: 10px;
+}
+
+.projectClientReferencesUploadProgressHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.projectClientReferencesUploadProgressHeader strong {
+  color: #216de0;
+}
+
+.projectClientReferencesProgressTrack {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(47 140 255 / 0.14);
+}
+
+.projectClientReferencesProgressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2f8cff, #d16dff, #ff72bc);
+  transition: width 160ms ease;
+}
+
+.projectClientReferencesUploadProgress small {
+  overflow: hidden;
+  color: #8793a3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectClientReferencesModalHint {
+  max-width: 420px;
+  margin: 6px 0 0;
+  color: #777;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.projectClientReferencesPreviewModal {
+  width: min(880px, 100%);
+}
+
+.projectClientReferencesPreviewStage {
+  display: grid;
+  min-height: min(520px, 58vh);
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid rgb(127 127 127 / 0.16);
+  border-radius: 18px;
+  background: rgb(242 244 247 / 0.72);
+}
+
+.projectClientReferencesPreviewStage > img {
+  display: block;
+  max-width: 100%;
+  max-height: min(520px, 58vh);
+  object-fit: contain;
+}
+
+.projectClientReferencesPreviewStage > video {
+  display: block;
+  width: 100%;
+  max-height: min(520px, 58vh);
+  background: #111;
+}
+
+.projectClientReferencesPreviewStage > audio {
+  width: min(520px, 90%);
+}
+
+.projectClientReferencesPreviewStage > iframe {
+  width: 100%;
+  height: min(520px, 58vh);
+  border: 0;
+  background: #fff;
+}
+
+.projectClientReferencesLinkPreview {
+  display: grid;
+  max-width: 620px;
+  justify-items: center;
+  gap: 16px;
+  padding: 32px;
+  color: #2f8cff;
+  text-align: center;
+}
+
+.projectClientReferencesLinkPreview p {
+  margin: 0;
+  color: #536174;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projectClientReferencePreview::after,
+  .projectClientReferencePreviewBadge,
+  .projectClientReferencesProgressTrack span {
+    transition: none;
+  }
+}
+
+.projectLocationMap {
+  display: grid;
+  gap: 20px;
+  padding: clamp(18px, 3vw, 30px);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 0.74);
+  box-shadow: 0 18px 38px rgb(17 17 17 / 0.08);
+}
+
+.projectLocationMapHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.projectLocationMapHeader h2 {
+  margin: 0;
+}
+
+.projectLocationMapHeader .projectFeedbackVersionMeta {
+  max-width: 620px;
+  margin: 6px 0 0;
+}
+
+.projectLocationMapHeaderBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1px solid rgb(47 140 255 / 0.2);
+  border-radius: 999px;
+  background: rgb(47 140 255 / 0.07);
+  color: #216de0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.projectLocationMapSearch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 4px 5px 4px 14px;
+  border: 1px solid rgb(127 127 127 / 0.2);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.78);
+  color: #738096;
+}
+
+.projectLocationMapSearch input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #111;
+  font: inherit;
+  font-size: 12px;
+}
+
+.projectLocationMapSearch input::placeholder {
+  color: #9aa4b2;
+}
+
+.projectLocationMapSearch button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.projectLocationMapSearch button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.projectLocationMapSearch button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.projectLocationMapSuggestions {
+  display: grid;
+  gap: 4px;
+  margin-top: -10px;
+  padding: 8px;
+  border: 1px solid rgb(127 127 127 / 0.16);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: 0 14px 30px rgb(17 17 17 / 0.1);
+}
+
+.projectLocationMapSuggestions button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #4d5968;
+  font: inherit;
+  font-size: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.projectLocationMapSuggestions button:hover {
+  background: #f1f4f8;
+  color: #111;
+}
+
+.projectLocationMapSuggestions button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectLocationMapControls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.projectLocationMapControls > * {
+  min-width: 0;
+}
+
+.projectLocationMapEmbedEditor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 14px;
+  padding: 4px 0;
+}
+
+.projectLocationMapAddressEditor {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.projectLocationMapAddressEditor .projectLocationMapEmbedLabel {
+  padding-bottom: 0;
+}
+
+.projectLocationMapEmbedLabel {
+  display: block;
+  grid-column: 1 / -1;
+  padding-bottom: 0;
+  color: #172033;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.projectLocationMapEmbedEditor input {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid rgb(17 17 17 / 0.14);
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+  color: #263142;
+  font: inherit;
+  font-size: 11px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.projectLocationMapEmbedEditor input:focus {
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgb(17 17 17 / 0.08);
+}
+
+.projectLocationMapEmbedActions {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.projectLocationMapEmbedActions .projectFeedbackAction {
+  justify-content: center;
+  min-width: 132px;
+  white-space: nowrap;
+}
+
+.projectLocationMapLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(230px, 0.75fr);
+  gap: 16px;
+}
+
+.projectLocationMapSurface {
+  position: relative;
+  min-height: 460px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #dbe4ed;
+  box-shadow: inset 0 0 0 1px rgb(17 17 17 / 0.08);
+}
+
+.projectLocationMapCanvas {
+  position: absolute;
+  inset: 0;
+}
+
+.projectLocationMapEmbed {
+  position: absolute;
+  inset: 0;
+  background: #e8edf3;
+}
+
+.projectLocationMapEmbed iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 460px;
+  border: 0;
+}
+
+.projectLocationMapCanvas .maplibregl-ctrl-top-right {
+  top: 12px;
+  right: 12px;
+}
+
+.projectLocationMapCanvas .maplibregl-ctrl-group {
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 8px 18px rgb(17 17 17 / 0.18);
+}
+
+.projectLocationMapMarker {
+  width: 22px;
+  height: 22px;
+  border: 5px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: #ed3154;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 0.32);
+  transform: rotate(-45deg);
+}
+
+.projectLocationMapEmpty {
+  display: grid;
+  height: 100%;
+  min-height: 460px;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 30px;
+  color: #758397;
+  text-align: center;
+}
+
+.projectLocationMapEmpty strong {
+  color: #3f4c5e;
+  font-size: 14px;
+}
+
+.projectLocationMapEmpty span {
+  max-width: 300px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.projectLocationMapDetails {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 24px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #122e58, #0b1830);
+  color: #fff;
+  box-shadow: 0 14px 30px rgb(11 24 48 / 0.2);
+}
+
+.projectLocationMapDetails .projectFeedbackEyebrow {
+  color: rgb(255 255 255 / 0.82);
+}
+
+.projectLocationMapDetails h3 {
+  margin: 10px 0 0;
+  font-size: 19px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.projectLocationMapDetails > p:not(.projectFeedbackEyebrow) {
+  margin: 10px 0 0;
+  color: rgb(255 255 255 / 0.86);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.projectLocationMapWeather {
+  width: 100%;
+  margin-top: 36px;
+}
+
+.projectLocationMapDetails .maretsetWeatherCard {
+  display: grid;
+  width: 100%;
+  gap: 13px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.projectLocationMapDetails .maretsetWeatherEyebrow {
+  margin-bottom: 6px;
+  color: #d9e9ff;
+  font-size: 9px;
+}
+
+.projectLocationMapDetails .maretsetWeatherHeader {
+  gap: 12px;
+}
+
+.projectLocationMapDetails .maretsetWeatherHeader h3 {
+  color: #fff;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.projectLocationMapDetails .maretsetWeatherHeader p:not(.maretsetWeatherEyebrow),
+.projectLocationMapDetails .maretsetWeatherLoading {
+  margin-top: 5px;
+  color: rgb(255 255 255 / 0.86);
+  font-size: 10px;
+}
+
+.projectLocationMapDetails .maretsetWeatherTempBlock {
+  gap: 7px;
+  padding: 8px 10px;
+  border-color: rgb(255 255 255 / 0.16);
+  background: rgb(255 255 255 / 0.1);
+}
+
+.projectLocationMapDetails .maretsetWeatherIcon {
+  color: #fff;
+}
+
+.projectLocationMapDetails .maretsetWeatherIconSvg {
+  width: 18px;
+  height: 18px;
+}
+
+.projectLocationMapDetails .maretsetWeatherTempBlock strong {
+  color: #fff;
+  font-size: 32px;
+}
+
+.projectLocationMapDetails .maretsetWeatherGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.projectLocationMapDetails .maretsetWeatherGrid div {
+  min-height: 0;
+  padding: 10px;
+  border-color: rgb(255 255 255 / 0.12);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.projectLocationMapDetails .maretsetWeatherGrid span {
+  color: rgb(255 255 255 / 0.78);
+  font-size: 8px;
+}
+
+.projectLocationMapDetails .maretsetWeatherGrid strong {
+  color: #fff;
+  font-size: 16px;
+}
+
+.projectLocationMapActions {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.projectLocationMapActions .projectFeedbackAction {
+  justify-content: center;
+  gap: 7px;
+  text-decoration: none;
+}
+
+.projectLocationMapActions .projectFeedbackAction:not(.projectFeedbackActionGhost) {
+  border-color: #fff;
+  background: #fff;
+  color: #0b1830;
+  box-shadow: 0 8px 18px rgb(0 0 0 / 0.16);
+}
+
+.projectLocationMapActions .projectFeedbackActionGhost {
+  border-color: rgb(255 255 255 / 0.72);
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+}
+
+.projectLocationMapActions .projectFeedbackAction:hover,
+.projectLocationMapActions .projectFeedbackAction:focus-visible {
+  border-color: #fff;
+  background: #dbeafe;
+  color: #111;
+}
+
+.projectLocationMapDetails > small {
+  margin-top: 12px;
+  color: rgb(255 255 255 / 0.48);
+  font-size: 9px;
+}
+
+@media (max-width: 760px) {
+  .projectLocationMap {
+    padding: 16px 12px;
+  }
+
+  .projectLocationMapHeader {
+    flex-direction: column;
+  }
+
+  .projectLocationMapControls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .projectLocationMapLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .projectLocationMapEmbedEditor {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .projectLocationMapEmbedLabel {
+    padding-bottom: 0;
+  }
+
+  .projectLocationMapEmbedActions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .projectLocationMapSurface,
+  .projectLocationMapEmpty {
+    min-height: 360px;
+  }
+
+  .projectLocationMapDetails {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 460px) {
+  .projectLocationMapSearch {
+    align-items: stretch;
+    flex-wrap: wrap;
+    border-radius: 18px;
+    padding: 10px;
+  }
+
+  .projectLocationMapSearch input {
+    flex: 1 1 calc(100% - 32px);
+  }
+
+  .projectLocationMapSearch button {
+    width: 100%;
+  }
 }

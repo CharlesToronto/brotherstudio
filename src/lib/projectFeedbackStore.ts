@@ -1,4 +1,9 @@
 import { getSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { normalizeGoogleMapsEmbedUrl } from "@/lib/googleMapsEmbed";
+import {
+  listProjectReferenceFileUrls,
+  PROJECT_REFERENCE_BUCKET,
+} from "@/lib/projectReferenceStore";
 import {
   getProjectViewerCookieName,
   getProjectViewerRoleCookieName,
@@ -35,6 +40,10 @@ type PreparedProjectImageUpload = {
 type ProjectRow = {
   id: string;
   name: string;
+  address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  map_embed_url?: string | null;
   status: string | null;
   access_password?: string | null;
   created_at: string;
@@ -110,6 +119,12 @@ function normalizeImageStatus(status: string | null | undefined): ProjectStatus 
 
 function normalizeAccessPassword(value: string | null | undefined) {
   return value?.trim() ?? "";
+}
+
+function normalizeProjectCoordinate(value: number | null | undefined, min: number, max: number) {
+  return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max
+    ? value
+    : null;
 }
 
 function normalizeEmail(value: string) {
@@ -469,6 +484,17 @@ export async function canProjectViewerInteract(input: {
   return isProjectAccessAuthorized(input.projectId, input.password);
 }
 
+export async function canProjectViewerEditSharedMap(input: {
+  projectId: string;
+  viewerRole: string | null | undefined;
+  viewerEmail: string | null | undefined;
+}) {
+  const role = normalizeProjectViewerRole(input.viewerRole);
+  if (role !== "team" && role !== "visitor") return false;
+
+  return isRegisteredProjectViewer(input.projectId, input.viewerEmail);
+}
+
 function buildProjectPayload(
   project: ProjectRow,
   images: ImageRow[],
@@ -524,6 +550,10 @@ function buildProjectPayload(
   return {
     id: project.id,
     name: project.name,
+    address: project.address?.trim() ?? "",
+    latitude: normalizeProjectCoordinate(project.latitude, -90, 90),
+    longitude: normalizeProjectCoordinate(project.longitude, -180, 180),
+    mapEmbedUrl: project.map_embed_url?.trim() || null,
     accessPassword: normalizeAccessPassword(project.access_password),
     status: normalizeStatus(project.status),
     createdAt: project.created_at,
@@ -545,7 +575,7 @@ async function loadProjectRows(projectId: string) {
   ] = await Promise.all([
     supabase
       .from("projects")
-      .select("id, name, status, access_password, created_at")
+      .select("id, name, address, latitude, longitude, map_embed_url, status, access_password, created_at")
       .eq("id", projectId)
       .maybeSingle(),
     supabase
@@ -699,8 +729,8 @@ export async function listProjectSummaries(options?: {
     .from("projects")
     .select(
       includeAccessPassword
-        ? "id, name, status, access_password, created_at"
-        : "id, name, status, created_at",
+        ? "id, name, address, latitude, longitude, map_embed_url, status, access_password, created_at"
+        : "id, name, address, latitude, longitude, map_embed_url, status, created_at",
     )
     .order("created_at", { ascending: false });
 
@@ -808,6 +838,10 @@ export async function listProjectSummaries(options?: {
   return projects.map((project) => ({
     id: project.id,
     name: project.name,
+    address: project.address?.trim() ?? "",
+    latitude: normalizeProjectCoordinate(project.latitude, -90, 90),
+    longitude: normalizeProjectCoordinate(project.longitude, -180, 180),
+    mapEmbedUrl: project.map_embed_url?.trim() || null,
     status: normalizeStatus(project.status),
     createdAt: project.created_at,
     latestVersion: latestVersionByProject.get(project.id) ?? 0,
@@ -821,17 +855,32 @@ export async function listProjectSummaries(options?: {
   }));
 }
 
-export async function createProject(input: { name: string; accessPassword: string }) {
+export async function createProject(input: {
+  name: string;
+  accessPassword: string;
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+}) {
   const name = input.name.trim();
   if (!name) throw new Error("Project name is required.");
   const accessPassword = normalizeAccessPassword(input.accessPassword);
   if (!accessPassword) throw new Error("Parcel number is required.");
+  const address = input.address?.trim() ?? "";
+  const latitude = normalizeProjectCoordinate(input.latitude, -90, 90);
+  const longitude = normalizeProjectCoordinate(input.longitude, -180, 180);
 
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from("projects")
-    .insert({ name, access_password: accessPassword })
-    .select("id, name, status, access_password, created_at")
+    .insert({
+      name,
+      access_password: accessPassword,
+      address,
+      latitude,
+      longitude,
+    })
+    .select("id, name, address, latitude, longitude, map_embed_url, status, access_password, created_at")
     .single();
 
   if (error) throw error;
@@ -840,6 +889,10 @@ export async function createProject(input: { name: string; accessPassword: strin
   return {
     id: project.id,
     name: project.name,
+    address: project.address?.trim() ?? "",
+    latitude: normalizeProjectCoordinate(project.latitude, -90, 90),
+    longitude: normalizeProjectCoordinate(project.longitude, -180, 180),
+    mapEmbedUrl: project.map_embed_url?.trim() || null,
     status: normalizeStatus(project.status),
     createdAt: project.created_at,
     latestVersion: 0,
@@ -853,9 +906,16 @@ export async function createProject(input: { name: string; accessPassword: strin
 
 export async function updateProjectSettings(
   projectId: string,
-  input: { name?: string; accessPassword?: string },
+  input: {
+    name?: string;
+    accessPassword?: string;
+    address?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    mapEmbedUrl?: string | null;
+  },
 ) {
-  const updates: Record<string, string> = {};
+  const updates: Record<string, string | number | null> = {};
 
   if (typeof input.name === "string") {
     const name = input.name.trim();
@@ -867,6 +927,22 @@ export async function updateProjectSettings(
     const accessPassword = normalizeAccessPassword(input.accessPassword);
     if (!accessPassword) throw new Error("Parcel number is required.");
     updates.access_password = accessPassword;
+  }
+
+  if (typeof input.address === "string") {
+    updates.address = input.address.trim();
+  }
+
+  if (input.latitude !== undefined) {
+    updates.latitude = normalizeProjectCoordinate(input.latitude, -90, 90);
+  }
+
+  if (input.longitude !== undefined) {
+    updates.longitude = normalizeProjectCoordinate(input.longitude, -180, 180);
+  }
+
+  if (input.mapEmbedUrl !== undefined) {
+    updates.map_embed_url = normalizeGoogleMapsEmbedUrl(input.mapEmbedUrl);
   }
 
   if (Object.keys(updates).length === 0) {
@@ -930,6 +1006,15 @@ export async function deleteProject(projectId: string) {
     .map((asset) => getStoragePathFromPublicUrl(asset.url, BROCHURE_ASSET_BUCKET))
     .filter((path): path is string => Boolean(path));
 
+  let referenceStoragePaths: string[] = [];
+  try {
+    referenceStoragePaths = await listProjectReferenceFileUrls(projectId);
+  } catch (error) {
+    if (!isMissingOptionalRelationError(error, "project_reference_files")) {
+      throw error;
+    }
+  }
+
   const { error: deleteError } = await supabase
     .from("projects")
     .delete()
@@ -959,6 +1044,19 @@ export async function deleteProject(projectId: string) {
       console.warn(
         "Failed to delete brochure assets from storage:",
         brochureStorageError.message,
+      );
+    }
+  }
+
+  if (referenceStoragePaths.length > 0) {
+    const { error: referenceStorageError } = await supabase.storage
+      .from(PROJECT_REFERENCE_BUCKET)
+      .remove(referenceStoragePaths);
+
+    if (referenceStorageError) {
+      console.warn(
+        "Failed to delete project reference assets from storage:",
+        referenceStorageError.message,
       );
     }
   }

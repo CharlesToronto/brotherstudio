@@ -73,6 +73,10 @@ export type ProjectVersionGroup = {
 export type ProjectFeedbackProject = {
   id: string;
   name: string;
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  mapEmbedUrl?: string | null;
   accessPassword?: string;
   status: ProjectStatus;
   createdAt: string;
@@ -86,6 +90,10 @@ export type ProjectFeedbackProject = {
 export type ProjectSummary = {
   id: string;
   name: string;
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  mapEmbedUrl?: string | null;
   status: ProjectStatus;
   createdAt: string;
   latestVersion: number;
@@ -94,4 +102,33 @@ export type ProjectSummary = {
   viewerCount: number;
   coverImageUrl: string | null;
   accessPassword?: string;
+};
+
+export type ProjectReferenceFolder = {
+  id: string;
+  projectId: string;
+  name: string;
+  isDefault: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProjectReferenceFile = {
+  id: string;
+  projectId: string;
+  folderId: string;
+  title: string;
+  description: string;
+  filename: string;
+  url: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProjectReferences = {
+  folders: ProjectReferenceFolder[];
+  files: ProjectReferenceFile[];
 };

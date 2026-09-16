@@ -31,6 +31,10 @@ type WeatherState =
 
 type MaretsetWeatherProps = {
   locale: "fr" | "en";
+  latitude?: number;
+  longitude?: number;
+  location?: string;
+  timezone?: string;
 };
 
 const NENDAZ_LATITUDE = 46.1834;
@@ -50,7 +54,13 @@ function getWeatherIcon(code: number | null, isDay: boolean) {
   return <Cloud className={className} />;
 }
 
-export function MaretsetWeather({ locale }: MaretsetWeatherProps) {
+export function MaretsetWeather({
+  locale,
+  latitude = NENDAZ_LATITUDE,
+  longitude = NENDAZ_LONGITUDE,
+  location = "Haute-Nendaz, Valais",
+  timezone = "Europe/Zurich",
+}: MaretsetWeatherProps) {
   const [state, setState] = useState<WeatherState>({ status: "loading" });
   const isFr = locale === "fr";
 
@@ -59,10 +69,10 @@ export function MaretsetWeather({ locale }: MaretsetWeatherProps) {
 
     const loadWeather = async () => {
       const params = new URLSearchParams({
-        latitude: String(NENDAZ_LATITUDE),
-        longitude: String(NENDAZ_LONGITUDE),
-        location: "Haute-Nendaz, Valais",
-        timezone: "Europe/Zurich",
+        latitude: String(latitude),
+        longitude: String(longitude),
+        location,
+        timezone,
       });
 
       try {
@@ -90,7 +100,7 @@ export function MaretsetWeather({ locale }: MaretsetWeatherProps) {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [latitude, longitude, location, timezone]);
 
   if (state.status === "loading") {
     return (

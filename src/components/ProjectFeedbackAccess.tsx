@@ -122,7 +122,14 @@ export function ProjectFeedbackAccess({
     setAccessRole(nextRole);
     setEmail(savedEmail);
 
-    if (entrySource === "dashboard" && savedEmail && !forceVisitorEntry) {
+    const canRestoreProjectAccess =
+      !forceVisitorEntry &&
+      savedEmail &&
+      (entrySource === "dashboard" ||
+        initialUnlocked ||
+        nextRole === "visitor");
+
+    if (canRestoreProjectAccess) {
       setIsLoading(true);
       await requestAccess(savedEmail, nextRole, "", false);
       return;

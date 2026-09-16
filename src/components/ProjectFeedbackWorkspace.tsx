@@ -11,8 +11,10 @@ import type {
   PointerEvent,
   SetStateAction,
 } from "react";
-import { Download } from "lucide-react";
+import { Check, Copy, Download, Share2 } from "lucide-react";
 
+import { ProjectClientReferences } from "@/components/ProjectClientReferences";
+import { ProjectLocationMap } from "@/components/ProjectLocationMap";
 import type {
   ProjectFeedbackComment,
   ProjectFeedbackDrawingElement,
@@ -20,7 +22,6 @@ import type {
   ProjectFeedbackDrawingPoint,
   ProjectFeedbackProject,
   ProjectFeedbackImage,
-  ProjectFeedbackTeamMessage,
   ProjectStatus,
   ProjectViewerRole,
 } from "@/lib/projectFeedbackTypes";
@@ -34,7 +35,6 @@ import {
 type ProjectFeedbackWorkspaceProps = {
   initialProject: ProjectFeedbackProject;
   allowImageManagement?: boolean;
-  showTeamChat?: boolean;
   canInteract?: boolean;
   viewerRole?: ProjectViewerRole;
   adminAccent?: boolean;
@@ -60,8 +60,8 @@ type ImageDimensions = {
   height: number;
 };
 
-type WorkspaceTab = "review" | "approved";
-type ImageSidePanelTab = "requests" | "chat" | "notes" | "drawing";
+type WorkspaceTab = "review" | "approved" | "map" | "references";
+type ImageSidePanelTab = "requests" | "notes" | "drawing";
 type DrawingTool = "freehand" | "line" | "rectangle" | "circle" | "eraser";
 type ShapeDrawingTool = Exclude<DrawingTool, "eraser">;
 
@@ -99,7 +99,6 @@ type NumberedVersionGroup = {
 
 const commentColorStorageKey = "bs_project_feedback_color";
 const defaultCommentColor = "#d88fa2";
-const teamChatPollIntervalMs = 1500;
 const projectFeedbackDisplayImageWidths = [720, 1200, 1800];
 const commentColorOptions = [
   "#d88fa2",
@@ -116,15 +115,6 @@ const commentColorOptions = [
   "#d59cbc",
 ];
 const postItColorOptions = ["#fff1a8", "#ffd5df", "#d9f6c4", "#cfeaff", "#eadbff", "#ffe0b8"];
-
-const teamChatBubblePalettes = [
-  { background: "#eef4ff", border: "#bfd3ff", accent: "#4f7df0" },
-  { background: "#fdf0f4", border: "#f3c1d2", accent: "#d86d97" },
-  { background: "#f6f1ff", border: "#d8c4ff", accent: "#8b67dd" },
-  { background: "#eefaf4", border: "#bfe6ce", accent: "#54a16f" },
-  { background: "#fff6ec", border: "#f2d2b2", accent: "#cf8b42" },
-  { background: "#eef8fb", border: "#b9dce7", accent: "#4d95ac" },
-];
 
 const drawingStrokeWidths = [2, 4, 6, 8];
 const emptyCountBadgeStyle: CSSProperties = {
@@ -186,26 +176,6 @@ function parseStoredArray<T>(value: string | null): T[] {
   } catch {
     return [];
   }
-}
-
-function hashString(value: string) {
-  let hash = 0;
-
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
-  }
-
-  return hash;
-}
-
-function getTeamChatBubblePalette(author: string) {
-  const normalizedAuthor = author.trim().toLowerCase();
-  const palette =
-    teamChatBubblePalettes[
-      hashString(normalizedAuthor) % teamChatBubblePalettes.length
-    ] ?? teamChatBubblePalettes[0];
-
-  return palette;
 }
 
 function drawingPointDistance(
@@ -348,10 +318,6 @@ function editRequestCountLabel(count: number) {
   return `${count} edit request${count === 1 ? "" : "s"}`;
 }
 
-function teamMessageCountLabel(count: number) {
-  return `${count} message${count === 1 ? "" : "s"}`;
-}
-
 function viewerCountLabel(count: number) {
   return `${count} viewer${count === 1 ? "" : "s"}`;
 }
@@ -397,7 +363,6 @@ function findImageCommentCount(image: ProjectFeedbackImage) {
 export function ProjectFeedbackWorkspace({
   initialProject,
   allowImageManagement = false,
-  showTeamChat = true,
   canInteract = true,
   viewerRole = "team",
   adminAccent = false,
@@ -431,6 +396,7 @@ export function ProjectFeedbackWorkspace({
   const [busyImageStatusId, setBusyImageStatusId] = useState<string | null>(null);
   const [busyImageStatus, setBusyImageStatus] = useState<ProjectStatus | null>(null);
   const [isDownloadingApproved, setIsDownloadingApproved] = useState(false);
+  const [referenceFileCount, setReferenceFileCount] = useState(0);
   const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<WorkspaceTab>(() => {
     const approvedCount = initialProject.versions.reduce(
       (total, versionGroup) =>
@@ -558,6 +524,7 @@ export function ProjectFeedbackWorkspace({
     setActiveWorkspaceTab((current) => {
       if (current === "review" && reviewImageCount > 0) return current;
       if (current === "approved" && approvedImageCount > 0) return current;
+      if (current === "map" || current === "references") return current;
       if (reviewImageCount === 0 && approvedImageCount > 0) return "approved";
       return "review";
     });
@@ -593,6 +560,8 @@ export function ProjectFeedbackWorkspace({
   const projectTitle = showParcelNumberInTitle
     ? `${project.name} - ${project.accessPassword}`
     : project.name;
+  const isFrenchInterface =
+    typeof document !== "undefined" && document.documentElement.lang.startsWith("fr");
 
   const resetFeedbackState = (nextProject?: ProjectFeedbackProject) => {
     if (nextProject) {
@@ -973,7 +942,7 @@ export function ProjectFeedbackWorkspace({
       resetFeedbackState(payload.project);
       setStatusMessage(
         status === "approved"
-          ? "Image added to approved delivery. It remains visible in review and delivery images."
+          ? "Image added to approved delivery. It remains visible in review and approved images."
           : "Image moved back to review. It now appears only in review.",
       );
     } catch (error) {
@@ -1160,7 +1129,7 @@ export function ProjectFeedbackWorkspace({
       }
 
       setStatusMessage(
-        `Started downloading ${approvedImages.length} delivery image${
+        `Started downloading ${approvedImages.length} approved image${
           approvedImages.length === 1 ? "" : "s"
         }.`,
       );
@@ -1168,7 +1137,7 @@ export function ProjectFeedbackWorkspace({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Failed to download delivery images.",
+          : "Failed to download approved images.",
       );
     } finally {
       setIsDownloadingApproved(false);
@@ -1190,22 +1159,30 @@ export function ProjectFeedbackWorkspace({
           <div className="projectFeedbackActions">
             {showCopyLink ? (
               <button
-                className="projectFeedbackAction projectFeedbackActionGhost"
+                className="projectFeedbackAction projectFeedbackActionGhost projectFeedbackActionIcon"
                 type="button"
                 data-copied={isCopyLinkCopied ? "true" : "false"}
+                aria-label={isCopyLinkCopied ? "Project link copied" : "Copy project link"}
+                title={isCopyLinkCopied ? "Project link copied" : "Copy project link"}
                 onClick={() => void handleCopyProjectLink()}
               >
-                {isCopyLinkCopied ? "Copied" : "Copy link"}
+                {isCopyLinkCopied ? (
+                  <Check aria-hidden="true" size={16} strokeWidth={2} />
+                ) : (
+                  <Copy aria-hidden="true" size={16} strokeWidth={1.8} />
+                )}
               </button>
             ) : null}
 
             {showShareLink ? (
               <button
-                className="projectFeedbackAction projectFeedbackActionGhost"
+                className="projectFeedbackAction projectFeedbackActionGhost projectFeedbackActionIcon"
                 type="button"
+                aria-label="Share link"
+                title="Share link"
                 onClick={() => void handleShareProjectLink()}
               >
-                Share link
+                <Share2 aria-hidden="true" size={16} strokeWidth={1.8} />
               </button>
             ) : null}
 
@@ -1232,7 +1209,7 @@ export function ProjectFeedbackWorkspace({
                 onClick={() => void handleMarkApproved()}
                 disabled={isUpdatingStatus || project.status === "approved"}
               >
-                {isUpdatingStatus ? "Updating..." : "Move project to approved delivery"}
+                {isUpdatingStatus ? "Updating..." : "Approve the project"}
               </button>
             ) : null}
           </div>
@@ -1267,8 +1244,7 @@ export function ProjectFeedbackWorkspace({
         ) : null}
       </header>
 
-      {project.versions.length > 0 ? (
-        <>
+      <>
           <div className="projectFeedbackWorkspaceTabs" role="tablist" aria-label="Project views">
             <button
               className="projectFeedbackWorkspaceTab"
@@ -1294,7 +1270,7 @@ export function ProjectFeedbackWorkspace({
               aria-selected={activeWorkspaceTab === "approved"}
               onClick={() => setActiveWorkspaceTab("approved")}
             >
-              Delivery Images
+              Approved Images
               <span
                 data-empty={approvedImageCount === 0 ? "true" : "false"}
                 style={approvedImageCount === 0 ? emptyCountBadgeStyle : undefined}
@@ -1302,9 +1278,59 @@ export function ProjectFeedbackWorkspace({
                 {approvedImageCount}
               </span>
             </button>
+            <button
+              className="projectFeedbackWorkspaceTab"
+              type="button"
+              role="tab"
+              data-active={activeWorkspaceTab === "map" ? "true" : "false"}
+              aria-selected={activeWorkspaceTab === "map"}
+              onClick={() => setActiveWorkspaceTab("map")}
+            >
+              {isFrenchInterface ? "Carte" : "Map"}
+            </button>
+            <button
+              className="projectFeedbackWorkspaceTab projectFeedbackReferenceTab"
+              type="button"
+              role="tab"
+              data-active={activeWorkspaceTab === "references" ? "true" : "false"}
+              aria-selected={activeWorkspaceTab === "references"}
+              onClick={() => setActiveWorkspaceTab("references")}
+            >
+              {isFrenchInterface ? "Reference client" : "Client References"}
+              <span data-empty={referenceFileCount === 0 ? "true" : "false"}>
+                {referenceFileCount}
+              </span>
+            </button>
           </div>
 
-          {activeWorkspaceTab === "review" ? (
+          {activeWorkspaceTab === "map" ? (
+            <ProjectLocationMap
+              projectId={project.id}
+              address={project.address}
+              latitude={project.latitude}
+              longitude={project.longitude}
+              mapEmbedUrl={project.mapEmbedUrl}
+              onLocationSaved={(nextLocation) => {
+                setProject((currentProject) => ({
+                  ...currentProject,
+                  address: nextLocation.label,
+                  latitude: nextLocation.latitude,
+                  longitude: nextLocation.longitude,
+                }));
+              }}
+              onMapEmbedUrlSaved={(mapEmbedUrl) => {
+                setProject((currentProject) => ({ ...currentProject, mapEmbedUrl }));
+              }}
+              adminMode={allowImageManagement}
+              canEdit={allowImageManagement || canInteract || viewerRole === "visitor"}
+            />
+          ) : activeWorkspaceTab === "references" ? (
+            <ProjectClientReferences
+              projectId={project.id}
+              adminMode={allowImageManagement}
+              onCountChange={setReferenceFileCount}
+            />
+          ) : activeWorkspaceTab === "review" ? (
             <>
           <div
             className="projectFeedbackVersionTabs"
@@ -1390,7 +1416,6 @@ export function ProjectFeedbackWorkspace({
                       }
                       showImageActions={allowImageManagement}
                       showDownloadAction={false}
-                      showTeamChat={showTeamChat}
                       allowCommentManagement={allowImageManagement || canInteract}
                       allowImageApproval={canManageApprovedImages}
                       canInteract={canInteract}
@@ -1453,14 +1478,6 @@ export function ProjectFeedbackWorkspace({
             />
           )}
         </>
-      ) : (
-        <div className="projectFeedbackEmpty">
-          <h2 className="projectFeedbackVersionTitle">No images yet</h2>
-          <p className="projectFeedbackVersionMeta">
-            Add the first variant to start collecting edit requests.
-          </p>
-        </div>
-      )}
     </section>
   );
 }
@@ -1479,7 +1496,6 @@ type ProjectFeedbackImageCardProps = {
   busyActionLabel: string | null;
   showImageActions: boolean;
   showDownloadAction: boolean;
-  showTeamChat: boolean;
   allowCommentManagement: boolean;
   allowImageApproval: boolean;
   canInteract: boolean;
@@ -1693,7 +1709,7 @@ function ProjectFeedbackEditRequestsPanelContent({
           {canInteract
             ? "Click on the image to add the first edit request."
             : isApprovedImage
-              ? "Delivery images stay visible here as read-only review history."
+              ? "Approved images stay visible here as read-only review history."
               : "Visitor mode is view-only for edit requests."}
         </p>
       )}
@@ -1715,7 +1731,6 @@ function ProjectFeedbackImageCard({
   busyActionLabel,
   showImageActions,
   showDownloadAction,
-  showTeamChat,
   allowCommentManagement,
   allowImageApproval,
   canInteract,
@@ -1745,16 +1760,12 @@ function ProjectFeedbackImageCard({
   const [activeSidePanel, setActiveSidePanel] = useState<ImageSidePanelTab>("requests");
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
   const dimensionsLabel = imageDimensionsLabel(dimensions);
-  const hasTeamChat = showTeamChat;
   const canInteractWithImage = canInteract && !isApprovedImage;
   const canManageCommentsForImage = allowCommentManagement && !isApprovedImage;
   const canPost = canInteractWithImage && viewerEmail.length > 0;
   const drawingRouteBase = showImageActions
     ? `/api/projects/${projectId}/images/${image.id}/drawings`
     : `/api/project/${projectId}/images/${image.id}/drawings`;
-  const teamChatRouteBase = showImageActions
-    ? `/api/projects/${projectId}/images/${image.id}/team-chat`
-    : `/api/project/${projectId}/images/${image.id}/team-chat`;
   const [drawingLayer, setDrawingLayer] = useState<ProjectFeedbackDrawingLayer | null>(
     null,
   );
@@ -2019,7 +2030,6 @@ function ProjectFeedbackImageCard({
   return (
     <article
       className="projectFeedbackImageCard"
-      data-team-chat={hasTeamChat ? "true" : "false"}
       data-can-interact={canInteractWithImage ? "true" : "false"}
       data-approved={isApprovedImage ? "true" : "false"}
     >
@@ -2171,7 +2181,7 @@ function ProjectFeedbackImageCard({
             <div className="projectFeedbackIdentityTag">
               {!canInteractWithImage
                 ? isApprovedImage
-                  ? "Delivery images stay visible here as read-only review history."
+                  ? "Approved images stay visible here as read-only review history."
                   : "Visitor mode is read-only for edit requests."
                 : viewerIdentityLabel
                 ? `Posting as ${viewerIdentityLabel}`
@@ -2226,7 +2236,7 @@ function ProjectFeedbackImageCard({
                 type="submit"
                 disabled={isSavingComment || !canPost}
               >
-                {isSavingComment ? "Saving..." : "Save edit request"}
+                {isSavingComment ? "Publishing..." : "Publish"}
               </button>
               <button
                 className="projectFeedbackAction projectFeedbackActionGhost"
@@ -2258,18 +2268,6 @@ function ProjectFeedbackImageCard({
               {image.comments.length}
             </span>
           </button>
-          {hasTeamChat ? (
-            <button
-              className="projectFeedbackSidePanelTab"
-              type="button"
-              role="tab"
-              data-active={activeSidePanel === "chat" ? "true" : "false"}
-              aria-selected={activeSidePanel === "chat"}
-              onClick={() => setActiveSidePanel("chat")}
-            >
-              Team Chat
-            </button>
-          ) : null}
           <button
             className="projectFeedbackSidePanelTab"
             type="button"
@@ -2319,20 +2317,6 @@ function ProjectFeedbackImageCard({
               onCommentDelete={onCommentDelete}
             />
           </div>
-
-          {hasTeamChat && activeSidePanel === "chat" ? (
-            <div>
-              <ProjectFeedbackTeamChat
-                teamChatRouteBase={teamChatRouteBase}
-                viewerEmail={viewerEmail}
-                viewerIdentityLabel={viewerIdentityLabel}
-                isApprovedImage={isApprovedImage}
-                canInteract={canInteractWithImage}
-                viewerRole={viewerRole}
-                detailsMode={false}
-              />
-            </div>
-          ) : null}
 
           {activeSidePanel === "notes" ? (
             <div>
@@ -2408,18 +2392,6 @@ function ProjectFeedbackImageCard({
             onCommentDelete={onCommentDelete}
           />
         </details>
-
-        {hasTeamChat ? (
-          <ProjectFeedbackTeamChat
-            teamChatRouteBase={teamChatRouteBase}
-            viewerEmail={viewerEmail}
-            viewerIdentityLabel={viewerIdentityLabel}
-            isApprovedImage={isApprovedImage}
-            canInteract={canInteractWithImage}
-            viewerRole={viewerRole}
-            detailsMode
-          />
-        ) : null}
 
         <details className="projectFeedbackSectionPanel projectFeedbackNotesSection">
           <summary className="projectFeedbackSectionSummary">
@@ -2782,7 +2754,7 @@ function ProjectFeedbackDrawingPanelContent({
             {!canInteract ? (
               <p className="projectFeedbackCommentsMeta">
                 {isApprovedImage
-                  ? "Delivery images keep the drawing layer visible in read-only mode."
+                  ? "Approved images keep the drawing layer visible in read-only mode."
                   : viewerRole === "visitor"
                     ? "Visitor mode is view-only for drawings."
                     : "Open the project as a team member to edit drawings."}
@@ -2914,7 +2886,7 @@ function ProjectFeedbackApprovedGallery({
   if (approvedImages.length === 0) {
     return (
       <div className="projectFeedbackEmpty">
-        <h2 className="projectFeedbackVersionTitle">No delivery images yet</h2>
+        <h2 className="projectFeedbackVersionTitle">No approved images yet</h2>
         <p className="projectFeedbackVersionMeta">
           Images added to approved delivery will appear here automatically.
         </p>
@@ -2926,10 +2898,10 @@ function ProjectFeedbackApprovedGallery({
     <section className="projectFeedbackApprovedShell">
       <div className="projectFeedbackApprovedHeader">
         <div className="projectFeedbackCommentsHeader">
-          <h2 className="projectFeedbackCommentsTitle">Delivery Images</h2>
+          <h2 className="projectFeedbackCommentsTitle">Approved Images</h2>
           <div className="projectFeedbackCommentsMetaGroup">
             <p className="projectFeedbackCommentsMeta">
-              {approvedImages.length} delivery image{approvedImages.length === 1 ? "" : "s"}
+              {approvedImages.length} approved image{approvedImages.length === 1 ? "" : "s"}
             </p>
           </div>
         </div>
@@ -3051,29 +3023,6 @@ function ProjectFeedbackCloseIcon() {
   );
 }
 
-function ProjectFeedbackSendIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M4 12h12"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.9"
-      />
-      <path
-        d="m12 6 6 6-6 6"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.9"
-      />
-    </svg>
-  );
-}
-
 function ProjectFeedbackNotesPanel({
   projectId,
   imageId,
@@ -3188,364 +3137,6 @@ function ProjectFeedbackNotesPanel({
         </div>
       </div>
     </aside>
-  );
-}
-
-type ProjectFeedbackTeamChatProps = {
-  teamChatRouteBase: string;
-  viewerEmail: string;
-  viewerIdentityLabel: string;
-  isApprovedImage: boolean;
-  canInteract: boolean;
-  viewerRole: ProjectViewerRole;
-  detailsMode?: boolean;
-};
-
-function ProjectFeedbackTeamChat({
-  teamChatRouteBase,
-  viewerEmail,
-  viewerIdentityLabel,
-  isApprovedImage,
-  canInteract,
-  viewerRole,
-  detailsMode = true,
-}: ProjectFeedbackTeamChatProps) {
-  const [messages, setMessages] = useState<ProjectFeedbackTeamMessage[]>([]);
-  const [content, setContent] = useState("");
-  const [replyTargetId, setReplyTargetId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [animatedPlaceholder, setAnimatedPlaceholder] = useState("");
-  const listRef = useRef<HTMLDivElement | null>(null);
-  const canPost = canInteract && viewerEmail.length > 0;
-  const replyTarget =
-    messages.find((message) => message.id === replyTargetId) ?? null;
-  const placeholderTarget = "Anything to say ?";
-
-  useEffect(() => {
-    let cancelled = false;
-    let isForbidden = false;
-    let intervalId: ReturnType<typeof setInterval> | null = null;
-
-    const loadMessages = async ({ silent = false }: { silent?: boolean } = {}) => {
-      if (!silent) {
-        setIsLoading(true);
-      }
-
-      if (!silent) {
-        setErrorMessage("");
-      }
-
-      try {
-        const response = await fetch(teamChatRouteBase, {
-          cache: "no-store",
-        });
-
-        const payload = (await response.json().catch(() => null)) as
-          | { messages?: ProjectFeedbackTeamMessage[]; error?: string }
-          | null;
-
-        if (response.status === 403) {
-          isForbidden = true;
-          if (!cancelled && !silent) {
-            setErrorMessage(
-              payload?.error ?? "Open the project with your email to view the team chat.",
-            );
-          }
-          return;
-        }
-
-        if (!response.ok || !payload?.messages) {
-          throw new Error(payload?.error ?? "Failed to load team chat.");
-        }
-
-        if (!cancelled) {
-          setMessages(payload.messages);
-          if (!silent) {
-            setErrorMessage("");
-          }
-        }
-      } catch (error) {
-        if (!cancelled && !silent) {
-          setErrorMessage(
-            error instanceof Error ? error.message : "Failed to load team chat.",
-          );
-        }
-      } finally {
-        if (!cancelled && !silent) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadMessages();
-
-    intervalId = setInterval(() => {
-      if (isForbidden) {
-        return;
-      }
-      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
-        return;
-      }
-
-      void loadMessages({ silent: true });
-    }, teamChatPollIntervalMs);
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        void loadMessages({ silent: true });
-      }
-    };
-
-    if (typeof document !== "undefined") {
-      document.addEventListener("visibilitychange", handleVisibilityChange);
-    }
-
-    return () => {
-      cancelled = true;
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-      if (typeof document !== "undefined") {
-        document.removeEventListener("visibilitychange", handleVisibilityChange);
-      }
-    };
-  }, [teamChatRouteBase]);
-
-  useEffect(() => {
-    if (!listRef.current) return;
-    listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [messages.length]);
-
-  useEffect(() => {
-    if (!canPost) {
-      setAnimatedPlaceholder(
-        isApprovedImage
-          ? "Delivery chat history"
-          : "Open the project with your email to chat",
-      );
-      return;
-    }
-
-    let frame = 0;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-    const tick = () => {
-      const cycle = placeholderTarget.length + 18;
-      const position = frame % cycle;
-      const sliceLength =
-        position <= placeholderTarget.length ? position : placeholderTarget.length;
-
-      setAnimatedPlaceholder(placeholderTarget.slice(0, sliceLength));
-      frame += 1;
-      timeoutId = setTimeout(tick, position < placeholderTarget.length ? 65 : 95);
-    };
-
-    tick();
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [canPost, isApprovedImage]);
-
-  const handleSubmit = async () => {
-    const trimmedContent = content.trim();
-    if (!trimmedContent || !canPost) return;
-
-    setIsSending(true);
-    setErrorMessage("");
-
-    try {
-      const response = await fetch(teamChatRouteBase, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          viewerEmail,
-          content: trimmedContent,
-          replyToMessageId: replyTargetId,
-        }),
-      });
-
-      const payload = (await response.json().catch(() => null)) as
-        | { message?: ProjectFeedbackTeamMessage; error?: string }
-        | null;
-
-      if (!response.ok || !payload?.message) {
-        throw new Error(payload?.error ?? "Failed to send team chat message.");
-      }
-
-      setMessages((current) => [...current, payload.message!]);
-      setContent("");
-      setReplyTargetId(null);
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to send team chat message.",
-      );
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const teamChatContent = (
-    <aside className="projectFeedbackTeamChat">
-      <div className="projectFeedbackCommentsHeader">
-        <h3 className="projectFeedbackCommentsTitle">Team Chat</h3>
-        <div className="projectFeedbackCommentsMetaGroup">
-          <p className="projectFeedbackCommentsMeta">
-            {teamMessageCountLabel(messages.length)}
-          </p>
-        </div>
-      </div>
-
-      <div className="projectFeedbackTeamChatPanel">
-        <div className="projectFeedbackTeamChatMessages" ref={listRef}>
-          {isLoading ? (
-            <p className="projectFeedbackCommentsMeta">Loading team chat...</p>
-          ) : messages.length > 0 ? (
-            <div className="projectFeedbackTeamChatList">
-              {messages.map((message) => {
-                const isMine =
-                  viewerIdentityLabel.length > 0 &&
-                  message.author === viewerIdentityLabel;
-                const bubblePalette = getTeamChatBubblePalette(message.author);
-
-                return (
-                  <article
-                    key={message.id}
-                    className="projectFeedbackTeamChatMessage"
-                    data-mine={isMine ? "true" : "false"}
-                    style={
-                      {
-                        "--chat-bubble-background": bubblePalette.background,
-                        "--chat-bubble-border": bubblePalette.border,
-                        "--chat-bubble-accent": bubblePalette.accent,
-                      } as CSSProperties
-                    }
-                  >
-                    <div className="projectFeedbackTeamChatMessageHeader">
-                      <strong>{message.author}</strong>
-                      <span>{formatTimestamp(message.createdAt)}</span>
-                    </div>
-
-                    {message.replyToMessageId ? (
-                      <div className="projectFeedbackTeamChatReplyPreview">
-                        <strong>{message.replyToAuthor ?? "Reply"}</strong>
-                        <span>{message.replyToContent ?? "Message unavailable"}</span>
-                      </div>
-                    ) : null}
-
-                    <p>{message.content}</p>
-
-                    {canInteract ? (
-                      <div className="projectFeedbackTeamChatMessageActions">
-                        <button
-                          className="projectFeedbackTeamChatReplyButton"
-                          type="button"
-                          onClick={() => setReplyTargetId(message.id)}
-                        >
-                          Reply
-                        </button>
-                      </div>
-                    ) : null}
-                  </article>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="projectFeedbackCommentsMeta">
-              No team messages yet for this image.
-            </p>
-          )}
-        </div>
-
-        <form
-          className="projectFeedbackTeamChatComposer"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleSubmit();
-          }}
-        >
-          {replyTarget ? (
-            <div className="projectFeedbackTeamChatReplyComposer">
-              <div className="projectFeedbackTeamChatReplyPreview">
-                <strong>{replyTarget.author}</strong>
-                <span>{replyTarget.content}</span>
-              </div>
-              <button
-                className="projectFeedbackTeamChatReplyButton"
-                type="button"
-                onClick={() => setReplyTargetId(null)}
-              >
-                Cancel reply
-              </button>
-            </div>
-          ) : null}
-
-          {!canInteract ? (
-            <p className="projectFeedbackCommentsMeta">
-              {isApprovedImage
-                ? "Delivery images keep the team chat history visible in read-only mode."
-                : viewerRole === "visitor"
-                ? "Visitor mode is read-only for team chat."
-                : "Team member access is required to join the team chat."}
-            </p>
-          ) : null}
-
-          <label className="projectFeedbackField projectFeedbackTeamChatField">
-            <textarea
-              className="projectFeedbackTextarea"
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              placeholder={animatedPlaceholder}
-              aria-label="Message"
-              required
-              disabled={!canPost || isSending}
-            />
-          </label>
-
-          <div className="projectFeedbackDraftActions">
-            <button
-              className="projectFeedbackChatSendButton"
-              type="submit"
-              aria-label={isSending ? "Sending message" : "Send message"}
-              disabled={isSending || !canPost}
-            >
-              {isSending ? "..." : <ProjectFeedbackSendIcon />}
-            </button>
-          </div>
-
-          {errorMessage ? (
-            <p className="projectFeedbackMessage projectFeedbackMessageError">
-              {errorMessage}
-            </p>
-          ) : null}
-        </form>
-      </div>
-    </aside>
-  );
-
-  if (!detailsMode) {
-    return teamChatContent;
-  }
-
-  return (
-    <details className="projectFeedbackSectionPanel projectFeedbackChatPanel">
-      <summary className="projectFeedbackSectionSummary">
-        <span className="projectFeedbackCommentsTitle">Team Chat</span>
-        <span
-          className="projectFeedbackCommentsMeta"
-          data-empty={messages.length === 0 ? "true" : "false"}
-          style={messages.length === 0 ? emptyCountBadgeStyle : undefined}
-        >
-          {teamMessageCountLabel(messages.length)}
-        </span>
-      </summary>
-
-      {teamChatContent}
-    </details>
   );
 }
 

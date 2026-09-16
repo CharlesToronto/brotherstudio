@@ -39,6 +39,7 @@ export function ClientProjectsAdmin({
   const [projects, setProjects] = useState(initialProjects);
   const [name, setName] = useState("");
   const [accessPassword, setAccessPassword] = useState("1870");
+  const [address, setAddress] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -48,6 +49,7 @@ export function ClientProjectsAdmin({
   const [savingPasswordProjectId, setSavingPasswordProjectId] = useState<
     string | null
   >(null);
+  const [savingAddressProjectId, setSavingAddressProjectId] = useState<string | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
   const [copiedProjectId, setCopiedProjectId] = useState<string | null>(null);
   const [layout, setLayout] = useState<"grid" | "list">("grid");
@@ -66,6 +68,9 @@ export function ClientProjectsAdmin({
           project.accessPassword ?? "",
         ]),
       ),
+  );
+  const [addressDrafts, setAddressDrafts] = useState<Record<string, string>>(() =>
+    Object.fromEntries(initialProjects.map((project) => [project.id, project.address ?? ""])),
   );
   const isLocalTlsIssue = Boolean(
     setupError?.includes("UNABLE_TO_GET_ISSUER_CERT_LOCALLY") ||
@@ -112,7 +117,7 @@ export function ClientProjectsAdmin({
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, accessPassword }),
+        body: JSON.stringify({ name, accessPassword, address }),
       });
 
       const payload = (await response.json().catch(() => null)) as
@@ -129,6 +134,7 @@ export function ClientProjectsAdmin({
       setProjects((current) => [payload.project!, ...current]);
       setName("");
       setAccessPassword("1870");
+      setAddress("");
       setNameDrafts((current) => ({
         ...current,
         [payload.project!.id]: payload.project!.name,
@@ -136,6 +142,10 @@ export function ClientProjectsAdmin({
       setPasswordDrafts((current) => ({
         ...current,
         [payload.project!.id]: payload.project?.accessPassword ?? accessPassword,
+      }));
+      setAddressDrafts((current) => ({
+        ...current,
+        [payload.project!.id]: payload.project?.address ?? address,
       }));
       setIsComposerOpen(false);
       setStatusMessage("Project created.");
@@ -252,6 +262,38 @@ export function ClientProjectsAdmin({
     }
   };
 
+  const handleSaveAddress = async (projectId: string) => {
+    const nextAddress = addressDrafts[projectId]?.trim() ?? "";
+    setSavingAddressProjectId(projectId);
+    setStatusMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          address: nextAddress,
+          ...(nextAddress ? {} : { latitude: null, longitude: null }),
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { project?: ProjectSummary; error?: string }
+        | null;
+      if (!response.ok || !payload?.project) {
+        throw new Error(payload?.error ?? "Failed to update project address.");
+      }
+
+      setProjects((current) => current.map((project) => project.id === projectId ? payload.project! : project));
+      setAddressDrafts((current) => ({ ...current, [projectId]: payload.project?.address ?? nextAddress }));
+      setStatusMessage("Project address updated.");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to update project address.");
+    } finally {
+      setSavingAddressProjectId(null);
+    }
+  };
+
   const handleCopyLink = async (projectId: string) => {
     if (typeof window === "undefined") return;
 
@@ -299,6 +341,11 @@ export function ClientProjectsAdmin({
         return next;
       });
       setPasswordDrafts((current) => {
+        const next = { ...current };
+        delete next[project.id];
+        return next;
+      });
+      setAddressDrafts((current) => {
         const next = { ...current };
         delete next[project.id];
         return next;
@@ -401,6 +448,26 @@ export function ClientProjectsAdmin({
                 onClick={() => void handleSaveName(project.id)}
               >
                 {savingNameProjectId === project.id ? "Saving..." : "Save name"}
+              </button>
+            </div>
+            <div className="clientAdminPasswordRow">
+              <label className="clientAdminField">
+                <span className="clientAdminLabel">Project address (optional)</span>
+                <input
+                  className="clientAdminInput"
+                  type="text"
+                  value={addressDrafts[project.id] ?? ""}
+                  onChange={(event) => setAddressDrafts((current) => ({ ...current, [project.id]: event.target.value }))}
+                  placeholder="Search it later in the Map tab"
+                />
+              </label>
+              <button
+                className="clientAdminButton clientAdminButtonGhost"
+                type="button"
+                disabled={savingAddressProjectId === project.id}
+                onClick={() => void handleSaveAddress(project.id)}
+              >
+                {savingAddressProjectId === project.id ? "Saving..." : "Save address"}
               </button>
             </div>
             <div className="clientAdminPasswordRow">
@@ -562,6 +629,17 @@ export function ClientProjectsAdmin({
                 value={accessPassword}
                 onChange={(event) => setAccessPassword(event.target.value)}
                 required
+              />
+            </label>
+
+            <label className="clientAdminField">
+              <span className="clientAdminLabel">Project address (optional)</span>
+              <input
+                className="clientAdminInput"
+                type="text"
+                value={address}
+                onChange={(event) => setAddress(event.target.value)}
+                placeholder="Project address"
               />
             </label>
 
