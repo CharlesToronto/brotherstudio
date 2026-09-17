@@ -13,16 +13,21 @@ import {
   LOCALE_COOKIE_KEY,
   getLocaleFromPathname,
   stripLocaleFromPathname,
+  type Locale,
   withLocalePath,
 } from "@/lib/i18n";
 
 const MOBILE_NAV_BREAKPOINT = 980;
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  locale?: Locale;
+};
+
+export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
   const pathname = usePathname();
   const mobileNavRef = useRef<HTMLElement | null>(null);
   const localeFromPath = getLocaleFromPathname(pathname);
-  const locale = localeFromPath ?? DEFAULT_LOCALE;
+  const locale = localeFromPath ?? layoutLocale ?? DEFAULT_LOCALE;
   const subpath = stripLocaleFromPathname(pathname);
   const messages = getMessages(locale).header;
   const isGalleryPage = subpath === "/";

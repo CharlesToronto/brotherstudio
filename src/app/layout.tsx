@@ -95,12 +95,12 @@ export default async function RootLayout({
         />
         <div className="siteShell">
           <div className="siteChrome">
-            {hasStandardChrome ? <SiteHeader /> : null}
+            {hasStandardChrome ? <SiteHeader locale={locale} /> : null}
             <AnalyticsTracker />
             {children}
             {hasStandardChrome ? <SiteFooter locale={locale} /> : null}
           </div>
-          <SiteAssistantBubble hasMobileMenu={hasStandardChrome} />
+          <SiteAssistantBubble hasMobileMenu={hasStandardChrome} locale={locale} />
         </div>
         {shouldLoadAnalytics ? (
           <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />

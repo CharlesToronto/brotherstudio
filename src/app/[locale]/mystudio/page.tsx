@@ -23,8 +23,8 @@ function getStudioTools(locale: Locale): StudioTool[] {
       name: "MyReview™",
       description:
         locale === "fr"
-          ? "Validez vos projets avec vos clients."
-          : "Review your projects with your clients.",
+          ? "Demandes de modification et références client."
+          : "Edit requests and client references.",
       href: "/myreview",
       visual: "review",
     },
@@ -32,8 +32,8 @@ function getStudioTools(locale: Locale): StudioTool[] {
       name: "FileFlow™",
       description:
         locale === "fr"
-          ? "Modifiez et partagez vos fichiers."
-          : "Edit and share your files.",
+          ? "Envoyez, convertissez et compressez vos documents."
+          : "Send, Convert, and Compress your documents",
       href: "https://fileflow.brotherstudio.ca/",
       external: true,
       visual: "fileflow",

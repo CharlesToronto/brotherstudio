@@ -50,6 +50,7 @@ type UploadProgress = {
 };
 
 const REFERENCE_LINK_MIME_TYPE = "application/x-reference-link";
+const ALL_DOCUMENTS_FOLDER_ID = "__all_documents__";
 
 function getApiBase(projectId: string, adminMode: boolean) {
   return `${adminMode ? "/api/projects" : "/api/project"}/${projectId}/references`;
@@ -165,6 +166,7 @@ export function ProjectClientReferences({
         upload: "Ajouter des fichiers",
         addLink: "Ajouter un lien",
         folder: "Nouveau dossier",
+        allDocuments: "Tous les documents",
         folderLabel: "Dossier",
         createFolder: "Créer le dossier",
         search: "Rechercher dans les références",
@@ -207,6 +209,7 @@ export function ProjectClientReferences({
         folderName: "Nom du dossier",
         fileCount: "fichier(s)",
         noReferences: "Aucune référence",
+        selectFolder: "Sélectionnez un dossier pour ajouter une référence.",
       }
     : {
         title: "Client References",
@@ -214,6 +217,7 @@ export function ProjectClientReferences({
         upload: "Add files",
         addLink: "Add a link",
         folder: "New folder",
+        allDocuments: "All documents",
         folderLabel: "Folder",
         createFolder: "Create folder",
         search: "Search references",
@@ -256,6 +260,7 @@ export function ProjectClientReferences({
         folderName: "Folder name",
         fileCount: "file(s)",
         noReferences: "No references",
+        selectFolder: "Select a folder before adding a reference.",
       };
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -295,9 +300,9 @@ export function ProjectClientReferences({
       if (!response.ok) throw new Error(payload?.error ?? "Unable to load references.");
       setReferences(payload);
       setActiveFolderId((current) =>
-        payload.folders.some((folder) => folder.id === current)
+        current === ALL_DOCUMENTS_FOLDER_ID || payload.folders.some((folder) => folder.id === current)
           ? current
-          : payload.folders[0]?.id ?? "",
+          : ALL_DOCUMENTS_FOLDER_ID,
       );
       onCountChange?.(payload.files.length);
       setErrorMessage("");
@@ -313,10 +318,18 @@ export function ProjectClientReferences({
   }, [refreshReferences]);
 
   const activeFolder = references.folders.find((folder) => folder.id === activeFolderId) ?? null;
+  const activeFolderName =
+    activeFolderId === ALL_DOCUMENTS_FOLDER_ID
+      ? copy.allDocuments
+      : activeFolder?.name ?? copy.noReferences;
   const visibleFiles = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return references.files
-      .filter((file) => file.folderId === activeFolderId)
+      .filter((file) =>
+        activeFolderId === ALL_DOCUMENTS_FOLDER_ID
+          ? true
+          : file.folderId === activeFolderId,
+      )
       .filter((file) =>
         normalizedQuery
           ? `${file.title} ${file.description} ${file.filename}`.toLowerCase().includes(normalizedQuery)
@@ -363,8 +376,8 @@ export function ProjectClientReferences({
     const selectedFiles = Array.from(event.target.files ?? []);
     event.currentTarget.value = "";
     if (selectedFiles.length === 0) return;
-    if (!activeFolderId) {
-      setErrorMessage("Create or select a folder before adding files.");
+    if (!activeFolderId || activeFolderId === ALL_DOCUMENTS_FOLDER_ID) {
+      setErrorMessage(copy.selectFolder);
       return;
     }
 
@@ -481,6 +494,10 @@ export function ProjectClientReferences({
   };
 
   const handleCreateLink = () => {
+    if (!activeFolderId || activeFolderId === ALL_DOCUMENTS_FOLDER_ID) {
+      setErrorMessage(copy.selectFolder);
+      return;
+    }
     setLinkUrl("");
     setLinkTitle("");
     setLinkDescription("");
@@ -489,7 +506,7 @@ export function ProjectClientReferences({
 
   const handleSubmitLink = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!activeFolderId || !linkUrl.trim()) return;
+    if (!activeFolderId || activeFolderId === ALL_DOCUMENTS_FOLDER_ID || !linkUrl.trim()) return;
 
     const result = await runAction("create-link", {
       folderId: activeFolderId,
@@ -536,7 +553,7 @@ export function ProjectClientReferences({
     if (!window.confirm(copy.confirmDeleteFolder)) return;
     const result = await runAction("delete-folder", { folderId: folder.id });
     if (result && "folders" in result) {
-      setActiveFolderId(result.folders[0]?.id ?? "");
+      setActiveFolderId(ALL_DOCUMENTS_FOLDER_ID);
     }
   };
 
@@ -648,12 +665,29 @@ export function ProjectClientReferences({
             <span>{copy.folderLabel}</span>
             <span>{references.files.length}</span>
           </div>
+          <div
+            className="projectClientReferencesFolderRow"
+            data-all-documents="true"
+            data-has-files={references.files.length > 0 ? "true" : "false"}
+          >
+            <button
+              className="projectClientReferencesFolderButton"
+              type="button"
+              data-active={activeFolderId === ALL_DOCUMENTS_FOLDER_ID ? "true" : "false"}
+              onClick={() => setActiveFolderId(ALL_DOCUMENTS_FOLDER_ID)}
+            >
+              <Folder aria-hidden="true" size={17} />
+              <span>{copy.allDocuments}</span>
+              <small>{references.files.length}</small>
+            </button>
+          </div>
           {references.folders.map((folder) => {
             const folderCount = references.files.filter((file) => file.folderId === folder.id).length;
             return (
               <div
                 key={folder.id}
                 className="projectClientReferencesFolderRow"
+                data-has-files={folderCount > 0 ? "true" : "false"}
                 data-drag-over={dragOverFolderId === folder.id ? "true" : "false"}
                 onDragOver={(event) => {
                   event.preventDefault();
@@ -681,7 +715,7 @@ export function ProjectClientReferences({
           <div className="projectClientReferencesToolbar">
             <div className="projectClientReferencesCurrentFolder">
               <Folder aria-hidden="true" size={18} />
-              <strong>{activeFolder?.name ?? copy.noReferences}</strong>
+              <strong>{activeFolderName}</strong>
             </div>
             <label className="projectClientReferencesSearch">
               <Search aria-hidden="true" size={15} />

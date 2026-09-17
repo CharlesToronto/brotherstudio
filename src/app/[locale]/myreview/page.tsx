@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
 import { MyProjectDirectory } from "@/components/MyProjectDirectory";
+import { resolveLocaleParam } from "@/lib/localeParams";
 import {
   isProjectFeedbackConfigured,
   listProjectSummaries,
 } from "@/lib/projectFeedbackStore";
-import { getPreferredRequestLocale } from "@/lib/requestLocale";
 
 export const metadata: Metadata = {
   title: "MyReview™",
@@ -17,8 +17,14 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function MyReviewAccessPage() {
-  const locale = await getPreferredRequestLocale();
+type LocalizedMyReviewAccessPageProps = {
+  params: Promise<{ locale: string }>;
+};
+
+export default async function LocalizedMyReviewAccessPage({
+  params,
+}: LocalizedMyReviewAccessPageProps) {
+  const locale = await resolveLocaleParam(params);
 
   if (!isProjectFeedbackConfigured()) {
     return (

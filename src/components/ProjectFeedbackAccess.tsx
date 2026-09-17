@@ -8,6 +8,7 @@ import type {
   ProjectFeedbackProject,
   ProjectViewerRole,
 } from "@/lib/projectFeedbackTypes";
+import type { AssistantLocale } from "@/lib/siteAssistantKnowledge";
 import {
   getProjectViewerEntryStorageKey,
   getProjectViewerRoleStorageKey,
@@ -20,17 +21,56 @@ type ProjectFeedbackAccessProps = {
   initialUnlocked: boolean;
   initialRole: ProjectViewerRole;
   forceVisitorEntry?: boolean;
+  locale: AssistantLocale;
 };
+
+function buildCopy(locale: AssistantLocale) {
+  return locale === "fr"
+    ? {
+        passwordPlaceholder: "utilisez le lien équipe pour éviter le numéro de parcelle.",
+        loadingTitle: "Chargement de la review",
+        openingTitle: "Ouverture de la review",
+        loadingMessage: "Veuillez patienter pendant la préparation du projet.",
+        visitorTitle: "Entrez votre email pour continuer",
+        visitorMessage: "Ce lien partagé ouvre le projet en mode visiteur.",
+        accessTitle: "Choisissez le type d’accès",
+        accessMessage:
+          "Les membres de l’équipe peuvent ajouter des demandes de modification. Les visiteurs peuvent uniquement consulter le projet.",
+        email: "Email",
+        parcelNumber: "Numéro de parcelle",
+        teamMember: "Membre de l’équipe",
+        visitor: "Visiteur",
+        openVisitor: "Ouvrir en mode visiteur",
+        openTeam: "Ouvrir en mode équipe",
+      }
+    : {
+        passwordPlaceholder: "use the team link to skip the parcel number.",
+        loadingTitle: "Loading Review",
+        openingTitle: "Opening Review",
+        loadingMessage: "Please wait while the project is being prepared.",
+        visitorTitle: "Enter Your Email To Continue",
+        visitorMessage: "This shared review link opens in visitor mode.",
+        accessTitle: "Choose Access Type",
+        accessMessage:
+          "Team members can post edit requests. Visitors can only view the project.",
+        email: "Email",
+        parcelNumber: "Parcel Number",
+        teamMember: "Team member",
+        visitor: "Visitor",
+        openVisitor: "Open as visitor",
+        openTeam: "Open as team member",
+      };
+}
 
 export function ProjectFeedbackAccess({
   projectId,
   initialUnlocked,
   initialRole,
   forceVisitorEntry = false,
+  locale,
 }: ProjectFeedbackAccessProps) {
-  const passwordPlaceholder = useTypingPlaceholder(
-    "use the team link to skip the parcel number.",
-  );
+  const copy = buildCopy(locale);
+  const passwordPlaceholder = useTypingPlaceholder(copy.passwordPlaceholder);
   const [mode, setMode] = useState<ProjectViewerRole>(
     forceVisitorEntry ? "visitor" : initialRole,
   );
@@ -163,10 +203,10 @@ export function ProjectFeedbackAccess({
           <div className="projectFeedbackIntro">
             <p className="projectFeedbackEyebrow">MyReview™</p>
             <h1 className="projectFeedbackTitle">
-              {isSubmitting ? "Opening Review" : "Loading Review"}
+              {isSubmitting ? copy.openingTitle : copy.loadingTitle}
             </h1>
             <p className="projectFeedbackVersionMeta">
-              Please wait while the project is being prepared.
+              {copy.loadingMessage}
             </p>
           </div>
         </div>
@@ -180,9 +220,9 @@ export function ProjectFeedbackAccess({
         <div className="projectFeedbackHeader">
           <div className="projectFeedbackIntro">
             <p className="projectFeedbackEyebrow">MyReview™</p>
-            <h1 className="projectFeedbackTitle">Enter Your Email To Continue</h1>
+            <h1 className="projectFeedbackTitle">{copy.visitorTitle}</h1>
             <p className="projectFeedbackVersionMeta">
-              This shared review link opens in visitor mode.
+              {copy.visitorMessage}
             </p>
           </div>
 
@@ -194,7 +234,7 @@ export function ProjectFeedbackAccess({
             }}
           >
             <label className="projectFeedbackField">
-              <span>Email</span>
+              <span>{copy.email}</span>
               <input
                 className="projectFeedbackInput"
                 type="email"
@@ -211,7 +251,7 @@ export function ProjectFeedbackAccess({
               type="submit"
               disabled={isSubmitting}
             >
-              Open as visitor
+              {copy.openVisitor}
             </button>
 
             {errorMessage ? (
@@ -230,21 +270,20 @@ export function ProjectFeedbackAccess({
       <div className="projectFeedbackHeader">
         <div className="projectFeedbackIntro">
           <p className="projectFeedbackEyebrow">MyReview™</p>
-          <h1 className="projectFeedbackTitle">Choose Access Type</h1>
+          <h1 className="projectFeedbackTitle">{copy.accessTitle}</h1>
           <p className="projectFeedbackVersionMeta">
-            Team members can post edit requests and chat. Visitors can only view
-            the project.
+            {copy.accessMessage}
           </p>
         </div>
 
         <div className="projectFeedbackRoleSwitch" role="tablist" aria-label="Access type">
-          <button
+            <button
             className="projectFeedbackRoleButton"
             type="button"
             data-active={mode === "team" ? "true" : "false"}
             onClick={() => setMode("team")}
           >
-            Team member
+            {copy.teamMember}
           </button>
           <button
             className="projectFeedbackRoleButton"
@@ -252,7 +291,7 @@ export function ProjectFeedbackAccess({
             data-active={mode === "visitor" ? "true" : "false"}
             onClick={() => setMode("visitor")}
           >
-            Visitor
+            {copy.visitor}
           </button>
         </div>
 
@@ -264,7 +303,7 @@ export function ProjectFeedbackAccess({
           }}
         >
           <label className="projectFeedbackField">
-            <span>Email</span>
+            <span>{copy.email}</span>
             <input
               className="projectFeedbackInput"
               type="email"
@@ -278,7 +317,7 @@ export function ProjectFeedbackAccess({
 
           {mode === "team" ? (
             <label className="projectFeedbackField">
-              <span>Parcel Number</span>
+              <span>{copy.parcelNumber}</span>
               <input
                 className="projectFeedbackInput"
                 type="password"
@@ -296,7 +335,7 @@ export function ProjectFeedbackAccess({
             type="submit"
             disabled={isSubmitting}
           >
-            {mode === "team" ? "Open as team member" : "Open as visitor"}
+            {mode === "team" ? copy.openTeam : copy.openVisitor}
           </button>
 
           {errorMessage ? (

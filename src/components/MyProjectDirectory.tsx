@@ -2,12 +2,18 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Eye, Pencil } from "lucide-react";
 
 import { useTypingPlaceholder } from "@/components/useTypingPlaceholder";
 import type { ProjectSummary, ProjectViewerRole } from "@/lib/projectFeedbackTypes";
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  type Locale,
+  withLocalePath,
+} from "@/lib/i18n";
 import {
   getProjectViewerEntryStorageKey,
   getProjectViewerRoleStorageKey,
@@ -16,14 +22,18 @@ import {
 
 type MyProjectDirectoryProps = {
   projects: ProjectSummary[];
+  locale?: Locale;
 };
 
 function projectStatusLabel(status: ProjectSummary["status"]) {
   return status === "approved" ? "Approved delivery" : "In review";
 }
 
-export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
+export function MyProjectDirectory({ projects, locale: layoutLocale }: MyProjectDirectoryProps) {
+  const pathname = usePathname();
   const router = useRouter();
+  const pathnameLocale = getLocaleFromPathname(pathname);
+  const locale = pathnameLocale ?? layoutLocale ?? DEFAULT_LOCALE;
   const passwordPlaceholder = useTypingPlaceholder(
     "use the team link to skip the parcel number.",
   );
@@ -92,7 +102,7 @@ export function MyProjectDirectory({ projects }: MyProjectDirectoryProps) {
         );
       }
 
-      router.push(`/myreview/${projectId}`);
+      router.push(withLocalePath(locale, `/myreview/${projectId}`));
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to open project.",

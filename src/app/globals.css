@@ -23553,6 +23553,51 @@ body:has(.dashboardPage),
   color: rgb(255 255 255 / 0.72);
 }
 
+.projectClientReferencesFolderRow[data-has-files="true"] .projectClientReferencesFolderButton {
+  background:
+    linear-gradient(135deg, rgb(221 247 231 / 0.96), rgb(175 226 198 / 0.9));
+  color: #155b38;
+  box-shadow: inset 0 0 0 1px rgb(42 132 82 / 0.14);
+}
+
+.projectClientReferencesFolderRow[data-has-files="true"] .projectClientReferencesFolderButton small {
+  color: #27734b;
+}
+
+.projectClientReferencesFolderRow[data-has-files="true"] .projectClientReferencesFolderButton:hover,
+.projectClientReferencesFolderRow[data-has-files="true"] .projectClientReferencesFolderButton[data-active="true"] {
+  background:
+    linear-gradient(135deg, #b9efca, #70c995);
+  color: #0b4328;
+  box-shadow:
+    inset 0 0 0 1px rgb(32 112 67 / 0.22),
+    0 7px 16px rgb(32 112 67 / 0.14);
+}
+
+.projectClientReferencesFolderRow[data-has-files="true"] .projectClientReferencesFolderButton[data-active="true"] small {
+  color: #155b38;
+}
+
+.projectClientReferencesFolderRow[data-all-documents="true"] .projectClientReferencesFolderButton {
+  margin-bottom: 4px;
+  background: linear-gradient(135deg, rgb(235 241 255 / 0.96), rgb(205 220 255 / 0.9));
+  color: #264b8a;
+  box-shadow: inset 0 0 0 1px rgb(63 105 194 / 0.13);
+}
+
+.projectClientReferencesFolderRow[data-all-documents="true"] .projectClientReferencesFolderButton small {
+  color: #4164a0;
+}
+
+.projectClientReferencesFolderRow[data-all-documents="true"] .projectClientReferencesFolderButton:hover,
+.projectClientReferencesFolderRow[data-all-documents="true"] .projectClientReferencesFolderButton[data-active="true"] {
+  background: linear-gradient(135deg, #dbe6ff, #aec6ff);
+  color: #173b7a;
+  box-shadow:
+    inset 0 0 0 1px rgb(63 105 194 / 0.2),
+    0 7px 16px rgb(63 105 194 / 0.14);
+}
+
 .projectClientReferencesFolderActions {
   display: inline-flex;
   gap: 2px;

@@ -9,25 +9,29 @@ import { DEFAULT_LOCALE, getLocaleFromPathname } from "@/lib/i18n";
 
 type SiteAssistantBubbleProps = {
   hasMobileMenu?: boolean;
+  locale?: AssistantLocale;
 };
 
 function buildCopy(locale: AssistantLocale) {
   return locale === "fr"
     ? {
         bubbleLabel: "Q&A",
-        dockLabel: "MyAssitant",
+      dockLabel: "MyAssistant",
         openAria: "Ouvrir l'assistant",
       }
     : {
         bubbleLabel: "Q&A",
-        dockLabel: "MyAssitant",
+      dockLabel: "MyAssistant",
         openAria: "Open assistant",
       };
 }
 
-export function SiteAssistantBubble({ hasMobileMenu = true }: SiteAssistantBubbleProps) {
+export function SiteAssistantBubble({
+  hasMobileMenu = true,
+  locale: layoutLocale,
+}: SiteAssistantBubbleProps) {
   const pathname = usePathname();
-  const locale = (getLocaleFromPathname(pathname) ?? DEFAULT_LOCALE) as AssistantLocale;
+  const locale = (getLocaleFromPathname(pathname) ?? layoutLocale ?? DEFAULT_LOCALE) as AssistantLocale;
   const copy = buildCopy(locale);
   const [isOpen, setIsOpen] = useState(false);
 

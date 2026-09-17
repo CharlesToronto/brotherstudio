@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import { ProjectFeedbackAccess } from "@/components/ProjectFeedbackAccess";
-import { getPreferredRequestLocale } from "@/lib/requestLocale";
+import { resolveLocaleParam } from "@/lib/localeParams";
 import {
   getProjectAccessCookieName,
   getProjectViewerRoleCookieName,
@@ -14,14 +14,14 @@ import { normalizeProjectViewerRole } from "@/lib/projectViewerIdentity";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-type MyReviewFeedbackPageProps = {
-  params: Promise<{ projectId: string }>;
+type LocalizedMyReviewFeedbackPageProps = {
+  params: Promise<{ locale: string; projectId: string }>;
   searchParams: Promise<{ viewer?: string | string[] }>;
 };
 
 export async function generateMetadata({
   params,
-}: MyReviewFeedbackPageProps): Promise<Metadata> {
+}: LocalizedMyReviewFeedbackPageProps): Promise<Metadata> {
   const { projectId } = await params;
 
   return {
@@ -34,12 +34,12 @@ export async function generateMetadata({
   };
 }
 
-export default async function MyReviewFeedbackPage({
+export default async function LocalizedMyReviewFeedbackPage({
   params,
   searchParams,
-}: MyReviewFeedbackPageProps) {
-  const locale = await getPreferredRequestLocale();
+}: LocalizedMyReviewFeedbackPageProps) {
   const { projectId } = await params;
+  const locale = await resolveLocaleParam(params);
   const resolvedSearchParams = await searchParams;
   const viewerParam = Array.isArray(resolvedSearchParams.viewer)
     ? resolvedSearchParams.viewer[0]
