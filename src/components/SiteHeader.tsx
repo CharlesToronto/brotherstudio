@@ -142,7 +142,7 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
     },
     {
       key: "book-meeting",
-      label: "Book a meeting",
+      label: locale === "fr" ? "Planifier un appel" : "Book a meeting",
       href: CALENDLY_MEETING_URL,
       kind: "anchor" as const,
       target: "_blank" as const,
@@ -225,7 +225,7 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
           target="_blank"
           rel="noreferrer"
         >
-          Book a meeting
+          {locale === "fr" ? "Planifier un appel" : "Book a meeting"}
         </a>
       </div>
 

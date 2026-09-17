@@ -4,6 +4,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Check,
+  Copy,
   Download,
   Eye,
   ExternalLink,
@@ -14,7 +16,6 @@ import {
   Grid2X2,
   Link2,
   List,
-  MoveRight,
   Pencil,
   Search,
   Trash2,
@@ -210,6 +211,8 @@ export function ProjectClientReferences({
         fileCount: "fichier(s)",
         noReferences: "Aucune référence",
         selectFolder: "Sélectionnez un dossier pour ajouter une référence.",
+        copyDocument: "Copier le document",
+        documentCopied: "Document copié",
       }
     : {
         title: "Client References",
@@ -261,6 +264,8 @@ export function ProjectClientReferences({
         fileCount: "file(s)",
         noReferences: "No references",
         selectFolder: "Select a folder before adding a reference.",
+        copyDocument: "Copy document",
+        documentCopied: "Document copied",
       };
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -289,6 +294,7 @@ export function ProjectClientReferences({
   const [isLoading, setIsLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [copiedFileId, setCopiedFileId] = useState<string | null>(null);
 
   const refreshReferences = useCallback(async () => {
     setIsLoading(true);
@@ -372,9 +378,7 @@ export function ProjectClientReferences({
     }
   };
 
-  const handleSelectFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(event.target.files ?? []);
-    event.currentTarget.value = "";
+  const prepareUploadDrafts = async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
     if (!activeFolderId || activeFolderId === ALL_DOCUMENTS_FOLDER_ID) {
       setErrorMessage(copy.selectFolder);
@@ -400,6 +404,35 @@ export function ProjectClientReferences({
     } finally {
       setIsPreparingUpload(false);
     }
+  };
+
+  const handleSelectFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files ?? []);
+    event.currentTarget.value = "";
+    void prepareUploadDrafts(selectedFiles);
+  };
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (
+      target?.closest("input, textarea, select, [contenteditable='true']")
+    ) {
+      return;
+    }
+
+    const pastedFiles = Array.from(event.clipboardData.files);
+    if (pastedFiles.length === 0) {
+      pastedFiles.push(
+        ...Array.from(event.clipboardData.items)
+          .filter((item) => item.kind === "file")
+          .map((item) => item.getAsFile())
+          .filter((file): file is File => file !== null),
+      );
+    }
+    if (pastedFiles.length === 0) return;
+
+    event.preventDefault();
+    void prepareUploadDrafts(pastedFiles);
   };
 
   const handleUpload = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -595,6 +628,41 @@ export function ProjectClientReferences({
     await runAction("delete-file", { fileId: file.id });
   };
 
+  const handleCopyFile = async (file: ProjectReferenceFile) => {
+    try {
+      if (
+        !isReferenceLink(file) &&
+        "ClipboardItem" in window &&
+        typeof navigator.clipboard?.write === "function"
+      ) {
+        const response = await fetch(file.url);
+        if (!response.ok) throw new Error("Unable to read the file.");
+        const blob = await response.blob();
+        const mimeType = blob.type || file.mimeType || "application/octet-stream";
+        await navigator.clipboard.write([
+          new ClipboardItem({ [mimeType]: blob }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(file.url);
+      }
+
+      setCopiedFileId(file.id);
+      window.setTimeout(() => {
+        setCopiedFileId((current) => (current === file.id ? null : current));
+      }, 1600);
+    } catch {
+      try {
+        await navigator.clipboard.writeText(file.url);
+        setCopiedFileId(file.id);
+        window.setTimeout(() => {
+          setCopiedFileId((current) => (current === file.id ? null : current));
+        }, 1600);
+      } catch {
+        setErrorMessage(copy.copyDocument);
+      }
+    }
+  };
+
   const renderPreview = (file: ProjectReferenceFile) =>
     isReferenceLink(file) ? (
       <span className="projectReferenceFileTypeIcon">
@@ -631,7 +699,10 @@ export function ProjectClientReferences({
   };
 
   return (
-    <section className="projectClientReferences" aria-labelledby="project-client-references-title">
+    <section
+      className="projectClientReferences"
+      aria-labelledby="project-client-references-title"
+    >
       <div className="projectClientReferencesHeader">
         <div>
           <p className="projectFeedbackEyebrow">MyReview™</p>
@@ -711,7 +782,11 @@ export function ProjectClientReferences({
           })}
         </aside>
 
-        <div className="projectClientReferencesContent">
+        <div
+          className="projectClientReferencesContent"
+          tabIndex={0}
+          onPaste={handlePaste}
+        >
           <div className="projectClientReferencesToolbar">
             <div className="projectClientReferencesCurrentFolder">
               <Folder aria-hidden="true" size={18} />
@@ -775,12 +850,23 @@ export function ProjectClientReferences({
                     <div className="projectClientReferenceMeta"><span>{file.filename}</span><span>{formatBytes(file.sizeBytes)}</span></div>
                     <div className="projectClientReferenceCardActions">
                       <label className="projectClientReferenceMove">
-                        <MoveRight aria-hidden="true" size={13} />
                         <span className="srOnly">{copy.move}</span>
                         <select value={file.folderId} onChange={(event) => void handleMoveFile(file.id, event.target.value)} aria-label={`${copy.move} ${file.title}`}>
                           {references.folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
                         </select>
                       </label>
+                      <button
+                        type="button"
+                        title={copiedFileId === file.id ? copy.documentCopied : copy.copyDocument}
+                        aria-label={`${copiedFileId === file.id ? copy.documentCopied : copy.copyDocument}: ${file.title}`}
+                        onClick={() => void handleCopyFile(file)}
+                      >
+                        {copiedFileId === file.id ? (
+                          <Check aria-hidden="true" size={14} />
+                        ) : (
+                          <Copy aria-hidden="true" size={14} />
+                        )}
+                      </button>
                       <button type="button" title={copy.rename} aria-label={`${copy.rename} ${file.title}`} onClick={() => handleEditFile(file)}><Pencil aria-hidden="true" size={14} /></button>
                       {isReferenceLink(file) ? (
                         <a href={file.url} target="_blank" rel="noreferrer" title={copy.openLink} aria-label={`${copy.openLink}: ${file.title}`}><ExternalLink aria-hidden="true" size={14} /></a>

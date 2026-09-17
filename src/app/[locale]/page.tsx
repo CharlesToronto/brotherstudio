@@ -54,10 +54,10 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
   const bookingCopy =
     locale === "fr"
       ? {
-          eyebrow: "Book a meeting",
+          eyebrow: "Planifier un appel",
           title: "Planifie un appel rapide.",
-          text: "Bloque un creneau en ligne et recois automatiquement le lien Google Meet pour discuter de ton projet.",
-          frameTitle: "Reservation Calendly BrotherStudio",
+          text: "Bloquez un créneau en ligne et recevez automatiquement le lien Google Meet pour discuter de votre projet.",
+          frameTitle: "Réservation Calendly BrotherStudio",
         }
       : {
           eyebrow: "Book a meeting",
@@ -69,8 +69,9 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
   return (
     <main className="siteMain">
       <HomeHeroHeaderController />
-      <HomeVideoHero />
+      <HomeVideoHero locale={locale} />
       <HomeGalleryExperience
+        locale={locale}
         items={items}
         filterLabels={{
           all: messages.home.projectFilterAllLabel,

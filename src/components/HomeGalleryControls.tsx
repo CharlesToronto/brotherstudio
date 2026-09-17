@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { CSSProperties } from "react";
+import type { Locale } from "@/lib/i18n";
 
 type SceneFilterOption<T extends string> = {
   key: T;
@@ -130,9 +131,11 @@ type MobileDisplayMode = "projects" | "grid";
 
 export function HomeMobileDisplayFilters({
   activeMode,
+  locale,
   onModeChange,
 }: {
   activeMode: MobileDisplayMode;
+  locale: Locale;
   onModeChange: (mode: MobileDisplayMode) => void;
 }) {
   return (
@@ -147,7 +150,7 @@ export function HomeMobileDisplayFilters({
         data-active={activeMode === "grid"}
         onClick={() => onModeChange("grid")}
       >
-        Grille
+        {locale === "fr" ? "Grille" : "Grid"}
       </button>
       <button
         type="button"
@@ -155,7 +158,7 @@ export function HomeMobileDisplayFilters({
         data-active={activeMode === "projects"}
         onClick={() => onModeChange("projects")}
       >
-        Projets
+        {locale === "fr" ? "Projets" : "Projects"}
       </button>
     </div>
   );

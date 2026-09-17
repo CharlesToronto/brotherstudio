@@ -3293,7 +3293,7 @@ html[data-theme="dark"] .siteLogoImageWhite {
   margin-right: 14px;
   padding: 0 14px;
   border: 1px solid #b41928;
-  border-radius: 0;
+  border-radius: 999px;
   background: #c61d2f;
   color: #fff;
   font-size: 10px;
@@ -23481,12 +23481,21 @@ body:has(.dashboardPage),
 }
 
 .projectClientReferencesFolders {
-  align-self: start;
+  align-self: stretch;
+  height: 100%;
+  box-sizing: border-box;
+  display: grid;
+  align-content: start;
+  gap: 8px;
   padding: 12px;
-  border: 1px solid rgb(127 127 127 / 0.16);
+  border: 1px solid rgb(74 119 205 / 0.22);
   border-radius: 18px;
-  background: rgb(255 255 255 / 0.54);
-  box-shadow: 0 12px 26px rgb(17 17 17 / 0.08);
+  background:
+    radial-gradient(circle at 15% 0%, rgb(255 255 255 / 0.72), transparent 34%),
+    linear-gradient(160deg, #eef5ff 0%, #dbe9ff 48%, #c5dafa 100%);
+  box-shadow:
+    0 16px 30px rgb(36 78 145 / 0.14),
+    inset 0 1px 0 rgb(255 255 255 / 0.72);
 }
 
 .projectClientReferencesFoldersHeader {
@@ -23834,12 +23843,16 @@ body:has(.dashboardPage),
 }
 
 .projectClientReferenceCardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 5px;
 }
 
 .projectClientReferenceCardActions button,
 .projectClientReferenceCardActions a {
+  flex: 0 0 29px;
   width: 29px;
   height: 29px;
   border-radius: 999px;
@@ -23855,15 +23868,16 @@ body:has(.dashboardPage),
 }
 
 .projectClientReferenceMove {
-  display: inline-flex;
+  display: flex;
+  flex: 0 0 100%;
   align-items: center;
-  gap: 4px;
-  margin-inline-end: auto;
+  justify-content: flex-end;
   color: #888;
 }
 
 .projectClientReferenceMove select {
-  max-width: 110px;
+  width: 100%;
+  max-width: none;
   padding: 6px 8px;
 }
 
@@ -24024,7 +24038,8 @@ body:has(.dashboardPage),
   }
 
   .projectClientReferenceMove select {
-    max-width: 92px;
+    width: 100%;
+    max-width: none;
   }
 }
 

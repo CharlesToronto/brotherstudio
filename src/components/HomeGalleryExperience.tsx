@@ -32,6 +32,7 @@ import { PROJECT_OPTIONS, type GalleryProjectKey } from "@/lib/galleryProjects";
 import type { GalleryItem } from "@/lib/galleryStore";
 
 type HomeGalleryExperienceProps = {
+  locale: Locale;
   items: GalleryItem[];
   filterLabels: {
     all: string;
@@ -79,114 +80,208 @@ type SalesPlanPreview = {
   alt: string;
 };
 
-const HOME_CAPABILITIES: Array<{
+type HomeCapability = {
   label: string;
   icon: LucideIcon;
   description: string;
-}> = [
-  {
-    label: "Branding Project",
-    icon: Building2,
-    description:
-      "A clear visual identity for your project, with naming, positioning, and art direction aligned to the audience you want to attract.",
-  },
-  {
-    label: "Images & Videos",
-    icon: Clapperboard,
-    description:
-      "High-end CGI imagery and cinematic content designed to present the development with clarity, atmosphere, and commercial appeal.",
-  },
-  {
-    label: "Sales Plan",
-    icon: BarChart3,
-    description:
-      "A structured sales narrative that organizes the offer, highlights key value points, and supports a smoother conversion journey.",
-  },
-  {
-    label: "Customs Website",
-    icon: Globe,
-    description:
-      "A dedicated website built around your project, tailored to showcase the product, capture attention, and drive qualified inquiries.",
-  },
-  {
-    label: "Meta Advertising",
-    icon: Megaphone,
-    description:
-      "Targeted paid campaigns across Meta platforms to generate awareness, reach the right segments, and feed the sales pipeline.",
-  },
-  {
-    label: "Lead Generation",
-    icon: Users,
-    description:
-      "Lead capture systems and acquisition flows designed to transform interest into measurable contacts ready for follow-up.",
-  },
-];
+};
 
-const HOME_DEVELOPER_REASONS: Array<{
+function getHomeCapabilities(locale: Locale): HomeCapability[] {
+  return locale === "fr"
+    ? [
+        {
+          label: "Image de marque",
+          icon: Building2,
+          description:
+            "Une identité visuelle claire pour votre projet, avec un nom, un positionnement et une direction artistique adaptés à votre audience.",
+        },
+        {
+          label: "Images et vidéos",
+          icon: Clapperboard,
+          description:
+            "Des images 3D haut de gamme et des contenus cinématographiques qui présentent le projet avec clarté, émotion et impact commercial.",
+        },
+        {
+          label: "Plan de vente",
+          icon: BarChart3,
+          description:
+            "Un récit commercial structuré qui organise l’offre, met en avant ses atouts et facilite le parcours vers la conversion.",
+        },
+        {
+          label: "Site web sur mesure",
+          icon: Globe,
+          description:
+            "Un site dédié à votre projet, conçu pour présenter le produit, capter l’attention et générer des demandes qualifiées.",
+        },
+        {
+          label: "Publicité Meta",
+          icon: Megaphone,
+          description:
+            "Des campagnes ciblées sur les plateformes Meta pour développer la notoriété, toucher les bons segments et alimenter vos ventes.",
+        },
+        {
+          label: "Génération de prospects",
+          icon: Users,
+          description:
+            "Des systèmes de capture et d’acquisition qui transforment l’intérêt en contacts mesurables prêts à être accompagnés.",
+        },
+      ]
+    : [
+        {
+          label: "Project Branding",
+          icon: Building2,
+          description:
+            "A clear visual identity for your project, with naming, positioning, and art direction aligned to the audience you want to attract.",
+        },
+        {
+          label: "Images & Videos",
+          icon: Clapperboard,
+          description:
+            "High-end CGI imagery and cinematic content designed to present the development with clarity, atmosphere, and commercial appeal.",
+        },
+        {
+          label: "Sales Plan",
+          icon: BarChart3,
+          description:
+            "A structured sales narrative that organizes the offer, highlights key value points, and supports a smoother conversion journey.",
+        },
+        {
+          label: "Custom Website",
+          icon: Globe,
+          description:
+            "A dedicated website built around your project, tailored to showcase the product, capture attention, and drive qualified inquiries.",
+        },
+        {
+          label: "Meta Advertising",
+          icon: Megaphone,
+          description:
+            "Targeted paid campaigns across Meta platforms to generate awareness, reach the right segments, and feed the sales pipeline.",
+        },
+        {
+          label: "Lead Generation",
+          icon: Users,
+          description:
+            "Lead capture systems and acquisition flows designed to transform interest into measurable contacts ready for follow-up.",
+        },
+      ];
+}
+
+type HomeDeveloperReason = {
   title: string;
   description: string;
   icon: LucideIcon;
-}> = [
-  {
-    title: "Launch Faster",
-    description:
-      "Bring your development to market with everything ready for a successful launch.",
-    icon: Rocket,
-  },
-  {
-    title: "Generate Qualified Buyers",
-    description:
-      "Attract buyers actively looking for new developments through targeted digital marketing.",
-    icon: Gem,
-  },
-  {
-    title: "One Team. One Strategy.",
-    description:
-      "Branding, CGI, websites and advertising working together from day one.",
-    icon: Handshake,
-  },
-];
+};
 
-const HOME_PROCESS_STEPS = [
-  {
-    title: "Project Branding",
-    description: "Position the development with a clear identity, message, and visual direction.",
-  },
-  {
-    title: "Images / Videos",
-    description: "Create premium visuals that make the project feel real before construction.",
-  },
-  {
-    title: "Website",
-    description: "Build a sales-focused destination that presents the offer and captures demand.",
-  },
-  {
-    title: "Meta Campaigns",
-    description: "Launch targeted campaigns that put the project in front of the right audience.",
-  },
-  {
-    title: "Qualified Buyers",
-    description: "Filter interest into serious leads ready for commercial follow-up.",
-  },
-  {
-    title: "Sales Partner (Optional)",
-    description: "Support the sales cycle with assets, data, and a coherent launch system.",
-  },
-] as const;
+function getHomeDeveloperReasons(locale: Locale): HomeDeveloperReason[] {
+  return locale === "fr"
+    ? [
+        {
+          title: "Lancez plus vite",
+          description:
+            "Mettez votre projet sur le marché avec tout ce qu’il faut pour réussir son lancement.",
+          icon: Rocket,
+        },
+        {
+          title: "Attirez des acheteurs qualifiés",
+          description:
+            "Touchez les acheteurs qui recherchent activement de nouveaux projets grâce à un marketing numérique ciblé.",
+          icon: Gem,
+        },
+        {
+          title: "Une équipe. Une stratégie.",
+          description:
+            "Image de marque, 3D, sites web et publicité réunis autour d’une même stratégie dès le premier jour.",
+          icon: Handshake,
+        },
+      ]
+    : [
+        {
+          title: "Launch Faster",
+          description:
+            "Bring your development to market with everything ready for a successful launch.",
+          icon: Rocket,
+        },
+        {
+          title: "Generate Qualified Buyers",
+          description:
+            "Attract buyers actively looking for new developments through targeted digital marketing.",
+          icon: Gem,
+        },
+        {
+          title: "One Team. One Strategy.",
+          description:
+            "Branding, CGI, websites and advertising working together from day one.",
+          icon: Handshake,
+        },
+      ];
+}
 
-const HOME_SALES_PLANS: SalesPlanPreview[] = Array.from({ length: 11 }, (_, index) => {
-  const fileNumber = index + 2;
-  return {
-    title: `Plan de vente ${index + 1}`,
-    image: `/gallery/sales-plans/${fileNumber}.png`,
-    alt: `Plan de vente ${index + 1}`,
-  };
-});
+function getHomeProcessSteps(locale: Locale) {
+  return locale === "fr"
+    ? [
+        { title: "Image de marque", description: "Positionnez le projet avec une identité, un message et une direction visuelle clairs." },
+        { title: "Images / Vidéos", description: "Créez des visuels premium qui rendent le projet concret avant même sa construction." },
+        { title: "Site web", description: "Construisez une destination commerciale qui présente l’offre et capte la demande." },
+        { title: "Campagnes Meta", description: "Lancez des campagnes ciblées pour présenter le projet à la bonne audience." },
+        { title: "Acheteurs qualifiés", description: "Transformez l’intérêt en prospects sérieux prêts pour le suivi commercial." },
+        { title: "Partenaire de vente (optionnel)", description: "Soutenez le cycle de vente avec des outils, des données et un système de lancement cohérent." },
+      ]
+    : [
+        { title: "Project Branding", description: "Position the development with a clear identity, message, and visual direction." },
+        { title: "Images / Videos", description: "Create premium visuals that make the project feel real before construction." },
+        { title: "Website", description: "Build a sales-focused destination that presents the offer and captures demand." },
+        { title: "Meta Campaigns", description: "Launch targeted campaigns that put the project in front of the right audience." },
+        { title: "Qualified Buyers", description: "Filter interest into serious leads ready for commercial follow-up." },
+        { title: "Sales Partner (Optional)", description: "Support the sales cycle with assets, data, and a coherent launch system." },
+      ];
+}
 
-const HOME_GALLERY_VIDEOS = [
-  { src: "/videos/bs-maretset-2.mp4", label: "Maretset video" },
-  { src: "/videos/bs-ads-video.mp4", label: "BS Ads video" },
-] as const;
+function getHomeSalesPlans(locale: Locale): SalesPlanPreview[] {
+  return Array.from({ length: 11 }, (_, index) => {
+    const fileNumber = index + 2;
+    const label = locale === "fr" ? "Plan de vente" : "Sales plan";
+    return {
+      title: `${label} ${index + 1}`,
+      image: `/gallery/sales-plans/${fileNumber}.png`,
+      alt: `${label} ${index + 1}`,
+    };
+  });
+}
+
+function getHomeGalleryVideos(locale: Locale) {
+  return [
+    {
+      src: "/videos/bs-maretset-2.mp4",
+      label: locale === "fr" ? "Vidéo Maretset" : "Maretset video",
+    },
+    {
+      src: "/videos/bs-ads-video.mp4",
+      label: locale === "fr" ? "Vidéo publicitaire Brother Studio" : "Brother Studio advertising video",
+    },
+  ] as const;
+}
+
+function getLocalizedGalleryItems(items: GalleryItem[], locale: Locale): GalleryItem[] {
+  if (locale !== "fr") return items;
+
+  const replacements: Array<[string, string]> = [
+    ["Living room", "Salon"],
+    ["Exterior", "Extérieur"],
+    ["Bedroom", "Chambre"],
+    ["Bed room", "Chambre"],
+    ["Kitchen", "Cuisine"],
+    ["Bathroom", "Salle de bain"],
+    ["Focus & Ambiance", "Focus et ambiance"],
+  ];
+
+  return items.map((item) => ({
+    ...item,
+    architect: replacements.reduce(
+      (caption, [source, target]) => caption.replaceAll(source, target),
+      item.architect,
+    ),
+  }));
+}
 
 function getWebsitePreviews(locale: Locale): WebsitePreview[] {
   const mesangeHref = withLocalePath(locale, "/myexperience");
@@ -210,7 +305,7 @@ function getWebsitePreviews(locale: Locale): WebsitePreview[] {
       alt: locale === "fr" ? "Apercu du site de vente Maretset" : "Preview of the Maretset sales website",
     },
     {
-      title: "Coming soon",
+      title: locale === "fr" ? "Bientôt disponible" : "Coming soon",
       href: websiteHref,
       image: "/mywebsite-coming-soon-cover.webp",
       alt:
@@ -370,12 +465,20 @@ export function HomeProjectMarquee({
 }
 
 export function HomeGalleryExperience({
+  locale: pageLocale,
   items,
   filterLabels,
   sceneFilterLabels,
 }: HomeGalleryExperienceProps) {
   const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname) ?? "en";
+  const locale = pageLocale ?? getLocaleFromPathname(pathname) ?? "en";
+  const isFrench = locale === "fr";
+  const capabilities = getHomeCapabilities(locale);
+  const developerReasons = getHomeDeveloperReasons(locale);
+  const processSteps = getHomeProcessSteps(locale);
+  const salesPlans = getHomeSalesPlans(locale);
+  const galleryVideos = getHomeGalleryVideos(locale);
+  const localizedItems = getLocalizedGalleryItems(items, locale);
   const [isMobileLayout, setIsMobileLayout] = useState(false);
   const [mobileDisplayMode, setMobileDisplayMode] = useState<MobileDisplayMode>("grid");
   const [activePrimaryTab, setActivePrimaryTab] = useState<GalleryPrimaryTabKey>("images");
@@ -390,8 +493,8 @@ export function HomeGalleryExperience({
   const primaryTabs = [
     { key: "images", label: "Images" },
     { key: "videos", label: "Videos" },
-    { key: "sales-plans", label: "Plan de vente" },
-    { key: "website", label: "Website" },
+    { key: "sales-plans", label: isFrench ? "Plans de vente" : "Sales plans" },
+    { key: "website", label: isFrench ? "Sites web" : "Websites" },
   ] as const;
   const sceneFilters = [
     { key: "all", label: sceneFilterLabels.all },
@@ -404,14 +507,14 @@ export function HomeGalleryExperience({
   ] as const;
   const availableProjects = PROJECT_OPTIONS.filter((option) =>
     ALWAYS_VISIBLE_MARQUEE_PROJECT_KEYS.has(option.key) ||
-    items.some((item) => item.project === option.key),
+    localizedItems.some((item) => item.project === option.key),
   );
   const websitePreviews = getWebsitePreviews(locale);
   const effectiveActiveProject = isMobileLayout ? "all" : activeProject;
   const projectFilteredItems =
     effectiveActiveProject === "all"
-      ? items
-      : items.filter((item) => item.project === effectiveActiveProject);
+      ? localizedItems
+      : localizedItems.filter((item) => item.project === effectiveActiveProject);
   const availableSceneFilters = sceneFilters.filter(
     (filter) =>
       filter.key === "all" || projectFilteredItems.some((item) => getSceneFilterForItem(item) === filter.key),
@@ -617,13 +720,21 @@ export function HomeGalleryExperience({
           aria-labelledby="home-capabilities-title"
         >
           <div className="homeCapabilitiesIntro">
-            <p className="homeCapabilitiesKicker">We do it for you</p>
+            <p className="homeCapabilitiesKicker">
+              {isFrench ? "Nous nous en chargeons pour vous" : "We do it for you"}
+            </p>
             <h2 id="home-capabilities-title" className="homeCapabilitiesTitle">
-              Everything you need to sell your development
+              {isFrench
+                ? "Tout ce qu’il vous faut pour vendre votre projet"
+                : "Everything you need to sell your development"}
             </h2>
           </div>
-          <div className="homeCapabilitiesRail" role="list" aria-label="Development marketing services">
-            {HOME_CAPABILITIES.map(({ label, icon: Icon, description }) => (
+          <div
+            className="homeCapabilitiesRail"
+            role="list"
+            aria-label={isFrench ? "Services de marketing immobilier" : "Development marketing services"}
+          >
+            {capabilities.map(({ label, icon: Icon, description }) => (
               <article key={label} className="homeCapabilitiesItem" role="listitem">
                 <span className="homeCapabilitiesIcon" aria-hidden="true">
                   <Icon size={32} strokeWidth={1.8} />
@@ -640,13 +751,15 @@ export function HomeGalleryExperience({
           aria-labelledby="home-developer-value-title"
         >
           <div className="homeDeveloperValueIntro">
-            <p className="homeDeveloperValueKicker">Business impact</p>
+            <p className="homeDeveloperValueKicker">
+              {isFrench ? "Impact commercial" : "Business impact"}
+            </p>
             <h2 id="home-developer-value-title" className="homeDeveloperValueTitle">
-              Why Developers Choose Brother Studio
+              {isFrench ? "Pourquoi les promoteurs choisissent Brother Studio" : "Why Developers Choose Brother Studio"}
             </h2>
           </div>
           <div className="homeDeveloperValueGrid" role="list">
-            {HOME_DEVELOPER_REASONS.map(({ title, description }, index) => (
+            {developerReasons.map(({ title, description }, index) => (
               <article key={title} className="homeDeveloperValueCard" role="listitem">
                 <span className="homeDeveloperValueIndex" aria-hidden="true">
                   {String(index + 1).padStart(2, "0")}
@@ -668,12 +781,12 @@ export function HomeGalleryExperience({
       >
         <div className="homeGalleryIntro">
           <div className="homeGalleryHeading">
-            <h2 className="homeGalleryTitle">Gallery</h2>
+            <h2 className="homeGalleryTitle">{isFrench ? "Galerie" : "Gallery"}</h2>
           </div>
 
           <HomeGalleryPrimaryTabs
             activeTab={activePrimaryTab}
-            ariaLabel="Gallery sections"
+            ariaLabel={isFrench ? "Sections de la galerie" : "Gallery sections"}
             tabs={primaryTabs}
             onTabChange={setActivePrimaryTab}
           />
@@ -692,7 +805,7 @@ export function HomeGalleryExperience({
           <div id="home-gallery-grid">
             {isVideoFilterActive ? (
               <div className="homeVideoGallery" role="list" aria-label={sceneFilterLabels.video}>
-                {HOME_GALLERY_VIDEOS.map((video) => (
+                {galleryVideos.map((video) => (
                   <article key={video.src} className="homeVideoGalleryCard" role="listitem">
                     <video
                       src={video.src}
@@ -705,8 +818,11 @@ export function HomeGalleryExperience({
                 ))}
               </div>
             ) : isSalesPlansTabActive ? (
-              <section className="homeSalesPlansGallery" aria-label="Plan de vente">
-            {HOME_SALES_PLANS.map((plan) => (
+              <section
+                className="homeSalesPlansGallery"
+                aria-label={isFrench ? "Plans de vente" : "Sales plans"}
+              >
+            {salesPlans.map((plan) => (
               <article key={plan.image} className="homeSalesPlanCard">
                 <Image
                   src={plan.image}
@@ -720,7 +836,10 @@ export function HomeGalleryExperience({
             ))}
           </section>
         ) : isWebsiteTabActive ? (
-          <section className="homeWebsiteGallery" aria-label="Website previews">
+          <section
+            className="homeWebsiteGallery"
+            aria-label={isFrench ? "Aperçus des sites web" : "Website previews"}
+          >
             {websitePreviews.map((preview, index) => (
               <article
                 key={`${preview.title}-${index}`}
@@ -764,6 +883,7 @@ export function HomeGalleryExperience({
           <>
             <HomeMobileDisplayFilters
               activeMode={mobileDisplayMode}
+              locale={locale}
               onModeChange={setMobileDisplayMode}
             />
 
@@ -850,7 +970,7 @@ export function HomeGalleryExperience({
                     <button
                       type="button"
                       className="galleryRevealButton"
-                      aria-label="Show all gallery images"
+                      aria-label={isFrench ? "Afficher toutes les images" : "Show all gallery images"}
                       onClick={() => setIsMobileGalleryExpanded(true)}
                     >
                       <GalleryPlusIcon />
@@ -863,7 +983,7 @@ export function HomeGalleryExperience({
                     <button
                       type="button"
                       className="galleryCollapseButton"
-                      aria-label="Reduce gallery"
+                      aria-label={isFrench ? "Réduire la galerie" : "Reduce gallery"}
                       onClick={() => setIsMobileGalleryExpanded(false)}
                     >
                       <GalleryMinusIcon />
@@ -899,7 +1019,7 @@ export function HomeGalleryExperience({
           <button
             type="button"
             className="lightboxClose"
-            aria-label="Close slideshow"
+            aria-label={isFrench ? "Fermer le diaporama" : "Close slideshow"}
             onClick={(event) => {
               event.stopPropagation();
               setActiveMobileItem(null);
@@ -911,7 +1031,7 @@ export function HomeGalleryExperience({
             <button
               type="button"
               className="lightboxArrow lightboxArrowLeft"
-              aria-label="Previous image"
+              aria-label={isFrench ? "Image précédente" : "Previous image"}
               onClick={(event) => {
                 event.stopPropagation();
                 const previousIndex =
@@ -935,7 +1055,7 @@ export function HomeGalleryExperience({
             <div
               className="lightboxPreviewRail"
               role="list"
-              aria-label="Image previews"
+              aria-label={isFrench ? "Aperçus des images" : "Image previews"}
               onClick={(event) => event.stopPropagation()}
             >
               {mobileLightboxItems.map((item, index) => (
@@ -945,7 +1065,7 @@ export function HomeGalleryExperience({
                   className="lightboxPreviewButton"
                   data-active={item.id === activeMobileItem.id ? "true" : "false"}
                   role="listitem"
-                  aria-label={`Open preview ${index + 1}`}
+                  aria-label={isFrench ? `Ouvrir l’aperçu ${index + 1}` : `Open preview ${index + 1}`}
                   onClick={() => setActiveMobileItem(item)}
                   ref={(node) => {
                     if (node) {
@@ -971,7 +1091,7 @@ export function HomeGalleryExperience({
             <button
               type="button"
               className="lightboxArrow lightboxArrowRight"
-              aria-label="Next image"
+              aria-label={isFrench ? "Image suivante" : "Next image"}
               onClick={(event) => {
                 event.stopPropagation();
                 const nextIndex = (activeMobileItemIndex + 1) % mobileLightboxItems.length;
@@ -987,15 +1107,17 @@ export function HomeGalleryExperience({
       <section className="homeProcessSection" aria-labelledby="home-process-title">
         <div className="homeProcessHeader">
           <h2 id="home-process-title" className="homeProcessTitle">
-            Our Process
+            {isFrench ? "Notre processus" : "Our Process"}
           </h2>
           <p className="homeProcessLead">
-            A complete launch system from positioning to qualified buyers.
+            {isFrench
+              ? "Un système de lancement complet, du positionnement aux acheteurs qualifiés."
+              : "A complete launch system from positioning to qualified buyers."}
           </p>
         </div>
 
         <div className="homeProcessList" role="list">
-          {HOME_PROCESS_STEPS.map((step, index) => (
+          {processSteps.map((step, index) => (
             <div key={step.title} className="homeProcessStepGroup" role="listitem">
               <button
                 type="button"
@@ -1017,7 +1139,7 @@ export function HomeGalleryExperience({
                 </span>
                 <span className="homeProcessStepSignal" aria-hidden="true" />
               </button>
-              {index < HOME_PROCESS_STEPS.length - 1 ? (
+              {index < processSteps.length - 1 ? (
                 <span className="homeProcessArrow" aria-hidden="true">
                   →
                 </span>

@@ -13,7 +13,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   const footerLabels =
     locale === "fr"
       ? {
-          studio: "High-End Visualizations",
+          studio: "Visualisations haut de gamme",
           navigation: "Navigation",
           access: "Mystudio",
           admin: "Admin",
