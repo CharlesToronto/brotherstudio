@@ -176,41 +176,41 @@ function getHomeDeveloperReasons(locale: Locale): HomeDeveloperReason[] {
   return locale === "fr"
     ? [
         {
-          title: "Lancez plus vite",
+          title: "Lancez votre projet plus vite",
           description:
-            "Mettez votre projet sur le marché avec tout ce qu’il faut pour réussir son lancement.",
+            "Tous les outils marketing réunis pour préparer un lancement efficace et cohérent.",
           icon: Rocket,
         },
         {
           title: "Attirez des acheteurs qualifiés",
           description:
-            "Touchez les acheteurs qui recherchent activement de nouveaux projets grâce à un marketing numérique ciblé.",
+            "Des visuels et des campagnes ciblées pour toucher les bonnes personnes au bon moment.",
           icon: Gem,
         },
         {
           title: "Une équipe. Une stratégie.",
           description:
-            "Image de marque, 3D, sites web et publicité réunis autour d’une même stratégie dès le premier jour.",
+            "Image de marque, 3D, site web et publicité réunis autour d’une même vision.",
           icon: Handshake,
         },
       ]
     : [
         {
-          title: "Launch Faster",
+          title: "Launch Your Project Faster",
           description:
-            "Bring your development to market with everything ready for a successful launch.",
+            "All your marketing tools in one place for an efficient, consistent launch.",
           icon: Rocket,
         },
         {
           title: "Generate Qualified Buyers",
           description:
-            "Attract buyers actively looking for new developments through targeted digital marketing.",
+            "Targeted visuals and campaigns to reach the right people at the right time.",
           icon: Gem,
         },
         {
           title: "One Team. One Strategy.",
           description:
-            "Branding, CGI, websites and advertising working together from day one.",
+            "Branding, 3D, website, and advertising built around one clear vision.",
           icon: Handshake,
         },
       ];
@@ -639,16 +639,14 @@ export function HomeGalleryExperience({
     const heading = galleryHeadingRef.current;
     if (!heading) return;
 
+    let targetProgress = 0;
+    let currentProgress = 0;
+    let hasMeasured = false;
     let frame = 0;
     const root = document.documentElement;
     const body = document.body;
 
-    const syncGalleryBackground = () => {
-      frame = 0;
-      const rect = heading.getBoundingClientRect();
-      const start = window.innerHeight * 0.62;
-      const end = window.innerHeight * 0.42;
-      const progress = Math.min(1, Math.max(0, (start - rect.top) / (start - end)));
+    const paintGalleryBackground = (progress: number) => {
       const channel = Math.round(progress * 255);
       const textChannel = progress > 0.58 ? 17 : 255;
       const borderAlpha = 0.08 + progress * 0.08;
@@ -667,14 +665,48 @@ export function HomeGalleryExperience({
       heading.style.setProperty("--home-gallery-border-alpha", borderAlpha.toFixed(3));
     };
 
-    const requestSync = () => {
+    const animateGalleryBackground = () => {
+      frame = 0;
+      const distance = targetProgress - currentProgress;
+      currentProgress += distance * 0.085;
+
+      if (Math.abs(distance) < 0.001) {
+        currentProgress = targetProgress;
+      }
+
+      paintGalleryBackground(currentProgress);
+
+      if (currentProgress !== targetProgress) {
+        frame = window.requestAnimationFrame(animateGalleryBackground);
+      }
+    };
+
+    const syncGalleryBackground = () => {
+      const rect = heading.getBoundingClientRect();
+      const start = window.innerHeight * 0.62;
+      const end = window.innerHeight * 0.42;
+      targetProgress = Math.min(1, Math.max(0, (start - rect.top) / (start - end)));
+
+      if (!hasMeasured) {
+        currentProgress = targetProgress;
+        hasMeasured = true;
+        paintGalleryBackground(currentProgress);
+        return;
+      }
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        currentProgress = targetProgress;
+        paintGalleryBackground(currentProgress);
+        return;
+      }
+
       if (frame) return;
-      frame = window.requestAnimationFrame(syncGalleryBackground);
+      frame = window.requestAnimationFrame(animateGalleryBackground);
     };
 
     syncGalleryBackground();
-    window.addEventListener("scroll", requestSync, { passive: true });
-    window.addEventListener("resize", requestSync);
+    window.addEventListener("scroll", syncGalleryBackground, { passive: true });
+    window.addEventListener("resize", syncGalleryBackground);
 
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
@@ -682,8 +714,8 @@ export function HomeGalleryExperience({
       root.style.removeProperty("--home-gallery-bg-rgb");
       body.style.removeProperty("--site-background-rgb");
       body.style.removeProperty("--home-gallery-bg-rgb");
-      window.removeEventListener("scroll", requestSync);
-      window.removeEventListener("resize", requestSync);
+      window.removeEventListener("scroll", syncGalleryBackground);
+      window.removeEventListener("resize", syncGalleryBackground);
     };
   }, []);
 
@@ -755,7 +787,7 @@ export function HomeGalleryExperience({
               {isFrench ? "Impact commercial" : "Business impact"}
             </p>
             <h2 id="home-developer-value-title" className="homeDeveloperValueTitle">
-              {isFrench ? "Pourquoi les promoteurs choisissent Brother Studio" : "Why Developers Choose Brother Studio"}
+              {isFrench ? "Pourquoi les promoteurs nous choisissent" : "Why Developers Choose Us"}
             </h2>
           </div>
           <div className="homeDeveloperValueGrid" role="list">

@@ -65,6 +65,32 @@ body:has(.homeBlurWordSection) {
     padding-right 260ms ease;
 }
 
+@keyframes site-route-enter {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translate3d(0, 14px, 0) scale(0.996);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.siteChrome > main {
+  animation: site-route-enter 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, filter, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .siteChrome > main {
+    animation: none;
+    will-change: auto;
+  }
+}
+
 .siteShell {
   display: flex;
   flex-direction: column;
@@ -9945,6 +9971,10 @@ html[data-theme="dark"] .homeBookingIntro span {
   display: grid;
   justify-items: start;
   gap: 14px;
+}
+
+.siteAssistantHidden {
+  display: none !important;
 }
 
 .siteAssistantBubbleButton {

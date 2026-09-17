@@ -49,7 +49,8 @@ export function SiteAssistantBubble({
 
   return (
     <div
-      className="siteAssistant"
+      className="siteAssistant siteAssistantHidden"
+      hidden
       data-open={isOpen ? "true" : "false"}
       data-mobile-menu={hasMobileMenu ? "true" : "false"}
     >
