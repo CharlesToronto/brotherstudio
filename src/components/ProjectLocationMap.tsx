@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ExternalLink, Globe2, MapPinned, Search } from "lucide-react";
+import { ChevronDown, ExternalLink, Globe2, MapPinned, Search } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { normalizeGoogleMapsEmbedUrl } from "@/lib/googleMapsEmbed";
 import { MaretsetWeather } from "@/components/MaretsetWeather";
@@ -291,7 +291,13 @@ export function ProjectLocationMap({
 
   return (
     <section className="projectLocationMap">
-      <div className="projectLocationMapControls">
+      <details className="projectLocationMapEditors" open>
+        <summary className="projectLocationMapEditorsSummary">
+          <span>{isFrench ? "Modifier la localisation" : "Edit project location"}</span>
+          <ChevronDown aria-hidden="true" size={16} />
+        </summary>
+
+        <div className="projectLocationMapControls">
         <div className="projectLocationMapAddressEditor">
           <label htmlFor="project-map-address" className="projectLocationMapEmbedLabel">{copy.addressLabel}</label>
           <form className="projectLocationMapSearch" onSubmit={(event) => {
@@ -332,7 +338,8 @@ export function ProjectLocationMap({
             </div>
           ) : null}
         </div>
-      </div>
+        </div>
+      </details>
 
       {suggestions.length > 0 ? (
         <div className="projectLocationMapSuggestions" role="listbox" aria-label={copy.suggestions}>

@@ -1,7 +1,9 @@
-import Image from "next/image";
-import Link from "next/link";
 import type { Metadata } from "next";
 
+import {
+  MyStudioToolsCarousel,
+  type MyStudioTool,
+} from "@/components/MyStudioToolsCarousel";
 import { getLanguageAlternates, type Locale, withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
 
@@ -9,15 +11,7 @@ type LocalePageProps = {
   params: Promise<{ locale: string }>;
 };
 
-type StudioTool = {
-  name: string;
-  description: string;
-  href: string;
-  external?: boolean;
-  visual: "review" | "fileflow" | "wallis";
-};
-
-function getStudioTools(locale: Locale): StudioTool[] {
+function getStudioTools(locale: Locale): MyStudioTool[] {
   return [
     {
       name: "MyReview™",
@@ -75,45 +69,6 @@ export async function generateMetadata({ params }: LocalePageProps): Promise<Met
   };
 }
 
-function ToolVisual({ type }: { type: StudioTool["visual"] }) {
-  if (type === "review") {
-    return (
-      <div className="myStudioVisual myStudioVisualReview">
-        <Image
-          src="/myreview-cover-v2.webp"
-          alt=""
-          fill
-          sizes="(max-width: 780px) 100vw, 32vw"
-        />
-      </div>
-    );
-  }
-
-  if (type === "fileflow") {
-    return (
-      <div className="myStudioVisual myStudioVisualFileflow" aria-hidden="true">
-        <Image
-          src="/fileflow-cover.webp"
-          alt=""
-          fill
-          sizes="(max-width: 780px) 100vw, 32vw"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="myStudioVisual myStudioVisualWallis" aria-hidden="true">
-      <Image
-        src="/mywallis-cover.webp"
-        alt=""
-        fill
-        sizes="(max-width: 780px) 100vw, 32vw"
-      />
-    </div>
-  );
-}
-
 export default async function MyStudioPage({ params }: LocalePageProps) {
   const locale = await resolveLocaleParam(params);
   const isFrench = locale === "fr";
@@ -128,40 +83,7 @@ export default async function MyStudioPage({ params }: LocalePageProps) {
           <span>{isFrench ? "Vos outils. Un seul espace." : "Your tools. One space."}</span>
         </header>
 
-        <div className="myStudioGrid">
-          {tools.map((tool) => {
-            const card = (
-              <>
-                <ToolVisual type={tool.visual} />
-                <div className="myStudioCardContent">
-                  <div>
-                    <h2>{tool.name}</h2>
-                    <p>{tool.description}</p>
-                  </div>
-                  <span className="myStudioDiscover">
-                    {isFrench ? "Découvrir" : "Discover"}
-                  </span>
-                </div>
-              </>
-            );
-
-            return tool.external ? (
-              <a
-                key={tool.name}
-                className="myStudioCard"
-                href={tool.href}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {card}
-              </a>
-            ) : (
-              <Link key={tool.name} className="myStudioCard" href={tool.href}>
-                {card}
-              </Link>
-            );
-          })}
-        </div>
+        <MyStudioToolsCarousel tools={tools} isFrench={isFrench} />
       </section>
     </main>
   );

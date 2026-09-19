@@ -412,6 +412,7 @@ export function ProjectFeedbackWorkspace({
 
     return reviewCount === 0 && approvedCount > 0 ? "approved" : "review";
   });
+  const workspaceTabsRef = useRef<HTMLDivElement | null>(null);
   const previousLatestVersionRef = useRef<number | null>(
     initialProject.latestVersion > 0 ? initialProject.latestVersion : null,
   );
@@ -529,6 +530,13 @@ export function ProjectFeedbackWorkspace({
       return "review";
     });
   }, [approvedImageCount, reviewImageCount]);
+
+  useEffect(() => {
+    const activeTab = workspaceTabsRef.current?.querySelector<HTMLElement>(
+      '[data-active="true"]',
+    );
+    activeTab?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [activeWorkspaceTab]);
 
   const activeVersionGroup =
     reviewVersions.find((versionGroup) => versionGroup.version === selectedVersion) ??
@@ -1245,11 +1253,17 @@ export function ProjectFeedbackWorkspace({
       </header>
 
       <>
-          <div className="projectFeedbackWorkspaceTabs" role="tablist" aria-label="Project views">
+          <div
+            ref={workspaceTabsRef}
+            className="projectFeedbackWorkspaceTabs"
+            role="tablist"
+            aria-label="Project views"
+          >
             <button
               className="projectFeedbackWorkspaceTab"
               type="button"
               role="tab"
+              data-workspace-tab="review"
               data-active={activeWorkspaceTab === "review" ? "true" : "false"}
               aria-selected={activeWorkspaceTab === "review"}
               onClick={() => setActiveWorkspaceTab("review")}
@@ -1266,6 +1280,7 @@ export function ProjectFeedbackWorkspace({
               className="projectFeedbackWorkspaceTab"
               type="button"
               role="tab"
+              data-workspace-tab="approved"
               data-active={activeWorkspaceTab === "approved" ? "true" : "false"}
               aria-selected={activeWorkspaceTab === "approved"}
               onClick={() => setActiveWorkspaceTab("approved")}
@@ -1282,6 +1297,7 @@ export function ProjectFeedbackWorkspace({
               className="projectFeedbackWorkspaceTab"
               type="button"
               role="tab"
+              data-workspace-tab="map"
               data-active={activeWorkspaceTab === "map" ? "true" : "false"}
               aria-selected={activeWorkspaceTab === "map"}
               onClick={() => setActiveWorkspaceTab("map")}
@@ -1292,6 +1308,7 @@ export function ProjectFeedbackWorkspace({
               className="projectFeedbackWorkspaceTab projectFeedbackReferenceTab"
               type="button"
               role="tab"
+              data-workspace-tab="references"
               data-active={activeWorkspaceTab === "references" ? "true" : "false"}
               aria-selected={activeWorkspaceTab === "references"}
               onClick={() => setActiveWorkspaceTab("references")}
@@ -2137,7 +2154,7 @@ function ProjectFeedbackImageCard({
 
         {isApprovedImage ? (
           <div className="projectFeedbackApprovalWatermark" aria-hidden="true">
-            <span>In delivery</span>
+            <span>Approved</span>
           </div>
         ) : null}
 

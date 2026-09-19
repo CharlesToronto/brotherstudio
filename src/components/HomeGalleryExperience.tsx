@@ -219,20 +219,20 @@ function getHomeDeveloperReasons(locale: Locale): HomeDeveloperReason[] {
 function getHomeProcessSteps(locale: Locale) {
   return locale === "fr"
     ? [
-        { title: "Image de marque", description: "Positionnez le projet avec une identité, un message et une direction visuelle clairs." },
-        { title: "Images / Vidéos", description: "Créez des visuels premium qui rendent le projet concret avant même sa construction." },
-        { title: "Site web", description: "Construisez une destination commerciale qui présente l’offre et capte la demande." },
-        { title: "Campagnes Meta", description: "Lancez des campagnes ciblées pour présenter le projet à la bonne audience." },
-        { title: "Acheteurs qualifiés", description: "Transformez l’intérêt en prospects sérieux prêts pour le suivi commercial." },
-        { title: "Partenaire de vente (optionnel)", description: "Soutenez le cycle de vente avec des outils, des données et un système de lancement cohérent." },
+        { title: "Image de marque", description: "Nous positionnons le projet avec une identité, un message et une direction visuelle clairs." },
+        { title: "Images / Vidéos", description: "Nous créons des visuels premium qui rendent le projet concret avant même sa construction." },
+        { title: "Site web", description: "Nous construisons une destination commerciale qui présente l’offre et capte la demande." },
+        { title: "Campagnes Meta", description: "Nous lançons des campagnes ciblées pour présenter le projet à la bonne audience." },
+        { title: "Acheteurs qualifiés", description: "Nous transformons l’intérêt en prospects sérieux prêts pour le suivi commercial." },
+        { title: "Partenaire de vente (optionnel)", description: "Nous soutenons le cycle de vente avec des outils, des données et un système de lancement cohérent." },
       ]
     : [
-        { title: "Project Branding", description: "Position the development with a clear identity, message, and visual direction." },
-        { title: "Images / Videos", description: "Create premium visuals that make the project feel real before construction." },
-        { title: "Website", description: "Build a sales-focused destination that presents the offer and captures demand." },
-        { title: "Meta Campaigns", description: "Launch targeted campaigns that put the project in front of the right audience." },
-        { title: "Qualified Buyers", description: "Filter interest into serious leads ready for commercial follow-up." },
-        { title: "Sales Partner (Optional)", description: "Support the sales cycle with assets, data, and a coherent launch system." },
+        { title: "Project Branding", description: "We position the development with a clear identity, message, and visual direction." },
+        { title: "Images / Videos", description: "We create premium visuals that make the project feel real before construction." },
+        { title: "Website", description: "We build a sales-focused destination that presents the offer and captures demand." },
+        { title: "Meta Campaigns", description: "We launch targeted campaigns that put the project in front of the right audience." },
+        { title: "Qualified Buyers", description: "We turn interest into serious leads ready for commercial follow-up." },
+        { title: "Sales Partner (Optional)", description: "We support the sales cycle with assets, data, and a coherent launch system." },
       ];
 }
 

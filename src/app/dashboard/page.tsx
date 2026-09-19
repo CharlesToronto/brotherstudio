@@ -26,6 +26,11 @@ const paymentStatusOptions: PaymentStatus[] = [...DASHBOARD_PAYMENT_STATUSES];
 const currencyOptions: Currency[] = ["CAD", "CHF"];
 type ProjectDraft = Omit<Project, "id" | "createdAt" | "updatedAt">;
 type TeamClientStatus = "new" | "contacted" | "follow_up" | "closed";
+type DashboardProjectLayout = "list" | "grid";
+type DashboardFilterOption = {
+  value: string;
+  label: string;
+};
 
 const TEAM_CLIENT_STATUSES: TeamClientStatus[] = ["new", "contacted", "follow_up", "closed"];
 const emptyTeamClientDraft = {
@@ -393,12 +398,101 @@ const DashboardSelect = forwardRef<
     <select
       {...props}
       ref={ref}
-      className={`h-11 rounded-xl border border-neutral-200 bg-white px-3 text-sm text-neutral-950 outline-none transition focus:border-neutral-400 ${
+      className={`dashboardSelect h-11 rounded-xl border border-neutral-200 bg-white px-3 text-sm text-neutral-950 outline-none transition focus:border-neutral-400 ${
         props.className ?? ""
       }`}
     />
   );
 });
+
+function DashboardFilterSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: DashboardFilterOption[];
+  onChange: (value: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedOption = options.find((option) => option.value === value) ?? options[0];
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="dashboardFilterSelect">
+      <button
+        type="button"
+        className="dashboardFilterSelectTrigger"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        <span className="dashboardFilterSelectTriggerText">
+          {selectedOption?.label ?? "Sélectionner"}
+        </span>
+        <span className="dashboardFilterSelectChevron" aria-hidden="true">
+          ↓
+        </span>
+      </button>
+
+      {isOpen ? (
+        <div
+          className="dashboardFilterSelectOverlay"
+          role="presentation"
+          onClick={() => setIsOpen(false)}
+        >
+          <div
+            className="dashboardFilterSelectMenu"
+            role="listbox"
+            aria-label={label}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="dashboardFilterSelectMenuHeader">{label}</div>
+            {options.map((option) => {
+              const isSelected = option.value === value;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  className="dashboardFilterSelectOption"
+                  data-selected={isSelected ? "true" : "false"}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                >
+                  <span>{option.label}</span>
+                  {isSelected ? <span aria-hidden="true">✓</span> : null}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 const dashboardButtonMotionClass =
   "transition-[transform,background-color,color,border-color,box-shadow] duration-200 ease-out active:scale-[0.98] disabled:transform-none";
@@ -430,6 +524,7 @@ export default function DashboardPage() {
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<
     "all" | PaymentStatus
   >("all");
+  const [projectLayout, setProjectLayout] = useState<DashboardProjectLayout>("list");
   const [activePaymentSlide, setActivePaymentSlide] = useState(0);
 
   useEffect(() => {
@@ -1527,7 +1622,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <main className="dashboardPage min-h-screen bg-black text-white">
+    <main className="dashboardPage min-h-screen bg-white text-neutral-950">
       <AdminLockOverlay title="Accès Dashboard" storageKey="bs_dashboard_unlocked" />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10 sm:px-8 lg:px-10">
         <header className="space-y-3">
@@ -1676,13 +1771,10 @@ export default function DashboardPage() {
           </article>
         </section>
 
-        <section className="rounded-[28px] border border-neutral-200 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+        <section className="dashboardAllocationSection rounded-[28px] border border-neutral-200 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
           <div className="mb-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-neutral-400">
-              Allocation
-            </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-neutral-950">
-              Répartition du payment reçu
+            <h2 className="text-xl font-semibold tracking-[-0.04em] text-neutral-950">
+              Répartition des paiements reçus
             </h2>
           </div>
 
@@ -1706,7 +1798,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="dashboardOverviewSection bg-transparent py-0 md:rounded-2xl md:border md:border-neutral-200 md:bg-white md:p-6 md:shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+        <section className="dashboardOverviewSection bg-transparent py-0">
           <div className="mb-5 flex flex-wrap items-start justify-between gap-4 md:items-start">
             <div className="w-full space-y-2 text-center md:w-auto md:text-left">
               <p className="text-xs font-medium uppercase tracking-[0.22em] text-sky-300">
@@ -1717,17 +1809,37 @@ export default function DashboardPage() {
               </h2>
             </div>
 
-            <button
-              type="button"
-              onClick={startAdd}
-              disabled={isSaving}
-              className={`mx-auto inline-flex h-11 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white md:mx-0 ${dashboardPrimaryButtonClass}`}
-            >
-              Ajouter un projet
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-3 md:justify-end">
+              <div className="dashboardProjectLayoutToggle" role="group" aria-label="Affichage des projets">
+                <button
+                  type="button"
+                  className="dashboardProjectLayoutButton"
+                  data-active={projectLayout === "list" ? "true" : "false"}
+                  onClick={() => setProjectLayout("list")}
+                >
+                  Liste
+                </button>
+                <button
+                  type="button"
+                  className="dashboardProjectLayoutButton"
+                  data-active={projectLayout === "grid" ? "true" : "false"}
+                  onClick={() => setProjectLayout("grid")}
+                >
+                  Grille
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={startAdd}
+                disabled={isSaving}
+                className={`mx-auto inline-flex h-11 items-center justify-center rounded-xl bg-neutral-950 px-4 text-sm font-medium text-white md:mx-0 ${dashboardPrimaryButtonClass}`}
+              >
+                Ajouter un projet
+              </button>
+            </div>
           </div>
 
-          <div className="mb-5 grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4 md:grid-cols-[minmax(0,1fr)_220px_240px]">
+          <div className="dashboardProjectFilters mb-5 grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4 md:grid-cols-[minmax(0,1fr)_220px_240px]">
             <DashboardField label="Recherche">
               <DashboardInput
                 value={projectSearch}
@@ -1737,34 +1849,30 @@ export default function DashboardPage() {
               />
             </DashboardField>
             <DashboardField label="Statut du projet">
-              <DashboardSelect
+              <DashboardFilterSelect
+                label="Statut du projet"
                 value={projectStatusFilter}
-                onChange={(event) =>
-                  setProjectStatusFilter(event.target.value as "all" | ProjectStatus)
+                options={[
+                  { value: "all", label: "Tous les statuts" },
+                  ...statusOptions.map((status) => ({ value: status, label: status })),
+                ]}
+                onChange={(nextValue) =>
+                  setProjectStatusFilter(nextValue as "all" | ProjectStatus)
                 }
-              >
-                <option value="all">Tous les statuts</option>
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </DashboardSelect>
+              />
             </DashboardField>
             <DashboardField label="Statut du paiement">
-              <DashboardSelect
+              <DashboardFilterSelect
+                label="Statut du paiement"
                 value={paymentStatusFilter}
-                onChange={(event) =>
-                  setPaymentStatusFilter(event.target.value as "all" | PaymentStatus)
+                options={[
+                  { value: "all", label: "Tous les paiements" },
+                  ...paymentStatusOptions.map((status) => ({ value: status, label: status })),
+                ]}
+                onChange={(nextValue) =>
+                  setPaymentStatusFilter(nextValue as "all" | PaymentStatus)
                 }
-              >
-                <option value="all">Tous les paiements</option>
-                {paymentStatusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </DashboardSelect>
+              />
             </DashboardField>
           </div>
 
@@ -1774,7 +1882,10 @@ export default function DashboardPage() {
             </div>
           ) : null}
 
-          <div className="flex snap-x snap-mandatory overflow-x-auto pb-2 scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:max-h-none md:gap-0 md:overflow-visible md:px-0 md:pb-0">
+          <div
+            className="dashboardProjectList flex snap-x snap-mandatory overflow-x-auto pb-2 scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:max-h-none md:gap-0 md:overflow-visible md:px-0 md:pb-0"
+            data-layout={projectLayout}
+          >
             {isLoading ? (
               <p className="text-sm text-neutral-500">Chargement des projets...</p>
             ) : filteredProjects.length > 0 ? (
@@ -1794,7 +1905,7 @@ export default function DashboardPage() {
                 return (
                   <article
                     key={project.id}
-                    className="flex w-full flex-none snap-center justify-center px-3 p-0 sm:px-4 md:block md:w-full md:max-w-none md:border-b-2 md:border-black/15 md:px-0 md:py-4 md:last:border-b-0"
+                    className="dashboardProjectRow flex w-full flex-none snap-center justify-center px-3 p-0 sm:px-4 md:block md:w-full md:max-w-none md:border-b-2 md:border-black/15 md:px-0 md:py-4 md:last:border-b-0"
                   >
                     <details
                       className="w-full rounded-[24px] border border-neutral-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)] group"
@@ -1802,7 +1913,7 @@ export default function DashboardPage() {
                     >
                       <summary className="flex cursor-pointer list-none items-center gap-3 p-4 sm:p-5 md:py-4">
                         <div className="min-w-0 flex-1">
-                          <div className="grid gap-3 md:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(0,1.05fr)_minmax(0,0.9fr)] md:items-center">
+                          <div className="dashboardProjectSummaryGrid grid gap-3 md:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(0,1.05fr)_minmax(0,0.9fr)] md:items-center">
                             <div className="flex min-w-0 items-center gap-3">
                               <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-sky-200 group-open:bg-neutral-950 group-open:text-sky-200 ${dashboardDisclosureButtonClass}`}>
                                 <Eye size={15} />
@@ -1860,7 +1971,7 @@ export default function DashboardPage() {
                         {isEditingThisCard ? (
                           renderDraftEditor()
                         ) : (
-                          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                          <div className="dashboardProjectDetailsGrid grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
                             <div className="grid gap-3">
                               <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-pink-300">
                                 Projet
@@ -1942,8 +2053,8 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <details className="dashboardClientsSection dashboardClientsDisclosure">
+          <summary className="dashboardClientsDisclosureSummary">
             <div className="space-y-2">
               <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-400">
                 Clients
@@ -1956,6 +2067,10 @@ export default function DashboardPage() {
                 jour quand tu modifies un client.
               </p>
             </div>
+          </summary>
+
+          <div className="dashboardClientsDisclosureBody">
+            <div className="mb-5 flex justify-end">
             <button
               type="button"
               onClick={openStandaloneNewClientForm}
@@ -1964,9 +2079,9 @@ export default function DashboardPage() {
             >
               Nouveau client
             </button>
-          </div>
+            </div>
 
-          <div className="grid gap-3">
+            <div className="grid gap-3">
             {isLoading ? (
               <p className="text-sm text-neutral-500">Chargement des clients...</p>
             ) : teamClients.length > 0 ? (
@@ -2042,8 +2157,9 @@ export default function DashboardPage() {
                 Aucun client enregistré pour le moment.
               </p>
             )}
+            </div>
           </div>
-        </section>
+        </details>
       </div>
       {showNewClientForm ? (
         <div
