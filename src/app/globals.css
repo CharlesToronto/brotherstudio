@@ -6449,12 +6449,12 @@ html[data-theme="dark"] .galleryFilterButton:focus-visible {
 }
 
 .homeGallerySection {
+  position: relative;
   margin: 0 calc(var(--page-padding) * -1) 34px;
   --home-gallery-bg-rgb: 0 0 0;
   --home-gallery-title-rgb: 255 255 255;
   --home-gallery-border-alpha: 0.12;
-  background: rgb(var(--site-background-rgb, var(--home-gallery-bg-rgb, 0 0 0)));
-  transition: background-color 80ms linear;
+  background: transparent;
 }
 
 .homeGalleryIntro {
@@ -7698,59 +7698,68 @@ html[data-theme="dark"] .homeDeveloperValueCard:focus-within {
 .homePostHeroDark {
   position: relative;
   margin: -1px calc(var(--page-padding) * -1) 0;
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
-  background: rgb(var(--site-background-rgb, 0 0 0));
+  background: transparent;
   --home-spotlight-x: 50%;
   --home-spotlight-y: 24%;
   --home-spotlight-opacity: 0.42;
-  transition: background 260ms ease;
 }
 
-.homePostHeroDark:has(.homeDeveloperValueCard:nth-child(1):hover),
-.homePostHeroDark:has(.homeDeveloperValueCard:nth-child(1):focus-within) {
-  --home-spotlight-opacity: 0.24;
-  background:
-    radial-gradient(circle at 76% 54%, rgb(66 215 255 / 0.2), transparent 34%),
-    radial-gradient(circle at 18% 72%, rgb(31 92 255 / 0.3), transparent 42%),
-    linear-gradient(180deg, #020711 0%, #000 100%);
+#home-gallery-start:has(.homeDeveloperValueCard:nth-child(1):is(:hover, :focus-within)) {
+  --home-ambient-primary: 31 92 255;
+  --home-ambient-secondary: 66 215 255;
+  --home-ambient-active: 1;
 }
 
-.homePostHeroDark:has(.homeDeveloperValueCard:nth-child(2):hover),
-.homePostHeroDark:has(.homeDeveloperValueCard:nth-child(2):focus-within) {
-  --home-spotlight-opacity: 0.24;
-  background:
-    radial-gradient(circle at 76% 54%, rgb(0 205 255 / 0.18), transparent 34%),
-    radial-gradient(circle at 18% 72%, rgb(0 230 155 / 0.28), transparent 42%),
-    linear-gradient(180deg, #01110d 0%, #000 100%);
+#home-gallery-start:has(.homeDeveloperValueCard:nth-child(2):is(:hover, :focus-within)) {
+  --home-ambient-primary: 0 230 155;
+  --home-ambient-secondary: 0 205 255;
+  --home-ambient-active: 1;
 }
 
-.homePostHeroDark:has(.homeDeveloperValueCard:nth-child(3):hover),
-.homePostHeroDark:has(.homeDeveloperValueCard:nth-child(3):focus-within) {
-  --home-spotlight-opacity: 0.24;
-  background:
-    radial-gradient(circle at 76% 54%, rgb(127 72 255 / 0.2), transparent 34%),
-    radial-gradient(circle at 18% 72%, rgb(255 105 180 / 0.28), transparent 42%),
-    linear-gradient(180deg, #11020a 0%, #000 100%);
+#home-gallery-start:has(.homeDeveloperValueCard:nth-child(3):is(:hover, :focus-within)) {
+  --home-ambient-primary: 255 105 180;
+  --home-ambient-secondary: 127 72 255;
+  --home-ambient-active: 1;
 }
 
 #home-gallery-start {
+  position: relative;
+  isolation: isolate;
   display: block;
   margin-top: -1px;
-  background: rgb(var(--site-background-rgb, 0 0 0));
-  transition: background-color 80ms linear;
+  background: transparent;
+  --home-ambient-primary: 255 105 180;
+  --home-ambient-secondary: 127 72 255;
+  --home-ambient-active: 0;
+  --home-ambient-visibility: 1;
 }
 
-.homePostHeroDark::before {
+/* One continuous light field behind both sections, fading with gallery entry. */
+#home-gallery-start::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
-  opacity: var(--home-spotlight-opacity);
+  background:
+    radial-gradient(ellipse at 18% 55%, rgb(var(--home-ambient-primary) / 0.3), transparent 65%),
+    radial-gradient(ellipse at 76% 35%, rgb(var(--home-ambient-secondary) / 0.2), transparent 60%);
+  opacity: calc(var(--home-ambient-active) * var(--home-ambient-visibility));
+  transition: opacity 220ms ease;
+}
+
+#home-gallery-start::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: calc(var(--home-spotlight-opacity, 0.42) * var(--home-ambient-visibility));
   background:
     radial-gradient(
-      540px circle at var(--home-spotlight-x) var(--home-spotlight-y),
+      540px circle at var(--home-spotlight-x, 50%) var(--home-spotlight-y, 24%),
       rgb(255 255 255 / 0.13),
       rgb(31 92 255 / 0.055) 34%,
       transparent 68%
@@ -7774,6 +7783,11 @@ html[data-theme="dark"] .homePostHeroDark > .homeDeveloperValueSection {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  #home-gallery-start::before,
+  #home-gallery-start::after {
+    transition: none;
+  }
+
   .homeCapabilitiesItem,
   .homeCapabilitiesHeader,
   .homeCapabilitiesIcon,
@@ -15293,6 +15307,13 @@ body:has(.campaignLanding) .campaignLandingNav,
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #7f7f7f;
+}
+
+.projectFeedbackIntro > .projectFeedbackEyebrow {
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+  color: #4c5562;
 }
 
 .projectFeedbackTitle,
@@ -24176,12 +24197,22 @@ body:has(.dashboardPage),
 }
 
 .siteHeader {
-  background: #fff !important;
+  background: transparent !important;
   color: #000 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 
 .siteHeader {
   border-bottom: 1px solid rgb(0 0 0 / 0.08);
+}
+
+@media (min-width: 981px) {
+  .siteHeader {
+    background: rgb(255 255 255 / 0.62) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.15) !important;
+    backdrop-filter: blur(20px) saturate(1.15) !important;
+  }
 }
 
 .siteFooter {
@@ -24190,12 +24221,18 @@ body:has(.dashboardPage),
   border-top: 1px solid rgb(255 255 255 / 0.12);
 }
 
-.siteNav,
+.siteNav {
+  background: transparent !important;
+  color: #000 !important;
+}
+
 .siteNavMobile,
 .siteNavMobileSubmenuPanel,
 .siteNavSubmenuPanel {
-  background: #fff !important;
+  background: rgb(255 255 255 / 0.62) !important;
   color: #000 !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.15);
+  backdrop-filter: blur(20px) saturate(1.15);
 }
 
 .siteNavLink,
@@ -24319,15 +24356,18 @@ body:has(.dashboardPage),
   border-radius: inherit;
   background: conic-gradient(
     from var(--project-feedback-reference-angle),
-    #2f8cff,
-    #65d7ff,
-    #d16dff,
-    #ff72bc,
-    #ff4f91,
-    #2f8cff
+    #3985ff 0deg,
+    #3985ff 60deg,
+    #b9ddff 90deg,
+    #3985ff 120deg,
+    #ff8a32 180deg,
+    #ff8a32 240deg,
+    #ffe0b8 270deg,
+    #ff8a32 300deg,
+    #3985ff 360deg
   );
   content: "";
-  animation: projectFeedbackReferenceNeonSpin 3.2s linear infinite;
+  animation: projectFeedbackReferenceNeonSpin 4s linear infinite;
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -25683,9 +25723,82 @@ body:has(.dashboardPage),
   }
 }
 
-@keyframes mobile-booking-neon-shift {
+/* Frosted booking button with an animated blue and orange outline. */
+@property --booking-neon-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes booking-neon-border-spin {
   to {
-    background-position: 0 0, 250% 0;
+    --booking-neon-angle: 360deg;
+  }
+}
+
+.siteHeaderBookingCta,
+.siteNavLink[data-nav-key="book-meeting"],
+.siteNavMobile .siteNavLink[data-nav-key="book-meeting"],
+.siteHeaderBookingCta:hover,
+.siteHeaderBookingCta:focus-visible,
+.siteNavLink[data-nav-key="book-meeting"]:hover,
+.siteNavLink[data-nav-key="book-meeting"]:focus-visible,
+.siteNavMobile .siteNavLink[data-nav-key="book-meeting"]:hover,
+.siteNavMobile .siteNavLink[data-nav-key="book-meeting"]:focus-visible {
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  position: relative;
+  background: rgb(255 255 255 / 0.62) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.15);
+  backdrop-filter: blur(20px) saturate(1.15);
+  color: #111 !important;
+  box-shadow:
+    -2px 0 7px rgb(57 133 255 / 0.22),
+    2px 0 7px rgb(255 138 50 / 0.22) !important;
+  text-shadow: none;
+  animation: none;
+}
+
+.siteHeaderBookingCta::before,
+.siteNavLink[data-nav-key="book-meeting"]::before,
+.siteNavMobile .siteNavLink[data-nav-key="book-meeting"]::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background:
+    conic-gradient(
+      from var(--booking-neon-angle),
+      #3985ff 0deg,
+      #3985ff 60deg,
+      #b9ddff 90deg,
+      #3985ff 120deg,
+      #ff8a32 180deg,
+      #ff8a32 240deg,
+      #ffe0b8 270deg,
+      #ff8a32 300deg,
+      #3985ff 360deg
+    );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: booking-neon-border-spin 4s linear infinite;
+}
+
+.siteHeaderBookingCta::after,
+.siteNavLink[data-nav-key="book-meeting"]::after,
+.siteNavMobile .siteNavLink[data-nav-key="book-meeting"]::after {
+  content: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .siteHeaderBookingCta::before,
+  .siteNavLink[data-nav-key="book-meeting"]::before,
+  .siteNavMobile .siteNavLink[data-nav-key="book-meeting"]::before {
+    animation: none;
   }
 }
 
@@ -25693,27 +25806,97 @@ body:has(.dashboardPage),
   .siteNavMobile .siteNavLink[data-nav-key="book-meeting"] {
     min-height: 34px;
     padding: 0 14px;
-    border: 1px solid transparent !important;
-    border-radius: 999px !important;
-    background:
-      linear-gradient(#fff, #fff) padding-box,
-      linear-gradient(90deg, #1f6fff, #8bdcff, #1f6fff, #8bdcff, #1f6fff)
-        border-box !important;
-    background-size: 100% 100%, 250% 100% !important;
-    background-position: 0 0, 0 0;
-    color: #111 !important;
-    box-shadow: 0 5px 16px rgb(31 111 255 / 0.12);
-    animation: mobile-booking-neon-shift 3.2s linear infinite;
+  }
+}
+
+.projectProspects {
+  display: grid;
+  gap: 24px;
+  padding: 28px 0 48px;
+}
+
+.projectProspectsHeader,
+.projectProspectsFormHeader,
+.projectProspectsToolbar,
+.projectProspectsFormActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.projectProspectsToolbar {
+  justify-content: stretch;
+}
+
+.projectProspectsToolbar > * {
+  flex: 1 1 0;
+}
+
+.projectProspectsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.projectProspectCard {
+  display: grid;
+  gap: 7px;
+  min-height: 132px;
+  padding: 16px;
+  border: 1px solid rgb(127 127 127 / 0.18);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.06);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.projectProspectCard:hover,
+.projectProspectCard[data-active="true"] {
+  border-color: rgb(255 255 255 / 0.58);
+  background: rgb(255 255 255 / 0.12);
+}
+
+.projectProspectCard span,
+.projectProspectCard small {
+  color: rgb(255 255 255 / 0.62);
+}
+
+.projectProspectsForm {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid rgb(127 127 127 / 0.22);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 0.05);
+}
+
+.projectProspectsFields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.projectProspectsEmpty {
+  padding: 36px;
+  border: 1px dashed rgb(127 127 127 / 0.28);
+  border-radius: 16px;
+  color: rgb(255 255 255 / 0.62);
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .projectProspectsHeader,
+  .projectProspectsToolbar,
+  .projectProspectsFormHeader,
+  .projectProspectsFormActions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .siteNavMobile .siteNavLink[data-nav-key="book-meeting"]:hover,
-  .siteNavMobile .siteNavLink[data-nav-key="book-meeting"]:focus-visible {
-    border-color: transparent !important;
-    background:
-      linear-gradient(#fff, #fff) padding-box,
-      linear-gradient(90deg, #1f6fff, #8bdcff, #1f6fff, #8bdcff, #1f6fff)
-        border-box !important;
-    background-size: 100% 100%, 250% 100% !important;
-    color: #111 !important;
+  .projectProspectsFields {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

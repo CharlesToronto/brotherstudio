@@ -213,7 +213,14 @@ export function MyProjectDirectory({ projects, locale: layoutLocale }: MyProject
             </div>
 
             {mode ? (
-              <div className="projectDirectoryAccessPanel">
+              <form
+                className="projectDirectoryAccessPanel"
+                noValidate
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void handleOpenProject(project.id);
+                }}
+              >
                 <label className="projectFeedbackField">
                   <span>Email</span>
                   <input
@@ -253,9 +260,8 @@ export function MyProjectDirectory({ projects, locale: layoutLocale }: MyProject
 
                 <button
                   className="projectFeedbackAction"
-                  type="button"
+                  type="submit"
                   disabled={busyProjectId === project.id}
-                  onClick={() => void handleOpenProject(project.id)}
                 >
                   {busyProjectId === project.id
                     ? "Opening..."
@@ -263,7 +269,7 @@ export function MyProjectDirectory({ projects, locale: layoutLocale }: MyProject
                       ? "Open in review"
                       : "Open as visitor"}
                 </button>
-              </div>
+              </form>
             ) : null}
           </div>
         </div>

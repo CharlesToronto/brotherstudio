@@ -638,6 +638,7 @@ export function HomeGalleryExperience({
   useEffect(() => {
     const heading = galleryHeadingRef.current;
     if (!heading) return;
+    const sharedSurface = heading.closest<HTMLElement>("#home-gallery-start");
 
     let targetProgress = 0;
     let currentProgress = 0;
@@ -651,6 +652,7 @@ export function HomeGalleryExperience({
       const textChannel = progress > 0.58 ? 17 : 255;
       const borderAlpha = 0.08 + progress * 0.08;
       const backgroundRgb = `${channel} ${channel} ${channel}`;
+      sharedSurface?.style.setProperty("--home-ambient-visibility", (1 - progress).toFixed(3));
 
       root.style.setProperty("--site-background-rgb", backgroundRgb);
       root.style.setProperty("--home-gallery-bg-rgb", backgroundRgb);
@@ -668,7 +670,7 @@ export function HomeGalleryExperience({
     const animateGalleryBackground = () => {
       frame = 0;
       const distance = targetProgress - currentProgress;
-      currentProgress += distance * 0.085;
+      currentProgress += distance * 0.2;
 
       if (Math.abs(distance) < 0.001) {
         currentProgress = targetProgress;
@@ -683,8 +685,8 @@ export function HomeGalleryExperience({
 
     const syncGalleryBackground = () => {
       const rect = heading.getBoundingClientRect();
-      const start = window.innerHeight * 0.62;
-      const end = window.innerHeight * 0.42;
+      const start = window.innerHeight * 0.45;
+      const end = window.innerHeight * 0.3;
       targetProgress = Math.min(1, Math.max(0, (start - rect.top) / (start - end)));
 
       if (!hasMeasured) {
@@ -710,6 +712,7 @@ export function HomeGalleryExperience({
 
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
+      sharedSurface?.style.removeProperty("--home-ambient-visibility");
       root.style.removeProperty("--site-background-rgb");
       root.style.removeProperty("--home-gallery-bg-rgb");
       body.style.removeProperty("--site-background-rgb");
@@ -720,12 +723,11 @@ export function HomeGalleryExperience({
   }, []);
 
   const handlePostHeroPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const section = postHeroSpotlightRef.current;
+    const section = postHeroSpotlightRef.current?.parentElement;
     if (!section) return;
 
-    const rect = section.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    const x = (event.clientX / window.innerWidth) * 100;
+    const y = (event.clientY / window.innerHeight) * 100;
 
     section.style.setProperty("--home-spotlight-x", `${x.toFixed(2)}%`);
     section.style.setProperty("--home-spotlight-y", `${y.toFixed(2)}%`);
@@ -733,7 +735,7 @@ export function HomeGalleryExperience({
   };
 
   const handlePostHeroPointerLeave = () => {
-    const section = postHeroSpotlightRef.current;
+    const section = postHeroSpotlightRef.current?.parentElement;
     if (!section) return;
 
     section.style.setProperty("--home-spotlight-opacity", "0.42");

@@ -15,6 +15,7 @@ import { Check, Copy, Download, Share2 } from "lucide-react";
 
 import { ProjectClientReferences } from "@/components/ProjectClientReferences";
 import { ProjectLocationMap } from "@/components/ProjectLocationMap";
+import { ProjectProspects } from "@/components/ProjectProspects";
 import type {
   ProjectFeedbackComment,
   ProjectFeedbackDrawingElement,
@@ -60,7 +61,7 @@ type ImageDimensions = {
   height: number;
 };
 
-type WorkspaceTab = "review" | "approved" | "map" | "references";
+type WorkspaceTab = "review" | "approved" | "prospects" | "map" | "references";
 type ImageSidePanelTab = "requests" | "notes" | "drawing";
 type DrawingTool = "freehand" | "line" | "rectangle" | "circle" | "eraser";
 type ShapeDrawingTool = Exclude<DrawingTool, "eraser">;
@@ -525,7 +526,7 @@ export function ProjectFeedbackWorkspace({
     setActiveWorkspaceTab((current) => {
       if (current === "review" && reviewImageCount > 0) return current;
       if (current === "approved" && approvedImageCount > 0) return current;
-      if (current === "map" || current === "references") return current;
+      if (current === "map" || current === "references" || current === "prospects") return current;
       if (reviewImageCount === 0 && approvedImageCount > 0) return "approved";
       return "review";
     });
@@ -568,9 +569,6 @@ export function ProjectFeedbackWorkspace({
   const projectTitle = showParcelNumberInTitle
     ? `${project.name} - ${project.accessPassword}`
     : project.name;
-  const isFrenchInterface =
-    typeof document !== "undefined" && document.documentElement.lang.startsWith("fr");
-
   const resetFeedbackState = (nextProject?: ProjectFeedbackProject) => {
     if (nextProject) {
       setProject(nextProject);
@@ -1160,7 +1158,7 @@ export function ProjectFeedbackWorkspace({
       <header className="projectFeedbackHeader">
         <div className="projectFeedbackHeaderTop">
           <div className="projectFeedbackIntro">
-            <p className="projectFeedbackEyebrow">Project Review</p>
+            <p className="projectFeedbackEyebrow">MyReview</p>
             <h1 className="projectFeedbackTitle">{projectTitle}</h1>
           </div>
 
@@ -1268,7 +1266,7 @@ export function ProjectFeedbackWorkspace({
               aria-selected={activeWorkspaceTab === "review"}
               onClick={() => setActiveWorkspaceTab("review")}
             >
-              In Review
+              Image in review
               <span
                 data-empty={reviewImageCount === 0 ? "true" : "false"}
                 style={reviewImageCount === 0 ? emptyCountBadgeStyle : undefined}
@@ -1302,7 +1300,7 @@ export function ProjectFeedbackWorkspace({
               aria-selected={activeWorkspaceTab === "map"}
               onClick={() => setActiveWorkspaceTab("map")}
             >
-              {isFrenchInterface ? "Carte" : "Map"}
+              Map
             </button>
             <button
               className="projectFeedbackWorkspaceTab projectFeedbackReferenceTab"
@@ -1313,14 +1311,27 @@ export function ProjectFeedbackWorkspace({
               aria-selected={activeWorkspaceTab === "references"}
               onClick={() => setActiveWorkspaceTab("references")}
             >
-              {isFrenchInterface ? "Reference client" : "Client References"}
+              Drive
               <span data-empty={referenceFileCount === 0 ? "true" : "false"}>
                 {referenceFileCount}
               </span>
             </button>
+            <button
+              className="projectFeedbackWorkspaceTab"
+              type="button"
+              role="tab"
+              data-workspace-tab="prospects"
+              data-active={activeWorkspaceTab === "prospects" ? "true" : "false"}
+              aria-selected={activeWorkspaceTab === "prospects"}
+              onClick={() => setActiveWorkspaceTab("prospects")}
+            >
+              Prospect
+            </button>
           </div>
 
-          {activeWorkspaceTab === "map" ? (
+          {activeWorkspaceTab === "prospects" ? (
+            <ProjectProspects key={project.id} projectId={project.id} projectName={project.name} adminMode={allowImageManagement} />
+          ) : activeWorkspaceTab === "map" ? (
             <ProjectLocationMap
               projectId={project.id}
               address={project.address}
