@@ -11,7 +11,8 @@ import type {
   PointerEvent,
   SetStateAction,
 } from "react";
-import { Check, Copy, Download, Share2 } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Check, Copy, Download, Search, Share2, X } from "lucide-react";
 
 import { ProjectClientReferences } from "@/components/ProjectClientReferences";
 import { ProjectLocationMap } from "@/components/ProjectLocationMap";
@@ -397,6 +398,7 @@ export function ProjectFeedbackWorkspace({
   const [busyImageStatusId, setBusyImageStatusId] = useState<string | null>(null);
   const [busyImageStatus, setBusyImageStatus] = useState<ProjectStatus | null>(null);
   const [isDownloadingApproved, setIsDownloadingApproved] = useState(false);
+  const [isNotifyingClient, setIsNotifyingClient] = useState(false);
   const [referenceFileCount, setReferenceFileCount] = useState(0);
   const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<WorkspaceTab>(() => {
     const approvedCount = initialProject.versions.reduce(
@@ -961,6 +963,37 @@ export function ProjectFeedbackWorkspace({
     }
   };
 
+  const handleNotifyClient = async () => {
+    if (!allowImageManagement) return;
+
+    setIsNotifyingClient(true);
+    setStatusMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(`/api/projects/${project.id}/notifications/approval`, {
+        method: "POST",
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { recipientCount?: number; error?: string }
+        | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Failed to send approval notification.");
+      }
+
+      setStatusMessage(
+        `Notification envoyée à ${payload?.recipientCount ?? 0} destinataire(s).`,
+      );
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to send approval notification.",
+      );
+    } finally {
+      setIsNotifyingClient(false);
+    }
+  };
+
   const handleStartCommentEdit = (comment: ProjectFeedbackComment) => {
     setEditingComment({
       id: comment.id,
@@ -1303,7 +1336,7 @@ export function ProjectFeedbackWorkspace({
               Map
             </button>
             <button
-              className="projectFeedbackWorkspaceTab projectFeedbackReferenceTab"
+              className="projectFeedbackWorkspaceTab"
               type="button"
               role="tab"
               data-workspace-tab="references"
@@ -1498,8 +1531,10 @@ export function ProjectFeedbackWorkspace({
               allowImageManagement={allowImageManagement}
               canManageApprovedImages={canManageApprovedImages}
               isDownloadingAll={isDownloadingApproved}
+              isNotifyingClient={isNotifyingClient}
               busyImageStatusId={busyImageStatusId}
               onDownloadAll={() => void handleDownloadAllApproved()}
+              onNotifyClient={() => void handleNotifyClient()}
               onMoveToReview={(imageId) => {
                 void handleUpdateImageStatus(imageId, "in_review");
               }}
@@ -1785,6 +1820,7 @@ function ProjectFeedbackImageCard({
   const editingCommentForImage =
     editingComment?.imageId === image.id ? editingComment : null;
   const [dimensions, setDimensions] = useState<ImageDimensions | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [activeSidePanel, setActiveSidePanel] = useState<ImageSidePanelTab>("requests");
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
   const dimensionsLabel = imageDimensionsLabel(dimensions);
@@ -2161,7 +2197,20 @@ function ProjectFeedbackImageCard({
               event.currentTarget.src = image.url;
             }
           }}
-        />
+          />
+
+        <button
+          className="projectFeedbackImageZoomButton"
+          type="button"
+          aria-label={`Agrandir ${imageLabel}`}
+          title="Agrandir l'image"
+          onClick={(event) => {
+            event.stopPropagation();
+            setIsLightboxOpen(true);
+          }}
+        >
+          <Search aria-hidden="true" size={18} strokeWidth={1.8} />
+        </button>
 
         {isApprovedImage ? (
           <div className="projectFeedbackApprovalWatermark" aria-hidden="true">
@@ -2277,6 +2326,13 @@ function ProjectFeedbackImageCard({
           </form>
         ) : null}
       </div>
+
+      <ProjectFeedbackImageLightbox
+        imageUrl={image.url}
+        imageLabel={imageLabel}
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+      />
 
       <div className="projectFeedbackDesktopSidePanel">
         <div className="projectFeedbackSidePanelTabs" role="tablist" aria-label="Image panels">
@@ -2491,10 +2547,65 @@ type ProjectFeedbackApprovedGalleryProps = {
   allowImageManagement: boolean;
   canManageApprovedImages: boolean;
   isDownloadingAll: boolean;
+  isNotifyingClient: boolean;
   busyImageStatusId: string | null;
   onDownloadAll: () => void;
+  onNotifyClient: () => void;
   onMoveToReview: (imageId: string) => void;
 };
+
+function ProjectFeedbackImageLightbox({
+  imageUrl,
+  imageLabel,
+  isOpen,
+  onClose,
+}: {
+  imageUrl: string;
+  imageLabel: string;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    (
+    <div
+      className="projectFeedbackImageLightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Image agrandie : ${imageLabel}`}
+      onClick={onClose}
+    >
+      <button
+        className="projectFeedbackImageLightboxClose"
+        type="button"
+        aria-label="Fermer l'image agrandie"
+        onClick={onClose}
+      >
+        <X aria-hidden="true" size={20} strokeWidth={1.8} />
+      </button>
+      <img
+        className="projectFeedbackImageLightboxImage"
+        src={imageUrl}
+        alt={imageLabel}
+        onClick={(event) => event.stopPropagation()}
+      />
+    </div>
+    ),
+    document.body,
+  );
+}
 
 type ProjectFeedbackDrawingCanvasProps = {
   elements: ProjectFeedbackDrawingElement[];
@@ -2827,6 +2938,7 @@ function ProjectFeedbackApprovedCard({
   onMoveToReview,
 }: ProjectFeedbackApprovedCardProps) {
   const [dimensions, setDimensions] = useState<ImageDimensions | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const dimensionsLabel = imageDimensionsLabel(dimensions);
   const displayImageUrl = getProjectFeedbackDisplayImageUrl(image.url, 1200);
   const displayImageSrcSet = getProjectFeedbackImageSrcSet(image.url);
@@ -2871,8 +2983,24 @@ function ProjectFeedbackApprovedCard({
               event.currentTarget.src = image.url;
             }
           }}
-        />
+          />
+        <button
+          className="projectFeedbackImageZoomButton"
+          type="button"
+          aria-label={`Agrandir ${imageLabel}`}
+          title="Agrandir l'image"
+          onClick={() => setIsLightboxOpen(true)}
+        >
+          <Search aria-hidden="true" size={18} strokeWidth={1.8} />
+        </button>
       </div>
+
+      <ProjectFeedbackImageLightbox
+        imageUrl={image.url}
+        imageLabel={imageLabel}
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+      />
 
       <div className="projectFeedbackApprovedActions">
         <a
@@ -2903,8 +3031,10 @@ function ProjectFeedbackApprovedGallery({
   allowImageManagement,
   canManageApprovedImages,
   isDownloadingAll,
+  isNotifyingClient,
   busyImageStatusId,
   onDownloadAll,
+  onNotifyClient,
   onMoveToReview,
 }: ProjectFeedbackApprovedGalleryProps) {
   const downloadBase = allowImageManagement
@@ -2942,6 +3072,16 @@ function ProjectFeedbackApprovedGallery({
         >
           {isDownloadingAll ? "Preparing..." : "Download all"}
         </button>
+        {allowImageManagement ? (
+          <button
+            className="projectFeedbackAction projectFeedbackActionGhost"
+            type="button"
+            disabled={isNotifyingClient || approvedImages.length === 0}
+            onClick={onNotifyClient}
+          >
+            {isNotifyingClient ? "Envoi..." : "Notifier le client"}
+          </button>
+        ) : null}
       </div>
 
       <div className="projectFeedbackApprovedGrid">

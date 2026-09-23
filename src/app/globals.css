@@ -3964,6 +3964,11 @@ body:has(.brochureStudioPageMain .brochureStudioLayout[data-sidebar-collapsed="t
   transition: transform 400ms ease;
 }
 
+.myWebsiteCardImage--full {
+  object-fit: contain;
+  background: #dfe9df;
+}
+
 .myWebsiteCard:hover .myWebsiteCardImage,
 .myWebsiteCard:focus-within .myWebsiteCardImage {
   transform: scale(1.03);
@@ -21532,6 +21537,313 @@ html[data-theme="dark"] .myStudioGuideArrow {
   border-radius: inherit;
 }
 
+.projectFeedbackImageZoomButton {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 999px;
+  background: rgb(17 17 17 / 0.68);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgb(17 17 17 / 0.2);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition:
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.projectFeedbackImageZoomButton:hover,
+.projectFeedbackImageZoomButton:focus-visible {
+  background: #111;
+  transform: scale(1.06);
+  outline: none;
+}
+
+.projectFeedbackImageLightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: rgb(0 0 0 / 0.88);
+  cursor: zoom-out;
+}
+
+.projectFeedbackImageLightboxImage {
+  display: block;
+  max-width: min(96vw, 1800px);
+  max-height: 92vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 0.32);
+  cursor: default;
+}
+
+.projectFeedbackImageLightboxClose {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 0.48);
+  border-radius: 999px;
+  background: rgb(17 17 17 / 0.52);
+  color: #fff;
+  cursor: pointer;
+}
+
+.projectFeedbackImageLightboxClose:hover,
+.projectFeedbackImageLightboxClose:focus-visible {
+  background: #111;
+  outline: none;
+}
+
+/* Plantaz website */
+.plantazWebsitePage {
+  --plantaz-ink: #24312b;
+  --plantaz-muted: #718078;
+  --plantaz-pastel: #cfe1d3;
+  --plantaz-pastel-dark: #8faa96;
+  min-height: 100vh;
+  background: #fff;
+  color: var(--plantaz-ink);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.plantazWebsitePage *, .plantazWebsitePage *::before, .plantazWebsitePage *::after { box-sizing: border-box; }
+.plantazWebsitePage a { color: inherit; text-decoration: none; }
+.plantazProgressRail { position: fixed !important; top: 50%; right: 20px; z-index: 50; display: grid; gap: 14px; width: 148px; max-height: calc(100vh - 40px); padding: 16px 16px 16px 12px; border: 1px solid rgb(255 255 255 / .22); border-radius: 18px; background: rgb(36 49 43 / .84); box-shadow: 0 18px 42px rgb(20 32 24 / .2); backdrop-filter: blur(14px); transform: translateY(-50%); }
+.plantazProgressRailHeader { display: flex; align-items: center; justify-content: space-between; padding-left: 14px; color: #d9eadb; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; }
+.plantazProgressRailHeader strong { font-weight: 600; }
+.plantazProgressRailHeader span { color: #fff; font-variant-numeric: tabular-nums; }
+.plantazProgressRailLine { position: absolute; top: 57px; bottom: 25px; left: 16px; width: 1px; background: rgb(217 234 219 / .3); }
+.plantazProgressRailLine span { position: relative; display: block; width: 2px; height: var(--plantaz-progress); min-height: 2px; margin-left: -.5px; border-radius: 999px; background: var(--plantaz-pastel); box-shadow: 0 0 10px rgb(207 225 211 / .7); transition: height 180ms ease; }
+.plantazProgressRailLine span::after { content: ""; position: absolute; right: 50%; bottom: -4px; width: 9px; height: 9px; border: 2px solid var(--plantaz-pastel); border-radius: 50%; background: var(--plantaz-ink); box-shadow: 0 0 0 4px rgb(207 225 211 / .18), 0 0 14px rgb(207 225 211 / .7); transform: translateX(50%); }
+.plantazProgressRail nav { display: grid; gap: 13px; }
+.plantazProgressRail nav a { display: flex; align-items: center; gap: 10px; color: rgb(255 255 255 / .68); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; transition: color 180ms ease, transform 180ms ease; }
+.plantazProgressRail nav a:hover, .plantazProgressRail nav a:focus-visible, .plantazProgressRail nav a.is-active { color: #fff; transform: translateX(2px); }
+.plantazProgressRailDot { position: relative; z-index: 1; flex: 0 0 9px; width: 9px; height: 9px; border: 1px solid rgb(255 255 255 / .72); border-radius: 50%; background: var(--plantaz-ink); transition: background 180ms ease, border-color 180ms ease, transform 180ms ease; }
+.plantazProgressRail nav a.is-active .plantazProgressRailDot { border-color: var(--plantaz-pastel); background: var(--plantaz-pastel); transform: scale(1.25); }
+.plantazWebsiteNav { position: absolute; top: 0; left: 0; right: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: 24px clamp(20px, 5vw, 72px); color: #fff; }
+.plantazWebsiteBrand { display: flex; width: clamp(150px, 14vw, 220px); padding: 2px 8px; border-radius: 4px; background: #fff; opacity: 1; }
+.plantazWebsiteBrand img { display: block; width: 100%; height: auto; opacity: 1; }
+.plantazWebsiteNav nav { display: flex; gap: clamp(14px, 2.5vw, 34px); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+.plantazWebsiteNav nav a { opacity: .86; }
+.plantazWebsiteNav nav a:hover { opacity: 1; }
+.plantazHero { position: relative; min-height: min(780px, 92vh); display: grid; align-items: end; overflow: hidden; background: var(--plantaz-pastel); color: #fff; }
+.plantazHero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.plantazHeroShade { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(25 36 29 / .3), rgb(25 36 29 / .68)); }
+.plantazHeroContent { position: relative; z-index: 1; max-width: 680px; padding: 0 clamp(20px, 9vw, 150px) 100px; }
+.plantazEyebrow { margin: 0 0 14px; color: var(--plantaz-pastel-dark); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; }
+.plantazHero .plantazEyebrow { color: #e1f0e4; }
+.plantazHero h1 { margin: 0; font-size: clamp(50px, 9vw, 124px); font-weight: 400; letter-spacing: -.06em; line-height: .9; }
+.plantazHeroContent > p:not(.plantazEyebrow) { max-width: 480px; margin: 28px 0; font-size: 16px; line-height: 1.6; }
+.plantazTextLink { display: inline-flex; gap: 12px; align-items: center; padding-bottom: 8px; border-bottom: 1px solid rgb(255 255 255 / .7); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.plantazSection { max-width: 1280px; margin: 0 auto; padding: clamp(76px, 10vw, 144px) clamp(20px, 5vw, 72px); }
+.plantazSectionIntro { max-width: 600px; margin-bottom: 48px; }
+.plantazSectionIntro h2, .plantazContact h2, .plantazApartment h2 { margin: 0; font-size: clamp(30px, 4vw, 52px); font-weight: 400; letter-spacing: -.05em; line-height: 1; }
+.plantazSectionIntro > p:last-child, .plantazContact > div > p:last-child, .plantazApartmentCopy > p:not(.plantazEyebrow) { color: var(--plantaz-muted); font-size: 15px; line-height: 1.7; }
+.plantazEnvironment { padding-bottom: 80px; }
+.plantazEnvironmentGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.plantazMap, .plantazEnvironmentImage { min-height: 480px; background: var(--plantaz-pastel); overflow: hidden; }
+.plantazEnvironmentImage { position: relative; }
+.plantazMap iframe { width: 100%; height: 100%; min-height: 480px; border: 0; filter: saturate(.7); }
+.plantazEnvironmentImage img, .plantazApartmentVisual img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.plantazEnvironmentWeather { position: absolute; top: 50%; left: 50%; z-index: 2; width: min(360px, calc(100% - 36px)); transform: translate(-50%, -50%); }
+.plantazEnvironmentWeather--inline { position: static; width: auto; transform: none; }
+.plantazInterestGrid .plantazEnvironmentWeather--inline { padding: 0; background: transparent; }
+.plantazEnvironmentWeather--inline .maretsetWeatherCard { height: 100%; }
+.plantazEnvironmentWeather .maretsetWeatherCard { gap: 12px; margin: 0; padding: 24px; border: 0; border-radius: 0; background: #f2f7f2; box-shadow: none; backdrop-filter: none; color: #000; text-shadow: none; }
+.plantazEnvironmentWeather .maretsetWeatherHeader { gap: 12px; }
+.plantazEnvironmentWeather .maretsetWeatherEyebrow { margin-bottom: 5px; color: #000; font-size: 9px; }
+.plantazEnvironmentWeather .maretsetWeatherHeader h3 { color: #000; font-size: 20px; }
+.plantazEnvironmentWeather .maretsetWeatherHeader p:not(.maretsetWeatherEyebrow), .plantazEnvironmentWeather .maretsetWeatherLoading { margin-top: 4px; color: #000; font-size: 12px; }
+.plantazEnvironmentWeather .maretsetWeatherTempBlock { gap: 7px; padding: 7px 9px; border-color: rgb(255 255 255 / .7); background: transparent; }
+.plantazEnvironmentWeather .maretsetWeatherTempBlock strong { color: #000; font-size: 30px; }
+.plantazEnvironmentWeather .maretsetWeatherIcon { color: #000; }
+.plantazEnvironmentWeather .maretsetWeatherGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.plantazEnvironmentWeather .maretsetWeatherGrid div { gap: 4px; padding: 8px 10px; border-color: rgb(255 255 255 / .55); border-radius: 10px; background: transparent; }
+.plantazEnvironmentWeather .maretsetWeatherGrid span { color: #000; font-size: 8px; }
+.plantazEnvironmentWeather .maretsetWeatherGrid strong { color: #000; font-size: 15px; }
+.plantazInterestGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
+.plantazInterestGrid article { padding: 24px; background: #f2f7f2; }
+.plantazInterestGrid span { color: var(--plantaz-pastel-dark); font-size: 11px; }
+.plantazInterestGrid h3 { margin: 42px 0 10px; font-size: 16px; font-weight: 500; }
+.plantazInterestGrid p { margin: 0; color: var(--plantaz-muted); font-size: 13px; line-height: 1.55; }
+.plantazInterestDetails { margin-top: 18px; border-top: 1px solid rgb(80 110 88 / .24); border-bottom: 1px solid rgb(80 110 88 / .24); }
+.plantazInterestDetails summary { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 0; color: var(--plantaz-ink); cursor: pointer; list-style: none; }
+.plantazInterestDetails summary::-webkit-details-marker { display: none; }
+.plantazInterestDetails summary::after { content: "+"; color: var(--plantaz-pastel-dark); font-size: 22px; font-weight: 300; line-height: 1; transition: transform 180ms ease; }
+.plantazInterestDetails[open] summary::after { transform: rotate(45deg); }
+.plantazInterestDetails summary span { color: var(--plantaz-pastel-dark); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; }
+.plantazInterestDetails summary strong { margin-left: auto; font-size: 13px; font-weight: 500; }
+.plantazInterestTableWrap { overflow-x: auto; padding-bottom: 22px; }
+.plantazInterestTable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.plantazInterestTable th, .plantazInterestTable td { padding: 13px 0; border-top: 1px solid rgb(80 110 88 / .12); text-align: left; }
+.plantazInterestTable thead th { color: var(--plantaz-muted); font-size: 9px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
+.plantazInterestTable tbody th { font-weight: 500; }
+.plantazInterestTable tbody td { color: var(--plantaz-muted); }
+.plantazInterestTable tbody tr { transition: background-color 180ms ease, color 180ms ease; }
+.plantazInterestTable tbody tr:hover { background: #dfeee1; }
+.plantazInterestTable tbody tr:hover th, .plantazInterestTable tbody tr:hover td { color: var(--plantaz-ink); }
+.plantazConstruction { max-width: 1280px; margin: 0 auto; padding: clamp(76px, 10vw, 144px) clamp(20px, 5vw, 72px); background: #fff; }
+.plantazConstructionHeader { display: grid; justify-items: center; gap: 14px; margin: 0 auto 64px; text-align: center; }
+.plantazConstructionHeader .plantazEyebrow { margin-bottom: 0; }
+.plantazConstructionHeader h2 { margin: 0; font-size: clamp(34px, 5vw, 64px); font-weight: 400; letter-spacing: -.06em; line-height: .95; }
+.plantazConstructionHeader > p:last-child { max-width: 520px; margin: 0; color: var(--plantaz-muted); font-size: 13px; line-height: 1.6; }
+.plantazConstructionList { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); padding: 20px 0 10px; }
+.plantazConstructionList::before { content: ""; position: absolute; top: 46px; right: 8%; left: 8%; height: 1px; background: rgb(36 49 43 / .2); }
+.plantazConstructionStep { position: relative; display: grid; justify-items: center; gap: 22px; min-width: 0; padding: 0 10px; text-align: center; }
+.plantazConstructionNumber { position: relative; z-index: 1; display: grid; place-items: center; width: 52px; height: 52px; border: 1px solid rgb(36 49 43 / .2); border-radius: 50%; background: #fff; color: var(--plantaz-muted); font-size: 11px; font-weight: 600; letter-spacing: .1em; transition: background 180ms ease, color 180ms ease, transform 180ms ease; }
+.plantazConstructionStep:hover .plantazConstructionNumber, .plantazConstructionStep:focus-within .plantazConstructionNumber { background: var(--plantaz-pastel-dark); color: #fff; transform: translateY(-3px); }
+.plantazConstructionStep > div { display: grid; justify-items: center; gap: 9px; }
+.plantazConstructionDate { color: var(--plantaz-pastel-dark); font-size: 9px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+.plantazConstructionStep h3 { max-width: 14ch; margin: 0; font-size: 17px; font-weight: 500; letter-spacing: -.035em; line-height: 1.05; }
+.plantazConstructionStep p { max-width: 22ch; margin: 0; color: var(--plantaz-muted); font-size: 12px; line-height: 1.5; }
+.plantazPlans { max-width: none; background: #eef5ef; }
+.plantazPlans > * { max-width: 1136px; margin-left: auto; margin-right: auto; }
+.plantazPlansTabs { display: none; }
+.plantazPlanList { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.plantazPlanList a { display: grid; gap: 18px; padding: 24px; border: 1px solid rgb(80 110 88 / .22); background: #fff; }
+.plantazPlanList a:hover { border-color: var(--plantaz-pastel-dark); }
+.plantazPlanList span { color: var(--plantaz-pastel-dark); font-size: 10px; letter-spacing: .15em; }
+.plantazPlanList strong { font-size: 16px; font-weight: 500; }
+.plantazPlanList small { color: var(--plantaz-muted); font-size: 12px; }
+.plantazMuted { color: var(--plantaz-muted); }
+.plantazGallery { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; }
+.plantazGallery figure { grid-column: span 4; margin: 0; }
+.plantazGallery figure:nth-child(3n + 1) { grid-column: span 6; }
+.plantazGalleryOpen { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+.plantazGallery img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--plantaz-pastel); }
+.plantazGallery figcaption { padding-top: 9px; color: var(--plantaz-muted); font-size: 10px; letter-spacing: .13em; text-transform: uppercase; }
+.plantazGalleryLightbox { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 56px 24px 110px; background: rgb(25 36 29 / .94); }
+.plantazGalleryLightbox > img { display: block; width: min(1100px, 100%); height: min(78vh, 760px); object-fit: contain; }
+.plantazGalleryClose { position: absolute; top: 22px; right: 24px; width: 42px; height: 42px; border: 1px solid rgb(255 255 255 / .5); border-radius: 50%; background: transparent; color: #fff; cursor: pointer; font-size: 28px; font-weight: 300; line-height: 1; }
+.plantazGalleryControls { position: absolute; bottom: 28px; left: 50%; display: flex; align-items: center; justify-content: center; gap: 14px; width: max-content; padding: 8px; border: 1px solid rgb(255 255 255 / .22); border-radius: 999px; background: rgb(20 31 25 / .72); box-shadow: 0 12px 34px rgb(0 0 0 / .24); backdrop-filter: blur(12px); transform: translateX(-50%); }
+.plantazGalleryControls button { display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid rgb(255 255 255 / .34); border-radius: 50%; background: rgb(255 255 255 / .08); color: #fff; cursor: pointer; font-size: 24px; font-weight: 300; line-height: 1; transition: background 180ms ease, border-color 180ms ease, transform 180ms ease; }
+.plantazGalleryControls button:hover, .plantazGalleryControls button:focus-visible { border-color: #d9eadb; background: #8faa96; transform: scale(1.06); }
+.plantazGalleryClose:hover, .plantazGalleryClose:focus-visible { background: rgb(255 255 255 / .16); }
+.plantazGalleryControls span { min-width: 56px; color: #fff; font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: .16em; text-align: center; }
+.plantazApartment { display: grid; grid-template-columns: .8fr 1.2fr; gap: 48px; align-items: stretch; }
+.plantazApartmentCopy { padding: 28px 0; }
+.plantazApartmentIntro > p:last-child { color: var(--plantaz-muted); font-size: 15px; line-height: 1.7; }
+.plantazApartmentVisual { min-height: 440px; background: var(--plantaz-pastel); }
+.plantazApartmentVisual--original { position: relative; align-self: start; min-height: 0; height: auto; aspect-ratio: 2048 / 1137; overflow: hidden; }
+.plantazApartmentVisual--original > img { height: auto; aspect-ratio: 2048 / 1137; object-fit: contain; }
+.plantazApartmentZones { position: absolute; inset: 0; width: 100%; height: 100%; }
+.plantazApartmentZones path { fill: #82c570; fill-opacity: 0; outline: none; pointer-events: all; transition: fill-opacity 180ms ease, stroke 180ms ease; }
+.plantazApartmentZones path:focus, .plantazApartmentZones path.is-active { fill-opacity: .68; stroke: #edf9ee; stroke-width: 8; }
+@media (hover: hover) and (pointer: fine) {
+  .plantazApartmentZones path:hover { fill-opacity: .68; stroke: #edf9ee; stroke-width: 8; }
+}
+.plantazApartmentZoneLabel { display: none; }
+.plantazAvailabilityHint { margin-top: 28px; color: var(--plantaz-pastel-dark); font-size: 12px; letter-spacing: .04em; line-height: 1.5; }
+.plantazContact { display: grid; grid-template-columns: .8fr 1.2fr; gap: 70px; max-width: 1280px; margin: 0 auto; padding: 100px clamp(20px, 5vw, 72px); background: #f2f7f2; }
+.plantazAvailabilityTableWrap { grid-column: 1 / -1; overflow-x: auto; margin-top: 10px; }
+.plantazAvailabilityScrollHint { position: sticky; top: 12px; z-index: 4; display: grid; grid-column: 1 / -1; grid-template-columns: auto auto; align-items: center; gap: 8px 12px; width: 100%; margin-bottom: 12px; padding: 10px 0; background: #fff; color: var(--plantaz-muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.plantazAvailabilityScrollHint strong { justify-self: end; color: var(--plantaz-pastel-dark); font-size: 10px; font-variant-numeric: tabular-nums; }
+.plantazAvailabilityScrollTrack { grid-column: 1 / -1; display: block; width: 100%; height: 3px; overflow: hidden; border-radius: 999px; background: #e1ebe2; }
+.plantazAvailabilityScrollTrack i { display: block; height: 100%; min-width: 8px; border-radius: inherit; background: var(--plantaz-pastel-dark); transition: width 160ms ease; }
+.plantazAvailabilityTable { width: 100%; min-width: 980px; border-collapse: collapse; font-size: 13px; table-layout: auto; }
+.plantazAvailabilityTable caption { margin-bottom: 14px; color: var(--plantaz-muted); font-size: 10px; letter-spacing: .14em; text-align: left; text-transform: uppercase; }
+.plantazAvailabilityTable th, .plantazAvailabilityTable td { padding: 16px 20px; border-bottom: 1px solid rgb(80 110 88 / .2); text-align: left; white-space: nowrap; }
+.plantazAvailabilityTable th:first-child { min-width: 150px; }
+.plantazAvailabilityTable td { min-width: 105px; }
+.plantazAvailabilityTable thead th { color: var(--plantaz-muted); font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
+.plantazAvailabilityTable tbody th { font-weight: 500; }
+.plantazAvailabilityTable tbody th button { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.plantazAvailabilityTable tbody th button:focus-visible { outline: 2px solid var(--plantaz-pastel-dark); outline-offset: 4px; }
+.plantazAvailabilityTable tbody tr { cursor: pointer; }
+.plantazAvailabilityTable tbody tr.is-active { background: #e5f1e6; }
+.plantazAvailabilityTable tbody tr:first-child { background: #f2f7f2; }
+.plantazAvailabilityStatus { color: var(--plantaz-muted); }
+.plantazAvailabilityStatus--available { color: #4b7656; }
+.plantazContactForm { display: grid; gap: 18px; }
+.plantazContactGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.plantazContactForm label { display: grid; gap: 8px; color: var(--plantaz-muted); font-size: 11px; }
+.plantazContactForm input, .plantazContactForm textarea { width: 100%; padding: 13px 0; border: 0; border-bottom: 1px solid rgb(80 110 88 / .3); background: transparent; color: var(--plantaz-ink); font: inherit; outline: none; }
+.plantazContactForm textarea { resize: vertical; }
+.plantazContactForm input:focus, .plantazContactForm textarea:focus { border-color: var(--plantaz-ink); }
+.plantazContactActions { display: flex; gap: 18px; align-items: center; }
+.plantazContactActions button { padding: 13px 20px; border: 0; background: var(--plantaz-ink); color: #fff; cursor: pointer; font: inherit; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+.plantazContactActions button:disabled { opacity: .55; cursor: wait; }
+.plantazContactActions p { margin: 0; color: var(--plantaz-muted); font-size: 12px; }
+.plantazContactActions p[data-error="true"] { color: #a14b45; }
+.plantazContactHoneypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.plantazFooter { padding: 64px clamp(20px, 5vw, 72px) 24px; background: var(--plantaz-ink); color: #fff; font-size: 11px; }
+.plantazFooterGrid { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 48px; max-width: 1280px; margin: 0 auto; }
+.plantazFooterBrand, .plantazFooterColumn { display: grid; align-content: start; gap: 10px; }
+.plantazFooterBrand img { display: block; width: min(220px, 100%); height: auto; margin-bottom: 10px; }
+.plantazFooterBrand p, .plantazFooterColumn p { max-width: 220px; margin: 0; color: #c8d5ca; line-height: 1.6; }
+.plantazFooterColumn h3 { margin: 0 0 8px; color: #d9eadb; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; }
+.plantazFooterColumn a { width: fit-content; color: #fff; transition: color 180ms ease; }
+.plantazFooterColumn a:hover, .plantazFooterColumn a:focus-visible { color: #d9eadb; }
+.plantazFooterBottom { display: flex; justify-content: space-between; gap: 20px; max-width: 1280px; margin: 60px auto 0; padding-top: 18px; border-top: 1px solid rgb(217 234 219 / .2); color: #9fb5a4; font-size: 10px; }
+@media (max-width: 760px) {
+  .plantazProgressRail { top: auto; right: auto; bottom: 14px; left: 50%; width: calc(100% - 32px); padding: 10px 12px; border: 1px solid rgb(255 255 255 / .24); border-radius: 14px; background: rgb(36 49 43 / .9); backdrop-filter: blur(10px); transform: translateX(-50%); }
+  .plantazProgressRailHeader { display: none; }
+  .plantazProgressRailLine { top: 14px; right: 16px; bottom: auto; left: 16px; width: auto; height: 1px; }
+  .plantazProgressRailLine span { width: var(--plantaz-progress); height: 100%; }
+  .plantazProgressRail nav { grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .plantazProgressRail nav a { display: grid; justify-items: center; gap: 5px; font-size: 7px; letter-spacing: .04em; text-align: center; }
+  .plantazProgressRail nav a.is-active .plantazProgressRailDot { transform: scale(1.15); }
+  .plantazWebsiteNav nav { display: none; }
+  .plantazHero { min-height: 700px; }
+  .plantazEnvironmentGrid, .plantazApartment, .plantazContact { grid-template-columns: 1fr; }
+  .plantazMap, .plantazEnvironmentImage, .plantazMap iframe { min-height: 320px; }
+  .plantazInterestGrid, .plantazPlanList { grid-template-columns: 1fr; }
+  .plantazInterestDetails summary { align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+  .plantazInterestDetails summary strong { margin-left: 0; }
+  .plantazPlansTabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 4px; scrollbar-width: none; }
+  .plantazPlansTabs::-webkit-scrollbar { display: none; }
+  .plantazPlansTabs button { display: grid; flex: 0 0 auto; gap: 4px; min-width: 120px; padding: 11px 12px; border: 1px solid rgb(80 110 88 / .22); background: transparent; color: var(--plantaz-muted); cursor: pointer; text-align: left; }
+  .plantazPlansTabs button.is-active { border-color: var(--plantaz-ink); background: var(--plantaz-ink); color: #fff; }
+  .plantazPlansTabs button span { font-size: 9px; letter-spacing: .12em; }
+  .plantazPlansTabs button strong { overflow: hidden; font-size: 11px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+  .plantazPlans .plantazPlanList { display: block; }
+  .plantazPlans .plantazPlanList a { display: none; }
+  .plantazPlans .plantazPlanList a.is-active { display: grid; }
+  .plantazConstructionList { grid-template-columns: 1fr; gap: 28px; padding: 10px 0 10px; }
+  .plantazConstructionList::before { top: 36px !important; right: auto !important; bottom: 36px !important; left: 26px !important; width: 1px !important; height: auto !important; }
+  .plantazConstructionStep { grid-template-columns: 52px minmax(0, 1fr); align-items: start; justify-items: start; gap: 16px; text-align: left; }
+  .plantazConstructionStep > div { justify-items: start; padding-top: 3px; }
+  .plantazConstructionStep h3, .plantazConstructionStep p { max-width: none; }
+  .plantazGallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .plantazGallery figure, .plantazGallery figure:nth-child(3n + 1) { grid-column: span 1; }
+  .plantazGallery figcaption { font-size: 8px; }
+  .plantazApartment { display: flex; flex-direction: column; gap: 0; }
+  .plantazApartmentCopy { display: contents; }
+  .plantazApartmentIntro { order: 1; padding: 0 0 28px; }
+  .plantazApartmentVisual { order: 2; min-height: 300px; }
+  .plantazAvailabilityHint { display: none; }
+  .plantazAvailabilityScrollHint { order: 4; margin-top: 4px; }
+  .plantazAvailabilityTableWrap { order: 5; }
+  .plantazAvailabilityTable caption { display: none; }
+  .plantazApartmentVisual--original { width: 100%; min-height: 0; aspect-ratio: 2048 / 1137; }
+  .plantazApartmentVisual--original > img { width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover; object-position: center; }
+  .plantazContactGrid { grid-template-columns: 1fr; }
+  .plantazFooterGrid { grid-template-columns: repeat(2, 1fr); gap: 36px 24px; }
+  .plantazFooterBrand { grid-column: 1 / -1; }
+  .plantazFooterBottom { flex-direction: column; gap: 6px; margin-top: 42px; }
+}
+
 .projectFeedbackApprovalWatermark {
   position: absolute;
   top: 50%;
@@ -25899,4 +26211,13 @@ body:has(.dashboardPage),
   .projectProspectsFields {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* The Plantaz presentation owns its own footer; hide BrotherStudio's global footer on this page. */
+body:has(.plantazWebsitePage) .siteHeader {
+  display: none !important;
+}
+
+.siteChrome:has(.plantazWebsitePage) > .siteFooter {
+  display: none !important;
 }

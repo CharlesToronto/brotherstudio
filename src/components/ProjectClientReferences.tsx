@@ -22,6 +22,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { PDFDocument } from "pdf-lib";
 
 import type {
   ProjectReferenceFile,
@@ -102,6 +103,39 @@ async function compressReferenceImage(file: File) {
   } catch {
     return file;
   }
+}
+
+async function compressReferencePdf(file: File) {
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    return file;
+  }
+
+  try {
+    const pdf = await PDFDocument.load(await file.arrayBuffer(), {
+      ignoreEncryption: true,
+      updateMetadata: false,
+    });
+    const bytes = await pdf.save({
+      addDefaultPage: false,
+      objectsPerTick: 50,
+      useObjectStreams: true,
+    });
+    const compressedBytes = new Uint8Array(bytes);
+    const compressedFile = new File([compressedBytes.buffer as ArrayBuffer], file.name, {
+      type: "application/pdf",
+      lastModified: file.lastModified,
+    });
+
+    return compressedFile.size < file.size ? compressedFile : file;
+  } catch {
+    // Encrypted or malformed PDFs continue to upload unchanged.
+    return file;
+  }
+}
+
+async function compressReferenceFile(file: File) {
+  const image = await compressReferenceImage(file);
+  return image === file ? compressReferencePdf(file) : image;
 }
 
 async function uploadReferenceFile(
@@ -390,7 +424,7 @@ export function ProjectClientReferences({
     try {
       const drafts = await Promise.all(
         selectedFiles.map(async (originalFile) => {
-          const file = await compressReferenceImage(originalFile);
+          const file = await compressReferenceFile(originalFile);
           return {
             file,
             title: baseFilename(originalFile.name),

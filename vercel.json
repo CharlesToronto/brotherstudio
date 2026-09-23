@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/project-notifications",
+      "schedule": "* * * * *"
+    }
+  ]
+}

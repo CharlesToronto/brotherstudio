@@ -56,6 +56,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.62,
     });
+
+    entries.push({
+      url: toAbsoluteUrl(withLocalePath(locale, "/mywebsite/plantaz")),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.62,
+    });
   }
 
   return entries;

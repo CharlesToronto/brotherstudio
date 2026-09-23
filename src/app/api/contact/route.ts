@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { site } from "@/content/site";
+import { getSupabaseAdminClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -205,6 +206,33 @@ export async function POST(request: Request) {
       "Email provider error.";
 
     return NextResponse.json({ error: errorMessage }, { status: 502 });
+  }
+
+  if (project.toLowerCase().includes("plantaz")) {
+    try {
+      const supabase = getSupabaseAdminClient();
+      const { data: projectRow } = await supabase
+        .from("projects")
+        .select("id")
+        .ilike("name", "%Plantaz%")
+        .limit(1)
+        .maybeSingle();
+
+      if (projectRow?.id) {
+        await supabase.from("project_prospects").insert({
+          project_id: projectRow.id,
+          name,
+          email,
+          phone,
+          source: source || "plantaz-sales-website",
+          interest: "Appartement Plantaz",
+          message,
+          notes: `Prospect ajouté automatiquement depuis le site Plantaz.\n\nDemande :\n${message}`,
+        });
+      }
+    } catch (prospectError) {
+      console.error("Failed to save Plantaz website prospect:", prospectError);
+    }
   }
 
   return NextResponse.json({ ok: true }, { status: 201 });

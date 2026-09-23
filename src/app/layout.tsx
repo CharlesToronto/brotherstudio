@@ -72,6 +72,7 @@ export default async function RootLayout({
   const subpath = stripLocaleFromPathname(pathname);
   const isBareExperiencePage = subpath === "/myexperience" || subpath.startsWith("/myexperience/");
   const isCampaignLandingPage = subpath === "/landing";
+  const isPlantazWebsitePage = subpath === "/mywebsite/plantaz";
   const hasStandardChrome = !isBareExperiencePage && !isCampaignLandingPage;
   const shouldLoadAnalytics =
     process.env.NODE_ENV === "production" && process.env.VERCEL === "1";
@@ -95,10 +96,10 @@ export default async function RootLayout({
         />
         <div className="siteShell">
           <div className="siteChrome">
-            {hasStandardChrome ? <SiteHeader locale={locale} /> : null}
+            {hasStandardChrome && !isPlantazWebsitePage ? <SiteHeader locale={locale} /> : null}
             <AnalyticsTracker />
             {children}
-            {hasStandardChrome ? <SiteFooter locale={locale} /> : null}
+            {hasStandardChrome && !isPlantazWebsitePage ? <SiteFooter locale={locale} /> : null}
           </div>
           <SiteAssistantBubble hasMobileMenu={hasStandardChrome} locale={locale} />
         </div>

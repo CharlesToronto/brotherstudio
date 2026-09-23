@@ -14,11 +14,13 @@ type WebsitePreview = {
   href?: string;
   image: string;
   alt: string;
+  showFullImage?: boolean;
 };
 
 function getWebsitePreviews(locale: Locale): WebsitePreview[] {
   const mesangeHref = withLocalePath(locale, "/myexperience");
   const maretsetHref = withLocalePath(locale, "/mywebsite/maretset");
+  const plantazHref = withLocalePath(locale, "/mywebsite/plantaz");
 
   return [
     {
@@ -40,12 +42,11 @@ function getWebsitePreviews(locale: Locale): WebsitePreview[] {
           : "Preview of the Maretset sales website",
     },
     {
-      title: "Coming soon",
-      image: "/mywebsite-coming-soon-cover.webp",
-      alt:
-        locale === "fr"
-          ? "Apercu d un prochain site de vente"
-          : "Preview of an upcoming sales website",
+      title: "Plantaz",
+      href: plantazHref,
+      image: "/plantaz-building-cover.jpg",
+      alt: locale === "fr" ? "Aperçu du site Plantaz" : "Plantaz website preview",
+      showFullImage: true,
     },
   ];
 }
@@ -109,7 +110,7 @@ export default async function MyWebsitePage({ params }: LocalePageProps) {
                       alt={preview.alt}
                       fill
                       sizes="(max-width: 900px) 100vw, 33vw"
-                      className="myWebsiteCardImage"
+                      className={`myWebsiteCardImage${preview.showFullImage ? " myWebsiteCardImage--full" : ""}`}
                     />
                   </div>
                   <div className="myWebsiteCardFooter">
@@ -124,7 +125,7 @@ export default async function MyWebsitePage({ params }: LocalePageProps) {
                       alt={preview.alt}
                       fill
                       sizes="(max-width: 900px) 100vw, 33vw"
-                      className="myWebsiteCardImage"
+                      className={`myWebsiteCardImage${preview.showFullImage ? " myWebsiteCardImage--full" : ""}`}
                     />
                   </div>
                   <div className="myWebsiteCardFooter">

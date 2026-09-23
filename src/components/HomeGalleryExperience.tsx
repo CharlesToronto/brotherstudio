@@ -72,6 +72,7 @@ type WebsitePreview = {
   href?: string;
   image: string;
   alt: string;
+  showFullImage?: boolean;
 };
 
 type SalesPlanPreview = {
@@ -285,8 +286,8 @@ function getLocalizedGalleryItems(items: GalleryItem[], locale: Locale): Gallery
 
 function getWebsitePreviews(locale: Locale): WebsitePreview[] {
   const mesangeHref = withLocalePath(locale, "/myexperience");
-  const websiteHref = withLocalePath(locale, "/mywebsite");
   const maretsetHref = withLocalePath(locale, "/mywebsite/maretset");
+  const plantazHref = withLocalePath(locale, "/mywebsite/plantaz");
 
   return [
     {
@@ -305,13 +306,11 @@ function getWebsitePreviews(locale: Locale): WebsitePreview[] {
       alt: locale === "fr" ? "Apercu du site de vente Maretset" : "Preview of the Maretset sales website",
     },
     {
-      title: locale === "fr" ? "Bientôt disponible" : "Coming soon",
-      href: websiteHref,
-      image: "/mywebsite-coming-soon-cover.webp",
-      alt:
-        locale === "fr"
-          ? "Apercu d un prochain site de vente"
-          : "Preview of an upcoming sales website",
+      title: "Plantaz",
+      href: plantazHref,
+      image: "/plantaz-building-cover.jpg",
+      alt: locale === "fr" ? "Aperçu du site Plantaz" : "Plantaz website preview",
+      showFullImage: true,
     },
   ];
 }
@@ -887,7 +886,7 @@ export function HomeGalleryExperience({
                         alt={preview.alt}
                         fill
                         sizes="(max-width: 900px) 100vw, 33vw"
-                        className="myWebsiteCardImage"
+                        className={`myWebsiteCardImage${preview.showFullImage ? " myWebsiteCardImage--full" : ""}`}
                       />
                     </div>
                     <div className="myWebsiteCardFooter">
@@ -902,7 +901,7 @@ export function HomeGalleryExperience({
                         alt={preview.alt}
                         fill
                         sizes="(max-width: 900px) 100vw, 33vw"
-                        className="myWebsiteCardImage"
+                        className={`myWebsiteCardImage${preview.showFullImage ? " myWebsiteCardImage--full" : ""}`}
                       />
                     </div>
                     <div className="myWebsiteCardFooter">

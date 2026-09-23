@@ -9,6 +9,7 @@ import {
   getProjectViewerRoleCookieName,
   isProjectFeedbackConfigured,
 } from "@/lib/projectFeedbackStore";
+import { queueProjectCommentDigest } from "@/lib/projectNotifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -70,6 +71,12 @@ export async function POST(
       viewerEmail,
       content,
     });
+
+    try {
+      await queueProjectCommentDigest(projectId);
+    } catch (notificationError) {
+      console.error("Failed to queue project comment notification:", notificationError);
+    }
 
     return NextResponse.json({ project }, { status: 201 });
   } catch (error) {
