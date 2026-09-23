@@ -1128,6 +1128,7 @@ body:has(.homeBlurWordSection) {
 
 .myExperienceCommunitySection .parallaxScrollFeatureMedia {
   width: min(100%, 620px);
+  border-radius: 14px;
   box-shadow:
     0 0 0 1px rgb(118 103 88 / 0.12),
     0 18px 48px rgb(78 62 45 / 0.12),
