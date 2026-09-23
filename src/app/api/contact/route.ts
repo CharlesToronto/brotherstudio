@@ -9,6 +9,7 @@ type ContactPayload = {
   name?: unknown;
   email?: unknown;
   phone?: unknown;
+  interest?: unknown;
   message?: unknown;
   website?: unknown;
   source?: unknown;
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
   const name = clip(asTrimmedString(body.name), 120);
   const email = clip(asTrimmedString(body.email).toLowerCase(), 200);
   const phone = clip(asTrimmedString(body.phone), 40);
+  const interest = clip(asTrimmedString(body.interest), 120);
   const message = clip(asTrimmedString(body.message), 4000);
   const source = clip(asTrimmedString(body.source), 80);
   const project = clip(asTrimmedString(body.project), 120);
@@ -99,6 +101,7 @@ export async function POST(request: Request) {
     `Name: ${name}`,
     `Email: ${email}`,
     `Phone: ${phone || "-"}`,
+    `Interest: ${interest || "-"}`,
     `Submitted: ${submittedAt}`,
     "",
     "Message:",
@@ -113,6 +116,7 @@ export async function POST(request: Request) {
         <strong>Name:</strong> ${escapeHtml(name)}<br />
         <strong>Email:</strong> ${escapeHtml(email)}<br />
         <strong>Phone:</strong> ${escapeHtml(phone || "-")}<br />
+        <strong>Interest:</strong> ${escapeHtml(interest || "-")}<br />
         <strong>Source:</strong> ${escapeHtml(source || "-")}<br />
         <strong>Project:</strong> ${escapeHtml(project || "-")}<br />
         <strong>Submitted:</strong> ${escapeHtml(submittedAt)}
@@ -160,6 +164,7 @@ export async function POST(request: Request) {
     "Recapitulatif :",
     `- Email : ${email}`,
     `- Telephone : ${phone || "-"}`,
+    `- Intérêt : ${interest || "-"}`,
     `- Demande : ${message}`,
     "",
     "BrotherStudio",
@@ -173,6 +178,7 @@ export async function POST(request: Request) {
       <p><strong>Recapitulatif</strong><br />
       Email: ${escapeHtml(email)}<br />
       Telephone: ${escapeHtml(phone || "-")}<br />
+      Intérêt: ${escapeHtml(interest || "-")}<br />
       Demande: ${escapeHtml(message)}</p>
       <p>BrotherStudio</p>
     </div>
@@ -208,13 +214,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: errorMessage }, { status: 502 });
   }
 
-  if (project.toLowerCase().includes("plantaz")) {
+  const projectSearchPattern = project.toLowerCase().includes("plantaz")
+    ? "%Plantaz%"
+    : project.toLowerCase().includes("mesange") || project.toLowerCase().includes("mésange")
+      ? "%Mesange%"
+      : null;
+
+  if (projectSearchPattern) {
     try {
       const supabase = getSupabaseAdminClient();
       const { data: projectRow } = await supabase
         .from("projects")
         .select("id")
-        .ilike("name", "%Plantaz%")
+        .ilike("name", projectSearchPattern)
         .limit(1)
         .maybeSingle();
 
@@ -224,10 +236,10 @@ export async function POST(request: Request) {
           name,
           email,
           phone,
-          source: source || "plantaz-sales-website",
-          interest: "Appartement Plantaz",
+          source: source || `${project.toLowerCase()}-website`,
+          interest: interest || `Projet ${project || "immobilier"}`,
           message,
-          notes: `Prospect ajouté automatiquement depuis le site Plantaz.\n\nDemande :\n${message}`,
+          notes: `Prospect ajouté automatiquement depuis le site ${project || "BrotherStudio"}.\n\nIntérêt : ${interest || "Non précisé"}\n\nDemande :\n${message}`,
         });
       }
     } catch (prospectError) {

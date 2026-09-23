@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,10 +19,20 @@ const QUICK_PROMPTS = [
 export function MyExperienceLeadFooter() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [messageValue, setMessageValue] = useState(QUICK_PROMPTS[0] ?? "");
+  const [interest, setInterest] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle",
     message: "",
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const value = params.get("appartement") || params.get("interet") || params.get("interest") || "";
+    if (!value.trim()) return;
+
+    const apartmentNumber = value.trim().match(/^\d{1,2}$/)?.[0];
+    setInterest(apartmentNumber ? `Appartement ${apartmentNumber.padStart(2, "0")}` : value.trim());
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -35,6 +45,7 @@ export function MyExperienceLeadFooter() {
       name: String(formData.get("name") ?? ""),
       email: String(formData.get("email") ?? ""),
       phone: String(formData.get("phone") ?? ""),
+      interest: String(formData.get("interest") ?? ""),
       message: String(formData.get("message") ?? ""),
       website: String(formData.get("website") ?? ""),
       source: "myexperience-footer",
@@ -61,6 +72,7 @@ export function MyExperienceLeadFooter() {
 
       form.reset();
       setMessageValue(QUICK_PROMPTS[0] ?? "");
+      setInterest("");
       setSubmitState({
         status: "success",
         message:
@@ -127,6 +139,18 @@ export function MyExperienceLeadFooter() {
                 autoComplete="tel"
                 maxLength={40}
                 placeholder="+41 ..."
+              />
+            </label>
+
+            <label className="myExperienceContactFooterField">
+              <span>Intérêt</span>
+              <input
+                name="interest"
+                type="text"
+                maxLength={120}
+                value={interest}
+                onChange={(event) => setInterest(event.target.value)}
+                placeholder="Appartement 04"
               />
             </label>
 
