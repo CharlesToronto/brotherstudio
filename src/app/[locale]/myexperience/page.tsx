@@ -59,7 +59,7 @@ const communityItems = [
     number: "01",
     title: "Appartement 1",
     description:
-      "Le niveau principal s’organise autour d’un séjour de 52 m², d’une salle à manger de 21 m² et d’une extension directe vers la terrasse de 74 m², pour un espace de vie généreux et accueillant au quotidien.",
+      "Un appartement chaleureux et ouvert, pensé autour d’un vaste espace de vie convivial. Le séjour et la salle à manger se prolongent naturellement vers la terrasse, créant une belle continuité entre l’intérieur et l’extérieur.",
     image: HOUSE_PLAN_SLIDES[0],
     size: "medium",
   },
@@ -67,7 +67,7 @@ const communityItems = [
     number: "02",
     title: "Appartement 2",
     description:
-      "Le plan équilibre intimité et confort avec une suite principale de 28 m², des chambres d’invités de 19 m² et une circulation soigneusement séparée pour une résidence calme et lisible.",
+      "Un appartement paisible et équilibré, où les espaces de vie s’articulent autour d’une organisation claire et fonctionnelle. La suite principale, les chambres d’invités et la terrasse offrent un cadre confortable, propice à la détente et à l’accueil.",
     image: HOUSE_PLAN_SLIDES[1],
     size: "medium",
   },
@@ -75,7 +75,7 @@ const communityItems = [
     number: "03",
     title: "Appartement 3",
     description:
-      "Sur 192 m², l’agencement est pensé comme une résidence d’exception : de beaux espaces communs, des transitions fluides et une relation naturelle entre la chaleur intérieure et le paysage environnant.",
+      "Une résidence d’exception imaginée pour offrir une expérience de vie généreuse et harmonieuse. Les espaces communs, les circulations fluides et les ouvertures vers l’extérieur créent un lien naturel entre confort intérieur et environnement.",
     image: HOUSE_PLAN_SLIDES[2],
     size: "medium",
   },
