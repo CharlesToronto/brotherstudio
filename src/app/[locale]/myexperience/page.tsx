@@ -275,7 +275,7 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
           </p>
           <div className="myExperienceFinalActions">
             <Link
-              href={withLocalePath(locale, "/contact")}
+              href="#contact"
               className={cn(
                 buttonVariants({ variant: "default", size: "lg" }),
                 "myExperiencePrimaryButton",
@@ -284,7 +284,7 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
               Demander la brochure
             </Link>
             <Link
-              href={withLocalePath(locale, "/price")}
+              href="#contact"
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
                 "myExperienceGhostButton",

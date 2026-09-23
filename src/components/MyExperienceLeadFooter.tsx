@@ -80,7 +80,7 @@ export function MyExperienceLeadFooter() {
   };
 
   return (
-    <section className="myExperienceContactFooter" aria-labelledby="myexperience-contact-footer-title">
+    <section id="contact" className="myExperienceContactFooter" aria-labelledby="myexperience-contact-footer-title">
       <div className="myExperienceShell myExperienceContactFooterShell">
         <div className="myExperienceContactFooterIntro">
           <p className="myExperienceSectionKicker">Prise de contact</p>
