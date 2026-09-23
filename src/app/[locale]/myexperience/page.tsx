@@ -5,7 +5,6 @@ import { MyExperienceCommunitySection } from "@/components/MyExperienceCommunity
 import { MyExperienceExteriorWeather } from "@/components/MyExperienceExteriorWeather";
 import { MyExperienceGalleryCarousel } from "@/components/MyExperienceGalleryCarousel";
 import { MyExperienceGalleryHeading } from "@/components/MyExperienceGalleryHeading";
-import { MyExperienceGalleryModeToggle } from "@/components/MyExperienceGalleryModeToggle";
 import { MyExperienceGalleryToneObserver } from "@/components/MyExperienceGalleryToneObserver";
 import { MyExperienceHousePlanSection } from "@/components/MyExperienceHousePlanSection";
 import { MyExperienceLeadFooter } from "@/components/MyExperienceLeadFooter";
@@ -236,9 +235,6 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
               kicker="Narration visuelle"
               title="GALERIE"
             />
-            <div className="myExperienceGalleryHeadingControls">
-              <MyExperienceGalleryModeToggle />
-            </div>
           </div>
           <div className="myExperienceGalleryCarouselFrame">
             <MyExperienceGalleryCarousel images={mesangeGalleryImages} />
