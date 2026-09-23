@@ -51,7 +51,7 @@ export function PlantazAvailabilityExplorer({ imageUrl }: PlantazAvailabilityExp
       <div className="plantazApartmentCopy">
         <div className="plantazApartmentIntro">
           <p className="plantazEyebrow">Disponibilité</p>
-          <h2>Appartement disponible</h2>
+          <h2>Appartements disponibles</h2>
           <p>Un lieu à découvrir avec une attention portée aux usages, à la lumière et au rapport intérieur-extérieur.</p>
         </div>
         <p className="plantazAvailabilityHint">Survolez un appartement pour localiser sa zone sur l’image.</p>

@@ -55,10 +55,10 @@ export async function generateMetadata({ params }: LocalePageProps): Promise<Met
   const locale = await resolveLocaleParam(params);
   const pathname = "/mywebsite/plantaz";
   return {
-    title: "Plantaz · Appartement disponible",
-    description: "Découvrez le projet Plantaz, son environnement et l’appartement disponible.",
+    title: "Plantaz · Appartements disponibles",
+    description: "Découvrez le projet Plantaz, son environnement et les appartements disponibles.",
     alternates: { canonical: withLocalePath(locale, pathname), languages: getLanguageAlternates(pathname) },
-    openGraph: { title: "Plantaz · Appartement disponible", description: "Le projet Plantaz par BrotherStudio." },
+    openGraph: { title: "Plantaz · Appartements disponibles", description: "Le projet Plantaz par BrotherStudio." },
   };
 }
 
@@ -92,14 +92,14 @@ export default async function PlantazWebsitePage({ params }: LocalePageProps) {
       <header className="plantazWebsiteNav">
         <a href="#top" className="plantazWebsiteBrand" aria-label="Plantaz — retour en haut"><img src="/plantaz-logo.png" alt="Plantaz — projet résidentiel" /></a>
         <nav aria-label="Navigation Plantaz">
-          <a href="#environnement">Environnement</a><a href="#plans">Plans</a><a href="#construction">Construction</a><a href="#gallery">Galerie</a><a href="#appartement">Appartement</a><a href="#contact">Contact</a>
+          <a href="#environnement">Environnement</a><a href="#plans">Plans</a><a href="#construction">Construction</a><a href="#gallery">Galerie</a><a href="#appartement">Appartements</a><a href="#contact">Contact</a>
         </nav>
       </header>
 
       <section className="plantazHero" id="top">
         {heroImage ? <img src={heroImage.url} alt="Vue du projet Plantaz" /> : null}
         <div className="plantazHeroShade" />
-        <div className="plantazHeroContent"><p className="plantazEyebrow">{address}</p><h1>Plantaz</h1><p>Un appartement disponible dans un environnement calme, pensé pour la lumière et la continuité avec le paysage.</p><a className="plantazTextLink" href="#appartement">Découvrir l’appartement <span>↘</span></a></div>
+        <div className="plantazHeroContent"><p className="plantazEyebrow">{address}</p><h1>Plantaz</h1><p>Des appartements disponibles dans un environnement calme, pensés pour la lumière et la continuité avec le paysage.</p><a className="plantazTextLink" href="#appartement">Découvrir les appartements <span>↘</span></a></div>
       </section>
 
       <section className="plantazSection plantazEnvironment" id="environnement">
@@ -109,7 +109,7 @@ export default async function PlantazWebsitePage({ params }: LocalePageProps) {
         <details className="plantazInterestDetails" open><summary><span>Points d’intérêt</span><strong>Découvrir les temps d’accès</strong></summary><div className="plantazInterestTableWrap"><table className="plantazInterestTable"><thead><tr><th scope="col">Point d’intérêt</th><th scope="col">Temps d’accès</th></tr></thead><tbody><tr><th scope="row">Gare Les Plantaz</th><td>3–5 min à pied</td></tr><tr><th scope="row">Gare de Nyon</th><td>10–15 min à pied</td></tr><tr><th scope="row">Centre-ville de Nyon</th><td>15–20 min à pied</td></tr><tr><th scope="row">Château de Nyon / Musée romain</th><td>15–20 min à pied</td></tr><tr><th scope="row">Lac Léman / Nyon-Rive</th><td>20–25 min à pied</td></tr><tr><th scope="row">Centre commercial La Combe / Coop</th><td>10–15 min à pied</td></tr><tr><th scope="row">Hôpital de Nyon</th><td>20–25 min à pied</td></tr><tr><th scope="row">Paléo / La Scène Nord</th><td>5–10 min en transports</td></tr><tr><th scope="row">Genève-Cornavin</th><td>Environ 25–30 min en transports</td></tr><tr><th scope="row">Genève</th><td>Environ 25–30 min en voiture</td></tr><tr><th scope="row">Aéroport de Genève</th><td>Environ 20–25 min en voiture ou 35–45 min en transports</td></tr><tr><th scope="row">Lausanne</th><td>Environ 30–35 min en train ou 40–50 min en voiture</td></tr></tbody></table></div></details>
       </section>
 
-      <section className="plantazSection plantazPlans" id="plans"><div className="plantazSectionIntro"><p className="plantazEyebrow">Documentation</p><h2>Les plans du projet.</h2><p>Téléchargez les documents disponibles pour comprendre les volumes et l’organisation de l’appartement.</p></div><PlantazPlansCarousel plans={plans} /></section>
+      <section className="plantazSection plantazPlans" id="plans"><div className="plantazSectionIntro"><p className="plantazEyebrow">Documentation</p><h2>Les plans du projet.</h2><p>Téléchargez les documents disponibles pour comprendre les volumes et l’organisation des appartements.</p></div><PlantazPlansCarousel plans={plans} /></section>
 
       <section className="plantazConstruction" id="construction" aria-labelledby="plantaz-construction-title"><div className="plantazConstructionHeader"><p className="plantazEyebrow">Le projet</p><h2 id="plantaz-construction-title">Timeline de construction</h2><p>Les étapes présentées sont indicatives et seront précisées au fur et à mesure de l’avancement du projet.</p></div><div className="plantazConstructionList" role="list">{plantazConstructionTimeline.map((step, index) => <article className="plantazConstructionStep" key={step.title} role="listitem"><span className="plantazConstructionNumber">{String(index + 1).padStart(2, "0")}</span><div><span className="plantazConstructionDate">{step.date}</span><h3>{step.title}</h3><p>{step.description}</p></div></article>)}</div></section>
 
@@ -117,7 +117,7 @@ export default async function PlantazWebsitePage({ params }: LocalePageProps) {
 
       <PlantazAvailabilityExplorer imageUrl={heroImage?.url ?? null} />
 
-      <section className="plantazContact" id="contact"><div><p className="plantazEyebrow">Votre intérêt</p><h2>Recevez les informations du projet.</h2><p>Une question sur l’appartement Plantaz ? Laissez vos coordonnées, nous vous répondrons rapidement.</p></div><PlantazContactForm /></section>
+      <section className="plantazContact" id="contact"><div><p className="plantazEyebrow">Votre intérêt</p><h2>Recevez les informations du projet.</h2><p>Une question sur les appartements Plantaz ? Laissez vos coordonnées, nous vous répondrons rapidement.</p></div><PlantazContactForm /></section>
 
       <footer className="plantazFooter">
         <div className="plantazFooterGrid">
