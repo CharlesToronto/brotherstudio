@@ -58,7 +58,7 @@ export function MyExperienceGalleryCarousel({
       <div className="myExperienceGalleryOgl">
           <CircularGallery
             items={galleryItems}
-            bend={0}
+            bend={0.8}
             borderRadius={0.035}
           scrollSpeed={4.4}
           scrollEase={0.072}
