@@ -6,7 +6,6 @@ import { MyExperienceExteriorWeather } from "@/components/MyExperienceExteriorWe
 import { MyExperienceGalleryCarousel } from "@/components/MyExperienceGalleryCarousel";
 import { MyExperienceGalleryHeading } from "@/components/MyExperienceGalleryHeading";
 import { MyExperienceGalleryToneObserver } from "@/components/MyExperienceGalleryToneObserver";
-import { MyExperienceHousePlanSection } from "@/components/MyExperienceHousePlanSection";
 import { MyExperienceLeadFooter } from "@/components/MyExperienceLeadFooter";
 import { MyExperienceParallaxHero } from "@/components/MyExperienceParallaxHero";
 import { MyExperienceStickyNavObserver } from "@/components/MyExperienceStickyNavObserver";
@@ -48,12 +47,6 @@ const LIFESTYLE_ACCESS_SLIDES = [
     alt: "Cadre de vie et accessibilité, rue résidentielle au coucher du soleil",
   },
 ] as const;
-const housePlanSpecs = [
-  { id: "total-area", label: "Surface totale", value: "192 m²" },
-  { id: "living-room", label: "Séjour", value: "52 m²" },
-  { id: "dining-room", label: "Salle à manger", value: "21 m²" },
-] as const;
-
 const communityItems = [
   {
     number: "01",
@@ -181,16 +174,10 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
 
       <div className="myExperienceShell myExperienceSections" id="overview">
         <ScrollReveal as="section" id="plan" className="myExperiencePanel myExperiencePlanSection">
-          <MyExperienceHousePlanSection
-            kicker="Plan"
-            title="PLAN"
-            specs={[...housePlanSpecs]}
-            note="La composition des espaces est pensée comme une résidence de standing, organisée autour de la lumière, de l’intimité, du confort intérieur et de transitions fluides vers le paysage."
-            defaultImage={{
-              src: FLOORPLAN_IMAGE,
-              alt: "Plan de la résidence",
-            }}
-          />
+          <div className="myExperiencePlanOnly">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={FLOORPLAN_IMAGE} alt="Plan de la résidence" />
+          </div>
         </ScrollReveal>
 
         <MyExperienceCommunitySection
