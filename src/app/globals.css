@@ -1135,7 +1135,7 @@ body:has(.homeBlurWordSection) {
 .myExperienceCommunitySection .myExperienceSectionKicker,
 .myExperienceCommunitySection .myExperienceCommunityTitle,
 .myExperienceCommunitySection .myExperienceCommunityLead {
-  color: #fff;
+  color: #fff !important;
 }
 
 .myExperienceCommunityRail {
