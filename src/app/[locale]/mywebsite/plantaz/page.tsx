@@ -102,6 +102,13 @@ export default async function PlantazWebsitePage({ params }: LocalePageProps) {
         <div className="plantazHeroContent"><p className="plantazEyebrow">{address}</p><h1>Plantaz</h1><p>Des appartements disponibles dans un environnement calme, pensés pour la lumière et la continuité avec le paysage.</p><a className="plantazTextLink" href="#appartement">Découvrir les appartements <span>↘</span></a></div>
       </section>
 
+      <section className="plantazFacts" aria-label="Informations essentielles sur le projet Plantaz">
+        <article className="plantazFact"><span>Type</span><strong>2.5 et 3.5 pièces</strong></article>
+        <article className="plantazFact"><span>Disponibilité</span><strong>6 appartements</strong></article>
+        <article className="plantazFact"><span>Livraison</span><strong>Décembre 2027</strong></article>
+        <article className="plantazFact"><span>Ville</span><strong>Nyon</strong></article>
+      </section>
+
       <section className="plantazSection plantazEnvironment" id="environnement">
         <div className="plantazSectionIntro"><p className="plantazEyebrow">L’environnement</p><h2>Habiter dans un cadre qui respire.</h2><p>Plantaz s’inscrit dans un contexte résidentiel à découvrir à travers la carte, les alentours et les points d’intérêt du projet.</p></div>
         <div className="plantazEnvironmentGrid"><div className="plantazMap"><iframe title="Carte de l’environnement du projet Plantaz" src={mapUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" /></div><div className="plantazEnvironmentImage"><img src="/plantaz-environment-lake.png" alt="Vue aérienne du lac et des montagnes depuis les alentours de Plantaz" /></div></div>

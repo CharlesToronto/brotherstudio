@@ -21726,6 +21726,11 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .plantazHero h1 { margin: 0; font-size: clamp(50px, 9vw, 124px); font-weight: 400; letter-spacing: -.06em; line-height: .9; }
 .plantazHeroContent > p:not(.plantazEyebrow) { max-width: 480px; margin: 28px 0; font-size: 16px; line-height: 1.6; }
 .plantazTextLink { display: inline-flex; gap: 12px; align-items: center; padding-bottom: 8px; border-bottom: 1px solid rgb(255 255 255 / .7); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.plantazFacts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; background: #fff; border-bottom: 1px solid rgb(80 110 88 / .16); }
+.plantazFact { display: grid; align-content: center; gap: 12px; min-height: 132px; padding: 26px clamp(20px, 4vw, 64px); border-right: 1px solid rgb(80 110 88 / .16); }
+.plantazFact:last-child { border-right: 0; }
+.plantazFact span { color: var(--plantaz-pastel-dark); font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
+.plantazFact strong { color: var(--plantaz-ink); font-size: clamp(18px, 2vw, 28px); font-weight: 400; letter-spacing: -.035em; line-height: 1.1; }
 .plantazSection { max-width: 1280px; margin: 0 auto; padding: clamp(76px, 10vw, 144px) clamp(20px, 5vw, 72px); }
 .plantazSectionIntro { max-width: 600px; margin-bottom: 48px; }
 .plantazSectionIntro h2, .plantazContact h2, .plantazApartment h2 { margin: 0; font-size: clamp(30px, 4vw, 52px); font-weight: 400; letter-spacing: -.05em; line-height: 1; }
@@ -21879,6 +21884,11 @@ html[data-theme="dark"] .myStudioGuideArrow {
   .plantazProgressRail nav a.is-active .plantazProgressRailDot { transform: scale(1.15); }
   .plantazWebsiteNav nav { display: none; }
   .plantazHero { min-height: 700px; }
+  .plantazFacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plantazFact { min-height: 112px; padding: 22px 18px; }
+  .plantazFact:nth-child(even) { border-right: 0; }
+  .plantazFact:nth-child(n + 3) { border-top: 1px solid rgb(80 110 88 / .16); }
+  .plantazFact strong { font-size: 19px; }
   .plantazEnvironmentGrid, .plantazApartment, .plantazContact { grid-template-columns: 1fr; }
   .plantazMap, .plantazEnvironmentImage, .plantazMap iframe { min-height: 320px; }
   .plantazInterestGrid, .plantazPlanList { grid-template-columns: 1fr; }
