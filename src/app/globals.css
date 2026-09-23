@@ -1132,6 +1132,12 @@ body:has(.homeBlurWordSection) {
   line-height: 1.7;
 }
 
+.myExperienceCommunitySection .myExperienceSectionKicker,
+.myExperienceCommunitySection .myExperienceCommunityTitle,
+.myExperienceCommunitySection .myExperienceCommunityLead {
+  color: #fff;
+}
+
 .myExperienceCommunityRail {
   display: grid;
   align-items: stretch;
