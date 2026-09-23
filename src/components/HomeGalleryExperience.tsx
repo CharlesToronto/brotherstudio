@@ -879,7 +879,7 @@ export function HomeGalleryExperience({
                 className={`myWebsiteCard${preview.href ? " myWebsiteCardLink" : ""}`}
               >
                 {preview.href ? (
-                  <Link className="myWebsiteCardInner" href={preview.href}>
+                  <Link className="myWebsiteCardInner" href={preview.href} target="_blank" rel="noreferrer">
                     <div className="myWebsiteCardMedia">
                       <Image
                         src={preview.image}
