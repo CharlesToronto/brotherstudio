@@ -1028,6 +1028,27 @@ body:has(.homeBlurWordSection) {
   color: #171412;
 }
 
+.myExperiencePlanSection .myExperienceSectionKicker {
+  color: rgb(255 255 255 / 0.78);
+}
+
+.myExperiencePlanSection .myExperienceSectionTitle,
+.myExperiencePlanSection .myExperienceSpecs dt,
+.myExperiencePlanSection .myExperienceSpecs dd,
+.myExperiencePlanSection .myExperiencePlanNote {
+  color: #fff;
+}
+
+.myExperiencePlanSection .myExperienceSpecRow {
+  border-bottom-color: rgb(255 255 255 / 0.22);
+}
+
+.myExperiencePlanSection .myExperiencePlanEditButton {
+  border-color: rgb(255 255 255 / 0.36);
+  background: rgb(255 255 255 / 0.14);
+  color: rgb(255 255 255 / 0.9);
+}
+
 .myExperienceSectionHeading {
   display: grid;
   gap: 6px;
