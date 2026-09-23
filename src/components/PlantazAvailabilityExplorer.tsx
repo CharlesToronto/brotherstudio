@@ -87,7 +87,7 @@ export function PlantazAvailabilityExplorer({ imageUrl }: PlantazAvailabilityExp
           <caption>Disponibilité des appartements Plantaz</caption>
           <thead>
             <tr>
-              <th scope="col">Appartement</th><th scope="col">Prix</th><th scope="col">Surface</th><th scope="col">Pièces</th><th scope="col">Statut</th><th scope="col">Balcon</th><th scope="col">Terrasse</th>
+              <th scope="col">Appartement</th><th scope="col">Prix</th><th scope="col">Surface</th><th scope="col">Pièces</th><th scope="col">Balcon</th><th scope="col">Terrasse</th><th scope="col">Disponibilité</th>
             </tr>
           </thead>
           <tbody>
@@ -103,8 +103,8 @@ export function PlantazAvailabilityExplorer({ imageUrl }: PlantazAvailabilityExp
               >
                 <th scope="row"><button type="button" onFocus={() => setActiveUnit(index)} aria-label={`Afficher la zone de l'appartement ${unit}`}>Appartement {unit}</button></th>
                 <td>Sur demande</td><td>{apartmentDetails[index].surface}</td><td>{apartmentDetails[index].rooms}</td>
-                <td><span className={apartmentDetails[index].status === "Disponible" ? "plantazAvailabilityStatus plantazAvailabilityStatus--available" : "plantazAvailabilityStatus"}>{apartmentDetails[index].status}</span></td>
                 <td>{apartmentDetails[index].balcony}</td><td>{apartmentDetails[index].terrace}</td>
+                <td><span className={apartmentDetails[index].status === "Disponible" ? "plantazAvailabilityStatus plantazAvailabilityStatus--available" : "plantazAvailabilityStatus"}>{apartmentDetails[index].status}</span></td>
               </tr>
             ))}
           </tbody>
