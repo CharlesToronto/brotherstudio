@@ -411,21 +411,23 @@ body:has(.homeBlurWordSection) {
   z-index: 2;
   margin-top: -1px;
   padding: 34px 0 18px;
+  isolation: isolate;
 }
 
 .myExperienceFactsSection::before {
   content: "";
   position: absolute;
-  top: -150px;
+  top: -250px;
   right: 0;
   left: 0;
-  height: 240px;
+  height: 380px;
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgb(10 10 13 / 0.96) 0%,
-    rgb(10 10 13 / 0.72) 30%,
-    rgb(10 10 13 / 0.28) 68%,
+    rgb(10 10 13 / 0.99) 0%,
+    rgb(10 10 13 / 0.88) 28%,
+    rgb(10 10 13 / 0.52) 58%,
+    rgb(10 10 13 / 0.16) 82%,
     transparent 100%
   );
 }
