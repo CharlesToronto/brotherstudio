@@ -71,7 +71,18 @@ export default async function PlantazWebsitePage({ params }: LocalePageProps) {
   const images = project.versions.flatMap((version) => version.images);
   const heroImage = images[0];
   const galleryImages = images.map((image, index) => index === 3 ? { ...image, url: "/plantaz-gallery-04.png" } : image);
-  const plans = references.files.filter((file) => file.mimeType === "application/pdf" || file.filename.toLowerCase().endsWith(".pdf"));
+  const plans = references.files
+    .filter((file) => file.mimeType === "application/pdf" || file.filename.toLowerCase().endsWith(".pdf"))
+    .map((file) => {
+      const sourceName = `${file.title || ""} ${file.filename}`.toLowerCase();
+      const displayTitle = sourceName.includes("elevation")
+        ? "Élévations du projet"
+        : sourceName.includes("level") || sourceName.includes("niveau")
+          ? "Plans des niveaux"
+          : file.title || file.filename;
+
+      return { ...file, title: displayTitle };
+    });
   const address = project.address || "Plantaz";
   const mapUrl = project.mapEmbedUrl || `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
 
