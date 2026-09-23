@@ -155,7 +155,7 @@ body:has(.homeBlurWordSection) {
   background:
     radial-gradient(circle at 18% 8%, rgb(214 197 165 / 0.18), transparent 30%),
     radial-gradient(circle at 86% 18%, rgb(232 220 201 / 0.28), transparent 34%),
-    linear-gradient(180deg, #0a0a0d 0%, #0a0a0d 18%, #efe8dc 30%, #f5efe5 100%);
+    linear-gradient(180deg, #0a0a0d 0%, #0a0a0d 18%, #f3f1eb 30%, #fbfaf7 100%);
 }
 
 .myExperienceAmbient {
@@ -183,7 +183,7 @@ body:has(.homeBlurWordSection) {
   z-index: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgb(10 10 13 / 0) 0%, rgb(245 239 229 / 0) 24%, rgb(245 239 229 / 0.42) 42%, rgb(245 239 229 / 0.92) 100%),
+    linear-gradient(180deg, rgb(10 10 13 / 0) 0%, rgb(251 250 247 / 0) 24%, rgb(251 250 247 / 0.42) 42%, rgb(251 250 247 / 0.94) 100%),
     radial-gradient(circle at 50% 50%, rgb(255 255 255 / 0.22), transparent 65%);
   opacity: 1;
 }
@@ -200,7 +200,7 @@ body:has(.homeBlurWordSection) {
 
 .myExperiencePage[data-gallery-tone="blue"]::before {
   background:
-    linear-gradient(180deg, rgb(10 10 13 / 0) 0%, rgb(245 239 229 / 0) 24%, rgb(242 238 232 / 0.46) 42%, rgb(239 235 228 / 0.94) 100%),
+    linear-gradient(180deg, rgb(10 10 13 / 0) 0%, rgb(251 250 247 / 0) 24%, rgb(247 246 242 / 0.46) 42%, rgb(244 243 239 / 0.96) 100%),
     radial-gradient(circle at 70% 35%, rgb(127 156 182 / 0.09), transparent 40%);
 }
 
