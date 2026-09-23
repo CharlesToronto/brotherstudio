@@ -118,7 +118,7 @@ export function MyExperienceScrollFilmSection({
           >
             <img
               src={image}
-              alt={`Mesange cinematic frame ${index + 1}`}
+              alt={`Image cinématographique Mésange ${index + 1}`}
               className="myExperienceFilmImage"
               loading={index === 0 ? "eager" : "lazy"}
               decoding="async"

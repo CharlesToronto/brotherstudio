@@ -80,7 +80,7 @@ export function MyExperienceExteriorWeather() {
         const payload = (await response.json()) as WeatherPayload & { error?: string };
 
         if (!response.ok) {
-          throw new Error(payload.error || "La meteo n'est pas disponible.");
+          throw new Error(payload.error || "La météo n'est pas disponible.");
         }
 
         if (!isCancelled) {
@@ -103,7 +103,7 @@ export function MyExperienceExteriorWeather() {
   if (state.status === "loading") {
     return (
       <div className="myExperienceWeatherCard" aria-live="polite">
-        <p className="myExperienceWeatherEyebrow">Meteo locale</p>
+        <p className="myExperienceWeatherEyebrow">Météo locale</p>
         <p className="myExperienceWeatherLoading">Chargement des conditions...</p>
       </div>
     );
@@ -112,7 +112,7 @@ export function MyExperienceExteriorWeather() {
   if (state.status === "error") {
     return (
       <div className="myExperienceWeatherCard" aria-live="polite">
-        <p className="myExperienceWeatherEyebrow">Meteo locale</p>
+        <p className="myExperienceWeatherEyebrow">Météo locale</p>
         <p className="myExperienceWeatherLoading">Conditions indisponibles pour le moment.</p>
       </div>
     );
@@ -124,7 +124,7 @@ export function MyExperienceExteriorWeather() {
     <div className="myExperienceWeatherCard" aria-live="polite">
       <div className="myExperienceWeatherHeader">
         <div>
-          <p className="myExperienceWeatherEyebrow">Meteo locale</p>
+          <p className="myExperienceWeatherEyebrow">Météo locale</p>
           <p className="myExperienceWeatherLocation">{data.location}</p>
         </div>
         <div className="myExperienceWeatherTempWrap">

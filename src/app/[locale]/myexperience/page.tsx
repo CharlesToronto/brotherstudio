@@ -33,25 +33,25 @@ const FLOORPLAN_IMAGE = "/myexperience-house-plan-sales-05.webp";
 const LIFESTYLE_ACCESS_SLIDES = [
   {
     src: "/myexperience-lifestyle-forest-malagnou.webp",
-    alt: "Cadre de vie et accessibilite, sentier forestier de Malagnou",
+    alt: "Cadre de vie et accessibilité, sentier forestier de Malagnou",
   },
   {
     src: "/myexperience-lifestyle-lakeside-evening.webp",
-    alt: "Cadre de vie et accessibilite, animation au bord du lac au coucher du soleil",
+    alt: "Cadre de vie et accessibilité, animation au bord du lac au coucher du soleil",
   },
   {
     src: "/myexperience-lifestyle-golf-view.webp",
-    alt: "Cadre de vie et accessibilite, vue aerienne sur le golf et le lac",
+    alt: "Cadre de vie et accessibilité, vue aérienne sur le golf et le lac",
   },
   {
     src: "/myexperience-lifestyle-street-sunset.webp",
-    alt: "Cadre de vie et accessibilite, rue residentielle au coucher du soleil",
+    alt: "Cadre de vie et accessibilité, rue résidentielle au coucher du soleil",
   },
 ] as const;
 const housePlanSpecs = [
   { id: "total-area", label: "Surface totale", value: "192 m²" },
-  { id: "living-room", label: "Sejour", value: "52 m²" },
-  { id: "dining-room", label: "Salle a manger", value: "21 m²" },
+  { id: "living-room", label: "Séjour", value: "52 m²" },
+  { id: "dining-room", label: "Salle à manger", value: "21 m²" },
 ] as const;
 
 const communityItems = [
@@ -59,7 +59,7 @@ const communityItems = [
     number: "01",
     title: "Appartement 1",
     description:
-      "Le niveau principal s'organise autour d'un sejour de 52 m², d'une salle a manger de 21 m² et d'une extension directe vers la terrasse de 74 m², pour un espace de vie genereux et accueillant au quotidien.",
+      "Le niveau principal s’organise autour d’un séjour de 52 m², d’une salle à manger de 21 m² et d’une extension directe vers la terrasse de 74 m², pour un espace de vie généreux et accueillant au quotidien.",
     image: HOUSE_PLAN_SLIDES[0],
     size: "medium",
   },
@@ -67,7 +67,7 @@ const communityItems = [
     number: "02",
     title: "Appartement 2",
     description:
-      "Le plan equilibre intimite et confort avec une suite principale de 28 m², des chambres invites de 19 m² et une circulation soigneusement separee pour une residence calme et lisible.",
+      "Le plan équilibre intimité et confort avec une suite principale de 28 m², des chambres d’invités de 19 m² et une circulation soigneusement séparée pour une résidence calme et lisible.",
     image: HOUSE_PLAN_SLIDES[1],
     size: "medium",
   },
@@ -75,7 +75,7 @@ const communityItems = [
     number: "03",
     title: "Appartement 3",
     description:
-      "Sur 192 m², l'agencement est pense comme une residence d'exception: de beaux espaces communs, des transitions fluides et une relation naturelle entre la chaleur interieure et le paysage environnant.",
+      "Sur 192 m², l’agencement est pensé comme une résidence d’exception : de beaux espaces communs, des transitions fluides et une relation naturelle entre la chaleur intérieure et le paysage environnant.",
     image: HOUSE_PLAN_SLIDES[2],
     size: "medium",
   },
@@ -83,22 +83,22 @@ const communityItems = [
 
 const propertyFacts = [
   { label: "3 lots", value: "135-185 m²" },
-  { label: "Caracteristiques", value: "Calme & familial" },
+  { label: "Caractéristiques", value: "Calme & familial" },
   { label: "Prix", value: "Dès CHF 867'000" },
   { label: "Localisation", value: "Gland, VD" },
 ] as const;
 const storyHighlights = [
   {
-    title: "Presence",
-    description: "Une residence composee pour offrir une sensation immediate de calme, d'intimite et d'ancrage dans son environnement.",
+    title: "Présence",
+    description: "Une résidence composée pour offrir une sensation immédiate de calme, d’intimité et d’ancrage dans son environnement.",
   },
   {
-    title: "Lumiere",
-    description: "Les ouvertures, la circulation et les tonalites interieures sont pensees pour rendre chaque espace chaleureux et habite.",
+    title: "Lumière",
+    description: "Les ouvertures, la circulation et les tonalités intérieures sont pensées pour rendre chaque espace chaleureux et habité.",
   },
   {
-    title: "Fluidite",
-    description: "Les transitions entre les espaces de vie, les zones nuit et les terrasses exterieures restent fluides et naturelles.",
+    title: "Fluidité",
+    description: "Les transitions entre les espaces de vie, les zones nuit et les terrasses extérieures restent fluides et naturelles.",
   },
 ] as const;
 
@@ -110,7 +110,7 @@ export async function generateMetadata({
 
   return {
     title: "myExperience",
-    description: "Presentation immobiliere cinematographique immersive par BrotherStudio.",
+    description: "Présentation immobilière cinématographique immersive par BrotherStudio.",
     alternates: {
       canonical: withLocalePath(locale, pathname),
       languages: getLanguageAlternates(pathname),
@@ -121,9 +121,9 @@ export async function generateMetadata({
 export default async function MyExperiencePage({ params }: MyExperiencePageProps) {
   const locale = await resolveLocaleParam(params);
   const sectionLinks = [
-    { href: "#overview", label: "Apercu" },
+    { href: "#overview", label: "Aperçu" },
     { href: "#plan", label: "Plan" },
-    { href: "#exterieur", label: "Exterieur" },
+    { href: "#exterieur", label: "Extérieur" },
     { href: "#gallery", label: "Galerie" },
     { href: "#vision", label: "Vision" },
     { href: "#brochure", label: "Brochure" },
@@ -133,7 +133,7 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
     .map((item, index) => ({
       id: item.id,
       src: item.src,
-      alt: item.architect?.trim() || `Rendu Mesange ${index + 1}`,
+        alt: item.architect?.trim() || `Rendu Mésange ${index + 1}`,
     }));
   const aroundMeImages = [...LIFESTYLE_ACCESS_SLIDES];
 
@@ -161,7 +161,7 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
         </nav>
       </div>
 
-      <section className="myExperienceFactsSection" aria-label="Informations cles sur Mesange">
+      <section className="myExperienceFactsSection" aria-label="Informations clés sur Mésange">
         <div className="myExperienceShell">
           <div className="myExperienceFactsGrid">
             {propertyFacts.map((fact, index) => (
@@ -185,25 +185,25 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
             kicker="Plan"
             title="PLAN"
             specs={[...housePlanSpecs]}
-            note="La composition des espaces est pensee comme une residence de standing, organisee autour de la lumiere, de l'intimite, du confort interieur et de transitions fluides vers le paysage."
+            note="La composition des espaces est pensée comme une résidence de standing, organisée autour de la lumière, de l’intimité, du confort intérieur et de transitions fluides vers le paysage."
             defaultImage={{
               src: FLOORPLAN_IMAGE,
-              alt: "Plan de la residence",
+              alt: "Plan de la résidence",
             }}
           />
         </ScrollReveal>
 
         <MyExperienceCommunitySection
           kicker="Plan"
-          title="Decouvrons les espaces"
-          description="Une lecture spatiale de la residence, axee sur les volumes, la circulation et l'equilibre entre intimite et vie partagee."
+          title="Découvrons les espaces"
+          description="Une lecture spatiale de la résidence, axée sur les volumes, la circulation et l’équilibre entre intimité et vie partagée."
           items={[...communityItems]}
         />
 
         <section
           id="exterieur"
           className="myExperienceExteriorSection"
-          aria-label="Sequence exterieure de Mesange"
+          aria-label="Séquence extérieure de Mésange"
         >
           <div className="myExperienceExteriorGrid">
             <div className="myExperienceExteriorMedia">
@@ -213,16 +213,16 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
               <p className="myExperienceSectionKicker">Around me</p>
               <h2 className="myExperienceSectionTitle">AUTOUR DE MOI</h2>
               <p className="myExperienceStoryText">
-                Autour de Mesange, le quotidien s&apos;ouvre sur l&apos;espace forestier de Malagny,
-                la plage, le club de golf et des rues residentielles paisibles. Le cadre
-                combine une presence naturelle forte, des lieux de detente accessibles et
-                une atmosphere de quartier calme.
+                Autour de Mésange, le quotidien s&apos;ouvre sur l&apos;espace forestier de Malagnou,
+                la plage, le club de golf et des rues résidentielles paisibles. Le cadre
+                combine une présence naturelle forte, des lieux de détente accessibles et
+                une atmosphère de quartier calme.
               </p>
               <p className="myExperienceStoryText">
-                Cette selection presente seulement quelques reperes du cadre de vie:
-                les environs offrent encore bien plus a decouvrir, entre promenades,
-                loisirs, vues ouvertes et proximite du lac. Mesange s&apos;inscrit ainsi dans
-                un environnement complet, agreable a vivre au quotidien.
+                Cette sélection présente seulement quelques repères du cadre de vie :
+                les environs offrent encore bien plus à découvrir, entre promenades,
+                loisirs, vues ouvertes et proximité du lac. Mésange s&apos;inscrit ainsi dans
+                un environnement complet, agréable à vivre au quotidien.
               </p>
               <MyExperienceExteriorWeather />
             </div>
@@ -246,9 +246,9 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
             <p className="myExperienceSectionKicker">Vision du projet</p>
             <h2 className="myExperienceSectionTitle">INTENTION ARCHITECTURALE</h2>
               <p className="myExperienceStoryText">
-                Mesange est imaginee comme une residence de presence plutot que de spectacle.
-                Le projet s&apos;appuie sur des proportions maitrisees, une chaleur interieure
-                et une lecture cinematographique de l&apos;habitat, a la fois raffinee et naturelle.
+                Mésange est imaginée comme une résidence de présence plutôt que de spectacle.
+                Le projet s&apos;appuie sur des proportions maîtrisées, une chaleur intérieure
+                et une lecture cinématographique de l&apos;habitat, à la fois raffinée et naturelle.
               </p>
           </div>
 
@@ -268,10 +268,10 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
         </ScrollReveal>
 
         <ScrollReveal as="section" id="brochure" className="myExperiencePanel myExperienceFinalCta">
-          <p className="myExperienceSectionKicker">Prochaine etape</p>
-          <h2 className="myExperienceFinalTitle">DEMANDEZ LA BROCHURE CINEMATOGRAPHIQUE COMPLETE</h2>
+          <p className="myExperienceSectionKicker">Prochaine étape</p>
+          <h2 className="myExperienceFinalTitle">DEMANDEZ LA BROCHURE CINÉMATOGRAPHIQUE COMPLÈTE</h2>
           <p className="myExperienceFinalLead">
-            Recevez la presentation complete, les plans et un apercu guide du projet.
+            Recevez la présentation complète, les plans et un aperçu guidé du projet.
           </p>
           <div className="myExperienceFinalActions">
             <Link

@@ -13,7 +13,7 @@ type SubmitState =
 const QUICK_PROMPTS = [
   "Recevoir la brochure",
   "Planifier une visite",
-  "Etre rappele",
+  "Être rappelé",
 ];
 
 export function MyExperienceLeadFooter() {
@@ -64,7 +64,7 @@ export function MyExperienceLeadFooter() {
       setSubmitState({
         status: "success",
         message:
-          "Demande envoyee. Un email de confirmation vient d'etre envoye au client.",
+            "Demande envoyée. Un e-mail de confirmation vient d’être envoyé au client.",
       });
     } catch (error) {
       setSubmitState({
@@ -88,8 +88,8 @@ export function MyExperienceLeadFooter() {
             Parlons de votre projet d&apos;achat
           </h2>
           <p className="myExperienceContactFooterLead">
-            Laissez vos coordonnees. Une confirmation est envoyee automatiquement au client,
-            avec copie sur votre adresse email.
+            Laissez vos coordonnées. Une confirmation est envoyée automatiquement au client,
+            avec copie sur votre adresse e-mail.
           </p>
         </div>
 
@@ -120,7 +120,7 @@ export function MyExperienceLeadFooter() {
             </label>
 
             <label className="myExperienceContactFooterField">
-              <span>Telephone</span>
+              <span>Téléphone</span>
               <input
                 name="phone"
                 type="tel"
@@ -192,7 +192,7 @@ export function MyExperienceLeadFooter() {
               {isSubmitting ? "Envoi..." : "Envoyer la demande"}
             </button>
             <p className="myExperienceContactFooterNote">
-              Reponse rapide par email. Ideal pour brochure, visite ou rappel.
+              Réponse rapide par e-mail. Idéal pour brochure, visite ou rappel.
             </p>
           </div>
 

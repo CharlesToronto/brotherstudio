@@ -9,31 +9,31 @@ import Floating, { FloatingElement } from "@/components/ui/parallax-floating";
 const heroTiles = [
   {
     src: "/uploads/f62a9ee2-3c29-488d-8cd9-58dad61b4af3-1774898563984.webp",
-    alt: "Atmosphere du sejour Mesange",
+    alt: "Atmosphère du séjour Mésange",
     className: "myExperienceHeroFloat1",
     depth: 0.7,
   },
   {
     src: "/uploads/afc57519-61e4-4225-bb43-8cdc51125275-1774016096392.webp",
-    alt: "Rendu interieur Mesange",
+    alt: "Rendu intérieur Mésange",
     className: "myExperienceHeroFloat2",
     depth: 1.2,
   },
   {
     src: "/uploads/d319f063-7b8b-41b2-857c-471d64d9083c-1774016140036.webp",
-    alt: "Rendu salon Mesange",
+    alt: "Rendu salon Mésange",
     className: "myExperienceHeroFloat3",
     depth: 1.8,
   },
   {
     src: "/uploads/60dcacb8-447a-4eb2-b2c7-100a63eeee7d-1774016180346.webp",
-    alt: "Rendu chambre Mesange",
+    alt: "Rendu chambre Mésange",
     className: "myExperienceHeroFloat4",
     depth: 1,
   },
   {
     src: "/uploads/03315390-9045-44d2-9845-6f3c5783dc32-1774037083611.webp",
-    alt: "Detail Mesange",
+    alt: "Détail Mésange",
     className: "myExperienceHeroFloat5",
     depth: 2.4,
   },
@@ -61,7 +61,7 @@ export function MyExperienceParallaxHero({ heroImage }: MyExperienceParallaxHero
     <section className="myExperienceHero myExperienceParallaxHero" ref={scope}>
       <Image
         src={heroImage}
-        alt="Rendu architectural exterieur"
+        alt="Rendu architectural extérieur"
         fill
         priority
         sizes="100vw"
@@ -107,14 +107,14 @@ export function MyExperienceParallaxHero({ heroImage }: MyExperienceParallaxHero
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={{ duration: 0.9, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
         >
-          <p className="myExperienceEyebrow">Presentation residentielle cinematographique</p>
-          <h1 className="myExperienceHeroTitle">MESANGE</h1>
+          <p className="myExperienceEyebrow">Présentation résidentielle cinématographique</p>
+          <h1 className="myExperienceHeroTitle">MÉSANGE</h1>
           <p className="myExperienceHeroCopy">
 
           </p>
           <div className="myExperienceHeroMeta">
             <span>Suisse</span>
-            <span>Residence privee</span>
+            <span>Résidence privée</span>
             <span>2026</span>
           </div>
         </motion.div>
