@@ -110,7 +110,7 @@ export function MyExperienceParallaxHero({ heroImage }: MyExperienceParallaxHero
           <p className="myExperienceEyebrow">Présentation résidentielle cinématographique</p>
           <h1 className="myExperienceHeroTitle">MÉSANGE</h1>
           <p className="myExperienceHeroCopy">
-
+            Une collection d’appartements privés à Gland, conçus autour de la lumière, du confort et d’un art de vivre en lien avec le paysage.
           </p>
           <div className="myExperienceHeroMeta">
             <span>Suisse</span>
