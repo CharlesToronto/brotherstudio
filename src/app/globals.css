@@ -21787,11 +21787,14 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .plantazConstructionList::before { content: ""; position: absolute; top: 46px; right: 8%; left: 8%; height: 1px; background: rgb(36 49 43 / .2); }
 .plantazConstructionStep { position: relative; display: grid; justify-items: center; gap: 22px; min-width: 0; padding: 0 10px; text-align: center; }
 .plantazConstructionNumber { position: relative; z-index: 1; display: grid; place-items: center; width: 52px; height: 52px; border: 1px solid rgb(36 49 43 / .2); border-radius: 50%; background: #fff; color: var(--plantaz-muted); font-size: 11px; font-weight: 600; letter-spacing: .1em; transition: background 180ms ease, color 180ms ease, transform 180ms ease; }
+.plantazConstructionStep.is-current .plantazConstructionNumber { border-color: var(--plantaz-pastel-dark); background: var(--plantaz-pastel-dark); color: #fff; animation: plantazConstructionPulse 2.2s ease-out infinite; }
 .plantazConstructionStep:hover .plantazConstructionNumber, .plantazConstructionStep:focus-within .plantazConstructionNumber { background: var(--plantaz-pastel-dark); color: #fff; transform: translateY(-3px); }
 .plantazConstructionStep > div { display: grid; justify-items: center; gap: 9px; }
 .plantazConstructionDate { color: var(--plantaz-pastel-dark); font-size: 9px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
 .plantazConstructionStep h3 { max-width: 14ch; margin: 0; font-size: 17px; font-weight: 500; letter-spacing: -.035em; line-height: 1.05; }
 .plantazConstructionStep p { max-width: 22ch; margin: 0; color: var(--plantaz-muted); font-size: 12px; line-height: 1.5; }
+@keyframes plantazConstructionPulse { 0%, 100% { box-shadow: 0 0 0 0 rgb(143 170 150 / .5); } 55% { box-shadow: 0 0 0 11px rgb(143 170 150 / 0); } }
+@media (prefers-reduced-motion: reduce) { .plantazConstructionStep.is-current .plantazConstructionNumber { animation: none; } }
 .plantazPlans { max-width: none; background: #eef5ef; }
 .plantazPlans > * { max-width: 1136px; margin-left: auto; margin-right: auto; }
 .plantazPlansTabs { display: none; }
