@@ -475,6 +475,20 @@ body:has(.homeBlurWordSection) {
   text-transform: uppercase;
 }
 
+.myExperienceStickyNavLink--cta {
+  border-color: #171412 !important;
+  background: #171412 !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px rgb(23 20 18 / 0.16);
+}
+
+.myExperienceStickyNavLink--cta:hover,
+.myExperienceStickyNavLink--cta:focus-visible {
+  border-color: #3a332d !important;
+  background: #3a332d !important;
+  color: #fff !important;
+}
+
 .myExperienceFactsGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

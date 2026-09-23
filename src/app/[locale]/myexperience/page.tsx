@@ -114,12 +114,11 @@ export async function generateMetadata({
 export default async function MyExperiencePage({ params }: MyExperiencePageProps) {
   const locale = await resolveLocaleParam(params);
   const sectionLinks = [
-    { href: "#overview", label: "Aperçu" },
     { href: "#plan", label: "Plan" },
     { href: "#exterieur", label: "Extérieur" },
     { href: "#gallery", label: "Galerie" },
     { href: "#vision", label: "Vision" },
-    { href: "#brochure", label: "Brochure" },
+    { href: "#contact", label: "Contact" },
   ] as const;
   const mesangeGalleryImages = (await getGalleryItems())
     .filter((item) => item.project === "mesange")
@@ -146,6 +145,7 @@ export default async function MyExperiencePage({ params }: MyExperiencePageProps
               className={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
                 "myExperienceStickyNavLink",
+                link.href === "#contact" && "myExperienceStickyNavLink--cta",
               )}
             >
               {link.label}
