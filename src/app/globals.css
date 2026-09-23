@@ -413,6 +413,28 @@ body:has(.homeBlurWordSection) {
   padding: 34px 0 18px;
 }
 
+.myExperienceFactsSection::before {
+  content: "";
+  position: absolute;
+  top: -150px;
+  right: 0;
+  left: 0;
+  height: 240px;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgb(10 10 13 / 0.96) 0%,
+    rgb(10 10 13 / 0.72) 30%,
+    rgb(10 10 13 / 0.28) 68%,
+    transparent 100%
+  );
+}
+
+.myExperienceFactsGrid {
+  position: relative;
+  z-index: 1;
+}
+
 .myExperienceStickyNavWrap {
   position: relative;
   z-index: 40;
