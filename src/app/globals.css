@@ -285,7 +285,7 @@ body:has(.homeBlurWordSection) {
   inset: 0;
   z-index: 2;
   background:
-    linear-gradient(180deg, rgb(0 0 0 / 0.4) 0%, rgb(0 0 0 / 0.62) 62%, rgb(10 10 13 / 0.58) 80%, rgb(10 10 13 / 0.24) 100%),
+    linear-gradient(180deg, rgb(0 0 0 / 0.4) 0%, rgb(0 0 0 / 0.6) 58%, rgb(10 10 13 / 0.52) 76%, rgb(10 10 13 / 0.16) 100%),
     radial-gradient(circle at 20% 22%, rgb(255 255 255 / 0.06), transparent 28%);
 }
 
@@ -417,18 +417,19 @@ body:has(.homeBlurWordSection) {
 .myExperienceFactsSection::before {
   content: "";
   position: absolute;
-  top: -220px;
+  top: -180px;
   right: 0;
   left: 0;
-  height: 440px;
+  height: 360px;
   pointer-events: none;
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgb(10 10 13 / 0.2) 28%,
-    rgb(10 10 13 / 0.52) 45%,
-    rgb(58 58 58 / 0.72) 50%,
-    rgb(247 247 243 / 0.78) 68%,
+    rgb(10 10 13 / 0.12) 28%,
+    rgb(46 46 46 / 0.28) 45%,
+    rgb(118 118 114 / 0.28) 50%,
+    rgb(247 247 243 / 0.5) 70%,
+    rgb(247 247 243 / 0.82) 90%,
     transparent 100%
   );
 }
