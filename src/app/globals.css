@@ -2344,7 +2344,10 @@ body:has(.homeBlurWordSection) {
   box-shadow: none;
 }
 
-#brochure.myExperienceFinalCta .myExperienceSectionKicker,
+#brochure.myExperienceFinalCta .myExperienceSectionKicker {
+  color: #5d5852;
+}
+
 #assistant.myExperiencePanel .myExperienceSectionKicker {
   color: rgb(230 220 203 / 0.58);
 }
