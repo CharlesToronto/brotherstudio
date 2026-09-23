@@ -4035,7 +4035,8 @@ body:has(.brochureStudioPageMain .brochureStudioLayout[data-sidebar-collapsed="t
 }
 
 .myWebsiteCardImage--full {
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center;
   background: #dfe9df;
 }
 
