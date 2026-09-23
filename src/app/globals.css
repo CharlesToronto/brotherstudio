@@ -21757,7 +21757,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
 .plantazAvailabilityHint { margin-top: 28px; color: var(--plantaz-pastel-dark); font-size: 12px; letter-spacing: .04em; line-height: 1.5; }
 .plantazContact { display: grid; grid-template-columns: .8fr 1.2fr; gap: 70px; max-width: 1280px; margin: 0 auto; padding: 100px clamp(20px, 5vw, 72px); background: #f2f7f2; }
 .plantazAvailabilityTableWrap { grid-column: 1 / -1; overflow-x: auto; margin-top: 10px; }
-.plantazAvailabilityScrollHint { position: sticky; top: 12px; z-index: 4; display: grid; grid-column: 1 / -1; grid-template-columns: auto auto; align-items: center; gap: 8px 12px; width: 100%; margin-bottom: 12px; padding: 10px 0; background: #fff; color: var(--plantaz-muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.plantazAvailabilityScrollHint { display: none; position: sticky; top: 12px; z-index: 4; grid-column: 1 / -1; grid-template-columns: auto auto; align-items: center; gap: 8px 12px; width: 100%; margin-bottom: 12px; padding: 10px 0; background: #fff; color: var(--plantaz-muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
 .plantazAvailabilityScrollHint strong { justify-self: end; color: var(--plantaz-pastel-dark); font-size: 10px; font-variant-numeric: tabular-nums; }
 .plantazAvailabilityScrollTrack { grid-column: 1 / -1; display: block; width: 100%; height: 3px; overflow: hidden; border-radius: 999px; background: #e1ebe2; }
 .plantazAvailabilityScrollTrack i { display: block; height: 100%; min-width: 8px; border-radius: inherit; background: var(--plantaz-pastel-dark); transition: width 160ms ease; }
@@ -21833,7 +21833,7 @@ html[data-theme="dark"] .myStudioGuideArrow {
   .plantazApartmentIntro { order: 1; padding: 0 0 28px; }
   .plantazApartmentVisual { order: 2; min-height: 300px; }
   .plantazAvailabilityHint { display: none; }
-  .plantazAvailabilityScrollHint { order: 4; margin-top: 4px; }
+  .plantazAvailabilityScrollHint { display: grid; order: 4; margin-top: 4px; }
   .plantazAvailabilityTableWrap { order: 5; }
   .plantazAvailabilityTable caption { display: none; }
   .plantazApartmentVisual--original { width: 100%; min-height: 0; aspect-ratio: 2048 / 1137; }
