@@ -1427,7 +1427,6 @@ export function ProjectFeedbackWorkspace({
 
       {allowImageManagement && isImageEditorEnabled && selectedEditorImage ? (
         <ProjectImageEditorPanel
-          image={selectedEditorImage.image}
           imageLabel={selectedEditorImage.imageLabel}
           adjustments={imageAdjustments[selectedEditorImage.image.id] ?? defaultImageAdjustments}
           onChange={(nextAdjustments) =>
@@ -1710,7 +1709,6 @@ export function ProjectFeedbackWorkspace({
 }
 
 type ImageEditorPanelProps = {
-  image: ProjectFeedbackImage;
   imageLabel: string;
   adjustments: ImageAdjustments;
   onChange: (adjustments: ImageAdjustments) => void;
@@ -1742,7 +1740,6 @@ function ImageEditorRange({ label, value, onChange }: ImageEditorRangeProps) {
 }
 
 function ProjectImageEditorPanel({
-  image,
   imageLabel,
   adjustments,
   onChange,
@@ -1764,17 +1761,6 @@ function ProjectImageEditorPanel({
           <X aria-hidden="true" size={17} />
         </button>
       </header>
-
-      <div
-        className="projectImageEditorPreview"
-        style={{ "--editor-vignette": getImageAdjustmentVignette(adjustments) } as CSSProperties}
-      >
-        <img
-          src={getProjectFeedbackDisplayImageUrl(image.url, 900)}
-          alt={`Aperçu de ${imageLabel}`}
-          style={{ filter: getImageAdjustmentFilter(adjustments) }}
-        />
-      </div>
 
       <div className="projectImageEditorControls">
         <section className="projectImageEditorGroup">

@@ -15962,8 +15962,7 @@ body:has(.campaignLanding) .campaignLandingNav,
   box-shadow: inset 0 0 0 2px rgb(114 200 255 / 0.5);
 }
 
-.projectFeedbackImageCard[data-image-editor-enabled="true"] .projectFeedbackCanvas::after,
-.projectImageEditorPreview::after {
+.projectFeedbackImageCard[data-image-editor-enabled="true"] .projectFeedbackCanvas::after {
   position: absolute;
   inset: 0;
   z-index: 3;
@@ -15986,12 +15985,15 @@ body:has(.campaignLanding) .campaignLandingNav,
 }
 
 .projectImageEditorPanel {
-  position: fixed !important;
+  position: sticky !important;
   top: 86px;
-  right: 20px;
+  right: auto;
   z-index: 1000;
+  grid-column: 1 / -1;
+  justify-self: end;
+  align-self: start;
   display: grid;
-  grid-template-rows: auto 168px minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(360px, calc(100vw - 40px));
   max-height: calc(100vh - 106px);
   overflow: hidden;
@@ -16000,7 +16002,6 @@ body:has(.campaignLanding) .campaignLandingNav,
   background: #fff;
   color: #1d2830;
   box-shadow: 0 18px 50px rgb(18 50 75 / 0.28), 0 0 0 1px rgb(255 255 255 / 0.65);
-  will-change: transform;
 }
 
 .projectImageEditorHeader {
@@ -16042,23 +16043,6 @@ body:has(.campaignLanding) .campaignLandingNav,
   background: #fff;
   color: #537181;
   cursor: pointer;
-}
-
-.projectImageEditorPreview {
-  position: relative;
-  display: grid;
-  place-items: center;
-  min-height: 0;
-  padding: 10px;
-  background: #18232c;
-}
-
-.projectImageEditorPreview img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 8px;
 }
 
 .projectImageEditorControls {
@@ -16154,21 +16138,15 @@ body:has(.campaignLanding) .campaignLandingNav,
 
 @media (max-width: 760px) {
   .projectImageEditorPanel {
-    top: auto;
-    right: 0;
-    bottom: 0;
+    top: 12px;
+    right: auto;
     width: 100%;
-    height: 50vh;
     max-height: 50vh;
-    position: fixed !important;
-    grid-template-rows: auto minmax(110px, 22vh) minmax(0, 1fr) auto;
+    position: sticky !important;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     border-right: 0;
     border-bottom: 0;
     border-radius: 18px 18px 0 0;
-  }
-
-  .projectImageEditorPreview {
-    padding: 8px 16px;
   }
 
   .projectImageEditorControls {
