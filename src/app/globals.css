@@ -15962,6 +15962,18 @@ body:has(.campaignLanding) .campaignLandingNav,
   box-shadow: inset 0 0 0 2px rgb(114 200 255 / 0.5);
 }
 
+.projectFeedbackImageCard[data-image-editor-enabled="true"] .projectFeedbackCanvas::after,
+.projectImageEditorPreview::after {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at center, transparent 42%, rgb(6 15 24 / 0.78) 100%);
+  content: "";
+  opacity: var(--editor-vignette, 0);
+  pointer-events: none;
+}
+
 .projectFeedbackEditorToggle[data-active="true"] {
   border-color: #72c8ff;
   background: #e4f5ff;
@@ -16032,6 +16044,7 @@ body:has(.campaignLanding) .campaignLandingNav,
 }
 
 .projectImageEditorPreview {
+  position: relative;
   display: grid;
   place-items: center;
   min-height: 0;

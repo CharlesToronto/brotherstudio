@@ -193,12 +193,20 @@ function getImageAdjustmentsStorageKey(projectId: string) {
 function getImageAdjustmentFilter(adjustments: ImageAdjustments) {
   const temperature = adjustments.temperature / 18;
   const tint = adjustments.tint / 14;
-  const brightness = 1 + adjustments.brightness / 180;
-  const contrast = 1 + adjustments.contrast / 160;
+  const tonalLift =
+    adjustments.brightness +
+    adjustments.highlights * 0.28 +
+    adjustments.shadows * 0.38 +
+    adjustments.whites * 0.22 +
+    adjustments.blacks * 0.16;
+  const textureContrast = adjustments.clarity * 0.28 + adjustments.sharpness * 0.16;
+  const brightness = 1 + tonalLift / 180;
+  const contrast = 1 + (adjustments.contrast + textureContrast) / 160;
   const saturation = 1 + adjustments.saturation / 100;
-  const vibrance = 1 + adjustments.vibrance / 220;
+  const vibrance = 1 + adjustments.vibrance / 180;
   const sepia = Math.max(0, adjustments.temperature) / 560;
   const invert = adjustments.invert ? 1 : 0;
+  const blur = adjustments.sharpness < 0 ? `blur(${Math.abs(adjustments.sharpness) / 160}px)` : "";
 
   return [
     `brightness(${Math.max(0.45, brightness)})`,
@@ -207,7 +215,12 @@ function getImageAdjustmentFilter(adjustments: ImageAdjustments) {
     `hue-rotate(${temperature + tint}deg)`,
     `sepia(${sepia})`,
     `invert(${invert})`,
-  ].join(" ");
+    blur,
+  ].filter(Boolean).join(" ");
+}
+
+function getImageAdjustmentVignette(adjustments: ImageAdjustments) {
+  return Math.max(0, adjustments.vignette) / 100;
 }
 
 function getProjectFeedbackDisplayImageUrl(url: string, width: number) {
@@ -1752,7 +1765,10 @@ function ProjectImageEditorPanel({
         </button>
       </header>
 
-      <div className="projectImageEditorPreview">
+      <div
+        className="projectImageEditorPreview"
+        style={{ "--editor-vignette": getImageAdjustmentVignette(adjustments) } as CSSProperties}
+      >
         <img
           src={getProjectFeedbackDisplayImageUrl(image.url, 900)}
           alt={`Aperçu de ${imageLabel}`}
@@ -2439,6 +2455,7 @@ function ProjectFeedbackImageCard({
         className="projectFeedbackCanvas"
         data-interactive={canInteractWithImage ? "true" : "false"}
         data-approved={isApprovedImage ? "true" : "false"}
+        style={{ "--editor-vignette": getImageAdjustmentVignette(imageAdjustments) } as CSSProperties}
         onClick={(event) => {
           if (isBusy || !canInteractWithImage || isDrawingInteractionEnabled) return;
           if (imageEditorEnabled) {
