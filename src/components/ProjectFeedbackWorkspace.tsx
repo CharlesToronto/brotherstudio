@@ -1391,7 +1391,6 @@ export function ProjectFeedbackWorkspace({
               >
                 <SlidersHorizontal aria-hidden="true" size={15} strokeWidth={1.8} />
                 <span>Éditeur d’image</span>
-                <strong>{isImageEditorEnabled ? "ON" : "OFF"}</strong>
               </button>
             ) : null}
 

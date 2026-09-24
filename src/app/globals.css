@@ -15979,11 +15979,6 @@ body:has(.campaignLanding) .campaignLandingNav,
   color: #17638e;
 }
 
-.projectFeedbackEditorToggle strong {
-  font-size: 9px;
-  letter-spacing: 0.1em;
-}
-
 .projectImageEditorOverlay {
   position: fixed !important;
   inset: 0;
