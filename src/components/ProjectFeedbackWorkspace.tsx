@@ -1426,7 +1426,7 @@ export function ProjectFeedbackWorkspace({
       </header>
 
       {allowImageManagement && isImageEditorEnabled && selectedEditorImage ? (
-        <ProjectImageEditorPanel
+        <ProjectImageEditorPortal
           imageLabel={selectedEditorImage.imageLabel}
           adjustments={imageAdjustments[selectedEditorImage.image.id] ?? defaultImageAdjustments}
           onChange={(nextAdjustments) =>
@@ -1804,6 +1804,12 @@ function ProjectImageEditorPanel({
       </button>
     </aside>
   );
+}
+
+function ProjectImageEditorPortal(props: ImageEditorPanelProps) {
+  if (typeof document === "undefined") return null;
+
+  return createPortal(<ProjectImageEditorPanel {...props} />, document.body);
 }
 
 type ProjectFeedbackImageCardProps = {
