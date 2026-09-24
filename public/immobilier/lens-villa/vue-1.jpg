@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr" class="ko_Theme">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="generator" content="Infomaniak Site Creator" />
+	<meta name="description" content="Vous souhaitez achetez un appartement en Valais  . Contactez-nous. 
+immobiliervalaisan.ch" />
+	<meta name="keywords" content="www.immobiliervalaisan.ch , achat-vente, appartements, apparemment  Monthey, Martigny, Sion, Chamoson,  val-d-Hérens. Savièse,  Sanetsch, lens, crans-Montana, Sierre" />
+
+	<title>Erreur 404 : La page demandée n'existe pas &mdash; Appartement à vendre en valais</title>
+
+	<link rel="preconnect" href="https://fonts.bunny.net" crossorigin><link rel="dns-prefetch" href="https://fonts.bunny.net" crossorigin>	<base href="/">
+	<link rel="shortcut icon" href="/data/files/cartedevisitev.pavard.png" />
+	<link rel="apple-touch-icon" href="/data/files/cartedevisitev.pavard.png" />
+
+	<script src="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/vendor/jquery@3.6.1/dist/jquery.min.js" type="text/javascript"></script>
+
+	<link href="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/vendor/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+	<link href="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/live.css" type="text/css" rel="stylesheet" /><link href="//fonts.bunny.net/css?family=|Roboto:200,400,700&amp;subset=latin-ext&amp;display=swap" rel="stylesheet" type="text/css" />
+	
+
+	<!--[if lt IE 9]><script src="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/vendor/html5shiv@3.7.3/dist/html5shiv.min.js"></script><script src="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/vendor/respond.js@1.4.2/dest/respond.min.js"></script><![endif]-->
+
+            <script src='https://sentry-hosting.infomaniak.com/js-sdk-loader/073160f6a54ed5776bc71e6f45e5b333.min.js' crossorigin='anonymous'></script>
+            <script>
+                Sentry.init({
+                    dsn: `https://073160f6a54ed5776bc71e6f45e5b333@sentry-hosting.infomaniak.com/39`,
+                    release: `6.16.0`,
+                    initialScope: { tags: { theme: `interior` } },
+                    tracesSampleRate: 0,
+                    profileSessionSampleRate: 0,
+                    sendClientReports: false,
+                    // denyUrls as RegExp CONSTRUCTORS, not regex literals: this
+                    // snippet is persisted into page content and round-trips
+                    // through editor saves, where a regex literal's escaped
+                    // slashes get destroyed (the 2WJ corruption), while a
+                    // string built via new RegExp() holds no backslashes at all
+                    denyUrls: [
+                        // Chrome extensions
+                        new RegExp('extensions/', 'i'),
+                        new RegExp('^chrome://', 'i'),
+                        new RegExp('^chrome-extension://', 'i'),
+                    ],
+                    beforeSend(event) {
+                        // Strip query strings (common PII source)
+                        if (event.request?.url) {
+                            event.request.url = event.request.url.split('?').at(0);
+                        }
+                        return event;
+                    },
+                });
+            </script>
+        
+	<style>:root{--ui-color-accent: #4EBDF5;--ui-color-accent-75: rgba(78,189,245,0.7);--ui-color-accent-50: rgba(78,189,245,0.5);--ui-color-accent-25: rgba(78,189,245,0.25);--ui-color-accent-light: rgba(78,189,245,0.1);--ui-color-stripes-accent:repeating-linear-gradient(
+	-45deg,#1281b9,#4EBDF5 20px,#1281b9 20px,#1281b9 50px,#4EBDF5 50px,#4EBDF5 65px);--ui-color-leftmenu:#292E3D;}</style>
+	<!--The Open Graph-->
+	<meta property="og:image" content="https://immobiliervalaisan.ch/data/files/cartedevisitev.pavard.png" /><meta name="twitter:image" content="https://immobiliervalaisan.ch/data/files/cartedevisitev.pavard.png"><style>.ko_Theme .topmenu a:hover, .ko_Theme .topmenu .active a {background:inherit}.ko_Theme .menuHolder li a {margin: 0;padding: 0;border: 0;font-size: 100%;font: inherit;vertical-align: baseline;line-height: 1;color: inherit;text-shadow: none}.ko_Theme .menuHolder li {display: inline-block;padding:0}.ko_Theme .menuHolder{ flex-flow: row wrap}.ko_Theme .menuHolder,.ko_Theme #headerMenu{padding:0}.ko_Theme .logoHolder #logoReplacer h2,.ko_Theme .logoHolder a,.ko_Theme .logoHolder {line-height:1;padding:0;margin:0;height:auto}.ko_Theme .logoHolder img{max-height:auto}.ko_Theme #headerMenu .container {/*overflow:auto;*/display:flex;flex-direction: row;justify-content: space-between;align-items: center}:root{--color1:#0E314F;--color2:#B18349;--color1_rgb: 14,49,79;--color1_hsl: 208,70%,18%;--color1_hs: 208,70%;--color1_h: 208;--color1_s: 70%;--color1_l: 18%;--color1_25:#c3ccd3;--color1_50:#8798a7;--color1_75:#4a657b;--color1_125:#0b253b;--color1_150:#071928;--color1_175:#040c14;--color2_rgb: 177,131,73;--color2_hsl: 33,42%,49%;--color2_hs: 33,42%;--color2_h: 33;--color2_s: 42%;--color2_l: 49%;--color2_25:#ece0d2;--color2_50:#d8c1a4;--color2_75:#c5a277;--color2_125:#856237;--color2_150:#594225;--color2_175:#2c2112;--color1_bw:rgba(255,255,255,0.8);--color1_25_bw:rgba(0,0,0,0.8);--color1_50_bw:rgba(255,255,255,0.8);--color1_75_bw:rgba(255,255,255,0.8);--color1_125_bw:rgba(255,255,255,0.8);--color1_150_bw:rgba(255,255,255,0.8);--color1_175_bw:rgba(255,255,255,0.8);--color2_bw:rgba(255,255,255,0.8);--color2_25_bw:rgba(0,0,0,0.8);--color2_50_bw:rgba(0,0,0,0.8);--color2_75_bw:rgba(255,255,255,0.8);--color2_125_bw:rgba(255,255,255,0.8);--color2_150_bw:rgba(255,255,255,0.8);--color2_175_bw:rgba(255,255,255,0.8);;--font1:"-apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica, Ubuntu, roboto, noto, arial, sans-serif";--font2:"Roboto";--font3:Helvetica Neue,sans-serif;--color1_rgb: 14,49,79;--color1_hsl: 208,70%,18%;--color1_hs: 208,70%;--color1_h: 208;--color1_s: 70%;--color1_l: 18%;--color1_25:#c3ccd3;--color1_50:#8798a7;--color1_75:#4a657b;--color1_125:#0b253b;--color1_150:#071928;--color1_175:#040c14;--color2_rgb: 177,131,73;--color2_hsl: 33,42%,49%;--color2_hs: 33,42%;--color2_h: 33;--color2_s: 42%;--color2_l: 49%;--color2_25:#ece0d2;--color2_50:#d8c1a4;--color2_75:#c5a277;--color2_125:#856237;--color2_150:#594225;--color2_175:#2c2112;--color1_bw:rgba(255,255,255,0.8);--color1_25_bw:rgba(0,0,0,0.8);--color1_50_bw:rgba(255,255,255,0.8);--color1_75_bw:rgba(255,255,255,0.8);--color1_125_bw:rgba(255,255,255,0.8);--color1_150_bw:rgba(255,255,255,0.8);--color1_175_bw:rgba(255,255,255,0.8);--color2_bw:rgba(255,255,255,0.8);--color2_25_bw:rgba(0,0,0,0.8);--color2_50_bw:rgba(0,0,0,0.8);--color2_75_bw:rgba(255,255,255,0.8);--color2_125_bw:rgba(255,255,255,0.8);--color2_150_bw:rgba(255,255,255,0.8);--color2_175_bw:rgba(255,255,255,0.8);}#contentArea .koColor {color:#0E314F;}ul.koCheckList li:before {background:#0E314F;}.ko_Theme #website .btn-primary {background-color:var(--color1);border-color:var(--color1);}.ko_Theme #website .btn-outline-primary {color:var(--color1);border-color:var(--color1);}.ko_Theme #website .btn-outline-primary:hover {background-color:var(--color1);color:var(--color1_bw);border-color:var(--color1);}#website .page-item.active .page-link {background-color:#0E314F;color:var(--color1_bw);border-color:var(--color1);}#contentArea a:not(.btn),#contentArea a.btn-link {color:var(--color1)}#website.koMenu a:not(.btn):not(.koMenuButton),#website.koMenu a.btn-link {color:var(--color1)}#website .keditDark .keditWhite a:not(.btn):not(.page-link),#website .keditDark .keditWhite a.btn.btn-link{color:var(--color1)}.ko_Theme #contentArea, .ko_Theme .koThemeDark #contentArea .whiteShadowContainer {color:rgba(0,0,0,0.5)}#contentArea h1, #contentArea h2, #contentArea h3,#contentArea h1 a, #contentArea h2 a, #contentArea h3 a, .koThemeDark #contentArea .whiteShadowContainer strong, .koThemeDark #contentArea .whiteShadowContainer h1, .koThemeDark #contentArea .whiteShadowContainer h2, .koThemeDark #contentArea .whiteShadowContainer h3{color: rgb(0, 0, 0);}#contentArea h4, #contentArea h5, #contentArea h6,#contentArea h4 a, #contentArea h5 a, #contentArea h6 a, .koThemeDark #contentArea .whiteShadowContainer strong, .koThemeDark #contentArea .whiteShadowContainer h4, .koThemeDark #contentArea .whiteShadowContainer h5, .koThemeDark #contentArea .whiteShadowContainer h6 {color: rgb(0, 0, 0);}.ko_Theme #website #footerContent {color: rgb(84, 84, 84);}.ko_Theme #website #footerContent h1,.ko_Theme #website #footerContent h2,.ko_Theme #website #footerContent h3,.ko_Theme #website #footerContent h4,.ko_Theme #website #footerContent h5,.ko_Theme #website #footerContent h6 {color: var(--color1);}.ko_Theme #website, .ko_Theme #website p{font-family:var(--font2),sans-serif;}.ko_Theme #website a.btn, .ko_Theme #website button.btn{font-family:var(--font2),sans-serif;}.ko_Theme #website h1,.ko_Theme #website h2,.ko_Theme #website h3{font-family:var(--font1),sans-serif;font-weight:400}.ko_Theme #website h4,.ko_Theme #website h5,.ko_Theme #website h6{font-family:var(--font1),sans-serif;font-weight:400}.ko_Theme #website .topmenu{font-family:var(--font2),sans-serif;font-weight:700}.ko_Theme #website .logoHolder h2{font-family:var(--font2),sans-serif;font-weight:700}.ko_Theme #website #footerContent {font-family:var(--font2),sans-serif;}.ko_Theme #website #footerContent h1,.ko_Theme #website #footerContent h2,.ko_Theme #website #footerContent h3,.ko_Theme #website #footerContent h4,.ko_Theme #website #footerContent h5,.ko_Theme #website #footerContent h6 {font-family:var(--font1),sans-serif;}.ko_Theme .menuHolder li.topmenuSocial > span{margin-top:0px;}.ko_Theme #headerContent:not(.koZeroPadding),.ko_Theme #subpageHeaderContent:not(.koZeroPadding){}.ko_Theme #headerMenu{/*overflow:auto;*//*display:flex;flex-direction: row;justify-content: space-between;align-items: center;*/background:rgb(255, 255, 255);padding:20px;margin:0px;border:0px solid var(--color1_25);border-width:0px 0px 1px 0px;border-radius:0px;;}.ko_Theme .logoHolder{padding:0px;;white-space: nowrap;}.ko_Theme .logoHolder h2{font-size:24px;color:rgb(0, 0, 0);display: flex;align-items: center;min-height:40px;}@media (max-width: 768px){.ko_Theme .logoHolder h2{font-size:22px;}}.ko_Theme .logoHolder img{max-height:40px;height:40px;min-height:40px;}.ko_Theme .menuHolder { display: flex;}.ko_Theme .menuHolder li{}.ko_Theme .menuHolder li a{font-size:15px;color:rgb(84, 84, 84);padding:5px 0px 5px 0px;margin:0px 0px 0px 15px;border-radius:0px;border:solid transparent;border-width:0px 0px 1px 0px;text-transform:uppercase;transition:0.2s all;}.ko_Theme .menuHolder li.active a,.ko_Theme .menuHolder li a:hover{color:var(--color1);border-color:var(--color1);}.ko_Theme .menuHolder li.accent1 a,.ko_Theme .menuHolder li.accent1.active a{font-size:15px;color:var(--color1_75);background:rgb(255, 255, 255);padding:10px 15px 10px 15px;margin:0px 0px 0px 30px;border-radius:50px;border:1px solid var(--color1);}.ko_Theme .menuHolder li.accent1.active a,.ko_Theme .menuHolder li.accent1 a:hover{color:var(--color1);background:var(--color1_25);}.ko_Theme .menuHolder li.accent2 a,.ko_Theme .menuHolder li.accent2.active a{font-size:15px;color:var(--color2_75);background:rgb(255, 255, 255);padding:10px 15px 10px 15px;margin:0px 0px 0px 10px;border-radius:50px;border:1px solid var(--color2);}.ko_Theme .menuHolder li.accent2.active a,.ko_Theme .menuHolder li.accent2 a:hover{color:var(--color2_125);background:var(--color2_25);}.ko_Theme .menuHolder li.topmenuSocial a{color:rgb(0, 0, 0)}</style>
+	<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-TGJ4M4CS');</script>
+<!-- End Google Tag Manager -->
+</head>
+<body class="" >
+<div id="websiteLoading" onclick="var elem = document.getElementById('websiteLoading');elem.parentNode.removeChild(elem);" onkeyup="var elem = document.getElementById('websiteLoading');elem.parentNode.removeChild(elem);" class="isLoading isLoading-1"><div style="background:white;position:absolute;top:0;left:0;right:0;bottom:0;height:100%;width:100%" class="d-none"></div><noscript><style>#websiteLoading{display:none!important}body{visibility:visible!important;overflow:auto!important}</style></noscript><style>		body{overflow:hidden}		body.body{visibility:visible;overflow:auto}		#websiteLoading{visibility:visible;position:fixed;top:0;left:0;right:0;bottom:0;transition:0.5s all;z-index:100;background: linear-gradient(135deg, rgba(255,255,255,.95) 20%, rgba(255,255,255,.5), rgba(255,255,255,.95) 80%);cursor:wait}		#websiteLoading.isLoading-1{background:#fff;}		#websiteLoading.isLoaded{opacity:0;cursor:default;pointer-events:none}		@-webkit-keyframes koLoadingRotation {		to {			-webkit-transform: rotate(360deg);					transform: rotate(360deg);		}		}		@keyframes koLoadingRotation {		to {			-webkit-transform: rotate(360deg);					transform: rotate(360deg);		}		}		.isLoading .spinner {		-webkit-animation: koLoadingRotation 1.5s linear infinite;				animation: koLoadingRotation 1.5s linear infinite;			/*will-change: transform;*/		}		.isLoading .spinner .path {		-webkit-animation: dash 1.5s ease-in-out infinite;				animation: dash 1.5s ease-in-out infinite;		}		@-webkit-keyframes dash {		0% {			stroke-dasharray: 1, 150;			stroke-dashoffset: 0;			stroke:var(--color1);		}		50% {			stroke-dasharray: 90, 150;			stroke-dashoffset: -35;			stroke:var(--color2);		}		100% {			stroke-dasharray: 90, 150;			stroke-dashoffset: -124;			stroke:var(--color1);		}		}		@keyframes dash {		0% {			stroke-dasharray: 1, 150;			stroke-dashoffset: 0;			stroke:var(--color1);		}		50% {			stroke-dasharray: 90, 150;			stroke-dashoffset: -35;			stroke:var(--color2);		}		100% {			stroke-dasharray: 90, 150;			stroke-dashoffset: -124;			stroke:var(--color1);		}		}		#websiteLoading::after {			content:"";			background: #fff;			border-radius:100%;			box-shadow: 5px 5px 50px rgba(0,0,0,0.1);			position: absolute;			top: 50%;			left: 50%;			margin: -57px 0 0 -57px;			width: 114px;			height: 114px;		}		</style><svg class="spinner" viewBox="0 0 50 50" style="z-index: 2;position: absolute;top: 50%;left: 50%;width:120px;height:120px;	  margin: -60px 0 0 -60px;"><circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="2" style="stroke: #ccc; stroke: var(--color1);stroke-linecap: round;"></circle></svg></div><div id="website" class=""><header id="header"><div id="headerMenu"><div class="container"><div class="logoHolder skiptranslate"><a href="/" class="logo"><h2><img src="data/files/cartedevisitev.pavard.png" style="border:0" id="WebsiteLogo" alt="IMMOBILIER VALAISAN" /><span>IMMOBILIER VALAISAN</span></h2></a></div>
+
+	<ul class="menuHolder topmenu">
+		<li class="accent1"><a href="https://immobiliervalaisan.ch"><span>ACCUEIL</span></a></li>
+		<li><a href="appartement"><span>APPARTEMENT</span></a></li>
+		<li><a href="maison-villa"><span>MAISON-VILLA</span></a></li>
+		<li><a href="terrain"><span>TERRAIN</span></a></li>
+		<li><a href="raccard-mayen"><span>RACCARD-MAYEN</span></a></li>
+		<li><a href="a-renover"><span>A RENOVER</span></a></li>
+		<li><a href="immeuble-locatif"><span>IMMEUBLE LOCATIF</span></a></li>
+		<li class="accent1"><a href="contact" rel="dropmenu_1_4"><span>CONTACT</span></a></li>
+		<li class="topmenuSocial topmenuSocialTranslate skiptranslate"><span><div class="dropdown">
+<button class="btn bg-white text-black dropdown-toggle px-3" style="min-width:inherit" type="button" data-bs-toggle="dropdown" data-bs-toggle="dropdown"><i class="fas fa-globe mr-2"></i><span class="m-0 p-0">FR</span></button>
+<div class="dropdown-menu dropdown-menu-right p-0 skiptranslate"><a class="d-block h-auto p-3 m-0 w-100 text-left dropdown-item text-dark hidden" data-lang="fr" href="javascript:void(null)" onclick="googleTranslateWebsite('fr')">French</a><a class="d-block h-auto p-3 m-0 w-100 text-left dropdown-item text-dark" data-lang="en" href="javascript:void(null)" onclick="googleTranslateWebsite('en')">English</a></div>
+</div></span><span style="display:none;">			<script type="text/javascript">
+        const pageLanguage = 'fr';
+        const availableLanguages = ["fr","en"];
+        const browserLanguage = '';
+        const manualTranslation = false;
+
+        function updateLanguageDropdown(language) {
+          $('.topmenuSocial.skiptranslate .dropdown-toggle span').text(language.toUpperCase());
+          $('.topmenuSocial.skiptranslate .dropdown-menu a').removeClass('hidden');
+          $(`.topmenuSocial.skiptranslate .dropdown-menu a[data-lang="${language}"]`).addClass('hidden');
+        }
+
+        function googleTranslateElementInit() {
+          const includedLanguages = availableLanguages.filter((language) => language !== pageLanguage).join(',');
+
+          new google.translate.TranslateElement({
+            pageLanguage,
+            includedLanguages,
+            useCookie: true,
+            autoDisplay: true,
+            multilanguagePage: false,
+            bodyStyle: 'font-family:Arial;'
+          }, 'google_translate_element');
+
+          onGoogleTranslate(({ newLanguage }) => {
+            updateLanguageDropdown(newLanguage);
+          });
+
+          if (!manualTranslation) {
+            autoTranslate(getGoogleTranslateLanguage() ?? browserLanguage);
+          }
+        }
+
+        function autoTranslate(language) {
+          if (document.getElementById(':1.container')) {
+            googleTranslateWebsite(language);
+
+            return;
+          }
+
+          setTimeout(() => autoTranslate(language), 100);
+        }
+
+        function googleTranslateWebsite(language) {
+          $('html').removeClass('ko_ThemeMobileMenuOpen');
+
+          // restore original site language
+          if (language === pageLanguage) {
+            const iframe = document.getElementById(':1.container');
+            const restore = iframe.contentDocument.getElementById(':1.restore');
+
+            restore.click();
+
+            return;
+          }
+
+          // translate site
+          const languageSelect = document.querySelector("#google_translate_element select");
+
+          if (languageSelect) {
+            languageSelect.value = language;
+            languageSelect.dispatchEvent(new Event("change"));
+          }
+        }
+
+        function getGoogleTranslateLanguage() {
+          const cookies = document.cookie.split(';');
+          const cookie = cookies.find(cookie => cookie.trim().startsWith('googtrans='));
+
+          if (!cookie) {
+            return undefined;
+          }
+
+          const value = cookie.split('=')[1].trim();
+          const parts = value.split('/');
+
+          return parts.length === 3 ? parts[2] : undefined;
+        }
+
+        function onGoogleTranslate(onTranslated) {
+          const target = document.documentElement;
+          const observer = new MutationObserver((mutations) => {
+            const oldLanguage = mutations.at(0).oldValue.toLowerCase();
+            const newLanguage = target.lang.toLowerCase();
+
+            onTranslated({ oldLanguage, newLanguage });
+          });
+
+          observer.observe(document.documentElement, {
+            attributes: true,
+            attributeOldValue: true,
+            attributeFilter: ['lang'],
+          });
+        }
+			</script>
+
+      <div id="google_translate_element" style="display:none"></div>
+      <script type="text/javascript" async src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  
+	<style>
+    .topmenuSocialTranslate a.hidden {
+        display: none !important;
+    }
+
+		.byGoogleTranslate {
+			font-size: 11px;
+			font-weight: normal;
+			padding: 15px 15px 15px;
+			white-space: nowrap;
+			border-top: 1px solid #eee;
+			margin: 0 5px;
+			line-height: 22px;
+			width: auto;
+		}
+
+		.byGoogleTranslate a {
+			width: auto !important;
+		}
+
+		.byGoogleTranslate a:hover {
+			background: none !important;
+			color: #000
+		}
+
+		.byGoogleTranslate {
+			border: 0;
+			background: #f5f5f5;
+			margin: 0;
+			padding: 5px 10px
+		}
+
+		.topmenuSocial font {
+			vertical-align: baseline !important;
+		}
+
+		.ko_Theme .menuHolder li.topmenuSocial a.koSocialSearch:hover {
+			background: #fff;
+			color: #000;
+		}
+	</style>
+	</span></li><li class="topmenuSocial topmenuSocialSearch" rel="Recherche"><span><a class="koSocial koSocialSearch" href="javascript:void(null)" onclick="$('#searchHolder').addClass('active');setTimeout(function(){$('#searchInput').focus();},100);"><i class="fas fa-search"></i></a></span></li>
+	</ul>
+
+</div></div></header><main class="WxEditableArea" id="contentArea"><div id="contentAreaElement" class="kelement"></div><section class="kedit keditError404"><div class="container"><div class="row justify-content-center"><div class="col col-md-8"><h1 class="h1 mb-0">Oups!</h1>Erreur 404 : La page demandée n'existe pas<br><a href="/" class="mt-5 btn btn-primary"><i class="fas fa-chevron-left fa-fw"></i> Accueil</a></div></div></div></section></main><footer id="footerContent"><section data-pcid="5500.1" id="kedit_fn0orubsd" data-bgcolor="rgb(255, 255, 255)" class="border-top kedit keditFooter keditFooter1" style="background:rgb(255, 255, 255)"><div class="container keditFooterLine1">
+          <div class="row">
+              <div class="col-lg-4">
+                  <div class="kedit" id="kpg_4480441">
+                  <img class="keditFooterLogo lazy" alt="" title="" data-src="data/files/cartedevisitev.pavard.png">
+                  <div class="keditable mt-4 keditFooterCompany"><b>Immobilier Valaisan&nbsp;</b><div>Route du Bredan 2</div><div>CH-1871 Choëx&nbsp;</div><div>TEL: +41 77 520 10 44</div></div>
+                  </div>
+              </div>
+              <div class="col-lg-8">
+                  <div class="kedit keditFooterMenu" id="kpg_4307442"><ul class="sitemap"><li><h5>Menu principal</h5>
+<ul>
+
+<li data-id="1"><a href="https://immobiliervalaisan.ch/data/files/" title="ACCUEIL" ><span>ACCUEIL</span></a></li>
+
+<li data-id="5"><a href="appartement" title="APPARTEMENT" ><span>APPARTEMENT</span></a></li>
+
+<li data-id="7"><a href="maison-villa" title="MAISON-VILLA" ><span>MAISON-VILLA</span></a></li>
+
+<li data-id="6"><a href="terrain" title="TERRAIN" ><span>TERRAIN</span></a></li>
+
+<li data-id="8"><a href="raccard-mayen" title="RACCARD-MAYEN" ><span>RACCARD-MAYEN</span></a></li>
+
+<li data-id="10"><a href="a-renover" title="A RENOVER" ><span>A RENOVER</span></a></li>
+
+<li data-id="9"><a href="immeuble-locatif" title="IMMEUBLE LOCATIF" ><span>IMMEUBLE LOCATIF</span></a></li>
+
+<li data-id="4"><a href="contact" title="CONTACT" ><span>CONTACT</span></a>
+<ul>
+
+<li data-id="12"><a href="financement-immobilier" title="FINANCEMENT IMMOBILIER" ><span>FINANCEMENT IMMOBILIER</span></a></li>
+
+<li data-id="13"><a href="partenariat" title="PARTENARIAT" ><span>PARTENARIAT</span></a></li>
+
+<li data-id="11"><a href="le-valais-en-image" title="LE VALAIS EN IMAGE" ><span>LE VALAIS EN IMAGE</span></a></li>
+</ul>
+</li>
+</ul>
+</li></ul><ul class="sitemap"><li><h5>Légal</h5>
+<ul>
+
+<li data-id="2"><a href="politique-de-confidentialite" title="Politique de confidentialité" ><span>Politique de confidentialité</span></a></li>
+</ul>
+</li></ul></div>
+              </div>
+          </div>
+      </div>
+
+      <div class="keditFooterLine2 border-top">
+          <div class="container">
+              <div class="row">
+                  <div class="col-sm-7">
+                      <div class="kedit" id="kpg_8995213"><div class="keditable keditFooterCopyright">Copyright, tous droits réservés</div></div>
+                  </div>
+                  <div class="col-sm-5">
+                      <div class="kedit keditFooterApp" id="kpg_3360764"><div class="footerHolder" id="keditFooterModule"><div class="social_fa social_bw social_bwh social_footer"><a target="_blank" href="https://www.facebook.com/Facebook"><i class="fab fa-facebook-square fa-2x fa-fw"></i></a><a target="_blank" href="https://twitter.com/Twitter"><i class="fab fa-x-twitter fa-2x fa-fw"></i></a><a target="_blank" href="https://www.youtube.com/YouTube"><i class="fab fa-youtube fa-2x fa-fw"></i></a></div></div></div>
+                  </div>
+              </div>
+          </div>
+      </div></section></footer></div><a id="scrollToTop" href="javascript:void(null)"><i class="fa fa-fw fa-arrow-up"></i></a><script data-id="websiteLoading">document.addEventListener('DOMContentLoaded', function(){
+
+						var c = document.getElementById('websiteLoading');
+						if (c !== null) {
+							c.classList.remove('isLoading-1');
+						}
+						setTimeout(function(){
+
+							c = document.getElementById('websiteLoading');
+							if (c !== null) {
+								document.body.classList.add('body');
+								c.classList.add('isLoaded');
+								setTimeout(function(){c.remove()}, 1000);
+							}
+
+						}, 3000);
+					});window.onload = function(){var c = document.getElementById('websiteLoading');
+				if (c !== null) {
+					c.classList.add('isLoaded');
+				}
+				document.body.classList.add('body');
+				setTimeout(function(){var c = document.getElementById('websiteLoading');if (c !== null){c.remove()}}, 500);document.addEventListener('keyup', function(e){if((e.ctrlKey || e.metaKey)&&e.keyCode==27){window.location.href="";}});};</script><script>var koSiteName="IMMOBILIER VALAISAN";$(function(){$(".koLeftMenuOpener").removeClass("invisible");})</script><div id="searchHolder">
+		<form method="get" action="">
+			<div>Recherche</div>
+			<input type="text" autocomplete="off" name="search" id="searchInput" class="form-control">
+			<button type="submit" class="btn btn-color1"><i class="fas fa-search"></i></button>
+			<button type="reset" class="btn btn-light" onclick="$('#searchHolder').removeClass('active')"><i class="fas fa-times"></i></button>
+		</form></div><link rel="stylesheet" href="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/vendor/magnific-popup@1.1.0/dist/magnific-popup.min.css" /><script defer src="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/vendor/magnific-popup@1.1.0/dist/jquery.magnific-popup.min.js" onload="magnificPopupInit()"></script><script>var magnificPopupInit=function(){$('a.lightbox').magnificPopup({type:'image',gallery:{enabled:true}});}</script>
+<script></script> 
+<div class="cookie-consent"><div>Ce site peut utiliser des cookies et des scripts externes. <a href="accueil">Plus d'informations</a></div><div class="cookie-close"><button type="button" class="btn btn-outline-primary" onclick="createCookieInfo(1234)">J'accepte</button></div></div>
+    <script>
+
+
+	function createCookieInfo(type){
+
+		var cookieValue='0';
+
+		if(type == 1234){
+
+			// all types of cookies are allowed
+
+			$('#cookieConsentCheckbox2,#cookieConsentCheckbox3,#cookieConsentCheckbox4').prop('checked',true);
+
+			cookieValue+='1234';
+
+		} else if(type == 0){
+
+			// custom settings
+
+			cookieValue+='1';
+
+			if($('#cookieConsentCheckbox2').prop('checked') === true)
+				cookieValue+='2';
+
+			if($('#cookieConsentCheckbox3').prop('checked') === true)
+				cookieValue+='3';
+
+			if($('#cookieConsentCheckbox4').prop('checked') === true)
+				cookieValue+='4';
+
+
+		} else {
+
+			// only necessary
+
+			$('#cookieConsentCheckbox2,#cookieConsentCheckbox3,#cookieConsentCheckbox4').prop('checked',false);
+
+			cookieValue+='1';
+
+		}
+
+		var name='cookieConsentAgree';
+
+        var date = new Date();
+        date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
+        var expires = "; expires=" + date.toGMTString();
+    	document.cookie = escape(name) + "=" + escape(cookieValue) + expires + "; path=/";
+
+		$(".cookie-consent").fadeOut();
+		
+	}
+
+	</script>
+    <script>if(window.self !== window.top){$(function(){window.top.koMenuFit(900);window.top.koMenuLoaded()});}</script><script src="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/vendor/instant.page@5.2.0/instantpage.min.js" type="module" defer></script><script>var menuCaption = "Sélectionner une page";var timeLocale={YEAR_PLURAL: "Ann\u00e9es",YEAR_SINGULAR: "Ann\u00e9e",MONTH_PLURAL: "Mois",MONTH_SINGULAR: "Mois",WEEK_PLURAL: "Semaines",WEEK_SINGULAR: "Semaine",DAY_PLURAL: "Jours",DAY_SINGULAR: "Jour",HOUR_PLURAL: "Heures",HOUR_SINGULAR: "Heure",MINUTE_PLURAL: "Minutes",MINUTE_SINGULAR: "Minute",SECOND_PLURAL: "Secondes",SECOND_SINGULAR: "Seconde"};</script><script type="text/javascript" src="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/live.js" defer></script><link href="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/vendor/@fortawesome/fontawesome-free@7.2.0/css/all.min.css" rel="stylesheet" /><script src="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/vendor/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+	<!-- AOS (Animate on Scroll) -->
+	<link rel="stylesheet" href="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/vendor/aos@2.3.4/dist/aos.css" />
+<script src="https://storage4.infomaniak.com/website-builder/cdn/6.16.0/assets/vendor/aos@2.3.4/dist/aos.min.js" defer></script><script>$(function(){AOS.init({offset:-10,delay:100,duration:800,easing:'ease',anchorPlacement:'top-bottom'});})</script><script>$(function(e){var a = 400,s = e('#scrollToTop');e(window).scroll(function(){e(this).scrollTop() > a ? s.addClass('active') : s.removeClass('active')}), s.on('click',function(a){s.removeClass('active');e('body,html').animate({scrollTop: 0});})})</script>
+<ul id="dropmenu_1_4" class="dropmenudiv dropfirst">
+<li><a href="financement-immobilier"><span>FINANCEMENT IMMOBILIER</span></a></li>
+<li><a href="partenariat"><span>PARTENARIAT</span></a></li>
+<li><a href="le-valais-en-image"><span>LE VALAIS EN IMAGE</span></a></li>
+</ul><script type="text/javascript" id="jsMenusSetup">window.addEventListener('load',function(){ddlevelsmenu.setup("1", "topbar","0","0");});</script>
+	<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TGJ4M4CS"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+</body></html>

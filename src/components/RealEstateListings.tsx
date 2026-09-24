@@ -13,6 +13,7 @@ import {
 
 import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
+import { RealEstateNavigation } from "@/components/RealEstateNavigation";
 
 type ListingCategory =
   | "Appartement"
@@ -23,6 +24,7 @@ type ListingCategory =
   | "À rénover";
 type ListingFilter =
   | "Tous les biens"
+  | "Promotion"
   | "Appartements"
   | "Maisons & villas"
   | "Projets neufs"
@@ -56,7 +58,7 @@ const listings: RealEstateListing[] = [
     area: "130 m²",
     exterior: "2 places de parc",
     price: "CHF 650’000",
-    image: "https://immobiliervalaisan.ch/data/files/vente35pmonrhey.png",
+    image: "/immobilier/monthey/vue-1.png",
     href: "https://immobiliervalaisan.ch/appartement",
   },
   {
@@ -69,7 +71,7 @@ const listings: RealEstateListing[] = [
     area: "110 m²",
     exterior: "Box + place de parc",
     price: "CHF 620’000",
-    image: "https://immobiliervalaisan.ch/data/files/aappartementvendreillarsaz.jpg",
+    image: "/immobilier/illarsaz/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/appartement",
   },
   {
@@ -82,7 +84,7 @@ const listings: RealEstateListing[] = [
     area: "118 m²",
     exterior: "Vente sur plans",
     price: "CHF 885’000",
-    image: "https://immobiliervalaisan.ch/data/files/avendreflantheyvalais_1773750039.jpg",
+    image: "/immobilier/lens-appartement-45/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/appartement",
   },
   {
@@ -95,7 +97,7 @@ const listings: RealEstateListing[] = [
     area: "71 m²",
     exterior: "Vente sur plans",
     price: "CHF 585’000",
-    image: "https://immobiliervalaisan.ch/data/files/avendreflantheyvalais.jpg",
+    image: "/immobilier/lens-appartement-35/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/appartement",
   },
   {
@@ -108,7 +110,7 @@ const listings: RealEstateListing[] = [
     area: "98 m²",
     exterior: "Parcelle 518 m²",
     price: "CHF 650’000",
-    image: "https://immobiliervalaisan.ch/data/files/chaletvendremorgins.jpg",
+    image: "/immobilier/morgins-chalet/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/maison-villa",
   },
   {
@@ -121,7 +123,7 @@ const listings: RealEstateListing[] = [
     area: "—",
     exterior: "Projet neuf",
     price: "CHF 1’300’000",
-    image: "https://immobiliervalaisan.ch/data/files/capturedcran2026-04-17145848.jpg",
+    image: "/immobilier/lens-villa/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/maison-villa",
   },
   {
@@ -134,7 +136,7 @@ const listings: RealEstateListing[] = [
     area: "133 m²",
     exterior: "2 granges",
     price: "CHF 600’000",
-    image: "https://immobiliervalaisan.ch/data/files/theme/maison-a-renover-ollon.jpg",
+    image: "/immobilier/ollon/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/maison-villa",
   },
   {
@@ -147,7 +149,7 @@ const listings: RealEstateListing[] = [
     area: "3’129 m²",
     exterior: "Permis 2026",
     price: "CHF 4’550’000",
-    image: "https://immobiliervalaisan.ch/data/files/img-1857175.jpg",
+    image: "/immobilier/soleure/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/terrain",
   },
   {
@@ -160,7 +162,7 @@ const listings: RealEstateListing[] = [
     area: "1’738 m²",
     exterior: "Densité 0,30 / 0,50",
     price: "Prix sur demande",
-    image: "https://immobiliervalaisan.ch/data/files/img-1857175.jpg",
+    image: "/immobilier/chamoson/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/terrain",
   },
   {
@@ -173,7 +175,7 @@ const listings: RealEstateListing[] = [
     area: "2’890 m²",
     exterior: "Permis de construire",
     price: "Prix sur demande",
-    image: "https://immobiliervalaisan.ch/data/files/img-1857175.jpg",
+    image: "/immobilier/valais-central/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/terrain",
   },
   {
@@ -186,7 +188,7 @@ const listings: RealEstateListing[] = [
     area: "96 m²",
     exterior: "Parcelle 514 m²",
     price: "CHF 660’000",
-    image: "https://immobiliervalaisan.ch/data/files/chaletvendremorgins.jpg",
+    image: "/immobilier/morgins-raccard/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/raccard-mayen",
   },
   {
@@ -199,7 +201,7 @@ const listings: RealEstateListing[] = [
     area: "8’500 m²",
     exterior: "Grange",
     price: "CHF 120’000",
-    image: "https://immobiliervalaisan.ch/data/files/photos/mayenavendre-valdebagne.jpg",
+    image: "/immobilier/val-de-bagnes/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/raccard-mayen",
   },
   {
@@ -212,7 +214,7 @@ const listings: RealEstateListing[] = [
     area: "105 m²",
     exterior: "Parcelle 349 m²",
     price: "CHF 275’000",
-    image: "https://immobiliervalaisan.ch/data/files/a-vendre-mayen-zour-savise.jpg",
+    image: "/immobilier/saviese/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/raccard-mayen",
   },
   {
@@ -225,13 +227,14 @@ const listings: RealEstateListing[] = [
     area: "Jardin 2’400 m²",
     exterior: "Grange + étage",
     price: "CHF 900’000",
-    image: "https://immobiliervalaisan.ch/data/files/photo_2025-03-14.jpg",
+    image: "/immobilier/corps-ferme/vue-1.jpg",
     href: "https://immobiliervalaisan.ch/a-renover",
   },
 ];
 
 const filters: ListingFilter[] = [
   "Tous les biens",
+  "Promotion",
   "Appartements",
   "Maisons & villas",
   "Projets neufs",
@@ -241,6 +244,7 @@ const filters: ListingFilter[] = [
 ];
 
 function filterToCategory(filter: ListingFilter): ListingCategory | null {
+  if (filter === "Promotion") return "Projet neuf";
   if (filter === "Appartements") return "Appartement";
   if (filter === "Maisons & villas") return "Maison & villa";
   if (filter === "Projets neufs") return "Projet neuf";
@@ -250,8 +254,10 @@ function filterToCategory(filter: ListingFilter): ListingCategory | null {
   return null;
 }
 
-function resolveListingHref(locale: Locale, href: string) {
-  return /^https?:\/\//i.test(href) ? href : withLocalePath(locale, href);
+function parseListingPrice(price: string): number | null {
+  if (price === "Prix sur demande") return null;
+  const amount = Number(price.replace(/[^0-9]/g, ""));
+  return Number.isFinite(amount) ? amount : null;
 }
 
 export function RealEstateListings({ locale }: { locale: Locale }) {
@@ -269,7 +275,18 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
 
     return listings.filter((listing) => {
       if (category && listing.category !== category) return false;
-      if (budget === "on-request" && listing.price !== "Prix sur demande") return false;
+      if (budget !== "all") {
+        const amount = parseListingPrice(listing.price);
+
+        if (budget === "on-request") {
+          if (amount !== null) return false;
+        } else if (budget === "3000000+") {
+          if (amount === null || amount <= 3_000_000) return false;
+        } else {
+          const [minimum, maximum] = budget.split("-").map(Number);
+          if (amount === null || amount < minimum || amount >= maximum) return false;
+        }
+      }
       if (rooms !== "Toutes les pièces" && !listing.rooms.startsWith(rooms)) return false;
       if (!normalizedSearch) return true;
 
@@ -287,7 +304,10 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
   };
 
   return (
-    <main className="siteMain realEstatePage">
+    <>
+      <RealEstateNavigation locale={locale} active="listings" />
+      <main className="siteMain realEstateSitePage">
+      <div className="realEstatePage">
       <section className="realEstateShell" aria-labelledby="real-estate-title">
         <div className="realEstateBreadcrumbs" aria-label={isFrench ? "Fil d’Ariane" : "Breadcrumbs"}>
           <Link href={withLocalePath(locale, "/")}>{isFrench ? "Accueil" : "Home"}</Link>
@@ -343,6 +363,12 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
               <span className="srOnly">{isFrench ? "Budget" : "Budget"}</span>
               <select value={budget} onChange={(event) => setBudget(event.target.value)}>
                 <option value="all">{isFrench ? "Tous les budgets" : "All budgets"}</option>
+                <option value="0-500000">CHF 0 – 500’000</option>
+                <option value="500000-1000000">CHF 500’000 – 1’000’000</option>
+                <option value="1000000-1500000">CHF 1’000’000 – 1’500’000</option>
+                <option value="1500000-2000000">CHF 1’500’000 – 2’000’000</option>
+                <option value="2000000-3000000">CHF 2’000’000 – 3’000’000</option>
+                <option value="3000000+">CHF 3’000’000+</option>
                 <option value="on-request">{isFrench ? "Prix sur demande" : "Price on request"}</option>
               </select>
               <ChevronDown aria-hidden="true" size={16} strokeWidth={1.5} />
@@ -390,7 +416,7 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
 
               return (
                 <article className={`realEstateCard${listing.featured ? " realEstateCardFeatured" : ""}`} key={listing.id}>
-                  <Link className="realEstateCardMedia" href={resolveListingHref(locale, listing.href)}>
+                  <Link className="realEstateCardMedia" href={withLocalePath(locale, `/immobilier/${listing.id}`)}>
                     <Image
                       src={listing.image}
                       alt={listing.title}
@@ -411,11 +437,11 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
                   </button>
                   <div className="realEstateCardBody">
                     <p className="realEstateCardLocation">{listing.location}</p>
-                    <h2><Link href={resolveListingHref(locale, listing.href)}>{listing.title}</Link></h2>
+                    <h2><Link href={withLocalePath(locale, `/immobilier/${listing.id}`)}>{listing.title}</Link></h2>
                     <p className="realEstateCardDetails">{listing.rooms} · {listing.area} · {listing.exterior}</p>
                     <div className="realEstateCardFooter">
                       <p className="realEstateCardPrice">{listing.price}</p>
-                      <Link className="realEstateCardArrow" href={resolveListingHref(locale, listing.href)} aria-label={`Découvrir ${listing.title}`}>↗</Link>
+                      <Link className="realEstateCardArrow" href={withLocalePath(locale, `/immobilier/${listing.id}`)} aria-label={`Découvrir ${listing.title}`}>↗</Link>
                     </div>
                   </div>
                 </article>
@@ -429,6 +455,8 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
           </div>
         )}
       </section>
-    </main>
+      </div>
+      </main>
+    </>
   );
 }

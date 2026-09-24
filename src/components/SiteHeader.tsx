@@ -126,7 +126,8 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
       label: messages.nav.realEstate,
       href: localizedHref("/immobilier"),
       isCurrent: subpath === "/immobilier",
-      kind: "link" as const,
+      kind: "anchor" as const,
+      target: "_blank" as const,
     },
     {
       key: "price",

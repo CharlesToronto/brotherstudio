@@ -1,10 +1,10 @@
 "use client";
 
 import { Dongle } from "next/font/google";
-import { ArrowDown } from "lucide-react";
+import Link from "next/link";
 
 import { useHeroScrollBridge } from "@/hooks/useHeroScrollBridge";
-import type { Locale } from "@/lib/i18n";
+import { withLocalePath, type Locale } from "@/lib/i18n";
 
 const dongle = Dongle({
   subsets: ["latin"],
@@ -14,6 +14,7 @@ const dongle = Dongle({
 export function HomeVideoHero({ locale }: { locale: Locale }) {
   const heroScrollBridgeRef = useHeroScrollBridge<HTMLElement>();
   const isFrench = locale === "fr";
+  const listingsHref = withLocalePath(locale, "/immobilier");
 
   return (
     <section
@@ -45,23 +46,12 @@ export function HomeVideoHero({ locale }: { locale: Locale }) {
                 : "Brother Studio is a property marketing company that helps developers launch, commercialize and sell new real estate developments through branding, CGI, websites, advertising and qualified lead generation."}
             </p>
           </div>
+          <div className="realEstateHeroActions homeHeroActions">
+            <Link className="realEstateHeroActionPrimary" href={listingsHref}>Découvrir nos biens <span aria-hidden="true">↗</span></Link>
+            <a className="realEstateHeroActionSecondary realEstateHeroActionNeon homeHeroActionNeon" href="#home-capabilities-title">Commercialiser mon projet <span aria-hidden="true">↗</span></a>
+          </div>
         </div>
 
-        <button
-          type="button"
-          className="homeHeroScrollButton"
-          aria-label={isFrench ? "Accéder à la galerie" : "Enter gallery"}
-          onClick={() => {
-            document.getElementById("home-capabilities-title")?.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }}
-        >
-          <span className="homeHeroScrollButtonIcon" aria-hidden="true">
-            <ArrowDown size={24} strokeWidth={1.9} />
-          </span>
-        </button>
       </div>
     </section>
   );
