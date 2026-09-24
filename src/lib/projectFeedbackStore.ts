@@ -11,6 +11,11 @@ import {
   normalizeProjectViewerEmail,
   normalizeProjectViewerRole,
 } from "@/lib/projectViewerIdentity";
+import {
+  defaultProjectImageAdjustments,
+  normalizeProjectImageAdjustments,
+} from "@/lib/projectImageAdjustments";
+import type { ProjectImageAdjustments } from "@/lib/projectImageAdjustments";
 import type {
   ProjectFeedbackComment,
   ProjectFeedbackDrawingElement,
@@ -96,6 +101,13 @@ type DrawingLayerRow = {
   elements: unknown;
   updated_by: string | null;
   created_at: string;
+  updated_at: string;
+};
+
+type ImageAdjustmentsRow = {
+  project_id: string;
+  image_id: string;
+  adjustments: unknown;
   updated_at: string;
 };
 
@@ -500,6 +512,7 @@ function buildProjectPayload(
   images: ImageRow[],
   comments: CommentRow[],
   viewers: ProjectViewerRow[],
+  imageAdjustments: ImageAdjustmentsRow[],
 ): ProjectFeedbackProject {
   const commentsByImageId = new Map<string, ProjectFeedbackComment[]>();
 
@@ -522,6 +535,12 @@ function buildProjectPayload(
   }
 
   const imagesByVersion = new Map<number, ProjectFeedbackImage[]>();
+  const adjustmentsByImageId = new Map(
+    imageAdjustments.map((row) => [
+      row.image_id,
+      normalizeProjectImageAdjustments(row.adjustments),
+    ]),
+  );
 
   for (const image of [...images].sort((a, b) => {
     if (a.version !== b.version) return b.version - a.version;
@@ -535,6 +554,8 @@ function buildProjectPayload(
       status: normalizeImageStatus(image.status),
       version: image.version,
       createdAt: image.created_at,
+      adjustments:
+        adjustmentsByImageId.get(image.id) ?? defaultProjectImageAdjustments,
       comments: commentsByImageId.get(image.id) ?? [],
     });
     imagesByVersion.set(image.version, list);
@@ -599,6 +620,11 @@ async function loadProjectRows(projectId: string) {
     .order("version", { ascending: false })
     .order("created_at", { ascending: true });
 
+  const { data: imageAdjustmentsData, error: imageAdjustmentsError } = await supabase
+    .from("image_adjustments")
+    .select("project_id, image_id, adjustments, updated_at")
+    .eq("project_id", projectId);
+
   if (projectError) throw projectError;
   let images: ImageRow[] = [];
 
@@ -625,12 +651,18 @@ async function loadProjectRows(projectId: string) {
 
   if (commentsError) throw commentsError;
   if (viewersError) throw viewersError;
+  if (imageAdjustmentsError && !isMissingOptionalRelationError(imageAdjustmentsError, "image_adjustments")) {
+    throw imageAdjustmentsError;
+  }
 
   return {
     project: (projectData as ProjectRow | null) ?? null,
     images,
     comments: (commentsData as CommentRow[] | null) ?? [],
     viewers: (viewersData as ProjectViewerRow[] | null) ?? [],
+    imageAdjustments: imageAdjustmentsError
+      ? []
+      : (imageAdjustmentsData as ImageAdjustmentsRow[] | null) ?? [],
   };
 }
 
@@ -680,10 +712,10 @@ export async function isProjectAccessAuthorized(
 export async function getProjectFeedbackProject(projectId: string) {
   if (!isProjectFeedbackConfigured()) return null;
 
-  const { project, images, comments, viewers } = await loadProjectRows(projectId);
+  const { project, images, comments, viewers, imageAdjustments } = await loadProjectRows(projectId);
   if (!project) return null;
 
-  return buildProjectPayload(project, images, comments, viewers);
+  return buildProjectPayload(project, images, comments, viewers, imageAdjustments);
 }
 
 export async function registerProjectViewer(input: {
@@ -1298,6 +1330,70 @@ async function assertProjectImageExists(projectId: string, imageId: string) {
 
   if (error) throw error;
   if (!data) throw new Error("Image not found.");
+}
+
+function buildImageAdjustmentsMigrationError() {
+  return new Error(
+    "Run the latest MyReview image-adjustments SQL migration before saving image edits.",
+  );
+}
+
+export async function saveAdminProjectImageAdjustments(input: {
+  projectId: string;
+  imageId: string;
+  adjustments: unknown;
+}): Promise<ProjectImageAdjustments> {
+  await assertProjectImageExists(input.projectId, input.imageId);
+
+  const supabase = getSupabaseAdminClient();
+  const adjustments = normalizeProjectImageAdjustments(input.adjustments);
+  const { data, error } = await supabase
+    .from("image_adjustments")
+    .upsert(
+      {
+        project_id: input.projectId,
+        image_id: input.imageId,
+        adjustments,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "image_id" },
+    )
+    .select("adjustments")
+    .single();
+
+  if (error) {
+    if (isMissingOptionalRelationError(error, "image_adjustments")) {
+      throw buildImageAdjustmentsMigrationError();
+    }
+    throw error;
+  }
+
+  return normalizeProjectImageAdjustments(
+    (data as Pick<ImageAdjustmentsRow, "adjustments">).adjustments,
+  );
+}
+
+export async function clearAdminProjectImageAdjustments(input: {
+  projectId: string;
+  imageId: string;
+}) {
+  await assertProjectImageExists(input.projectId, input.imageId);
+
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("image_adjustments")
+    .delete()
+    .eq("project_id", input.projectId)
+    .eq("image_id", input.imageId);
+
+  if (error) {
+    if (isMissingOptionalRelationError(error, "image_adjustments")) {
+      throw buildImageAdjustmentsMigrationError();
+    }
+    throw error;
+  }
+
+  return defaultProjectImageAdjustments;
 }
 
 export async function listProjectImageDrawingLayer(

@@ -16028,6 +16028,22 @@ body:has(.campaignLanding) .campaignLandingNav,
   text-transform: uppercase;
 }
 
+.projectImageEditorSaveState {
+  margin: 5px 0 0;
+  color: #4f7f65;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.projectImageEditorSaveState[data-state="saving"] {
+  color: #537181;
+}
+
+.projectImageEditorSaveState[data-state="error"] {
+  color: #c64d43;
+}
+
 .projectImageEditorHeader h2,
 .projectImageEditorGroup h3 {
   display: flex;

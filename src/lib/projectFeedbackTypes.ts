@@ -1,3 +1,5 @@
+import type { ProjectImageAdjustments } from "@/lib/projectImageAdjustments";
+
 export type ProjectStatus = "in_review" | "approved";
 export type ProjectViewerRole = "team" | "visitor";
 
@@ -62,6 +64,7 @@ export type ProjectFeedbackImage = {
   status: ProjectStatus;
   version: number;
   createdAt: string;
+  adjustments: ProjectImageAdjustments;
   comments: ProjectFeedbackComment[];
 };
 

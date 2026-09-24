@@ -41,6 +41,10 @@ import type {
 } from "@/lib/projectFeedbackTypes";
 import { getResponseErrorMessage } from "@/lib/errorMessage";
 import {
+  defaultProjectImageAdjustments,
+} from "@/lib/projectImageAdjustments";
+import type { ProjectImageAdjustments } from "@/lib/projectImageAdjustments";
+import {
   getProjectViewerStorageKey,
   getProjectViewerRoleStorageKey,
   maskProjectViewerEmail,
@@ -111,39 +115,7 @@ type NumberedVersionGroup = {
   images: VersionImageEntry[];
 };
 
-type ImageAdjustments = {
-  temperature: number;
-  tint: number;
-  brightness: number;
-  contrast: number;
-  highlights: number;
-  shadows: number;
-  whites: number;
-  blacks: number;
-  saturation: number;
-  vibrance: number;
-  sharpness: number;
-  clarity: number;
-  vignette: number;
-  invert: boolean;
-};
-
-const defaultImageAdjustments: ImageAdjustments = {
-  temperature: 0,
-  tint: 0,
-  brightness: 0,
-  contrast: 0,
-  highlights: 0,
-  shadows: 0,
-  whites: 0,
-  blacks: 0,
-  saturation: 0,
-  vibrance: 0,
-  sharpness: 0,
-  clarity: 0,
-  vignette: 0,
-  invert: false,
-};
+type ImageAdjustments = ProjectImageAdjustments;
 
 const commentColorStorageKey = "bs_project_feedback_color";
 const defaultCommentColor = "#d88fa2";
@@ -186,10 +158,6 @@ function getProjectToolStorageKey(projectId: string, imageId: string, tool: stri
   return `bs_project_${projectId}_${imageId}_${tool}`;
 }
 
-function getImageAdjustmentsStorageKey(projectId: string) {
-  return `bs_project_${projectId}_image_adjustments`;
-}
-
 function getImageAdjustmentFilter(adjustments: ImageAdjustments) {
   const temperature = adjustments.temperature / 18;
   const tint = adjustments.tint / 14;
@@ -221,6 +189,14 @@ function getImageAdjustmentFilter(adjustments: ImageAdjustments) {
 
 function getImageAdjustmentVignette(adjustments: ImageAdjustments) {
   return Math.max(0, adjustments.vignette) / 100;
+}
+
+function getSharedImageAdjustments(project: ProjectFeedbackProject) {
+  return Object.fromEntries(
+    project.versions.flatMap((versionGroup) =>
+      versionGroup.images.map((image) => [image.id, image.adjustments]),
+    ),
+  ) as Record<string, ImageAdjustments>;
 }
 
 function getProjectFeedbackDisplayImageUrl(url: string, width: number) {
@@ -484,7 +460,15 @@ export function ProjectFeedbackWorkspace({
   const [isNotifyingClient, setIsNotifyingClient] = useState(false);
   const [isImageEditorEnabled, setIsImageEditorEnabled] = useState(false);
   const [selectedEditorImageId, setSelectedEditorImageId] = useState<string | null>(null);
-  const [imageAdjustments, setImageAdjustments] = useState<Record<string, ImageAdjustments>>({});
+  const [imageAdjustments, setImageAdjustments] = useState<Record<string, ImageAdjustments>>(
+    () => getSharedImageAdjustments(initialProject),
+  );
+  const [imageAdjustmentsSaveState, setImageAdjustmentsSaveState] = useState<
+    "saving" | "saved" | "error" | null
+  >(null);
+  const [imageAdjustmentsSaveImageId, setImageAdjustmentsSaveImageId] = useState<string | null>(
+    null,
+  );
   const [referenceFileCount, setReferenceFileCount] = useState(0);
   const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<WorkspaceTab>(() => {
     const approvedCount = initialProject.versions.reduce(
@@ -502,6 +486,8 @@ export function ProjectFeedbackWorkspace({
     return reviewCount === 0 && approvedCount > 0 ? "approved" : "review";
   });
   const workspaceTabsRef = useRef<HTMLDivElement | null>(null);
+  const imageAdjustmentsSaveTimeoutRef = useRef<number | null>(null);
+  const imageAdjustmentsSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const previousLatestVersionRef = useRef<number | null>(
     initialProject.latestVersion > 0 ? initialProject.latestVersion : null,
   );
@@ -519,18 +505,6 @@ export function ProjectFeedbackWorkspace({
   }, [project.id]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    try {
-      const stored = window.localStorage.getItem(getImageAdjustmentsStorageKey(project.id));
-      const parsed = stored ? (JSON.parse(stored) as Record<string, ImageAdjustments>) : {};
-      setImageAdjustments(parsed && typeof parsed === "object" ? parsed : {});
-    } catch {
-      setImageAdjustments({});
-    }
-  }, [project.id]);
-
-  useEffect(() => {
     setProject(initialProject);
     setDraft(null);
     setEditingComment(null);
@@ -539,7 +513,16 @@ export function ProjectFeedbackWorkspace({
     previousLatestVersionRef.current =
       initialProject.latestVersion > 0 ? initialProject.latestVersion : null;
     setSelectedEditorImageId(null);
+    setImageAdjustments(getSharedImageAdjustments(initialProject));
   }, [initialProject]);
+
+  useEffect(() => {
+    return () => {
+      if (imageAdjustmentsSaveTimeoutRef.current !== null) {
+        window.clearTimeout(imageAdjustmentsSaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -650,27 +633,72 @@ export function ProjectFeedbackWorkspace({
   const viewerIdentityLabel = viewerEmail ? maskProjectViewerEmail(viewerEmail) : "";
   const canManageApprovedImages = allowImageManagement || canInteract;
 
-  const persistImageAdjustments = (nextAdjustments: Record<string, ImageAdjustments>) => {
-    setImageAdjustments(nextAdjustments);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(
-        getImageAdjustmentsStorageKey(project.id),
-        JSON.stringify(nextAdjustments),
-      );
-    }
+  const saveImageAdjustments = (
+    imageId: string,
+    adjustments: ImageAdjustments | null,
+  ) => {
+    setImageAdjustmentsSaveImageId(imageId);
+    setImageAdjustmentsSaveState("saving");
+    imageAdjustmentsSaveQueueRef.current = imageAdjustmentsSaveQueueRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        const response = await fetch(
+          `/api/projects/${project.id}/images/${imageId}/adjustments`,
+          adjustments
+            ? {
+                method: "PUT",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ adjustments }),
+              }
+            : { method: "DELETE" },
+        );
+        const payload = (await response.json().catch(() => null)) as
+          | { adjustments?: ImageAdjustments; error?: string }
+          | null;
+
+        if (!response.ok || !payload?.adjustments) {
+          throw new Error(payload?.error ?? "Impossible d’enregistrer les réglages.");
+        }
+
+        setImageAdjustments((current) => ({
+          ...current,
+          [imageId]: payload.adjustments ?? defaultProjectImageAdjustments,
+        }));
+        setImageAdjustmentsSaveImageId(imageId);
+        setImageAdjustmentsSaveState("saved");
+      })
+      .catch(() => {
+        setImageAdjustmentsSaveImageId(imageId);
+        setImageAdjustmentsSaveState("error");
+      });
   };
 
   const updateImageAdjustments = (
     imageId: string,
     nextAdjustments: ImageAdjustments,
   ) => {
-    persistImageAdjustments({ ...imageAdjustments, [imageId]: nextAdjustments });
+    setImageAdjustments((current) => ({ ...current, [imageId]: nextAdjustments }));
+    if (imageAdjustmentsSaveTimeoutRef.current !== null) {
+      window.clearTimeout(imageAdjustmentsSaveTimeoutRef.current);
+    }
+    setImageAdjustmentsSaveImageId(imageId);
+    setImageAdjustmentsSaveState("saving");
+    imageAdjustmentsSaveTimeoutRef.current = window.setTimeout(() => {
+      saveImageAdjustments(imageId, nextAdjustments);
+      imageAdjustmentsSaveTimeoutRef.current = null;
+    }, 350);
   };
 
   const resetImageAdjustments = (imageId: string) => {
-    const nextAdjustments = { ...imageAdjustments };
-    delete nextAdjustments[imageId];
-    persistImageAdjustments(nextAdjustments);
+    setImageAdjustments((current) => ({
+      ...current,
+      [imageId]: defaultProjectImageAdjustments,
+    }));
+    if (imageAdjustmentsSaveTimeoutRef.current !== null) {
+      window.clearTimeout(imageAdjustmentsSaveTimeoutRef.current);
+      imageAdjustmentsSaveTimeoutRef.current = null;
+    }
+    saveImageAdjustments(imageId, null);
   };
 
   const busyNoticeLabel = isUploading
@@ -1428,7 +1456,14 @@ export function ProjectFeedbackWorkspace({
       {allowImageManagement && isImageEditorEnabled && selectedEditorImage ? (
         <ProjectImageEditorPortal
           imageLabel={selectedEditorImage.imageLabel}
-          adjustments={imageAdjustments[selectedEditorImage.image.id] ?? defaultImageAdjustments}
+          adjustments={
+            imageAdjustments[selectedEditorImage.image.id] ?? defaultProjectImageAdjustments
+          }
+          saveState={
+            imageAdjustmentsSaveImageId === selectedEditorImage.image.id
+              ? imageAdjustmentsSaveState
+              : null
+          }
           onChange={(nextAdjustments) =>
             updateImageAdjustments(selectedEditorImage.image.id, nextAdjustments)
           }
@@ -1636,7 +1671,9 @@ export function ProjectFeedbackWorkspace({
                       showDownloadAction={false}
                       imageEditorEnabled={allowImageManagement && isImageEditorEnabled}
                       isImageEditorSelected={selectedEditorImageId === image.id}
-                      imageAdjustments={imageAdjustments[image.id] ?? defaultImageAdjustments}
+                      imageAdjustments={
+                        imageAdjustments[image.id] ?? defaultProjectImageAdjustments
+                      }
                       allowCommentManagement={allowImageManagement || canInteract}
                       allowImageApproval={canManageApprovedImages}
                       canInteract={canInteract}
@@ -1711,6 +1748,7 @@ export function ProjectFeedbackWorkspace({
 type ImageEditorPanelProps = {
   imageLabel: string;
   adjustments: ImageAdjustments;
+  saveState: "saving" | "saved" | "error" | null;
   onChange: (adjustments: ImageAdjustments) => void;
   onReset: () => void;
   onClose: () => void;
@@ -1742,6 +1780,7 @@ function ImageEditorRange({ label, value, onChange }: ImageEditorRangeProps) {
 function ProjectImageEditorPanel({
   imageLabel,
   adjustments,
+  saveState,
   onChange,
   onReset,
   onClose,
@@ -1756,6 +1795,15 @@ function ProjectImageEditorPanel({
         <div>
           <p className="projectImageEditorEyebrow">Outil admin</p>
           <h2><SlidersHorizontal aria-hidden="true" size={16} /> Éditer {imageLabel}</h2>
+          {saveState ? (
+            <p className="projectImageEditorSaveState" data-state={saveState}>
+              {saveState === "saving"
+                ? "Enregistrement…"
+                : saveState === "saved"
+                  ? "Enregistré pour tous"
+                  : "Échec de l’enregistrement"}
+            </p>
+          ) : null}
         </div>
         <button type="button" className="projectImageEditorClose" onClick={onClose} aria-label="Fermer l’éditeur">
           <X aria-hidden="true" size={17} />
