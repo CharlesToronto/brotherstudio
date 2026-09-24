@@ -12,7 +12,19 @@ import type {
   SetStateAction,
 } from "react";
 import { createPortal } from "react-dom";
-import { Check, Copy, Download, Search, Share2, X } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Download,
+  Droplets,
+  RotateCcw,
+  Search,
+  Share2,
+  SlidersHorizontal,
+  Sun,
+  Waves,
+  X,
+} from "lucide-react";
 
 import { ProjectClientReferences } from "@/components/ProjectClientReferences";
 import { ProjectLocationMap } from "@/components/ProjectLocationMap";
@@ -99,6 +111,40 @@ type NumberedVersionGroup = {
   images: VersionImageEntry[];
 };
 
+type ImageAdjustments = {
+  temperature: number;
+  tint: number;
+  brightness: number;
+  contrast: number;
+  highlights: number;
+  shadows: number;
+  whites: number;
+  blacks: number;
+  saturation: number;
+  vibrance: number;
+  sharpness: number;
+  clarity: number;
+  vignette: number;
+  invert: boolean;
+};
+
+const defaultImageAdjustments: ImageAdjustments = {
+  temperature: 0,
+  tint: 0,
+  brightness: 0,
+  contrast: 0,
+  highlights: 0,
+  shadows: 0,
+  whites: 0,
+  blacks: 0,
+  saturation: 0,
+  vibrance: 0,
+  sharpness: 0,
+  clarity: 0,
+  vignette: 0,
+  invert: false,
+};
+
 const commentColorStorageKey = "bs_project_feedback_color";
 const defaultCommentColor = "#d88fa2";
 const projectFeedbackDisplayImageWidths = [720, 1200, 1800];
@@ -138,6 +184,30 @@ function createId() {
 
 function getProjectToolStorageKey(projectId: string, imageId: string, tool: string) {
   return `bs_project_${projectId}_${imageId}_${tool}`;
+}
+
+function getImageAdjustmentsStorageKey(projectId: string) {
+  return `bs_project_${projectId}_image_adjustments`;
+}
+
+function getImageAdjustmentFilter(adjustments: ImageAdjustments) {
+  const temperature = adjustments.temperature / 18;
+  const tint = adjustments.tint / 14;
+  const brightness = 1 + adjustments.brightness / 180;
+  const contrast = 1 + adjustments.contrast / 160;
+  const saturation = 1 + adjustments.saturation / 100;
+  const vibrance = 1 + adjustments.vibrance / 220;
+  const sepia = Math.max(0, adjustments.temperature) / 560;
+  const invert = adjustments.invert ? 1 : 0;
+
+  return [
+    `brightness(${Math.max(0.45, brightness)})`,
+    `contrast(${Math.max(0.55, contrast)})`,
+    `saturate(${Math.max(0, saturation * vibrance)})`,
+    `hue-rotate(${temperature + tint}deg)`,
+    `sepia(${sepia})`,
+    `invert(${invert})`,
+  ].join(" ");
 }
 
 function getProjectFeedbackDisplayImageUrl(url: string, width: number) {
@@ -399,6 +469,9 @@ export function ProjectFeedbackWorkspace({
   const [busyImageStatus, setBusyImageStatus] = useState<ProjectStatus | null>(null);
   const [isDownloadingApproved, setIsDownloadingApproved] = useState(false);
   const [isNotifyingClient, setIsNotifyingClient] = useState(false);
+  const [isImageEditorEnabled, setIsImageEditorEnabled] = useState(false);
+  const [selectedEditorImageId, setSelectedEditorImageId] = useState<string | null>(null);
+  const [imageAdjustments, setImageAdjustments] = useState<Record<string, ImageAdjustments>>({});
   const [referenceFileCount, setReferenceFileCount] = useState(0);
   const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<WorkspaceTab>(() => {
     const approvedCount = initialProject.versions.reduce(
@@ -433,6 +506,18 @@ export function ProjectFeedbackWorkspace({
   }, [project.id]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const stored = window.localStorage.getItem(getImageAdjustmentsStorageKey(project.id));
+      const parsed = stored ? (JSON.parse(stored) as Record<string, ImageAdjustments>) : {};
+      setImageAdjustments(parsed && typeof parsed === "object" ? parsed : {});
+    } catch {
+      setImageAdjustments({});
+    }
+  }, [project.id]);
+
+  useEffect(() => {
     setProject(initialProject);
     setDraft(null);
     setEditingComment(null);
@@ -440,6 +525,7 @@ export function ProjectFeedbackWorkspace({
     setSelectedVersion(initialProject.latestVersion > 0 ? initialProject.latestVersion : null);
     previousLatestVersionRef.current =
       initialProject.latestVersion > 0 ? initialProject.latestVersion : null;
+    setSelectedEditorImageId(null);
   }, [initialProject]);
 
   useEffect(() => {
@@ -545,8 +631,34 @@ export function ProjectFeedbackWorkspace({
     reviewVersions.find((versionGroup) => versionGroup.version === selectedVersion) ??
     reviewVersions[reviewVersions.length - 1] ??
     null;
+  const selectedEditorImage = reviewVersions
+    .flatMap((versionGroup) => versionGroup.images)
+    .find(({ image }) => image.id === selectedEditorImageId) ?? null;
   const viewerIdentityLabel = viewerEmail ? maskProjectViewerEmail(viewerEmail) : "";
   const canManageApprovedImages = allowImageManagement || canInteract;
+
+  const persistImageAdjustments = (nextAdjustments: Record<string, ImageAdjustments>) => {
+    setImageAdjustments(nextAdjustments);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        getImageAdjustmentsStorageKey(project.id),
+        JSON.stringify(nextAdjustments),
+      );
+    }
+  };
+
+  const updateImageAdjustments = (
+    imageId: string,
+    nextAdjustments: ImageAdjustments,
+  ) => {
+    persistImageAdjustments({ ...imageAdjustments, [imageId]: nextAdjustments });
+  };
+
+  const resetImageAdjustments = (imageId: string) => {
+    const nextAdjustments = { ...imageAdjustments };
+    delete nextAdjustments[imageId];
+    persistImageAdjustments(nextAdjustments);
+  };
 
   const busyNoticeLabel = isUploading
     ? uploadTargetVersion === null
@@ -1226,6 +1338,23 @@ export function ProjectFeedbackWorkspace({
             ) : null}
 
             {allowImageManagement ? (
+              <button
+                className="projectFeedbackAction projectFeedbackActionGhost projectFeedbackEditorToggle"
+                type="button"
+                data-active={isImageEditorEnabled ? "true" : "false"}
+                aria-pressed={isImageEditorEnabled}
+                onClick={() => {
+                  setIsImageEditorEnabled((current) => !current);
+                  setActiveWorkspaceTab("review");
+                }}
+              >
+                <SlidersHorizontal aria-hidden="true" size={15} strokeWidth={1.8} />
+                <span>Éditeur d’image</span>
+                <strong>{isImageEditorEnabled ? "ON" : "OFF"}</strong>
+              </button>
+            ) : null}
+
+            {allowImageManagement ? (
               <label className="projectFeedbackUpload">
                 <span>{isUploading ? "Adding..." : "Add new variant"}</span>
                 <input
@@ -1282,6 +1411,22 @@ export function ProjectFeedbackWorkspace({
           </p>
         ) : null}
       </header>
+
+      {allowImageManagement && isImageEditorEnabled && selectedEditorImage ? (
+        <ProjectImageEditorPanel
+          image={selectedEditorImage.image}
+          imageLabel={selectedEditorImage.imageLabel}
+          adjustments={imageAdjustments[selectedEditorImage.image.id] ?? defaultImageAdjustments}
+          onChange={(nextAdjustments) =>
+            updateImageAdjustments(selectedEditorImage.image.id, nextAdjustments)
+          }
+          onReset={() => resetImageAdjustments(selectedEditorImage.image.id)}
+          onClose={() => {
+            setIsImageEditorEnabled(false);
+            setSelectedEditorImageId(null);
+          }}
+        />
+      ) : null}
 
       <>
           <div
@@ -1477,6 +1622,9 @@ export function ProjectFeedbackWorkspace({
                       }
                       showImageActions={allowImageManagement}
                       showDownloadAction={false}
+                      imageEditorEnabled={allowImageManagement && isImageEditorEnabled}
+                      isImageEditorSelected={selectedEditorImageId === image.id}
+                      imageAdjustments={imageAdjustments[image.id] ?? defaultImageAdjustments}
                       allowCommentManagement={allowImageManagement || canInteract}
                       allowImageApproval={canManageApprovedImages}
                       canInteract={canInteract}
@@ -1487,6 +1635,9 @@ export function ProjectFeedbackWorkspace({
                         void handleUpdateImageStatus(imageId, "approved");
                       }}
                       onImageClick={handleCreateDraft}
+                      onSelectForImageEditor={(selectedImage) => {
+                        setSelectedEditorImageId(selectedImage.id);
+                      }}
                       onDeleteImage={(imageId) => {
                         void handleDeleteImage(imageId);
                       }}
@@ -1545,6 +1696,114 @@ export function ProjectFeedbackWorkspace({
   );
 }
 
+type ImageEditorPanelProps = {
+  image: ProjectFeedbackImage;
+  imageLabel: string;
+  adjustments: ImageAdjustments;
+  onChange: (adjustments: ImageAdjustments) => void;
+  onReset: () => void;
+  onClose: () => void;
+};
+
+type ImageEditorRangeProps = {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+};
+
+function ImageEditorRange({ label, value, onChange }: ImageEditorRangeProps) {
+  return (
+    <label className="projectImageEditorRange">
+      <span>{label}</span>
+      <input
+        type="range"
+        min={-100}
+        max={100}
+        value={value}
+        aria-label={label}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
+      <output>{value > 0 ? `+${value}` : value}</output>
+    </label>
+  );
+}
+
+function ProjectImageEditorPanel({
+  image,
+  imageLabel,
+  adjustments,
+  onChange,
+  onReset,
+  onClose,
+}: ImageEditorPanelProps) {
+  const update = <K extends keyof ImageAdjustments>(key: K, value: ImageAdjustments[K]) => {
+    onChange({ ...adjustments, [key]: value });
+  };
+
+  return (
+    <aside className="projectImageEditorPanel" aria-label="Éditeur d’image">
+      <header className="projectImageEditorHeader">
+        <div>
+          <p className="projectImageEditorEyebrow">Outil admin</p>
+          <h2><SlidersHorizontal aria-hidden="true" size={16} /> Éditer {imageLabel}</h2>
+        </div>
+        <button type="button" className="projectImageEditorClose" onClick={onClose} aria-label="Fermer l’éditeur">
+          <X aria-hidden="true" size={17} />
+        </button>
+      </header>
+
+      <div className="projectImageEditorPreview">
+        <img
+          src={getProjectFeedbackDisplayImageUrl(image.url, 900)}
+          alt={`Aperçu de ${imageLabel}`}
+          style={{ filter: getImageAdjustmentFilter(adjustments) }}
+        />
+      </div>
+
+      <div className="projectImageEditorControls">
+        <section className="projectImageEditorGroup">
+          <h3><Droplets aria-hidden="true" size={14} /> Balance des blancs</h3>
+          <ImageEditorRange label="Température" value={adjustments.temperature} onChange={(value) => update("temperature", value)} />
+          <ImageEditorRange label="Teinte" value={adjustments.tint} onChange={(value) => update("tint", value)} />
+        </section>
+
+        <section className="projectImageEditorGroup">
+          <h3><Sun aria-hidden="true" size={14} /> Lumière</h3>
+          <ImageEditorRange label="Luminosité" value={adjustments.brightness} onChange={(value) => update("brightness", value)} />
+          <ImageEditorRange label="Contraste" value={adjustments.contrast} onChange={(value) => update("contrast", value)} />
+          <ImageEditorRange label="Tons clairs" value={adjustments.highlights} onChange={(value) => update("highlights", value)} />
+          <ImageEditorRange label="Ombres" value={adjustments.shadows} onChange={(value) => update("shadows", value)} />
+          <ImageEditorRange label="Blancs" value={adjustments.whites} onChange={(value) => update("whites", value)} />
+          <ImageEditorRange label="Noirs" value={adjustments.blacks} onChange={(value) => update("blacks", value)} />
+        </section>
+
+        <section className="projectImageEditorGroup">
+          <div className="projectImageEditorGroupTitleRow">
+            <h3><Droplets aria-hidden="true" size={14} /> Couleur</h3>
+            <label className="projectImageEditorToggle">
+              <span>Inverser</span>
+              <input type="checkbox" checked={adjustments.invert} onChange={(event) => update("invert", event.target.checked)} />
+            </label>
+          </div>
+          <ImageEditorRange label="Brillance" value={adjustments.vibrance} onChange={(value) => update("vibrance", value)} />
+          <ImageEditorRange label="Saturation" value={adjustments.saturation} onChange={(value) => update("saturation", value)} />
+        </section>
+
+        <section className="projectImageEditorGroup">
+          <h3><Waves aria-hidden="true" size={14} /> Texture</h3>
+          <ImageEditorRange label="Netteté" value={adjustments.sharpness} onChange={(value) => update("sharpness", value)} />
+          <ImageEditorRange label="Clarté" value={adjustments.clarity} onChange={(value) => update("clarity", value)} />
+          <ImageEditorRange label="Vignettage" value={adjustments.vignette} onChange={(value) => update("vignette", value)} />
+        </section>
+      </div>
+
+      <button className="projectImageEditorReset" type="button" onClick={onReset}>
+        <RotateCcw aria-hidden="true" size={14} /> Réinitialiser les ajustements
+      </button>
+    </aside>
+  );
+}
+
 type ProjectFeedbackImageCardProps = {
   projectId: string;
   image: ProjectFeedbackImage;
@@ -1559,6 +1818,9 @@ type ProjectFeedbackImageCardProps = {
   busyActionLabel: string | null;
   showImageActions: boolean;
   showDownloadAction: boolean;
+  imageEditorEnabled: boolean;
+  isImageEditorSelected: boolean;
+  imageAdjustments: ImageAdjustments;
   allowCommentManagement: boolean;
   allowImageApproval: boolean;
   canInteract: boolean;
@@ -1571,6 +1833,7 @@ type ProjectFeedbackImageCardProps = {
     image: ProjectFeedbackImage,
     event: MouseEvent<HTMLDivElement>,
   ) => void;
+  onSelectForImageEditor: (image: ProjectFeedbackImage) => void;
   onDeleteImage: (imageId: string) => void;
   onReplaceImage: (imageId: string, file: File) => void;
   onDraftChange: Dispatch<SetStateAction<DraftComment | null>>;
@@ -1794,6 +2057,9 @@ function ProjectFeedbackImageCard({
   busyActionLabel,
   showImageActions,
   showDownloadAction,
+  imageEditorEnabled,
+  isImageEditorSelected,
+  imageAdjustments,
   allowCommentManagement,
   allowImageApproval,
   canInteract,
@@ -1803,6 +2069,7 @@ function ProjectFeedbackImageCard({
   busyCommentAction,
   onApproveImage,
   onImageClick,
+  onSelectForImageEditor,
   onDeleteImage,
   onReplaceImage,
   onDraftChange,
@@ -2096,6 +2363,8 @@ function ProjectFeedbackImageCard({
       className="projectFeedbackImageCard"
       data-can-interact={canInteractWithImage ? "true" : "false"}
       data-approved={isApprovedImage ? "true" : "false"}
+      data-image-editor-selected={isImageEditorSelected ? "true" : "false"}
+      data-image-editor-enabled={imageEditorEnabled ? "true" : "false"}
     >
       <div className="projectFeedbackImageCardHeader">
         <div className="projectFeedbackImageCardCopy">
@@ -2172,11 +2441,16 @@ function ProjectFeedbackImageCard({
         data-approved={isApprovedImage ? "true" : "false"}
         onClick={(event) => {
           if (isBusy || !canInteractWithImage || isDrawingInteractionEnabled) return;
+          if (imageEditorEnabled) {
+            onSelectForImageEditor(image);
+            return;
+          }
           onImageClick(image, event);
         }}
       >
         <img
           className="projectFeedbackImage"
+          style={{ filter: getImageAdjustmentFilter(imageAdjustments) }}
           src={displayImageUrl}
           srcSet={displayImageSrcSet}
           sizes="(max-width: 760px) calc(100vw - 36px), 54vw"
