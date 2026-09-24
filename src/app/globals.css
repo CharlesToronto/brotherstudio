@@ -26542,3 +26542,525 @@ body:has(.plantazWebsitePage) .siteHeader {
 .siteChrome:has(.plantazWebsitePage) > .siteFooter {
   display: none !important;
 }
+
+/* Real estate listing */
+body:has(.realEstatePage) {
+  --site-background-rgb: 248 247 244;
+  background: #f8f7f4;
+  color: #171817;
+}
+
+body:has(.realEstatePage) .siteHeader {
+  background: rgb(248 247 244 / 0.94);
+  border-bottom: 1px solid rgb(23 24 23 / 0.12);
+}
+
+.realEstatePage {
+  min-height: calc(100vh - 86px);
+  padding: 0 clamp(22px, 6vw, 88px) 7rem;
+  background: #f8f7f4;
+}
+
+.realEstateShell {
+  width: min(100%, 1440px);
+  margin: 0 auto;
+}
+
+.realEstateBreadcrumbs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 18px 0 0;
+  color: rgb(23 24 23 / 0.55);
+  font-size: 12px;
+}
+
+.realEstateBreadcrumbs a {
+  color: inherit;
+}
+
+.realEstateHero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  padding: clamp(44px, 7vw, 90px) 0 28px;
+}
+
+.realEstateEyebrow {
+  margin: 0 0 18px;
+  color: rgb(23 24 23 / 0.58);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.realEstateHero h1 {
+  max-width: 760px;
+  margin: 0;
+  font-size: clamp(3.7rem, 8vw, 7.7rem);
+  font-weight: 600;
+  letter-spacing: -0.075em;
+  line-height: 0.9;
+}
+
+.realEstateIntro {
+  margin: 18px 0 0;
+  font-size: clamp(17px, 2vw, 25px);
+  letter-spacing: -0.03em;
+}
+
+.realEstateSellButton {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid rgb(23 24 23 / 0.7);
+  border-radius: 6px;
+  color: #171817;
+  font-size: 13px;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.realEstateSellButton:hover,
+.realEstateSellButton:focus-visible {
+  background: #171817;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.realEstateFilters {
+  display: grid;
+  gap: 16px;
+  padding: 0 0 25px;
+  border-bottom: 1px solid rgb(23 24 23 / 0.18);
+}
+
+.realEstateFilterChips {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 2px 0 4px;
+  scrollbar-width: none;
+}
+
+.realEstateFilterChips::-webkit-scrollbar {
+  display: none;
+}
+
+.realEstateFilterChip {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 22px;
+  border: 1px solid rgb(23 24 23 / 0.14);
+  border-radius: 999px;
+  background: transparent;
+  color: rgb(23 24 23 / 0.74);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+.realEstateFilterChip[data-active="true"],
+.realEstateFilterChip:hover,
+.realEstateFilterChip:focus-visible {
+  border-color: #171817;
+  background: #171817;
+  color: #fff;
+}
+
+.realEstateSearchBar {
+  display: grid;
+  grid-template-columns: 1.35fr 1.15fr 1.15fr 0.8fr;
+  border: 1px solid rgb(23 24 23 / 0.16);
+  background: rgb(255 255 255 / 0.32);
+}
+
+.realEstateSearchField {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0 17px;
+  border-right: 1px solid rgb(23 24 23 / 0.14);
+  color: rgb(23 24 23 / 0.72);
+}
+
+.realEstateSearchField input,
+.realEstateSearchField select {
+  min-width: 0;
+  flex: 1 1 auto;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #171817;
+  font: inherit;
+  font-size: 13px;
+}
+
+.realEstateSearchField input::placeholder {
+  color: rgb(23 24 23 / 0.56);
+}
+
+.realEstateSearchField select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.realEstateSearchFieldIcon {
+  display: inline-grid;
+  width: 18px;
+  place-items: center;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.realEstateSearchButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  background: #171817;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+
+.realEstateResultsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 0 17px;
+}
+
+.realEstateResultsHeader p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.realEstateResultsActions,
+.realEstateResultsActions label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.realEstateResultsActions label {
+  color: rgb(23 24 23 / 0.68);
+  font-size: 13px;
+}
+
+.realEstateResultsActions select {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #171817;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+
+.realEstateViewButton {
+  display: inline-grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgb(23 24 23 / 0.14);
+  border-radius: 7px;
+  background: rgb(255 255 255 / 0.45);
+  color: #171817;
+}
+
+.realEstateGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 34px 18px;
+}
+
+.realEstateCard {
+  position: relative;
+  min-width: 0;
+}
+
+.realEstateCardMedia {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 1.52;
+  border-radius: 7px;
+  background: #dcdcd7;
+}
+
+.realEstateCardMedia img {
+  object-fit: cover;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.realEstateCard:hover .realEstateCardMedia img,
+.realEstateCard:focus-within .realEstateCardMedia img {
+  transform: scale(1.035);
+}
+
+.realEstateCardStatus {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 7px 12px;
+  border-radius: 5px;
+  background: #65735a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.realEstateFavoriteButton {
+  position: absolute;
+  top: 11px;
+  right: 12px;
+  z-index: 1;
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.realEstateFavoriteButton[data-active="true"] {
+  color: #be5c1f;
+}
+
+.realEstateCardBody {
+  padding: 13px 9px 0;
+}
+
+.realEstateCardLocation {
+  margin: 0 0 8px;
+  color: rgb(23 24 23 / 0.55);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.realEstateCardBody h2 {
+  margin: 0;
+  font-size: clamp(18px, 1.8vw, 25px);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.realEstateCardBody h2 a {
+  color: inherit;
+}
+
+.realEstateCardDetails {
+  margin: 9px 0 0;
+  color: rgb(23 24 23 / 0.76);
+  font-size: 14px;
+}
+
+.realEstateCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.realEstateCardPrice {
+  margin: 0;
+  color: #171817;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.realEstateCardArrow {
+  color: #171817;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.realEstateEmptyState {
+  padding: 70px 20px;
+  border-top: 1px solid rgb(23 24 23 / 0.14);
+  text-align: center;
+}
+
+.realEstateEmptyState h2,
+.realEstateEmptyState p {
+  margin: 0;
+}
+
+.realEstateEmptyState p {
+  margin-top: 10px;
+  color: rgb(23 24 23 / 0.64);
+}
+
+@media (max-width: 760px) {
+  .realEstatePage {
+    min-height: 100vh;
+    padding: 0 14px calc(7rem + env(safe-area-inset-bottom));
+  }
+
+  .realEstateBreadcrumbs {
+    padding-top: 13px;
+    font-size: 10px;
+  }
+
+  .realEstateHero {
+    display: block;
+    padding: 42px 0 23px;
+  }
+
+  .realEstateEyebrow {
+    margin-bottom: 14px;
+    font-size: 10px;
+  }
+
+  .realEstateHero h1 {
+    font-size: clamp(3.3rem, 17vw, 5.2rem);
+  }
+
+  .realEstateIntro {
+    max-width: 310px;
+    margin-top: 13px;
+    font-size: 17px;
+    line-height: 1.15;
+  }
+
+  .realEstateSellButton {
+    margin-top: 22px;
+    font-size: 12px;
+  }
+
+  .realEstateFilters {
+    gap: 12px;
+  }
+
+  .realEstateFilterChips {
+    margin-inline: -14px;
+    padding-inline: 14px;
+  }
+
+  .realEstateFilterChip {
+    min-height: 32px;
+    padding-inline: 15px;
+    font-size: 11px;
+  }
+
+  .realEstateSearchBar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .realEstateSearchField {
+    min-height: 47px;
+    padding-inline: 11px;
+    font-size: 11px;
+  }
+
+  .realEstateSearchFieldLocation {
+    grid-column: 1 / -1;
+    border-right: 0;
+    border-bottom: 1px solid rgb(23 24 23 / 0.14);
+  }
+
+  .realEstateSearchField:nth-child(3) {
+    border-right: 0;
+  }
+
+  .realEstateSearchButton {
+    grid-column: 1 / -1;
+    min-height: 47px;
+    border-top: 1px solid rgb(23 24 23 / 0.14);
+  }
+
+  .realEstateResultsHeader {
+    align-items: flex-start;
+    padding: 17px 0 13px;
+  }
+
+  .realEstateResultsHeader p,
+  .realEstateResultsActions label {
+    font-size: 11px;
+  }
+
+  .realEstateViewButton {
+    display: none;
+  }
+
+  .realEstateGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 27px 10px;
+  }
+
+  .realEstateCardMedia {
+    aspect-ratio: 1.08;
+    border-radius: 5px;
+  }
+
+  .realEstateCardStatus {
+    top: 7px;
+    left: 7px;
+    max-width: calc(100% - 14px);
+    overflow: hidden;
+    padding: 5px 7px;
+    font-size: 7px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .realEstateFavoriteButton {
+    top: 5px;
+    right: 5px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .realEstateCardBody {
+    padding: 9px 3px 0;
+  }
+
+  .realEstateCardLocation {
+    margin-bottom: 6px;
+    font-size: 8px;
+    letter-spacing: 0.08em;
+  }
+
+  .realEstateCardBody h2 {
+    font-size: 15px;
+    line-height: 1.08;
+  }
+
+  .realEstateCardDetails {
+    margin-top: 6px;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  .realEstateCardFooter {
+    margin-top: 7px;
+  }
+
+  .realEstateCardPrice {
+    font-size: 12px;
+  }
+
+  .realEstateCardArrow {
+    font-size: 19px;
+  }
+}

@@ -34,6 +34,7 @@ export type SiteMessages = {
       home: string;
       gallery: string;
       instagram: string;
+      realEstate: string;
       services: string;
       price: string;
       about: string;
@@ -308,6 +309,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         home: "Home",
         gallery: "Gallery",
         instagram: "Instagram",
+        realEstate: "Real estate",
         services: "Services",
         price: "Service & Price",
         about: "About",
@@ -901,6 +903,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
         home: "Accueil",
         gallery: "Galerie",
         instagram: "Instagram",
+        realEstate: "Immobilier",
         services: "Services",
         price: "Services et tarifs",
         about: "A propos",

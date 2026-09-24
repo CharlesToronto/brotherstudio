@@ -42,6 +42,8 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
         ? "mystudio"
         : subpath === "/about"
         ? "about"
+        : subpath === "/immobilier"
+          ? "real-estate"
         : subpath === "/contact"
           ? "contact"
           : null;
@@ -117,6 +119,13 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
         subpath === "/mystudio" ||
         subpath === "/myproject" ||
         subpath === "/mywebsite",
+      kind: "link" as const,
+    },
+    {
+      key: "real-estate",
+      label: messages.nav.realEstate,
+      href: localizedHref("/immobilier"),
+      isCurrent: subpath === "/immobilier",
       kind: "link" as const,
     },
     {
