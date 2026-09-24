@@ -15984,16 +15984,24 @@ body:has(.campaignLanding) .campaignLandingNav,
   letter-spacing: 0.1em;
 }
 
-.projectImageEditorPanel {
+.projectImageEditorOverlay {
   position: fixed !important;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+.projectImageEditorPanel {
+  position: absolute !important;
   top: 86px;
   right: 20px;
-  z-index: 1000;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(360px, calc(100vw - 40px));
+  height: min(760px, calc(100vh - 106px));
   max-height: calc(100vh - 106px);
   overflow: hidden;
+  pointer-events: auto;
   border: 1px solid rgb(51 132 183 / 0.28);
   border-radius: 18px;
   background: #fff;
@@ -16141,7 +16149,7 @@ body:has(.campaignLanding) .campaignLandingNav,
     width: 100%;
     height: 50vh;
     max-height: 50vh;
-    position: fixed !important;
+    position: absolute !important;
     grid-template-rows: auto minmax(0, 1fr) auto;
     border-right: 0;
     border-bottom: 0;

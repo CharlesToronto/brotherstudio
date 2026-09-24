@@ -1809,7 +1809,12 @@ function ProjectImageEditorPanel({
 function ProjectImageEditorPortal(props: ImageEditorPanelProps) {
   if (typeof document === "undefined") return null;
 
-  return createPortal(<ProjectImageEditorPanel {...props} />, document.body);
+  return createPortal(
+    <div className="projectImageEditorOverlay">
+      <ProjectImageEditorPanel {...props} />
+    </div>,
+    document.body,
+  );
 }
 
 type ProjectFeedbackImageCardProps = {
