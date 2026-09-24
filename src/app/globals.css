@@ -42,6 +42,15 @@ body:has(.homeBlurWordSection) {
   --site-background-rgb: 0 0 0;
 }
 
+body:has(.clientAdminLayout),
+body:has(.projectFeedbackShell[data-admin-view="true"]) {
+  --site-background-rgb: 226 229 232;
+  background:
+    radial-gradient(circle at 8% 0%, rgb(255 255 255 / 0.72), transparent 30rem),
+    radial-gradient(circle at 92% 12%, rgb(190 198 207 / 0.38), transparent 34rem),
+    linear-gradient(135deg, #e8ebee 0%, #dfe3e7 48%, #eef1f3 100%);
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;
