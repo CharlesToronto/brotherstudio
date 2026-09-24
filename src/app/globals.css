@@ -44,11 +44,11 @@ body:has(.homeBlurWordSection) {
 
 body:has(.clientAdminLayout),
 body:has(.projectFeedbackShell[data-admin-view="true"]) {
-  --site-background-rgb: 226 229 232;
+  --site-background-rgb: 204 219 236;
   background:
-    radial-gradient(circle at 8% 0%, rgb(255 255 255 / 0.72), transparent 30rem),
-    radial-gradient(circle at 92% 12%, rgb(190 198 207 / 0.38), transparent 34rem),
-    linear-gradient(135deg, #e8ebee 0%, #dfe3e7 48%, #eef1f3 100%);
+    radial-gradient(circle at 8% 0%, rgb(255 255 255 / 0.62), transparent 30rem),
+    radial-gradient(circle at 92% 12%, rgb(108 149 194 / 0.42), transparent 34rem),
+    linear-gradient(135deg, #dceafa 0%, #c5d8ec 48%, #e8f1fa 100%);
 }
 
 .visuallyHidden {
