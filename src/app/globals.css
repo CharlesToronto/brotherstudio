@@ -6976,6 +6976,7 @@ html[data-theme="dark"] .galleryFilterButton:focus-visible {
   font-weight: 500;
   line-height: 1.05;
   letter-spacing: 0;
+  scroll-margin-top: 72px;
 }
 
 .homeCapabilitiesRail {
@@ -8623,6 +8624,8 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
 }
 
 @media (max-width: 980px) {
+  #home-capabilities-title { scroll-margin-top: 56px; }
+
   .siteHeader {
     gap: 0;
     border-bottom: 0;
@@ -8658,14 +8661,13 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
     gap: 16px;
     overflow-x: auto;
     overflow-y: visible;
-    padding: 10px calc(max(12px, 50% - 42px))
-      calc(10px + env(safe-area-inset-bottom));
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
     background: rgb(255 255 255 / 0.34);
     border: 1px solid rgb(0 0 0 / 0.08);
     backdrop-filter: blur(20px);
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
-    scroll-padding-inline: 50%;
+    scroll-padding-inline: 12px;
     scrollbar-width: none;
   }
 
@@ -26974,9 +26976,13 @@ body:has(.realEstateSitePage) .siteHeader { display: none !important; }
 .homeHeroActions .realEstateHeroActionSecondary { background: #fff; color: #111817; }
 .homeHeroActions .realEstateHeroActionNeon { border: 0 !important; background: linear-gradient(105deg, #3985ff 0%, #b9ddff 25%, #ff8a32 52%, #ffe0b8 70%, #3985ff 100%); background-size: 240% 100%; color: #fff; animation: real-estate-neon-text-flow 4s ease-in-out infinite; }
 .homeHeroActions .realEstateHeroActionNeon::before { display: none; }
-.homeHeroActions .homeHeroActionNeon { border: 0 !important; background: linear-gradient(105deg, #3985ff 0%, #b9ddff 25%, #ff8a32 52%, #ffe0b8 70%, #3985ff 100%) !important; background-size: 240% 100% !important; color: #fff !important; box-shadow: 0 10px 30px rgb(57 133 255 / .32), 0 10px 30px rgb(255 138 50 / .26); }
+.homeHeroActions .homeHeroActionNeon { border: 0 !important; background-image: linear-gradient(90deg, #3985ff 0%, #3985ff 20%, #b9ddff 35%, #ff8a32 50%, #ffe0b8 65%, #ff8a32 80%, #3985ff 100%) !important; background-position: 100% 50%; background-size: 360% 100%; color: #fff !important; box-shadow: 0 10px 30px rgb(57 133 255 / .32), 0 10px 30px rgb(255 138 50 / .26); will-change: background-position; animation: home-hero-neon-flow 2.4s ease-in-out infinite !important; }
 .homeHeroActions .homeHeroActionNeon::before { display: none !important; }
-@media (prefers-reduced-motion: reduce) { .homeHeroActions .realEstateHeroActionNeon { animation: none; background-position: 50% 50%; } }
+@keyframes home-hero-neon-flow {
+  0%, 100% { background-position: 100% 50%; }
+  50% { background-position: 0% 50%; }
+}
+@media (prefers-reduced-motion: reduce) { .homeHeroActions .homeHeroActionNeon { animation: none !important; background-position: 50% 50% !important; } }
 .realEstateCommercialHeroImage { position: relative; min-height: 0; }
 .realEstateCommercialHeroImage img { object-fit: cover; object-position: 63% center; }
 .realEstateCommercialProcess { padding: clamp(74px, 9vw, 130px) clamp(28px, 5vw, 80px); }
@@ -27034,6 +27040,8 @@ body:has(.realEstateSitePage) .siteHeader { display: none !important; }
   .realEstateCommercialHeroCopy { padding: 65px 14px 40px; }
   .realEstateCommercialHero h1 { width: auto; max-width: 100%; font-size: clamp(3.25rem, 15vw, 5.4rem); white-space: normal; }
   .realEstateHeroActions { align-items: flex-start; flex-direction: column; margin-top: 30px; }
+  .homeHeroActions { align-items: center !important; justify-content: center; margin-inline: auto; }
+  .homeHeroActions a { align-self: center; }
   .realEstateCommercialLead { font-size: 15px; }
   .realEstateCommercialHeroImage { height: 66svh; min-height: 420px; }
   .realEstateCommercialProcess { padding: 70px 14px; }
@@ -27351,4 +27359,42 @@ body:has(.realEstateSitePage) .siteHeader { display: none !important; }
   .projectFeedbackImageCard[data-image-editor-selected="true"] .projectFeedbackCanvas::before {
     animation: none;
   }
+}
+
+/* High-contrast mobile navigation for the main hero. */
+@media (max-width: 980px) {
+  body:has(.homeBlurWordSection) .siteHeader {
+    background: #050505 !important;
+    border-bottom: 1px solid rgb(255 255 255 / .18) !important;
+    color: #fff !important;
+  }
+
+  body:has(.homeBlurWordSection) .siteNavMobile {
+    background: #050505 !important;
+    border-top: 1px solid rgb(255 255 255 / .2) !important;
+    color: #fff !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  body:has(.homeBlurWordSection) .siteNavMobile .siteNavLink,
+  body:has(.homeBlurWordSection) .siteNavMobile .siteNavSubmenuTrigger,
+  body:has(.homeBlurWordSection) .siteNavMobile .siteNavSublink {
+    color: #fff !important;
+  }
+
+  body:has(.homeBlurWordSection) .siteNavMobile .siteNavLink[data-nav-key="book-meeting"] {
+    border-color: #fff !important;
+    background: #fff !important;
+    color: #050505 !important;
+  }
+
+  body:has(.homeBlurWordSection) .siteNavMobile .siteNavLink[data-nav-key="book-meeting"]:hover,
+  body:has(.homeBlurWordSection) .siteNavMobile .siteNavLink[data-nav-key="book-meeting"]:focus-visible {
+    background: #e8e8e8 !important;
+    color: #050505 !important;
+  }
+
+  body:has(.homeBlurWordSection) .siteLogoImageBlack { display: none !important; }
+  body:has(.homeBlurWordSection) .siteLogoImageWhite { display: block !important; }
 }

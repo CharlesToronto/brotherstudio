@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 import { getMessages } from "@/content/messages";
 import { site } from "@/content/site";
@@ -17,36 +17,17 @@ import {
   withLocalePath,
 } from "@/lib/i18n";
 
-const MOBILE_NAV_BREAKPOINT = 980;
-
 type SiteHeaderProps = {
   locale?: Locale;
 };
 
 export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
   const pathname = usePathname();
-  const mobileNavRef = useRef<HTMLElement | null>(null);
   const localeFromPath = getLocaleFromPathname(pathname);
   const locale = localeFromPath ?? layoutLocale ?? DEFAULT_LOCALE;
   const subpath = stripLocaleFromPathname(pathname);
   const messages = getMessages(locale).header;
   const isGalleryPage = subpath === "/";
-  const activeNavKey = isGalleryPage
-    ? "home"
-    : subpath === "/services" || subpath === "/price"
-        ? "price"
-      : subpath === "/myreview" ||
-          subpath === "/mystudio" ||
-          subpath === "/myproject" ||
-          subpath === "/mywebsite"
-        ? "mystudio"
-        : subpath === "/about"
-        ? "about"
-        : subpath === "/immobilier"
-          ? "real-estate"
-        : subpath === "/contact"
-          ? "contact"
-          : null;
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -54,44 +35,6 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
       document.cookie = `${LOCALE_COOKIE_KEY}=${locale}; path=/; max-age=31536000; samesite=lax`;
     } catch {}
   }, [locale]);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || window.innerWidth > MOBILE_NAV_BREAKPOINT) return;
-    const nav = mobileNavRef.current;
-    if (!nav) return;
-
-    const centerActiveItem = (behavior: ScrollBehavior) => {
-      const activeItem =
-        activeNavKey !== null
-          ? nav.querySelector<HTMLElement>(`[data-nav-key="${activeNavKey}"]`)
-          : null;
-
-      if (!activeItem) return;
-
-      const targetLeft =
-        activeItem.offsetLeft - nav.clientWidth / 2 + activeItem.clientWidth / 2;
-
-      nav.scrollTo({
-        left: Math.max(0, targetLeft),
-        behavior,
-      });
-    };
-
-    const frame = window.requestAnimationFrame(() => {
-      centerActiveItem("auto");
-    });
-
-    const handleResize = () => {
-      centerActiveItem("auto");
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      window.cancelAnimationFrame(frame);
-    };
-  }, [activeNavKey, pathname]);
 
   const localizedHref = (target: string) => withLocalePath(locale, target);
 
@@ -239,7 +182,7 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
         </a>
       </div>
 
-      <nav ref={mobileNavRef} className="siteNavMobile" aria-label="Primary">
+      <nav className="siteNavMobile" aria-label="Primary">
         {mobileBookingItem ? renderNavItems([mobileBookingItem]) : null}
         {renderNavItems(mobilePrimaryItems)}
       </nav>

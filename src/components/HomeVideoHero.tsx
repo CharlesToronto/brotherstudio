@@ -36,7 +36,7 @@ export function HomeVideoHero({ locale }: { locale: Locale }) {
       <div className="homeHeroOverlay">
         <div className={`homeHeroCopy ${dongle.className}`}>
           <p className="homeHeroEyebrow">
-            {isFrench ? "Du plan à la vente." : "From Plan to Sale."}
+            {isFrench ? "De l’idée à la vente." : "From idea to sale."}
           </p>
           <h1 className="homeHeroTitle">BROTHERSTUDIO</h1>
           <div className="homeHeroValue">

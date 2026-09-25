@@ -43,7 +43,7 @@ export function HomeBlurWordSection({ items }: HomeBlurWordSectionProps) {
 
       <div className="homeHeroOverlay">
         <div className={`homeHeroCopy ${dongle.className}`}>
-          <p className="homeHeroEyebrow">From Plan to Sale.</p>
+          <p className="homeHeroEyebrow">From idea to sale.</p>
           <h1 className="homeHeroTitle">BROTHERSTUDIO</h1>
           <div className="homeHeroValue">
             <p className="homeHeroValueText">
