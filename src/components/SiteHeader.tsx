@@ -151,7 +151,7 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
         <Link className="siteLogo" href={localizedHref("/")}>
           <Image
             className="siteLogoImage siteLogoImageBlack"
-            src="/bs-logo-menu-cropped.png"
+            src="/bs-logo-menu-cropped.webp"
             alt={site.name}
             width={2565}
             height={570}
@@ -159,7 +159,7 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
           />
           <Image
             className="siteLogoImage siteLogoImageWhite"
-            src="/bs-logo-menu-white.png"
+            src="/bs-logo-menu-white.webp"
             alt=""
             width={2511}
             height={585}

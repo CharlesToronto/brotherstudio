@@ -1,3 +1,5 @@
+import sharp from "sharp";
+
 import { getSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { normalizeGoogleMapsEmbedUrl } from "@/lib/googleMapsEmbed";
 import {
@@ -34,6 +36,13 @@ const BROCHURE_ASSET_BUCKET = "brochure-assets";
 const PROJECT_ASSET_BROWSER_CACHE_TTL_SECONDS = "31536000";
 const DEFAULT_COMMENT_COLOR = "#d88fa2";
 const UNIVERSAL_PROJECT_ACCESS_PASSWORD = "1870";
+
+async function convertImageToWebp(file: File) {
+  return sharp(Buffer.from(await file.arrayBuffer()))
+    .rotate()
+    .webp({ quality: 88, effort: 5 })
+    .toBuffer();
+}
 
 type PreparedProjectImageUpload = {
   path: string;
@@ -356,28 +365,11 @@ function extensionFromUrl(url: string) {
 }
 
 function extensionForFile(file: File) {
-  const nameParts = file.name.split(".");
-  const maybeExtension = nameParts.length > 1 ? nameParts.pop()?.toLowerCase() : "";
-  if (maybeExtension) return `.${maybeExtension}`;
-
-  if (file.type === "image/png") return ".png";
-  if (file.type === "image/webp") return ".webp";
-  if (file.type === "image/gif") return ".gif";
-  if (file.type === "image/svg+xml") return ".svg";
-  return ".jpg";
+  return ".webp";
 }
 
 function extensionForUploadInput(fileName: string, fileType: string) {
-  const trimmedName = fileName.trim();
-  const nameParts = trimmedName.split(".");
-  const maybeExtension = nameParts.length > 1 ? nameParts.pop()?.toLowerCase() : "";
-  if (maybeExtension) return `.${maybeExtension}`;
-
-  if (fileType === "image/png") return ".png";
-  if (fileType === "image/webp") return ".webp";
-  if (fileType === "image/gif") return ".gif";
-  if (fileType === "image/svg+xml") return ".svg";
-  return ".jpg";
+  return ".webp";
 }
 
 function createImagePath(projectId: string, version: number, file: File) {
@@ -1572,12 +1564,13 @@ export async function uploadProjectVersion(
     }
 
     const uploadPath = createImagePath(projectId, nextVersion, file);
+    const webpBuffer = await convertImageToWebp(file);
     const { error: uploadError } = await supabase.storage
       .from(PROJECT_IMAGE_BUCKET)
-      .upload(uploadPath, Buffer.from(await file.arrayBuffer()), {
+      .upload(uploadPath, webpBuffer, {
         // Files are uploaded to a unique path per version, so a long browser TTL is safe.
         cacheControl: PROJECT_ASSET_BROWSER_CACHE_TTL_SECONDS,
-        contentType: file.type || "image/jpeg",
+        contentType: "image/webp",
         upsert: false,
       });
 
@@ -1837,11 +1830,12 @@ export async function replaceProjectImage(
   if (!image) throw new Error("Image not found.");
 
   const nextPath = createImagePath(projectId, image.version, file);
+  const webpBuffer = await convertImageToWebp(file);
   const { error: uploadError } = await supabase.storage
     .from(PROJECT_IMAGE_BUCKET)
-    .upload(nextPath, Buffer.from(await file.arrayBuffer()), {
+    .upload(nextPath, webpBuffer, {
       cacheControl: PROJECT_ASSET_BROWSER_CACHE_TTL_SECONDS,
-      contentType: file.type || "image/jpeg",
+      contentType: "image/webp",
       upsert: false,
     });
 

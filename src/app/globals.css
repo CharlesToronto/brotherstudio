@@ -7499,11 +7499,7 @@ html[data-theme="dark"] .homeCapabilitiesItem:focus-within .homeCapabilitiesPlus
   overflow: hidden;
   -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
-  transition:
-    border-color 180ms ease,
-    filter 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
+  transition: none;
 }
 
 .homeCapabilitiesItem::before {
@@ -7525,42 +7521,42 @@ html[data-theme="dark"] .homeCapabilitiesItem:focus-within .homeCapabilitiesPlus
   --capability-accent: 0 82 255;
   --capability-accent-soft: 0 224 255;
   --capability-accent-deep: 40 18 210;
-  --capability-solid: #0057ff;
+  --capability-solid: linear-gradient(145deg, #0057ff 0%, #0038b8 100%);
 }
 
 .homeCapabilitiesItem:nth-child(2) {
   --capability-accent: 0 205 255;
   --capability-accent-soft: 0 255 183;
   --capability-accent-deep: 0 93 255;
-  --capability-solid: #00c8ff;
+  --capability-solid: linear-gradient(145deg, #00d5ff 0%, #007bb5 100%);
 }
 
 .homeCapabilitiesItem:nth-child(3) {
   --capability-accent: 0 230 155;
   --capability-accent-soft: 148 255 68;
   --capability-accent-deep: 0 123 105;
-  --capability-solid: #00e676;
+  --capability-solid: linear-gradient(145deg, #7c3cff 0%, #4f1dbb 100%);
 }
 
 .homeCapabilitiesItem:nth-child(4) {
   --capability-accent: 255 116 0;
   --capability-accent-soft: 255 222 64;
   --capability-accent-deep: 255 58 48;
-  --capability-solid: #ff7a00;
+  --capability-solid: linear-gradient(145deg, #ff2bd6 0%, #b70b8e 100%);
 }
 
 .homeCapabilitiesItem:nth-child(5) {
   --capability-accent: 255 0 110;
   --capability-accent-soft: 255 89 214;
   --capability-accent-deep: 105 40 255;
-  --capability-solid: #ff006e;
+  --capability-solid: linear-gradient(145deg, #00f5a0 0%, #008b70 100%);
 }
 
 .homeCapabilitiesItem:nth-child(6) {
   --capability-accent: 127 72 255;
   --capability-accent-soft: 0 213 255;
   --capability-accent-deep: 44 27 255;
-  --capability-solid: #7b2cff;
+  --capability-solid: linear-gradient(145deg, #ff8a00 0%, #c95600 100%);
 }
 
 .homeCapabilitiesItem:nth-child(n) {
@@ -7569,9 +7565,9 @@ html[data-theme="dark"] .homeCapabilitiesItem:focus-within .homeCapabilitiesPlus
 
 .homeCapabilitiesItem:hover,
 .homeCapabilitiesItem:focus-within {
-  transform: translateY(-5px) scale(1.02);
+  transform: none;
   border-color: rgb(255 255 255 / 0.48);
-  filter: saturate(1.08) brightness(1.08);
+  filter: none;
   background: var(--capability-solid);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.38);
 }
@@ -7598,7 +7594,7 @@ html[data-theme="dark"] .homeCapabilitiesItem:focus-within .homeCapabilitiesPlus
 
 .homeCapabilitiesItem:hover .homeCapabilitiesIcon,
 .homeCapabilitiesItem:focus-within .homeCapabilitiesIcon {
-  transform: scale(1.08) rotate(-4deg);
+  transform: none;
   border-color: rgb(255 255 255 / 0.28);
   background: rgb(255 255 255 / 0.18);
 }
@@ -26928,6 +26924,7 @@ body:has(.realEstateProfilePage) .siteHeader {
 /* Independent real estate mini-site navigation and landing pages */
 body:has(.realEstateSitePage) { --site-background-rgb: 248 247 244; background: #f8f7f4; color: #171817; }
 body:has(.realEstateSitePage) .siteHeader { display: none !important; }
+body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !important; }
 .realEstateSitePage { --real-estate-nav-height: 76px; padding-top: var(--real-estate-nav-height); transform: none !important; filter: none !important; will-change: auto !important; }
 .realEstateLocalHeader { position: fixed; top: 0; right: 0; left: 0; z-index: 50; border-bottom: 1px solid rgb(23 24 23 / .14); background: rgb(248 247 244 / .96); }
 .realEstateLocalHeaderInner { display: flex; align-items: center; justify-content: space-between; gap: 30px; width: min(100% - 64px, 1440px); min-height: 76px; margin: 0 auto; }
@@ -26971,7 +26968,7 @@ body:has(.realEstateSitePage) .siteHeader { display: none !important; }
 @media (prefers-reduced-motion: reduce) { .realEstateHeroActionNeon::before { animation: none; } }
 .realEstateHeroActions a:hover, .realEstateHeroActions a:focus-visible { transform: translateY(-1px); }
 .homeHeroActions { width: 100%; justify-content: center; margin-top: 24px; pointer-events: auto; }
-.homeHeroActions a { min-height: 52px; padding-inline: 27px; border-radius: 999px; box-shadow: 0 10px 30px rgb(0 0 0 / .3); font-size: 20px; font-weight: 600; }
+.homeHeroActions a { flex: 0 1 300px; width: 300px; justify-content: center; min-height: 52px; padding-inline: 20px; border-radius: 999px; box-shadow: 0 10px 30px rgb(0 0 0 / .3); font-size: 20px; font-weight: 600; }
 .homeHeroActions .realEstateHeroActionPrimary,
 .homeHeroActions .realEstateHeroActionSecondary { background: #fff; color: #111817; }
 .homeHeroActions .realEstateHeroActionNeon { border: 0 !important; background: linear-gradient(105deg, #3985ff 0%, #b9ddff 25%, #ff8a32 52%, #ffe0b8 70%, #3985ff 100%); background-size: 240% 100%; color: #fff; animation: real-estate-neon-text-flow 4s ease-in-out infinite; }
@@ -27027,6 +27024,17 @@ body:has(.realEstateSitePage) .siteHeader { display: none !important; }
 .realEstateStudioDeliverables h2 { max-width: 620px; margin: 0; font-size: clamp(2.5rem, 4.5vw, 5.5rem); font-weight: 500; letter-spacing: -.075em; line-height: .94; }
 .realEstateStudioDeliverables ul { margin: 0; padding: 0; list-style: none; }
 .realEstateStudioDeliverables li { padding: 17px 0; border-bottom: 1px solid rgb(23 24 23 / .16); font-size: 17px; }
+.realEstateFooter { padding: 70px clamp(28px, 5vw, 80px) 24px; background: #171817; color: #fff; }
+.realEstateFooterTop { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; padding-bottom: 50px; border-bottom: 1px solid rgb(255 255 255 / .2); }
+.realEstateFooterLogo { color: #fff; font-size: clamp(24px, 3vw, 38px); font-weight: 700; letter-spacing: -.07em; }
+.realEstateFooterTop > p { margin: 0; color: rgb(255 255 255 / .56); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.realEstateFooterGrid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 40px; padding: 42px 0 58px; }
+.realEstateFooterGrid > div { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.realEstateFooterLabel { margin: 0 0 8px; color: rgb(255 255 255 / .48); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+.realEstateFooterGrid nav { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.realEstateFooter a { color: #fff; font-size: 14px; }
+.realEstateFooterGrid p:not(.realEstateFooterLabel) { margin: 0; color: rgb(255 255 255 / .75); font-size: 14px; }
+.realEstateFooterBottom { display: flex; justify-content: space-between; gap: 20px; padding-top: 22px; border-top: 1px solid rgb(255 255 255 / .12); color: rgb(255 255 255 / .45); font-size: 11px; }
 
 @media (max-width: 760px) {
   .realEstateSitePage { --real-estate-nav-height: 96px; }
@@ -27041,7 +27049,7 @@ body:has(.realEstateSitePage) .siteHeader { display: none !important; }
   .realEstateCommercialHero h1 { width: auto; max-width: 100%; font-size: clamp(3.25rem, 15vw, 5.4rem); white-space: normal; }
   .realEstateHeroActions { align-items: flex-start; flex-direction: column; margin-top: 30px; }
   .homeHeroActions { align-items: center !important; justify-content: center; margin-inline: auto; }
-  .homeHeroActions a { align-self: center; }
+  .homeHeroActions a { align-self: center; flex: 0 1 300px; width: min(100%, 300px); }
   .realEstateCommercialLead { font-size: 15px; }
   .realEstateCommercialHeroImage { height: 66svh; min-height: 420px; }
   .realEstateCommercialProcess { padding: 70px 14px; }
@@ -27059,6 +27067,14 @@ body:has(.realEstateSitePage) .siteHeader { display: none !important; }
   .realEstateStudioServices { display: block; padding: 0 14px 70px; }
   .realEstateStudioServices > div, .realEstateStudioServices > div:first-child { padding: 24px 0; border-top: 1px solid rgb(23 24 23 / .18); border-left: 0; }
   .realEstateStudioDeliverables { display: block; padding: 70px 14px; }
+  .realEstateFooter { padding: 56px 14px 20px; }
+  .realEstateFooterTop { display: block; padding-bottom: 34px; }
+  .realEstateFooterTop > p { margin-top: 18px; line-height: 1.4; }
+  .realEstateFooterGrid { grid-template-columns: 1fr 1fr; gap: 34px 22px; padding: 34px 0 42px; }
+  .realEstateFooterGrid > div:first-child { grid-column: 1 / -1; }
+  .realEstateFooterBottom { display: block; line-height: 1.5; }
+  .realEstateFooterBottom span { display: block; }
+  .realEstateFooterBottom span + span { margin-top: 8px; }
   .realEstateStudioDeliverables ul { margin-top: 45px; }
 }
 

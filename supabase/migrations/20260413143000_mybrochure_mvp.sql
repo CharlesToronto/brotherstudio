@@ -47,7 +47,6 @@ values (
   10485760,
   array[
     'image/jpeg',
-    'image/png',
     'image/webp',
     'image/gif',
     'image/svg+xml'

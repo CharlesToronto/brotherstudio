@@ -14,6 +14,7 @@ import {
 import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
 import { RealEstateNavigation } from "@/components/RealEstateNavigation";
+import { RealEstateFooter } from "@/components/RealEstateFooter";
 
 type ListingCategory =
   | "Appartement"
@@ -58,7 +59,7 @@ const listings: RealEstateListing[] = [
     area: "130 m²",
     exterior: "2 places de parc",
     price: "CHF 650’000",
-    image: "/immobilier/monthey/vue-1.png",
+    image: "/immobilier/monthey/vue-1.webp",
     href: "https://immobiliervalaisan.ch/appartement",
   },
   {
@@ -457,6 +458,7 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
       </section>
       </div>
       </main>
+      <RealEstateFooter locale={locale} />
     </>
   );
 }

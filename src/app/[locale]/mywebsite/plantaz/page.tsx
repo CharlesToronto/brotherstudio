@@ -70,7 +70,7 @@ export default async function PlantazWebsitePage({ params }: LocalePageProps) {
   const { project, references } = data;
   const images = project.versions.flatMap((version) => version.images);
   const heroImage = images[0];
-  const galleryImages = images.map((image, index) => index === 3 ? { ...image, url: "/plantaz-gallery-04.png" } : image);
+  const galleryImages = images.map((image, index) => index === 3 ? { ...image, url: "/plantaz-gallery-04.webp" } : image);
   const plans = references.files
     .filter((file) => file.mimeType === "application/pdf" || file.filename.toLowerCase().endsWith(".pdf"))
     .map((file) => {
@@ -90,7 +90,7 @@ export default async function PlantazWebsitePage({ params }: LocalePageProps) {
     <main className="plantazWebsitePage">
       <PlantazProgressRail />
       <header className="plantazWebsiteNav">
-        <a href="#top" className="plantazWebsiteBrand" aria-label="Plantaz — retour en haut"><img src="/plantaz-logo.png" alt="Plantaz — projet résidentiel" /></a>
+        <a href="#top" className="plantazWebsiteBrand" aria-label="Plantaz — retour en haut"><img src="/plantaz-logo.webp" alt="Plantaz — projet résidentiel" /></a>
         <nav aria-label="Navigation Plantaz">
           <a href="#environnement">Environnement</a><a href="#plans">Plans</a><a href="#construction">Construction</a><a href="#gallery">Galerie</a><a href="#appartement">Appartements</a><a href="#contact">Contact</a>
         </nav>
@@ -111,7 +111,7 @@ export default async function PlantazWebsitePage({ params }: LocalePageProps) {
 
       <section className="plantazSection plantazEnvironment" id="environnement">
         <div className="plantazSectionIntro"><p className="plantazEyebrow">L’environnement</p><h2>Habiter dans un cadre qui respire.</h2><p>Plantaz s’inscrit dans un contexte résidentiel à découvrir à travers la carte, les alentours et les points d’intérêt du projet.</p></div>
-        <div className="plantazEnvironmentGrid"><div className="plantazMap"><iframe title="Carte de l’environnement du projet Plantaz" src={mapUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" /></div><div className="plantazEnvironmentImage"><img src="/plantaz-environment-lake.png" alt="Vue aérienne du lac et des montagnes depuis les alentours de Plantaz" /></div></div>
+        <div className="plantazEnvironmentGrid"><div className="plantazMap"><iframe title="Carte de l’environnement du projet Plantaz" src={mapUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" /></div><div className="plantazEnvironmentImage"><img src="/plantaz-environment-lake.webp" alt="Vue aérienne du lac et des montagnes depuis les alentours de Plantaz" /></div></div>
         <div className="plantazInterestGrid"><article className="plantazEnvironmentWeather plantazEnvironmentWeather--inline"><MaretsetWeather locale="fr" latitude={46.3934314789} longitude={6.2336004928} location="Nyon, Vaud" timezone="Europe/Zurich" /></article><article><span>02</span><h3>Un cadre résidentiel</h3><p>Une implantation sobre, ouverte sur son environnement.</p></article><article><span>03</span><h3>Les points d’intérêt</h3><p>Services, mobilité et nature réunis autour du projet.</p></article></div>
         <details className="plantazInterestDetails" open><summary><span>Points d’intérêt</span><strong>Découvrir les temps d’accès</strong></summary><div className="plantazInterestTableWrap"><table className="plantazInterestTable"><thead><tr><th scope="col">Point d’intérêt</th><th scope="col">Temps d’accès</th></tr></thead><tbody><tr><th scope="row">Gare Les Plantaz</th><td>3–5 min à pied</td></tr><tr><th scope="row">Gare de Nyon</th><td>10–15 min à pied</td></tr><tr><th scope="row">Centre-ville de Nyon</th><td>15–20 min à pied</td></tr><tr><th scope="row">Château de Nyon / Musée romain</th><td>15–20 min à pied</td></tr><tr><th scope="row">Lac Léman / Nyon-Rive</th><td>20–25 min à pied</td></tr><tr><th scope="row">Centre commercial La Combe / Coop</th><td>10–15 min à pied</td></tr><tr><th scope="row">Hôpital de Nyon</th><td>20–25 min à pied</td></tr><tr><th scope="row">Paléo / La Scène Nord</th><td>5–10 min en transports</td></tr><tr><th scope="row">Genève-Cornavin</th><td>Environ 25–30 min en transports</td></tr><tr><th scope="row">Genève</th><td>Environ 25–30 min en voiture</td></tr><tr><th scope="row">Aéroport de Genève</th><td>Environ 20–25 min en voiture ou 35–45 min en transports</td></tr><tr><th scope="row">Lausanne</th><td>Environ 30–35 min en train ou 40–50 min en voiture</td></tr></tbody></table></div></details>
       </section>
@@ -129,7 +129,7 @@ export default async function PlantazWebsitePage({ params }: LocalePageProps) {
       <footer className="plantazFooter">
         <div className="plantazFooterGrid">
           <div className="plantazFooterBrand">
-            <img src="/bs-logo-menu-white.png" alt="BrotherStudio" />
+            <img src="/bs-logo-menu-white.webp" alt="BrotherStudio" />
             <p>Visualisations architecturales et sites de vente pour projets immobiliers.</p>
           </div>
           <div className="plantazFooterColumn">

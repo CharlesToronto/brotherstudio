@@ -6,6 +6,7 @@ import { withLocalePath } from "@/lib/i18n";
 import { CALENDLY_MEETING_URL } from "@/lib/calendly";
 
 import { RealEstateNavigation } from "@/components/RealEstateNavigation";
+import { RealEstateFooter } from "@/components/RealEstateFooter";
 
 export function RealEstateCommercialHome({ locale }: { locale: Locale }) {
   const listingsHref = withLocalePath(locale, "/immobilier/biens");
@@ -25,7 +26,7 @@ export function RealEstateCommercialHome({ locale }: { locale: Locale }) {
           </div>
         </div>
         <div className="realEstateCommercialHeroImage">
-          <Image src="/immobilier/hero-promotion.png" alt="Villa contemporaine avec vue sur un lac et les Alpes" fill priority sizes="(max-width: 760px) 100vw, 64vw" />
+          <Image src="/immobilier/hero-promotion.webp" alt="Villa contemporaine avec vue sur un lac et les Alpes" fill priority sizes="(max-width: 760px) 100vw, 64vw" />
         </div>
       </section>
 
@@ -49,6 +50,7 @@ export function RealEstateCommercialHome({ locale }: { locale: Locale }) {
         <Link href={listingsHref}>Voir tous les biens <span aria-hidden="true">↗</span></Link>
       </section>
       </main>
+      <RealEstateFooter locale={locale} />
     </>
   );
 }

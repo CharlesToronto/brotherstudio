@@ -21,7 +21,7 @@ export function RealEstateNavigation({ locale, active = "home" }: RealEstateNavi
         <nav className="realEstateLocalNav" aria-label="Navigation immobilier">
           <Link className={active === "home" ? "is-active" : ""} href={homeHref}>Home</Link>
           <Link className={active === "listings" ? "is-active" : ""} href={listingsHref}>Nos biens immobiliers</Link>
-          <a className={`realEstateLocalNavCta${active === "studio" ? " is-active" : ""}`} href="https://brotherstudio.ch" target="_blank" rel="noreferrer">Studio de commercialisation <span aria-hidden="true">↗</span></a>
+          <a className={`realEstateLocalNavCta${active === "studio" ? " is-active" : ""}`} href="https://brotherstudio.ch" target="_blank" rel="noreferrer">Commercialiser mon projet <span aria-hidden="true">↗</span></a>
           <a href="#site-footer">Contact</a>
         </nav>
       </div>

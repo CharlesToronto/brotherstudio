@@ -8,6 +8,7 @@ import { useState } from "react";
 import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
 import { RealEstateNavigation } from "@/components/RealEstateNavigation";
+import { RealEstateFooter } from "@/components/RealEstateFooter";
 
 type ProjectProfile = {
   id: string;
@@ -32,7 +33,7 @@ type ProjectDocument = {
   href?: string;
 };
 
-const imageFallback = "/immobilier/monthey/vue-1.png";
+const imageFallback = "/immobilier/monthey/vue-1.webp";
 
 const projectProfiles: Record<string, Partial<ProjectProfile>> = {
   "monthey-appartement-45": {
@@ -40,8 +41,8 @@ const projectProfiles: Record<string, Partial<ProjectProfile>> = {
     location: "Monthey · Valais",
     status: "À vendre",
     price: "CHF 650’000",
-    image: "/immobilier/monthey/vue-1.png",
-    images: ["/immobilier/monthey/vue-1.png", "/immobilier/monthey/vue-2.jpg"],
+    image: "/immobilier/monthey/vue-1.webp",
+    images: ["/immobilier/monthey/vue-1.webp", "/immobilier/monthey/vue-2.jpg"],
     category: "Appartement",
     rooms: "4,5 pièces",
     area: "130 m²",
@@ -224,6 +225,7 @@ export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale
         </div>
       </div>
       </main>
+      <RealEstateFooter locale={locale} />
     </>
   );
 }

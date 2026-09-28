@@ -396,9 +396,34 @@ async function uploadFileToSignedUrl(input: {
   signedUrl: string;
   file: File;
 }) {
+  const uploadFile = input.file.type === "image/webp"
+    ? input.file
+    : await new Promise<File>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = image.naturalWidth;
+          canvas.height = image.naturalHeight;
+          const context = canvas.getContext("2d");
+          if (!context) {
+            reject(new Error("Unable to prepare image upload."));
+            return;
+          }
+          context.drawImage(image, 0, 0);
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error("Unable to convert image to WebP."));
+              return;
+            }
+            resolve(new File([blob], input.file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" }));
+          }, "image/webp", 0.88);
+        };
+        image.onerror = () => reject(new Error("Unable to read image upload."));
+        image.src = URL.createObjectURL(input.file);
+      });
   const formData = new FormData();
   formData.append("cacheControl", "31536000");
-  formData.append("", input.file);
+  formData.append("", uploadFile);
 
   const response = await fetch(input.signedUrl, {
     method: "PUT",

@@ -319,7 +319,7 @@ export function CampaignLandingPage({
       <header className="campaignLandingNav">
         <Link className="campaignLandingLogo" href={`/${locale}`}>
           <Image
-            src="/bs-logo-menu-cropped.png"
+            src="/bs-logo-menu-cropped.webp"
             alt="BrotherStudio"
             width={2565}
             height={570}

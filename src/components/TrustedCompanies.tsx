@@ -7,13 +7,13 @@ type TrustedCompaniesProps = {
 };
 
 const trustedLogos = [
-  { name: "Bon Plan", src: "/trusted-logos/1.png" },
-  { name: "Bner", src: "/trusted-logos/2.png" },
-  { name: "Buildner", src: "/trusted-logos/3.png" },
-  { name: "Courtage Immobilier", src: "/trusted-logos/4.png" },
-  { name: "SPC", src: "/trusted-logos/5.png" },
-  { name: "Batiplus", src: "/trusted-logos/6.png" },
-  { name: "Pearlman", src: "/trusted-logos/7.png" },
+  { name: "Bon Plan", src: "/trusted-logos/1.webp" },
+  { name: "Bner", src: "/trusted-logos/2.webp" },
+  { name: "Buildner", src: "/trusted-logos/3.webp" },
+  { name: "Courtage Immobilier", src: "/trusted-logos/4.webp" },
+  { name: "SPC", src: "/trusted-logos/5.webp" },
+  { name: "Batiplus", src: "/trusted-logos/6.webp" },
+  { name: "Pearlman", src: "/trusted-logos/7.webp" },
 ] as const;
 
 export function TrustedCompanies({ locale }: TrustedCompaniesProps) {

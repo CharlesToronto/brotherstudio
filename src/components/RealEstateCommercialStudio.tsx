@@ -4,6 +4,7 @@ import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
 
 import { RealEstateNavigation } from "@/components/RealEstateNavigation";
+import { RealEstateFooter } from "@/components/RealEstateFooter";
 
 export function RealEstateCommercialStudio({ locale }: { locale: Locale }) {
   const contactHref = withLocalePath(locale, "/contact");
@@ -12,7 +13,7 @@ export function RealEstateCommercialStudio({ locale }: { locale: Locale }) {
       <RealEstateNavigation locale={locale} active="studio" />
       <main className="siteMain realEstateSitePage realEstateCommercialStudio">
       <section className="realEstateStudioIntro">
-        <p className="realEstateCommercialEyebrow">Studio de commercialisation</p>
+        <p className="realEstateCommercialEyebrow">Commercialiser mon projet</p>
         <h1>Votre projet mérite<br />une vraie expérience de vente.</h1>
         <p>Nous réunissons stratégie, image et outils digitaux pour accompagner la commercialisation de promotions immobilières, de la première idée jusqu’au dernier lot.</p>
       </section>
@@ -27,6 +28,7 @@ export function RealEstateCommercialStudio({ locale }: { locale: Locale }) {
       </section>
       <section className="realEstateCommercialCta"><div><p className="realEstateCommercialEyebrow">Un projet ?</p><h2>Parlons de votre projet.</h2></div><Link href={contactHref}>Prendre contact <span aria-hidden="true">↗</span></Link></section>
       </main>
+      <RealEstateFooter locale={locale} />
     </>
   );
 }

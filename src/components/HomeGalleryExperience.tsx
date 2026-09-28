@@ -243,7 +243,7 @@ function getHomeSalesPlans(locale: Locale): SalesPlanPreview[] {
     const label = locale === "fr" ? "Plan de vente" : "Sales plan";
     return {
       title: `${label} ${index + 1}`,
-      image: `/gallery/sales-plans/${fileNumber}.png`,
+      image: `/gallery/sales-plans/${fileNumber}.webp`,
       alt: `${label} ${index + 1}`,
     };
   });

@@ -47,8 +47,8 @@ export function HomeVideoHero({ locale }: { locale: Locale }) {
             </p>
           </div>
           <div className="realEstateHeroActions homeHeroActions">
-            <Link className="realEstateHeroActionPrimary" href={listingsHref}>Découvrir nos biens <span aria-hidden="true">↗</span></Link>
             <a className="realEstateHeroActionSecondary realEstateHeroActionNeon homeHeroActionNeon" href="#home-capabilities-title">Commercialiser mon projet <span aria-hidden="true">↗</span></a>
+            <Link className="realEstateHeroActionPrimary" href={listingsHref}>Découvrir nos biens <span aria-hidden="true">↗</span></Link>
           </div>
         </div>
 
