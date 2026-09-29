@@ -19,19 +19,20 @@ import { RealEstateFooter } from "@/components/RealEstateFooter";
 type ListingCategory =
   | "Appartement"
   | "Maison & villa"
+  | "Chalet"
   | "Projet neuf"
   | "Terrain"
   | "Raccard & mayen"
+  | "Immeuble locatif"
   | "À rénover";
 type ListingFilter =
   | "Tous les biens"
-  | "Promotion"
   | "Appartements"
-  | "Maisons & villas"
-  | "Projets neufs"
-  | "Terrains"
-  | "Raccards & mayens"
-  | "À rénover";
+  | "Maison- villa"
+  | "Chalet"
+  | "Raccard- mayen"
+  | "Terrain"
+  | "Immeuble locatif";
 
 type RealEstateListing = {
   id: string;
@@ -103,7 +104,7 @@ const listings: RealEstateListing[] = [
   },
   {
     id: "morgins-chalet",
-    category: "Maison & villa",
+    category: "Chalet",
     status: "À vendre",
     location: "Morgins · Valais",
     title: "Chalet à vendre — Morgins",
@@ -235,23 +236,21 @@ const listings: RealEstateListing[] = [
 
 const filters: ListingFilter[] = [
   "Tous les biens",
-  "Promotion",
   "Appartements",
-  "Maisons & villas",
-  "Projets neufs",
-  "Terrains",
-  "Raccards & mayens",
-  "À rénover",
+  "Chalet",
+  "Immeuble locatif",
+  "Maison- villa",
+  "Raccard- mayen",
+  "Terrain",
 ];
 
 function filterToCategory(filter: ListingFilter): ListingCategory | null {
-  if (filter === "Promotion") return "Projet neuf";
   if (filter === "Appartements") return "Appartement";
-  if (filter === "Maisons & villas") return "Maison & villa";
-  if (filter === "Projets neufs") return "Projet neuf";
-  if (filter === "Terrains") return "Terrain";
-  if (filter === "Raccards & mayens") return "Raccard & mayen";
-  if (filter === "À rénover") return "À rénover";
+  if (filter === "Maison- villa") return "Maison & villa";
+  if (filter === "Chalet") return "Chalet";
+  if (filter === "Raccard- mayen") return "Raccard & mayen";
+  if (filter === "Terrain") return "Terrain";
+  if (filter === "Immeuble locatif") return "Immeuble locatif";
   return null;
 }
 

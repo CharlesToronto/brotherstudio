@@ -46,8 +46,15 @@ export async function PATCH(
         clientPhone?: unknown;
         clientWebsite?: unknown;
         projectName?: unknown;
+        mapEmbedUrl?: unknown;
+        requestSummary?: unknown;
+        requestDetails?: unknown;
+        requestEmailUrl?: unknown;
+        requestPdfUrl?: unknown;
+        requestPdfName?: unknown;
         teamClientId?: unknown;
         serviceTypes?: unknown;
+        deliverables?: unknown;
         status?: unknown;
         paymentStatus?: unknown;
         invoicedAmount?: unknown;
@@ -92,6 +99,12 @@ export async function PATCH(
         ? { clientWebsite: body.clientWebsite }
         : null),
       ...(typeof body?.projectName === "string" ? { projectName: body.projectName } : null),
+      ...(typeof body?.mapEmbedUrl === "string" ? { mapEmbedUrl: body.mapEmbedUrl } : null),
+      ...(typeof body?.requestSummary === "string" ? { requestSummary: body.requestSummary } : null),
+      ...(typeof body?.requestDetails === "string" ? { requestDetails: body.requestDetails } : null),
+      ...(typeof body?.requestEmailUrl === "string" ? { requestEmailUrl: body.requestEmailUrl } : null),
+      ...(typeof body?.requestPdfUrl === "string" ? { requestPdfUrl: body.requestPdfUrl } : null),
+      ...(typeof body?.requestPdfName === "string" ? { requestPdfName: body.requestPdfName } : null),
       ...(teamClient?.id
         ? { teamClientId: teamClient.id }
         : body?.teamClientId === null
@@ -105,6 +118,9 @@ export async function PATCH(
               (value): value is string => typeof value === "string",
             ),
           }
+        : null),
+      ...(Array.isArray(body?.deliverables)
+        ? { deliverables: body.deliverables as never[] }
         : null),
       ...(typeof body?.status === "string"
         ? { status: body.status as DashboardProjectStatus }

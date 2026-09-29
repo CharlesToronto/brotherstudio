@@ -248,7 +248,7 @@ body:has(.projectFeedbackShell[data-admin-view="true"]) {
 }
 
 .myExperienceScrollProgressFill {
-  width: 100%;
+  width: auto;
   height: 100%;
   transform-origin: center bottom;
   border-radius: inherit;
@@ -1993,7 +1993,7 @@ body:has(.projectFeedbackShell[data-admin-view="true"]) {
   display: block;
   width: 100%;
   height: 196px;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .myExperienceGalleryArcTitleText {
@@ -24181,6 +24181,60 @@ body:has(.dashboardPage),
   box-shadow: none !important;
 }
 
+.dashboardPage .dashboardProjectList details[open] {
+  border-color: transparent !important;
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  background: #dff3ff !important;
+  box-shadow:
+    -2px 0 7px rgb(57 133 255 / 0.22),
+    2px 0 7px rgb(255 138 50 / 0.22),
+    0 14px 34px rgb(14 165 233 / 0.16) !important;
+}
+
+.dashboardPage .dashboardProjectList details[open]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1px;
+  background:
+    conic-gradient(
+      from var(--booking-neon-angle),
+      #3985ff 0deg,
+      #3985ff 60deg,
+      #b9ddff 90deg,
+      #3985ff 120deg,
+      #ff8a32 180deg,
+      #ff8a32 240deg,
+      #ffe0b8 270deg,
+      #ff8a32 300deg,
+      #3985ff 360deg
+    );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: booking-neon-border-spin 4s linear infinite;
+}
+
+.dashboardPage .dashboardProjectList details[open] > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboardPage .dashboardProjectList details[open] > summary,
+.dashboardPage .dashboardProjectList details[open] > div {
+  background: #dff3ff !important;
+}
+
+.dashboardPage .dashboardProjectList details[open] > div {
+  border-top: 1px solid #7dd3fc !important;
+}
+
 .dashboardProjectLayoutToggle {
   display: inline-flex;
   align-items: center;
@@ -24419,7 +24473,7 @@ body:has(.dashboardPage),
   display: grid;
   gap: 20px;
   border: 0 !important;
-  background: transparent !important;
+  background: #fff !important;
   box-shadow: none !important;
 }
 
@@ -24883,6 +24937,152 @@ body:has(.dashboardPage),
 .siteFooterGroupTitle,
 .siteFooterAccordionBody .siteFooterLink {
   color: rgb(255 255 255 / 0.76) !important;
+}
+
+.siteFooterCityMarquee {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: calc(var(--page-padding) * -1);
+  margin-right: calc(var(--page-padding) * -1);
+  margin-left: calc(var(--page-padding) * -1);
+  width: auto;
+  min-height: 48px;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 0;
+  background-image: linear-gradient(
+    90deg,
+    #3985ff 0%,
+    #3985ff 20%,
+    #b9ddff 35%,
+    #ff8a32 50%,
+    #ffe0b8 65%,
+    #ff8a32 80%,
+    #3985ff 100%
+  );
+  background-position: 100% 50%;
+  background-size: 360% 100%;
+  animation: home-hero-neon-flow 8s ease-in-out infinite;
+  border: 0;
+}
+
+.siteFooterCityMarquee.homeCityMarquee {
+  position: relative;
+  z-index: 10;
+  grid-column: auto;
+  margin: 0 calc(var(--page-padding) * -1);
+  width: auto;
+  border-top-color: transparent;
+}
+
+.siteFooterCityMarqueeViewport {
+  width: 100%;
+  overflow: hidden;
+}
+
+.siteFooterCityMarqueeSlides {
+  position: relative;
+  width: 100%;
+  height: 48px;
+}
+
+.siteFooterCityMarqueeSlide {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 900ms ease;
+}
+
+.siteFooterCityMarqueeSlides[data-active-slide="0"] .siteFooterCityMarqueeSlide:first-child,
+.siteFooterCityMarqueeSlides[data-active-slide="1"] .siteFooterCityMarqueeSlide:last-child {
+  opacity: 1;
+}
+
+.siteFooterCityMarqueeTrack {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  overflow: hidden;
+  animation: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+.siteFooterCityMarqueeStats {
+  justify-content: center;
+  gap: 18px;
+  color: rgb(255 255 255 / 0.9);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.siteFooterCityMarqueeDivider {
+  color: rgb(255 255 255 / 0.36);
+}
+
+.siteFooterCityMarqueeStatNumber {
+  font-size: 1.45em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.siteFooterCityMarqueeItem {
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 100%;
+  align-items: center;
+  gap: 22px;
+  padding-right: 22px;
+  color: rgb(255 255 255 / 0.86);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.siteFooterCityMarqueeItemDuplicate {
+  display: none;
+}
+
+@keyframes site-footer-city-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .siteFooterCityMarquee {
+    animation: none;
+    background-position: 50% 50%;
+  }
+
+  .siteFooterCityMarqueeTrack {
+    animation: none;
+  }
+
+  .siteFooterCityMarqueeSlides {
+    transition: none;
+  }
+
+  .siteFooterCityMarqueeSlide {
+    transition: none;
+  }
 }
 
 .siteNavLink[data-nav-key="book-meeting"],
@@ -26379,9 +26579,9 @@ body:has(.dashboardPage),
   border: 1px solid transparent !important;
   border-radius: 999px !important;
   position: relative;
-  background: rgb(255 255 255 / 0.62) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.15);
-  backdrop-filter: blur(20px) saturate(1.15);
+  background: transparent !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   color: #111 !important;
   box-shadow:
     -2px 0 7px rgb(57 133 255 / 0.22),
@@ -26993,7 +27193,7 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
 .realEstateCommercialCta { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 48px clamp(28px, 5vw, 80px); background: #171817; color: #fff; }
 .realEstateCommercialCta .realEstateCommercialEyebrow { color: rgb(255 255 255 / .55); margin-bottom: 12px; }
 .realEstateCommercialCta h2 { margin: 0; font-size: clamp(2.3rem, 4vw, 5rem); font-weight: 500; letter-spacing: -.07em; line-height: .95; }
-.realEstateCommercialCta a, .realEstateListingsTeaser a { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; min-height: 46px; padding: 0 20px; border: 1px solid currentColor; border-radius: 999px; color: inherit; font-size: 13px; }
+.realEstateCommercialCta a, .realEstateCommercialListingsTeaser a { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; min-height: 46px; padding: 0 20px; border: 1px solid currentColor; border-radius: 999px; color: inherit; font-size: 13px; }
 .realEstateCommercialListingsTeaser { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; padding: clamp(70px, 9vw, 130px) clamp(28px, 5vw, 80px); }
 .realEstateCommercialListingsTeaser .realEstateCommercialEyebrow { margin-bottom: 20px; }
 .realEstateNeonText {
@@ -27049,7 +27249,19 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
   .realEstateCommercialHero h1 { width: auto; max-width: 100%; font-size: clamp(3.25rem, 15vw, 5.4rem); white-space: normal; }
   .realEstateHeroActions { align-items: flex-start; flex-direction: column; margin-top: 30px; }
   .homeHeroActions { align-items: center !important; justify-content: center; margin-inline: auto; }
-  .homeHeroActions a { align-self: center; flex: 0 1 300px; width: min(100%, 300px); }
+  .homeHeroActions { width: 100%; max-width: 100%; }
+  .homeHeroActions a {
+    align-self: center;
+    box-sizing: border-box;
+    flex: 0 1 auto;
+    width: min(100%, 300px) !important;
+    max-width: calc(100vw - 36px);
+    height: auto !important;
+    min-height: 50px;
+    aspect-ratio: auto !important;
+    padding: 12px 18px;
+    font-size: clamp(15px, 4.2vw, 18px);
+  }
   .realEstateCommercialLead { font-size: 15px; }
   .realEstateCommercialHeroImage { height: 66svh; min-height: 420px; }
   .realEstateCommercialProcess { padding: 70px 14px; }
@@ -27076,6 +27288,66 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
   .realEstateFooterBottom span { display: block; }
   .realEstateFooterBottom span + span { margin-top: 8px; }
   .realEstateStudioDeliverables ul { margin-top: 45px; }
+}
+
+@media (max-width: 640px) {
+  .siteFooterCityMarquee.homeCityMarquee {
+    margin-top: -2px;
+    border-top: 0 !important;
+  }
+
+  .siteFooterCityMarqueeSlides .siteFooterCityMarqueeSlide:first-child {
+    display: none;
+  }
+
+  .siteFooterCityMarqueeSlides .siteFooterCityMarqueeSlide:last-child {
+    display: flex;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .siteFooterCityMarqueeTrack {
+    width: max-content;
+    min-width: 100%;
+    justify-content: flex-start;
+    padding-inline: 0;
+    animation: site-footer-city-marquee-mobile 60s linear infinite !important;
+    will-change: transform;
+  }
+
+  .siteFooterCityMarqueeItem {
+    gap: 14px;
+    padding-right: 14px;
+    font-size: 9px;
+    letter-spacing: 0.13em;
+  }
+
+  .siteFooterCityMarqueeItemDuplicate {
+    display: inline-flex;
+  }
+
+  .siteFooterCityMarqueeStats {
+    gap: 10px;
+    padding-inline: 12px;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+
+  .siteFooterCityMarqueeStatNumber {
+    font-size: 1.2em;
+  }
+}
+
+@keyframes site-footer-city-marquee-mobile {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) and (max-width: 640px) {
+  .siteFooterCityMarqueeTrack {
+    animation: none !important;
+    transform: none;
+  }
 }
 
 .realEstateProfilePage { min-height: calc(100vh - 86px); padding: 0 0 7rem; background: #f8f7f4; }
@@ -27413,4 +27685,11 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
 
   body:has(.homeBlurWordSection) .siteLogoImageBlack { display: none !important; }
   body:has(.homeBlurWordSection) .siteLogoImageWhite { display: block !important; }
+}
+
+/* Keep the top navigation booking CTA visibly white above page-specific overrides. */
+.siteHeaderBookingCta {
+  background: #fff !important;
+  background-image: none !important;
+  color: #111 !important;
 }

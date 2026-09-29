@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { getMessages } from "@/content/messages";
 import { site } from "@/content/site";
+import { FooterCityMarquee } from "@/components/FooterCityMarquee";
 import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
 
@@ -35,7 +36,8 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   ];
   const accessLinks = [
     { label: "MyReview™", href: "/myreview" },
-    { label: "myWebsite", href: withLocalePath(locale, "/mywebsite") },
+    { label: "FileFlow™", href: "https://fileflow.brotherstudio.ca/", external: true },
+    { label: "MyWallis™", href: "https://mywallis.vercel.app/", external: true },
   ];
   const adminLinks = [
     { label: "MyReview™ Admin", href: "/admin/client-projects" },
@@ -91,6 +93,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
 
   return (
     <footer id="site-footer" className="siteFooter">
+      <FooterCityMarquee />
       <div className="siteFooterBrand">
         <div className="siteFooterBrandHeader">
           <Image

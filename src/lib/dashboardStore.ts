@@ -26,6 +26,22 @@ export const DASHBOARD_SERVICE_OPTIONS = [
   "Immeuble forfait",
 ] as const;
 
+export const DASHBOARD_DELIVERABLE_CATEGORIES = [
+  "Image",
+  "Vidéo",
+  "Site web",
+  "Document",
+  "Autre",
+] as const;
+
+export type DashboardDeliverableCategory = (typeof DASHBOARD_DELIVERABLE_CATEGORIES)[number];
+export type DashboardDeliverable = {
+  id: string;
+  name: string;
+  quantity: number;
+  category: DashboardDeliverableCategory;
+};
+
 export type DashboardProjectStatus = (typeof DASHBOARD_PROJECT_STATUSES)[number];
 export type DashboardProjectCurrency = (typeof DASHBOARD_PROJECT_CURRENCIES)[number];
 export type DashboardPaymentStatus = (typeof DASHBOARD_PAYMENT_STATUSES)[number];
@@ -39,7 +55,14 @@ export type DashboardProjectRecord = {
   clientPhone: string;
   clientWebsite: string;
   projectName: string;
+  mapEmbedUrl: string;
   serviceTypes: string[];
+  deliverables: DashboardDeliverable[];
+  requestSummary: string;
+  requestDetails: string;
+  requestEmailUrl: string;
+  requestPdfUrl: string;
+  requestPdfName: string;
   status: DashboardProjectStatus;
   paymentStatus: DashboardPaymentStatus;
   invoicedAmount: number;
@@ -60,7 +83,14 @@ type DashboardProjectRow = {
   client_phone: string | null;
   client_website?: string | null;
   project_name: string | null;
+  map_embed_url?: string | null;
   service_types: string[] | null;
+  deliverables?: DashboardDeliverable[] | null;
+  request_summary?: string | null;
+  request_details?: string | null;
+  request_email_url?: string | null;
+  request_pdf_url?: string | null;
+  request_pdf_name?: string | null;
   status: string | null;
   payment_status?: string | null;
   invoiced_amount: number | string | null;
@@ -73,13 +103,13 @@ type DashboardProjectRow = {
 };
 
 const DASHBOARD_PROJECT_SELECT =
-  "id, team_client_id, client_name, client_company, client_email, client_phone, client_website, project_name, service_types, status, payment_status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at";
+  "id, team_client_id, client_name, client_company, client_email, client_phone, client_website, project_name, map_embed_url, service_types, deliverables, request_summary, request_details, request_email_url, request_pdf_url, request_pdf_name, status, payment_status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at";
 
 const DASHBOARD_PROJECT_LEGACY_SELECT =
   "id, team_client_id, client_name, client_company, client_email, client_phone, project_name, service_types, status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at";
 
 const DASHBOARD_PROJECT_WITHOUT_WEBSITE_SELECT =
-  "id, team_client_id, client_name, client_company, client_email, client_phone, project_name, service_types, status, payment_status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at";
+  "id, team_client_id, client_name, client_company, client_email, client_phone, project_name, service_types, status, invoiced_amount, upcoming_amount, expected_date, currency, exchange_rate_to_cad, created_at, updated_at";
 
 function assertDashboardConfigured() {
   if (!isSupabaseConfigured()) {
@@ -128,11 +158,17 @@ function getStoreErrorDetails(error: unknown) {
 function getMissingOptionalDashboardColumn(error: unknown) {
   const { code, message } = getStoreErrorDetails(error);
   const normalizedMessage = message.toLowerCase();
-  const column = normalizedMessage.includes("client_website")
-    ? "client_website"
-    : normalizedMessage.includes("payment_status")
-      ? "payment_status"
-      : null;
+  const column = [
+    "client_website",
+    "map_embed_url",
+    "payment_status",
+    "request_summary",
+    "request_details",
+    "request_email_url",
+    "request_pdf_url",
+    "request_pdf_name",
+    "deliverables",
+  ].find((candidate) => normalizedMessage.includes(candidate)) ?? null;
 
   if (
     column &&
@@ -197,6 +233,36 @@ function normalizeAmount(value: number | string | null | undefined) {
   return 0;
 }
 
+function normalizeDeliverables(
+  value: DashboardProjectRow["deliverables"],
+  legacyServices: string[] | null,
+): DashboardDeliverable[] {
+  if (Array.isArray(value)) {
+    return (value as unknown[])
+      .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+      .map((item, index) => ({
+        id: typeof item.id === "string" && item.id ? item.id : `deliverable-${index}`,
+        name: typeof item.name === "string" ? item.name.trim() : "",
+        quantity: typeof item.quantity === "number" && item.quantity > 0 ? Math.round(item.quantity) : 1,
+        category: DASHBOARD_DELIVERABLE_CATEGORIES.includes(item.category as DashboardDeliverableCategory)
+          ? (item.category as DashboardDeliverableCategory)
+          : "Autre",
+      }))
+      .filter((item) => item.name.length > 0);
+  }
+
+  return (legacyServices ?? []).map((name, index) => ({
+    id: `legacy-${index}-${name}`,
+    name,
+    quantity: 1,
+    category: name.toLowerCase().includes("video") || name.toLowerCase().includes("walkthrough")
+      ? "Vidéo"
+      : name.toLowerCase().includes("image") || name.toLowerCase().includes("photo")
+        ? "Image"
+        : "Autre",
+  }));
+}
+
 function normalizeProjectRow(row: DashboardProjectRow): DashboardProjectRecord {
   return {
     id: row.id,
@@ -207,9 +273,16 @@ function normalizeProjectRow(row: DashboardProjectRow): DashboardProjectRecord {
     clientPhone: row.client_phone?.trim() ?? "",
     clientWebsite: row.client_website?.trim() ?? "",
     projectName: row.project_name?.trim() ?? "",
+    mapEmbedUrl: row.map_embed_url?.trim() ?? "",
     serviceTypes: Array.isArray(row.service_types)
       ? row.service_types.filter((value): value is string => typeof value === "string")
       : [],
+    deliverables: normalizeDeliverables(row.deliverables, row.service_types),
+    requestSummary: row.request_summary?.trim() ?? "",
+    requestDetails: row.request_details?.trim() ?? "",
+    requestEmailUrl: row.request_email_url?.trim() ?? "",
+    requestPdfUrl: row.request_pdf_url?.trim() ?? "",
+    requestPdfName: row.request_pdf_name?.trim() ?? "",
     status: normalizeStatus(row.status),
     paymentStatus:
       row.payment_status === undefined
@@ -241,7 +314,14 @@ function toProjectPayload(
     client_phone: input.clientPhone.trim(),
     client_website: input.clientWebsite.trim(),
     project_name: input.projectName.trim(),
+    map_embed_url: input.mapEmbedUrl.trim(),
     service_types: input.serviceTypes,
+    deliverables: input.deliverables,
+    request_summary: input.requestSummary.trim(),
+    request_details: input.requestDetails.trim(),
+    request_email_url: input.requestEmailUrl.trim(),
+    request_pdf_url: input.requestPdfUrl.trim(),
+    request_pdf_name: input.requestPdfName.trim(),
     status: normalizeStatus(input.status),
     payment_status: normalizePaymentStatus(input.paymentStatus),
     invoiced_amount: Number.isFinite(input.invoicedAmount) ? input.invoicedAmount : 0,
@@ -258,11 +338,18 @@ function toProjectPayload(
 }
 
 function toLegacyCompatiblePayload(
-  payload: Record<string, string | number | string[] | null>,
+  payload: Record<string, string | number | string[] | DashboardDeliverable[] | null>,
 ) {
   const legacyPayload = { ...payload };
   delete legacyPayload.client_website;
+  delete legacyPayload.map_embed_url;
   delete legacyPayload.payment_status;
+  delete legacyPayload.request_summary;
+  delete legacyPayload.request_details;
+  delete legacyPayload.request_email_url;
+  delete legacyPayload.request_pdf_url;
+  delete legacyPayload.request_pdf_name;
+  delete legacyPayload.deliverables;
   return legacyPayload;
 }
 
@@ -340,7 +427,7 @@ export async function updateDashboardProject(
 ) {
   assertDashboardConfigured();
   const supabase = getSupabaseAdminClient();
-  const payload: Record<string, string | number | string[] | null> = {};
+  const payload: Record<string, string | number | string[] | DashboardDeliverable[] | null> = {};
 
   if (typeof patch.clientName === "string") payload.client_name = patch.clientName.trim();
   if (typeof patch.clientCompany === "string") {
@@ -355,7 +442,14 @@ export async function updateDashboardProject(
     payload.client_website = patch.clientWebsite.trim();
   }
   if (typeof patch.projectName === "string") payload.project_name = patch.projectName.trim();
+  if (typeof patch.mapEmbedUrl === "string") payload.map_embed_url = patch.mapEmbedUrl.trim();
   if (Array.isArray(patch.serviceTypes)) payload.service_types = patch.serviceTypes;
+  if (Array.isArray(patch.deliverables)) payload.deliverables = patch.deliverables;
+  if (typeof patch.requestSummary === "string") payload.request_summary = patch.requestSummary.trim();
+  if (typeof patch.requestDetails === "string") payload.request_details = patch.requestDetails.trim();
+  if (typeof patch.requestEmailUrl === "string") payload.request_email_url = patch.requestEmailUrl.trim();
+  if (typeof patch.requestPdfUrl === "string") payload.request_pdf_url = patch.requestPdfUrl.trim();
+  if (typeof patch.requestPdfName === "string") payload.request_pdf_name = patch.requestPdfName.trim();
   if (typeof patch.status === "string") payload.status = normalizeStatus(patch.status);
   if (typeof patch.paymentStatus === "string") {
     payload.payment_status = normalizePaymentStatus(patch.paymentStatus);
@@ -382,6 +476,27 @@ export async function updateDashboardProject(
     .single();
   let data = result.data as DashboardProjectRow | null;
   let error: unknown = result.error;
+
+  if (error && isMissingOptionalDashboardColumn(error)) {
+    const missingColumn = getMissingOptionalDashboardColumn(error);
+    if (
+      (missingColumn?.startsWith("request_") || missingColumn === "map_embed_url") &&
+      Object.keys(payload).some(
+        (key) => key.startsWith("request_") || key === "map_embed_url",
+      )
+    ) {
+      const legacyPayload = toLegacyCompatiblePayload(payload);
+      const legacyResult = await supabase
+        .from("dashboard_projects")
+        .update(legacyPayload)
+        .eq("id", id)
+        .select(DASHBOARD_PROJECT_LEGACY_SELECT)
+        .single();
+
+      data = legacyResult.data as DashboardProjectRow | null;
+      error = legacyResult.error;
+    }
+  }
 
   if (error && getMissingOptionalDashboardColumn(error) === "client_website") {
     const withoutWebsitePayload = { ...payload };

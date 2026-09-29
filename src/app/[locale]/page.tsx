@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { CalendlyEmbed } from "@/components/CalendlyEmbed";
+import { FooterCityMarquee } from "@/components/FooterCityMarquee";
 import { HomeGalleryExperience } from "@/components/HomeGalleryExperience";
 import { HomeHeroHeaderController } from "@/components/HomeHeroHeaderController";
 import { HomeVideoHero } from "@/components/HomeVideoHero";
@@ -70,6 +71,7 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
     <main className="siteMain">
       <HomeHeroHeaderController />
       <HomeVideoHero locale={locale} />
+      <FooterCityMarquee className="homeCityMarquee" />
       <HomeGalleryExperience
         locale={locale}
         items={items}

@@ -1,12 +1,13 @@
 "use client";
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { Eye, Pencil, Search, Trash2, UserPlus, X } from "lucide-react";
+import { CreditCard, FileText, Folder, Pencil, Search, Trash2, User, UserPlus, X } from "lucide-react";
 
 import { AdminLockOverlay } from "@/components/AdminLockOverlay";
 import {
   DASHBOARD_PAYMENT_STATUSES,
   DASHBOARD_SERVICE_OPTIONS,
+  type DashboardDeliverable,
   type DashboardPaymentStatus as PaymentStatus,
   type DashboardProjectCurrency as Currency,
   type DashboardProjectRecord as Project,
@@ -81,7 +82,14 @@ function createEmptyProject(): ProjectDraft {
     clientPhone: "",
     clientWebsite: "",
     projectName: "",
+    mapEmbedUrl: "",
     serviceTypes: [],
+    deliverables: [],
+    requestSummary: "",
+    requestDetails: "",
+    requestEmailUrl: "",
+    requestPdfUrl: "",
+    requestPdfName: "",
     status: "À venir",
     paymentStatus: "À facturer",
     invoicedAmount: 0,
@@ -131,10 +139,7 @@ function doesProjectMatchPatch(project: Project, patch: Partial<ProjectDraft>) {
     const expectedValue = patch[key];
 
     if (Array.isArray(persistedValue) && Array.isArray(expectedValue)) {
-      return (
-        persistedValue.length === expectedValue.length &&
-        persistedValue.every((value, index) => value === expectedValue[index])
-      );
+      return JSON.stringify(persistedValue) === JSON.stringify(expectedValue);
     }
 
     if (typeof persistedValue === "number" && typeof expectedValue === "number") {
@@ -500,7 +505,6 @@ const dashboardPrimaryButtonClass = `${dashboardButtonMotionClass} hover:-transl
 const dashboardSecondaryButtonClass = `${dashboardButtonMotionClass} hover:-translate-y-0.5 hover:bg-neutral-50 hover:shadow-[0_8px_20px_rgba(15,23,42,0.08)]`;
 const dashboardIconButtonClass = `${dashboardButtonMotionClass} hover:-translate-y-0.5 hover:bg-neutral-50 hover:shadow-[0_8px_20px_rgba(15,23,42,0.08)]`;
 const dashboardDangerButtonClass = `${dashboardButtonMotionClass} hover:-translate-y-0.5 hover:bg-rose-100 hover:shadow-[0_8px_20px_rgba(244,63,94,0.16)]`;
-const dashboardDisclosureButtonClass = `${dashboardButtonMotionClass} hover:-translate-y-0.5 hover:bg-neutral-950 hover:text-white hover:shadow-[0_10px_24px_rgba(15,23,42,0.16)]`;
 
 export default function DashboardPage() {
   const clientPickerRef = useRef<HTMLSelectElement | null>(null);
@@ -514,8 +518,9 @@ export default function DashboardPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<ProjectDraft | null>(null);
+  const [requestPdfFile, setRequestPdfFile] = useState<File | null>(null);
+  const [newDeliverableName, setNewDeliverableName] = useState("");
   const [showClientPicker, setShowClientPicker] = useState(false);
-  const [showServicesMenu, setShowServicesMenu] = useState(false);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [editingTeamClientId, setEditingTeamClientId] = useState<string | null>(null);
   const [newClientDraft, setNewClientDraft] = useState(emptyTeamClientDraft);
@@ -704,8 +709,11 @@ export default function DashboardPage() {
         project.clientCompany,
         project.clientEmail,
         project.projectName,
+        project.requestSummary,
+        project.requestDetails,
         project.clientPhone,
         ...project.serviceTypes,
+        ...project.deliverables.map((deliverable) => deliverable.name),
       ]
         .join(" ")
         .toLowerCase();
@@ -726,8 +734,8 @@ export default function DashboardPage() {
     setErrorMessage("");
     setStatusMessage("");
     setDraft(createEmptyProject());
+    setRequestPdfFile(null);
     setShowClientPicker(false);
-    setShowServicesMenu(false);
     setShowNewClientForm(false);
     setEditingTeamClientId(null);
     setNewClientDraft(emptyTeamClientDraft);
@@ -746,7 +754,14 @@ export default function DashboardPage() {
       clientPhone: project.clientPhone,
       clientWebsite: project.clientWebsite,
       projectName: project.projectName,
+      mapEmbedUrl: project.mapEmbedUrl,
       serviceTypes: project.serviceTypes,
+      deliverables: project.deliverables,
+      requestSummary: project.requestSummary,
+      requestDetails: project.requestDetails,
+      requestEmailUrl: project.requestEmailUrl,
+      requestPdfUrl: project.requestPdfUrl,
+      requestPdfName: project.requestPdfName,
       status: project.status,
       paymentStatus: project.paymentStatus,
       invoicedAmount: project.invoicedAmount,
@@ -755,8 +770,8 @@ export default function DashboardPage() {
       currency: project.currency,
       exchangeRateToCad: project.exchangeRateToCad,
     });
+    setRequestPdfFile(null);
     setShowClientPicker(false);
-    setShowServicesMenu(false);
     setShowNewClientForm(false);
     setEditingTeamClientId(null);
     setNewClientDraft(emptyTeamClientDraft);
@@ -766,8 +781,8 @@ export default function DashboardPage() {
 
   const cancelDraft = () => {
     setDraft(null);
+    setRequestPdfFile(null);
     setShowClientPicker(false);
-    setShowServicesMenu(false);
     setShowNewClientForm(false);
     setEditingTeamClientId(null);
     setNewClientDraft(emptyTeamClientDraft);
@@ -788,7 +803,14 @@ export default function DashboardPage() {
       clientPhone: normalizedDraft.clientPhone.trim(),
       clientWebsite: normalizedDraft.clientWebsite.trim(),
       projectName: normalizedDraft.projectName.trim(),
+      mapEmbedUrl: normalizedDraft.mapEmbedUrl.trim(),
       serviceTypes: normalizedDraft.serviceTypes,
+      deliverables: normalizedDraft.deliverables,
+      requestSummary: normalizedDraft.requestSummary.trim(),
+      requestDetails: normalizedDraft.requestDetails.trim(),
+      requestEmailUrl: normalizedDraft.requestEmailUrl.trim(),
+      requestPdfUrl: normalizedDraft.requestPdfUrl.trim(),
+      requestPdfName: normalizedDraft.requestPdfName.trim(),
       expectedDate: normalizedDraft.expectedDate,
       invoicedAmount: Number.isFinite(normalizedDraft.invoicedAmount)
         ? normalizedDraft.invoicedAmount
@@ -823,7 +845,7 @@ export default function DashboardPage() {
           : normalizedProject;
       const patchedFields = requestBody as Partial<ProjectDraft>;
 
-      if (method === "PATCH" && Object.keys(patchedFields).length === 0) {
+      if (method === "PATCH" && Object.keys(patchedFields).length === 0 && !requestPdfFile) {
         setStatusMessage("Aucun changement à sauvegarder.");
         cancelDraft();
         return;
@@ -869,13 +891,57 @@ export default function DashboardPage() {
         );
       }
 
-      if (method === "PATCH" && !confirmation.confirmed) {
-        throw new Error(
-          "La sauvegarde n'a pas été confirmée après rechargement. Réessaie, puis vérifie la migration Supabase du dashboard si le problème revient.",
+      const requestFieldsWereEntered = Boolean(
+        normalizedDraft.requestSummary ||
+          normalizedDraft.requestDetails ||
+          normalizedDraft.requestEmailUrl ||
+          normalizedDraft.requestPdfUrl ||
+          normalizedDraft.requestPdfName,
+      );
+      const requestFieldsWereSkipped = Boolean(
+        requestFieldsWereEntered &&
+          !persistedProject.requestSummary &&
+          !persistedProject.requestDetails &&
+          !persistedProject.requestEmailUrl &&
+          !persistedProject.requestPdfUrl &&
+          !persistedProject.requestPdfName,
+      );
+      const mapWasSkipped = Boolean(
+        normalizedDraft.mapEmbedUrl && !persistedProject.mapEmbedUrl,
+      );
+      const deliverablesWereSkipped = Boolean(
+        normalizedDraft.deliverables.length > 0 && persistedProject.deliverables.length === 0,
+      );
+
+      let latestProjects = confirmation.data.projects;
+      let latestClients = confirmation.data.clients;
+      if (requestPdfFile) {
+        const formData = new FormData();
+        formData.append("file", requestPdfFile);
+        const documentResponse = await fetch(
+          `/api/dashboard/projects/${persistedProject.id}/request-document`,
+          { method: "POST", body: formData },
         );
+        const documentPayload = (await documentResponse.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        if (!documentResponse.ok) {
+          throw new Error(documentPayload?.error ?? "Impossible d’enregistrer le PDF.");
+        }
+        const refreshed = await loadDashboardData();
+        latestProjects = refreshed.projects;
+        latestClients = refreshed.clients;
       }
 
-      setStatusMessage(isAdding ? "Projet créé." : "Projet mis à jour.");
+      setProjects(latestProjects);
+      setTeamClients(latestClients);
+      setStatusMessage(
+        requestFieldsWereSkipped || mapWasSkipped || deliverablesWereSkipped || !confirmation.confirmed
+          ? `${isAdding ? "Projet créé" : "Projet mis à jour"}. Les nouveaux champs seront disponibles après l’application de la migration Supabase.`
+          : isAdding
+            ? "Projet créé."
+            : "Projet mis à jour.",
+      );
 
       cancelDraft();
     } catch (error) {
@@ -1084,27 +1150,48 @@ export default function DashboardPage() {
     setShowClientPicker(false);
   };
 
-  const toggleDraftService = (service: string) => {
-    setDraft((current) => {
-      if (!current) return current;
-      return current.serviceTypes.includes(service)
+  const updateDeliverable = (id: string, patch: Partial<DashboardDeliverable>) => {
+    setDraft((current) =>
+      current
         ? {
             ...current,
-            serviceTypes: current.serviceTypes.filter((entry) => entry !== service),
+            deliverables: current.deliverables.map((item) =>
+              item.id === id ? { ...item, ...patch } : item,
+            ),
           }
-        : {
-            ...current,
-            serviceTypes: [...current.serviceTypes, service],
-        };
-    });
+        : current,
+    );
   };
 
-  const selectedServicesLabel =
-    draft?.serviceTypes.length && draft.serviceTypes.length > 0
-      ? `${draft.serviceTypes.length} service${
-          draft.serviceTypes.length > 1 ? "s sélectionnés" : " sélectionné"
-        }`
-      : "Choisir les services";
+  const removeDeliverable = (id: string) => {
+    setDraft((current) =>
+      current
+        ? { ...current, deliverables: current.deliverables.filter((item) => item.id !== id) }
+        : current,
+    );
+  };
+
+  const addDeliverable = () => {
+    const name = newDeliverableName.trim();
+    if (!name) return;
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            deliverables: [
+              ...current.deliverables,
+              {
+                id: `deliverable-${Date.now()}`,
+                name,
+                quantity: 1,
+                category: "Autre",
+              },
+            ],
+          }
+        : current,
+    );
+    setNewDeliverableName("");
+  };
   const selectedClientLabel =
     draft?.teamClientId && teamClients.some((client) => client.id === draft.teamClientId)
       ? (() => {
@@ -1116,7 +1203,6 @@ export default function DashboardPage() {
 
   const openClientPicker = () => {
     if (teamClients.length === 0) return;
-    setShowServicesMenu(false);
     setShowClientPicker(true);
 
     requestAnimationFrame(() => {
@@ -1131,7 +1217,6 @@ export default function DashboardPage() {
 
   const openNewClientFormFromDraft = () => {
     setShowClientPicker(false);
-    setShowServicesMenu(false);
     setEditingTeamClientId(null);
     setNewClientDraft(createTeamClientDraftFromProject(draft));
     setShowNewClientForm(true);
@@ -1139,7 +1224,6 @@ export default function DashboardPage() {
 
   const openStandaloneNewClientForm = () => {
     setShowClientPicker(false);
-    setShowServicesMenu(false);
     setEditingTeamClientId(null);
     setNewClientDraft(emptyTeamClientDraft);
     setShowNewClientForm(true);
@@ -1147,7 +1231,6 @@ export default function DashboardPage() {
 
   const openTeamClientEditor = (client: TeamClientRecord) => {
     setShowClientPicker(false);
-    setShowServicesMenu(false);
     setEditingTeamClientId(client.id);
     setNewClientDraft(createTeamClientDraftFromClient(client));
     setShowNewClientForm(true);
@@ -1340,14 +1423,18 @@ export default function DashboardPage() {
 
   const renderDraftEditor = () => {
     if (!draft) return null;
+    const requestPdfInputId = editingId ? `request-pdf-${editingId}` : "request-pdf-new";
 
     return (
-      <>
+      <div className="dashboardProjectEditor">
         {errorMessage ? <p className="mb-4 text-sm text-rose-700">{errorMessage}</p> : null}
         <div className="grid gap-4 lg:grid-cols-3">
-          <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
+          <div className="grid gap-2.5 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2.5">
+              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+                  <User aria-hidden="true" className="h-4 w-4" />
+                </span>
                 Informations
               </p>
               <button
@@ -1431,7 +1518,7 @@ export default function DashboardPage() {
                 placeholder="client@email.com"
               />
             </DashboardField>
-            <DashboardField label="Phone number">
+            <DashboardField label="Téléphone">
               <DashboardInput
                 value={draft.clientPhone}
                 onChange={(event) => {
@@ -1454,8 +1541,11 @@ export default function DashboardPage() {
             </DashboardField>
           </div>
 
-          <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
+          <div className="flex h-full flex-col gap-2.5 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-3.5">
+            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                <Folder aria-hidden="true" className="h-4 w-4" />
+              </span>
               Projet
             </p>
             <DashboardField label="Nom du projet">
@@ -1472,60 +1562,39 @@ export default function DashboardPage() {
                 type="date"
               />
             </DashboardField>
-            <DashboardField label="Service effectué">
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowClientPicker(false);
-                    setShowServicesMenu((current) => !current);
-                  }}
-                  className={`flex h-11 w-full items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 text-left text-sm text-neutral-950 outline-none ${dashboardSecondaryButtonClass}`}
+            <DashboardField label="Map / lien embed Google Maps">
+              <DashboardInput
+                value={draft.mapEmbedUrl}
+                onChange={(event) => updateDraft("mapEmbedUrl", event.target.value)}
+                type="text"
+                placeholder="https://www.google.com/maps/embed?pb=..."
+              />
+            </DashboardField>
+            <div className="mt-auto">
+              <DashboardField label="Statuts">
+                <DashboardSelect
+                  value={draft.status}
+                  onChange={(event) =>
+                    updateDraft("status", event.target.value as ProjectStatus)
+                  }
+                  className="border-sky-300 bg-sky-50 font-semibold text-sky-900 focus:border-sky-500"
                 >
-                  <span className="truncate">{selectedServicesLabel}</span>
-                  <span className="text-neutral-400">{showServicesMenu ? "▲" : "▼"}</span>
-                </button>
-                {showServicesMenu ? (
-                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 max-h-72 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-3 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                    <div className="grid gap-2">
-                      {DASHBOARD_SERVICE_OPTIONS.map((service) => (
-                        <label
-                          key={service}
-                          className="flex items-start gap-2 text-sm text-neutral-700"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={draft.serviceTypes.includes(service)}
-                            onChange={() => toggleDraftService(service)}
-                            className="mt-1 h-4 w-4 rounded border-neutral-300"
-                          />
-                          <span>{service}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </DashboardField>
-            <DashboardField label="Statuts">
-              <DashboardSelect
-                value={draft.status}
-                onChange={(event) =>
-                  updateDraft("status", event.target.value as ProjectStatus)
-                }
-              >
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </DashboardSelect>
-            </DashboardField>
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </DashboardSelect>
+              </DashboardField>
+            </div>
           </div>
 
-          <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
-              Payment
+          <div className="flex h-full flex-col gap-2.5 rounded-2xl border border-neutral-200 bg-[#faf8f5] p-3.5">
+            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                <CreditCard aria-hidden="true" className="h-4 w-4" />
+              </span>
+              Paiement
             </p>
             <DashboardField label="Invoice">
               <DashboardInput
@@ -1546,20 +1615,6 @@ export default function DashboardPage() {
                 type="number"
                 min="0"
               />
-            </DashboardField>
-            <DashboardField label="Statut">
-              <DashboardSelect
-                value={draft.paymentStatus}
-                onChange={(event) =>
-                  updateDraftPaymentStatus(event.target.value as PaymentStatus)
-                }
-              >
-                {paymentStatusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </DashboardSelect>
             </DashboardField>
             {draft.currency === "CHF" ? (
               <DashboardField label="Taux de change">
@@ -1596,6 +1651,162 @@ export default function DashboardPage() {
                 ))}
               </DashboardSelect>
             </DashboardField>
+            <div className="mt-auto">
+              <DashboardField label="Statut">
+                <DashboardSelect
+                  value={draft.paymentStatus}
+                  onChange={(event) =>
+                    updateDraftPaymentStatus(event.target.value as PaymentStatus)
+                  }
+                  className="border-emerald-300 bg-emerald-50 font-semibold text-emerald-900 focus:border-emerald-500"
+                >
+                  {paymentStatusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </DashboardSelect>
+              </DashboardField>
+            </div>
+          </div>
+
+        </div>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+          <div className="grid gap-4 rounded-2xl border border-sky-200 bg-[linear-gradient(135deg,#dff3ff_0%,#e7e9ff_100%)] p-4 shadow-[0_12px_28px_rgba(96,165,250,0.16)]">
+            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-800">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-white/75 text-sky-700 shadow-sm">
+                <FileText aria-hidden="true" className="h-4 w-4" />
+              </span>
+              Note projet
+            </p>
+            <DashboardField label="Détails de la demande">
+              <textarea
+                value={draft.requestDetails}
+                onChange={(event) => updateDraft("requestDetails", event.target.value)}
+                rows={7}
+                placeholder="Décris ce que le client a demandé, les livrables et les contraintes..."
+                className="min-h-44 w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-sm text-neutral-950 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </DashboardField>
+            <div className="grid items-start gap-4 md:grid-cols-2">
+              <DashboardField label="Lien de confirmation de projet">
+                <DashboardInput
+                  value={draft.requestEmailUrl}
+                  onChange={(event) => updateDraft("requestEmailUrl", event.target.value)}
+                  type="url"
+                  placeholder="https://drive.google.com/..."
+                />
+              </DashboardField>
+              <DashboardField label="PDF de l’email">
+                <input
+                  id={requestPdfInputId}
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(event) => setRequestPdfFile(event.target.files?.[0] ?? null)}
+                  className="sr-only"
+                />
+                <label
+                  htmlFor={requestPdfInputId}
+                  className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-sky-200 bg-white px-4 py-3 text-sm font-semibold text-sky-800 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 focus-within:ring-2 focus-within:ring-sky-300"
+                >
+                  <FileText aria-hidden="true" className="h-4 w-4" />
+                  {requestPdfFile || draft.requestPdfUrl ? "Remplacer le PDF" : "Choisir un PDF"}
+                </label>
+                {requestPdfFile ? (
+                  <p className="mt-2 min-h-5 truncate text-xs text-sky-800" title={requestPdfFile.name}>
+                    {requestPdfFile.name}
+                  </p>
+                ) : draft.requestPdfUrl ? (
+                  <a
+                    href={draft.requestPdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex min-h-5 max-w-full truncate text-xs font-medium text-sky-800 underline"
+                    title={draft.requestPdfName || "Voir le PDF actuel"}
+                  >
+                    {draft.requestPdfName || "Voir le PDF actuel"}
+                  </a>
+                ) : (
+                  <p className="mt-2 min-h-5 text-xs text-sky-700">Aucun PDF ajouté.</p>
+                )}
+              </DashboardField>
+            </div>
+          </div>
+
+          <div className="grid content-start gap-4 rounded-2xl border border-violet-200 bg-[linear-gradient(135deg,#f5f3ff_0%,#eef2ff_100%)] p-4 shadow-[0_12px_28px_rgba(139,92,246,0.1)]">
+            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-violet-800">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-white/80 text-violet-700 shadow-sm">
+                <Folder aria-hidden="true" className="h-4 w-4" />
+              </span>
+              Livrables à produire
+            </p>
+            <p className="text-xs leading-5 text-violet-900/70">
+              Liste les éléments demandés et indique la quantité à produire.
+            </p>
+            <div className="grid gap-2">
+              {draft.deliverables.length > 0 ? (
+                draft.deliverables.map((deliverable) => (
+                  <div
+                    key={deliverable.id}
+                    className="grid grid-cols-[minmax(0,1fr)_72px_28px] items-center gap-2 rounded-lg border border-violet-100 bg-white px-2.5 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-neutral-800">{deliverable.name}</p>
+                    </div>
+                    <input
+                      type="number"
+                      min="1"
+                      value={deliverable.quantity}
+                      onChange={(event) =>
+                        updateDeliverable(deliverable.id, {
+                          quantity: Math.max(1, Number(event.target.value) || 1),
+                        })
+                      }
+                      aria-label={`Quantité pour ${deliverable.name}`}
+                      className="h-9 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-2 text-center text-sm font-semibold text-neutral-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeDeliverable(deliverable.id)}
+                      aria-label={`Supprimer ${deliverable.name}`}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full text-neutral-400 transition hover:bg-rose-50 hover:text-rose-600"
+                    >
+                      <X aria-hidden="true" className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="rounded-lg border border-dashed border-violet-200 bg-white/60 px-3 py-4 text-xs text-violet-900/60">
+                  Aucun livrable ajouté pour le moment.
+                </p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <select
+                value={newDeliverableName}
+                onChange={(event) => setNewDeliverableName(event.target.value)}
+                className="h-10 rounded-lg border border-violet-100 bg-white px-3 text-sm text-neutral-700 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                aria-label="Libellé du livrable"
+              >
+                <option value="">Sélectionner un livrable</option>
+                {DASHBOARD_SERVICE_OPTIONS.map((service) => (
+                  <option key={service} value={service}>
+                    {service}
+                  </option>
+                ))}
+              </select>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={addDeliverable}
+                  disabled={!newDeliverableName}
+                  className="inline-flex h-10 items-center justify-center rounded-lg bg-neutral-950 px-4 text-xs font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Ajouter
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1617,7 +1828,7 @@ export default function DashboardPage() {
             Annuler
           </button>
         </div>
-      </>
+      </div>
     );
   };
 
@@ -1801,11 +2012,11 @@ export default function DashboardPage() {
         <section className="dashboardOverviewSection bg-transparent py-0">
           <div className="mb-5 flex flex-wrap items-start justify-between gap-4 md:items-start">
             <div className="w-full space-y-2 text-center md:w-auto md:text-left">
-              <p className="text-xs font-medium uppercase tracking-[0.22em] text-sky-300">
+              <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-950">
                 Vue d&apos;ensemble
               </p>
-              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-sky-100">
-                Liste des clients / projets
+              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-neutral-950">
+                Liste des projets
               </h2>
             </div>
 
@@ -1908,16 +2119,13 @@ export default function DashboardPage() {
                     className="dashboardProjectRow flex w-full flex-none snap-center justify-center px-3 p-0 sm:px-4 md:block md:w-full md:max-w-none md:border-b-2 md:border-black/15 md:px-0 md:py-4 md:last:border-b-0"
                   >
                     <details
-                      className="w-full rounded-[24px] border border-neutral-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)] group"
+                      className="w-full rounded-[24px] border border-neutral-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)] open:border-sky-200 open:bg-[#dff3ff] open:shadow-[0_14px_34px_rgba(14,165,233,0.14)] group"
                       open={isEditingThisCard ? true : undefined}
                     >
                       <summary className="flex cursor-pointer list-none items-center gap-3 p-4 sm:p-5 md:py-4">
                         <div className="min-w-0 flex-1">
                           <div className="dashboardProjectSummaryGrid grid gap-3 md:grid-cols-[minmax(0,1.05fr)_minmax(0,1.15fr)_minmax(0,1.05fr)_minmax(0,0.9fr)] md:items-center">
                             <div className="flex min-w-0 items-center gap-3">
-                              <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-sky-200 group-open:bg-neutral-950 group-open:text-sky-200 ${dashboardDisclosureButtonClass}`}>
-                                <Eye size={15} />
-                              </span>
                               <div className="min-w-0">
                                 <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-sky-300">
                                   Client
@@ -1971,50 +2179,63 @@ export default function DashboardPage() {
                         {isEditingThisCard ? (
                           renderDraftEditor()
                         ) : (
-                          <div className="dashboardProjectDetailsGrid grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-                            <div className="grid gap-3">
-                              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-pink-300">
-                                Projet
+                          <>
+                            <div className="mb-4 rounded-2xl border border-sky-200 bg-[linear-gradient(135deg,#dff3ff_0%,#e7e9ff_100%)] p-4 shadow-[0_12px_28px_rgba(96,165,250,0.16)]">
+                              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-sky-800">
+                                Note projet
                               </p>
-                              <div className="grid gap-2 text-sm text-sky-100/75">
-                                <p className="font-semibold text-pink-200">
-                                  {project.projectName || "Projet sans titre"}
+                              {project.requestDetails ? (
+                                <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                                  {project.requestDetails}
                                 </p>
-                                <p className="text-pink-100/80">{project.status}</p>
-                                <p>{formatDate(project.expectedDate)}</p>
-                                <p>{project.clientEmail || "Email non renseigné"}</p>
-                                <p>{project.clientPhone || "Téléphone non renseigné"}</p>
+                              ) : null}
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {project.requestEmailUrl ? (
+                                  <a
+                                    href={project.requestEmailUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex rounded-full border border-sky-300 bg-sky-100 px-3 py-1 text-[11px] font-medium text-sky-800 underline"
+                                  >
+                                    Ouvrir l’email / brief ↗
+                                  </a>
+                                ) : null}
+                                {project.requestPdfUrl ? (
+                                  <a
+                                    href={project.requestPdfUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex rounded-full border border-sky-300 bg-sky-100 px-3 py-1 text-[11px] font-medium text-sky-800 underline"
+                                  >
+                                    Voir le PDF{project.requestPdfName ? ` — ${project.requestPdfName}` : ""} ↗
+                                  </a>
+                                ) : null}
                               </div>
                             </div>
-
-                            <div className="grid gap-3">
-                              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-emerald-300">
-                                Finance
-                              </p>
-                              <div className="flex flex-wrap items-start gap-2">
-                                <span className="inline-flex rounded-full border border-neutral-200 bg-white/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-sky-100">
-                                  {project.currency}
-                                  {project.currency === "CHF"
-                                    ? ` ${project.exchangeRateToCad.toFixed(2)}`
-                                    : null}
-                                </span>
-                                <span
-                                  className={`inline-flex rounded-full px-3 py-1 text-[11px] font-medium ${amountSummary.badgeClass}`}
-                                >
-                                  {amountSummary.label}
-                                </span>
+                            <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+                              <div className="rounded-2xl border border-violet-200 bg-[linear-gradient(135deg,#f5f3ff_0%,#eef2ff_100%)] p-4">
+                                <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-violet-800">
+                                  Livrables à produire
+                                </p>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  {project.deliverables.length > 0 ? (
+                                    project.deliverables.map((deliverable) => (
+                                      <span
+                                        key={deliverable.id}
+                                        className="inline-flex rounded-full border border-violet-200 bg-white px-3 py-1 text-[11px] font-medium text-violet-800"
+                                      >
+                                        {deliverable.name} × {deliverable.quantity}
+                                      </span>
+                                    ))
+                                  ) : (
+                                    <span className="text-sm text-violet-900/60">
+                                      Aucun livrable renseigné
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              <p className={`text-lg font-semibold tracking-[-0.03em] ${amountSummary.amountClass}`}>
-                                {displayAmount}
-                              </p>
-                              <p className="text-sm leading-6 text-sky-100/75">
-                                {project.serviceTypes.length > 0
-                                  ? project.serviceTypes.join(", ")
-                                  : "Aucun service renseigné"}
-                              </p>
-                            </div>
 
-                            <div className="flex flex-wrap items-start gap-2 md:justify-end">
+                              <div className="flex flex-wrap items-start gap-2 lg:justify-end">
                               <button
                                 type="button"
                                 onClick={() => startEdit(project)}
@@ -2035,8 +2256,9 @@ export default function DashboardPage() {
                               >
                                 <Trash2 size={16} />
                               </button>
+                              </div>
                             </div>
-                          </div>
+                          </>
                         )}
                       </div>
                     </details>

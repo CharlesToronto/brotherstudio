@@ -55,8 +55,15 @@ export async function POST(request: Request) {
         clientPhone?: unknown;
         clientWebsite?: unknown;
         projectName?: unknown;
+        mapEmbedUrl?: unknown;
+        requestSummary?: unknown;
+        requestDetails?: unknown;
+        requestEmailUrl?: unknown;
+        requestPdfUrl?: unknown;
+        requestPdfName?: unknown;
         teamClientId?: unknown;
         serviceTypes?: unknown;
+        deliverables?: unknown;
         status?: unknown;
         paymentStatus?: unknown;
         invoicedAmount?: unknown;
@@ -102,10 +109,17 @@ export async function POST(request: Request) {
       clientPhone: typeof body?.clientPhone === "string" ? body.clientPhone : "",
       clientWebsite: typeof body?.clientWebsite === "string" ? body.clientWebsite : "",
       projectName,
+      mapEmbedUrl: typeof body?.mapEmbedUrl === "string" ? body.mapEmbedUrl : "",
+      requestSummary: typeof body?.requestSummary === "string" ? body.requestSummary : "",
+      requestDetails: typeof body?.requestDetails === "string" ? body.requestDetails : "",
+      requestEmailUrl: typeof body?.requestEmailUrl === "string" ? body.requestEmailUrl : "",
+      requestPdfUrl: typeof body?.requestPdfUrl === "string" ? body.requestPdfUrl : "",
+      requestPdfName: typeof body?.requestPdfName === "string" ? body.requestPdfName : "",
       teamClientId: teamClient?.id ?? teamClientId,
       serviceTypes: Array.isArray(body?.serviceTypes)
         ? body.serviceTypes.filter((value): value is string => typeof value === "string")
         : [],
+      deliverables: Array.isArray(body?.deliverables) ? body.deliverables as never[] : [],
       status: typeof body?.status === "string" ? (body.status as DashboardProjectStatus) : "À venir",
       paymentStatus:
         typeof body?.paymentStatus === "string"

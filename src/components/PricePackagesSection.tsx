@@ -46,10 +46,6 @@ export function PricePackagesSection({
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Array<HTMLElement | null>>([]);
 
-  const openAssistant = () => {
-    window.dispatchEvent(new Event("site-assistant:open"));
-  };
-
   useEffect(() => {
     cardRefs.current = cardRefs.current.slice(0, packages.length);
   }, [packages.length]);
@@ -335,12 +331,6 @@ export function PricePackagesSection({
         })}
       </div>
 
-      <div className="packageAssistantCta">
-        <p>Des questions sur ces packages ? Notre agent IA &quot;MyAssistant&quot; peut y repondre.</p>
-        <button className="packageAssistantButton" type="button" onClick={openAssistant}>
-          Demander a MyAssistant
-        </button>
-      </div>
     </section>
   );
 }

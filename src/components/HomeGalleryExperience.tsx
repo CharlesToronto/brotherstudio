@@ -753,9 +753,6 @@ export function HomeGalleryExperience({
           aria-labelledby="home-capabilities-title"
         >
           <div className="homeCapabilitiesIntro">
-            <p className="homeCapabilitiesKicker">
-              {isFrench ? "Nous nous en chargeons pour vous" : "We do it for you"}
-            </p>
             <h2 id="home-capabilities-title" className="homeCapabilitiesTitle">
               {isFrench
                 ? "Tout ce qu’il vous faut pour vendre votre projet"
