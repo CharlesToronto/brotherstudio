@@ -643,12 +643,14 @@ export function HomeGalleryExperience({
     let currentProgress = 0;
     let hasMeasured = false;
     let frame = 0;
+    let lastFrameTime = 0;
     const root = document.documentElement;
     const body = document.body;
 
     const paintGalleryBackground = (progress: number) => {
       const channel = Math.round(progress * 255);
       const textChannel = progress > 0.58 ? 17 : 255;
+      sharedSurface?.style.setProperty("--home-surface-text-rgb", `${textChannel} ${textChannel} ${textChannel}`);
       const borderAlpha = 0.08 + progress * 0.08;
       const backgroundRgb = `${channel} ${channel} ${channel}`;
       sharedSurface?.style.setProperty("--home-ambient-visibility", (1 - progress).toFixed(3));
@@ -666,10 +668,12 @@ export function HomeGalleryExperience({
       heading.style.setProperty("--home-gallery-border-alpha", borderAlpha.toFixed(3));
     };
 
-    const animateGalleryBackground = () => {
+    const animateGalleryBackground = (timestamp: number) => {
       frame = 0;
+      const elapsed = lastFrameTime ? Math.min(timestamp - lastFrameTime, 64) : 16.67;
+      lastFrameTime = timestamp;
       const distance = targetProgress - currentProgress;
-      currentProgress += distance * 0.2;
+      currentProgress += distance * (1 - Math.exp(-elapsed / 120));
 
       if (Math.abs(distance) < 0.001) {
         currentProgress = targetProgress;
@@ -679,13 +683,16 @@ export function HomeGalleryExperience({
 
       if (currentProgress !== targetProgress) {
         frame = window.requestAnimationFrame(animateGalleryBackground);
+      } else {
+        lastFrameTime = 0;
       }
     };
 
     const syncGalleryBackground = () => {
       const rect = heading.getBoundingClientRect();
-      const start = window.innerHeight * 0.45;
-      const end = window.innerHeight * 0.3;
+      const isMobile = window.matchMedia("(max-width: 640px)").matches;
+      const start = window.innerHeight * (isMobile ? 0.85 : 0.45);
+      const end = window.innerHeight * (isMobile ? 0.15 : 0.3);
       targetProgress = Math.min(1, Math.max(0, (start - rect.top) / (start - end)));
 
       if (!hasMeasured) {
@@ -712,6 +719,7 @@ export function HomeGalleryExperience({
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
       sharedSurface?.style.removeProperty("--home-ambient-visibility");
+      sharedSurface?.style.removeProperty("--home-surface-text-rgb");
       root.style.removeProperty("--site-background-rgb");
       root.style.removeProperty("--home-gallery-bg-rgb");
       body.style.removeProperty("--site-background-rgb");

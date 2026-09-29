@@ -8344,6 +8344,58 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
 }
 
 @media (max-width: 640px) {
+  body:has(.homeBlurWordSection),
+  body:has(.homeBlurWordSection) .siteShell {
+    transition: none;
+  }
+
+  #home-gallery-start {
+    background: transparent !important;
+  }
+
+  #home-gallery-start .homeGalleryStage,
+  #home-gallery-start #home-gallery-grid,
+  #home-gallery-start .homeSceneFilters {
+    background: transparent !important;
+  }
+
+  #home-gallery-start .homeMobileGalleryRevealShell[data-clamped="true"]::after {
+    background: linear-gradient(
+      180deg,
+      rgb(var(--site-background-rgb) / 0),
+      rgb(var(--site-background-rgb)) 82%
+    );
+  }
+
+  #home-gallery-start .homePostHeroDark,
+  #home-gallery-start .homeCapabilitiesStrip,
+  #home-gallery-start .homeDeveloperValueSection {
+    background: transparent !important;
+  }
+
+  #home-gallery-start .homeCapabilitiesTitle,
+  #home-gallery-start .homeDeveloperValueTitle,
+  #home-gallery-start .homeDeveloperValueCard h3,
+  #home-gallery-start .homeDeveloperValueCard p,
+  #home-gallery-start .homeDeveloperValueIndex {
+    color: rgb(var(--home-surface-text-rgb, 255 255 255));
+    transition: none;
+  }
+
+  #home-gallery-start::before,
+  #home-gallery-start::after {
+    display: none !important;
+    opacity: 0 !important;
+    transition: none !important;
+  }
+
+  #home-gallery-start .homeDeveloperValueCard,
+  #home-gallery-start .homeDeveloperValueCard:hover,
+  #home-gallery-start .homeDeveloperValueCard:focus-within {
+    transform: none !important;
+    transition: none !important;
+  }
+
   .homeCapabilitiesStrip {
     grid-template-columns: 1fr;
     gap: 28px;
@@ -27692,4 +27744,10 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
   background: #fff !important;
   background-image: none !important;
   color: #111 !important;
+}
+
+.homeCapabilitiesItem,
+.homeCapabilitiesItem:hover,
+.homeCapabilitiesItem:focus-within {
+  border: 0 !important;
 }
