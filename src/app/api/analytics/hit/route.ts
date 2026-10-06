@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ANALYTICS_EXCLUSION_COOKIE } from "@/lib/analyticsPreference";
 
 import {
   isTrackablePath,
@@ -22,6 +23,10 @@ async function readBody(request: Request) {
 }
 
 export async function POST(request: NextRequest) {
+  if (request.cookies.get(ANALYTICS_EXCLUSION_COOKIE)?.value === "1") {
+    return NextResponse.json({ ok: true }, { status: 202 });
+  }
+
   const body = await readBody(request);
   const rawPath = (body as { path?: unknown } | null)?.path;
   const path = normalizeAnalyticsPath(typeof rawPath === "string" ? rawPath : "/");

@@ -35,9 +35,9 @@ export async function generateMetadata({ params }: RealEstatePageProps): Promise
       url: withLocalePath(locale, pathname),
       locale: locale === "fr" ? "fr_CH" : "en_CH",
       type: "website",
-      images: [{ url: toAbsoluteUrl("/immobilier/hero-promotion.webp"), width: 1500, height: 1049, alt: title }],
+      images: [{ url: toAbsoluteUrl("/immobilier/hero-lac-alpes.webp"), width: 2400, height: 1669, alt: title }],
     },
-    twitter: { card: "summary_large_image", title, description, images: [toAbsoluteUrl("/immobilier/hero-promotion.webp")] },
+    twitter: { card: "summary_large_image", title, description, images: [toAbsoluteUrl("/immobilier/hero-lac-alpes.webp")] },
   };
 }
 
@@ -51,7 +51,7 @@ export default async function RealEstatePage({ params }: RealEstatePageProps) {
         "@type": "RealEstateAgent",
         name: "Brother Studio Immobilier",
         url: pageUrl,
-        image: toAbsoluteUrl("/immobilier/hero-promotion.webp"),
+        image: toAbsoluteUrl("/immobilier/hero-lac-alpes.webp"),
         areaServed: { "@type": "Place", name: "Suisse romande" },
         email: "info@brotherstudio.ca",
         telephone: "+1 437 677 3212",

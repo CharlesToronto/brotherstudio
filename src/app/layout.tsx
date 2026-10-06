@@ -15,6 +15,7 @@ import {
   stripLocaleFromPathname,
 } from "@/lib/i18n";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { ANALYTICS_EXCLUSION_COOKIE } from "@/lib/analyticsPreference";
 
 const siteUrl = getSiteUrl();
 const defaultDescription =
@@ -74,8 +75,9 @@ export default async function RootLayout({
   const isCampaignLandingPage = subpath === "/landing";
   const isPlantazWebsitePage = subpath === "/mywebsite/plantaz";
   const hasStandardChrome = !isBareExperiencePage && !isCampaignLandingPage;
+  const analyticsDisabled = cookieStore.get(ANALYTICS_EXCLUSION_COOKIE)?.value === "1";
   const shouldLoadAnalytics =
-    process.env.NODE_ENV === "production" && process.env.VERCEL === "1";
+    !analyticsDisabled && process.env.NODE_ENV === "production" && process.env.VERCEL === "1";
 
   return (
     <html lang={locale} data-theme="light">
@@ -97,7 +99,7 @@ export default async function RootLayout({
         <div className="siteShell">
           <div className="siteChrome">
             {hasStandardChrome && !isPlantazWebsitePage ? <SiteHeader locale={locale} /> : null}
-            <AnalyticsTracker />
+            {!analyticsDisabled ? <AnalyticsTracker /> : null}
             {children}
             {hasStandardChrome && !isPlantazWebsitePage ? <SiteFooter locale={locale} /> : null}
           </div>

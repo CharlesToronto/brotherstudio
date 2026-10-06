@@ -26,7 +26,7 @@ export function RealEstateCommercialHome({ locale }: { locale: Locale }) {
           </div>
         </div>
         <div className="realEstateCommercialHeroImage">
-          <Image src="/immobilier/hero-promotion.webp" alt="Villa contemporaine avec vue sur un lac et les Alpes" fill priority sizes="(max-width: 760px) 100vw, 64vw" />
+          <Image src="/immobilier/hero-lac-alpes.webp" alt="Résidence contemporaine avec terrasses donnant sur un lac et les Alpes" fill priority sizes="(max-width: 760px) 100vw, 64vw" />
         </div>
       </section>
 
