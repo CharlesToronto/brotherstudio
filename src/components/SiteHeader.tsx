@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { getMessages } from "@/content/messages";
 import { site } from "@/content/site";
@@ -28,6 +28,10 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
   const subpath = stripLocaleFromPathname(pathname);
   const messages = getMessages(locale).header;
   const isGalleryPage = subpath === "/";
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const desktopRealEstateTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileRealEstateTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -36,7 +40,48 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
     } catch {}
   }, [locale]);
 
+  useEffect(() => {
+    if (openSubmenu !== "real-estate") return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (event.target instanceof Node && !headerRef.current?.contains(event.target)) {
+        setOpenSubmenu(null);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpenSubmenu(null);
+        const trigger = window.matchMedia("(max-width: 980px)").matches
+          ? mobileRealEstateTriggerRef.current
+          : desktopRealEstateTriggerRef.current;
+        trigger?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [openSubmenu]);
+
   const localizedHref = (target: string) => withLocalePath(locale, target);
+
+  const realEstateSubmenuItems = [
+    {
+      label: locale === "fr" ? "Accueil" : "Home",
+      href: localizedHref("/immobilier"),
+    },
+    {
+      label: locale === "fr" ? "Nos biens" : "Properties",
+      href: localizedHref("/immobilier/biens"),
+    },
+    {
+      label: locale === "fr" ? "Vendre mon bien" : "Sell my property",
+      href: localizedHref("/immobilier/vendre"),
+    },
+  ];
 
   const navItems = [
     {
@@ -69,8 +114,7 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
       label: messages.nav.realEstate,
       href: localizedHref("/immobilier"),
       isCurrent: subpath === "/immobilier",
-      kind: "anchor" as const,
-      target: "_blank" as const,
+      kind: "link" as const,
     },
     {
       key: "price",
@@ -108,12 +152,60 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
     (item) => item.key !== "book-meeting",
   );
 
-  const renderNavItems = (items: typeof navItems) =>
+  const renderNavItems = (items: typeof navItems, isMobile = false) =>
     items.map((item) => {
       const commonProps = {
         className: "siteNavLink",
         "data-nav-key": item.key,
       };
+
+      if (item.key === "real-estate") {
+        const isOpen = openSubmenu === item.key;
+        const isCurrent = subpath.startsWith("/immobilier");
+        const panelId = isMobile ? "mobile-real-estate-submenu" : "real-estate-submenu";
+
+        return (
+          <div
+            key={item.key}
+            className="siteNavSubmenu"
+            data-nav-key={item.key}
+            data-open={isOpen}
+          >
+            <button
+              ref={isMobile ? mobileRealEstateTriggerRef : desktopRealEstateTriggerRef}
+              type="button"
+              className="siteNavSubmenuTrigger"
+              data-current={isCurrent}
+              aria-haspopup="true"
+              aria-expanded={isOpen}
+              aria-controls={panelId}
+              onClick={() => setOpenSubmenu(isOpen ? null : item.key)}
+            >
+              {item.label}
+            </button>
+            {!isMobile ? (
+              <div
+                id={panelId}
+                className="siteNavSubmenuPanel"
+                aria-hidden={!isOpen}
+                inert={!isOpen}
+              >
+                {realEstateSubmenuItems.map((submenuItem) => (
+                  <Link
+                    key={submenuItem.href}
+                    className="siteNavSublink"
+                    href={submenuItem.href}
+                    aria-current={subpath === submenuItem.href.replace(`/${locale}`, "") ? "page" : undefined}
+                    onClick={() => setOpenSubmenu(null)}
+                  >
+                    {submenuItem.label}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        );
+      }
 
       if (item.kind === "link") {
         return (
@@ -146,7 +238,7 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
     });
 
   return (
-    <header className="siteHeader">
+    <header className="siteHeader" ref={headerRef}>
       <div className="siteHeaderMain">
         <Link className="siteLogo" href={localizedHref("/")}>
           <Image
@@ -183,9 +275,29 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
       </div>
 
       <nav className="siteNavMobile" aria-label="Primary">
-        {mobileBookingItem ? renderNavItems([mobileBookingItem]) : null}
-        {renderNavItems(mobilePrimaryItems)}
+        {mobileBookingItem ? renderNavItems([mobileBookingItem], true) : null}
+        {renderNavItems(mobilePrimaryItems, true)}
       </nav>
+
+      {openSubmenu === "real-estate" ? (
+        <nav
+          id="mobile-real-estate-submenu"
+          className="siteNavMobileSubmenuPanel"
+          aria-label={locale === "fr" ? "Pages immobilières" : "Real estate pages"}
+        >
+          {realEstateSubmenuItems.map((submenuItem) => (
+            <Link
+              key={submenuItem.href}
+              className="siteNavMobileSublink"
+              href={submenuItem.href}
+              aria-current={subpath === submenuItem.href.replace(`/${locale}`, "") ? "page" : undefined}
+              onClick={() => setOpenSubmenu(null)}
+            >
+              {submenuItem.label}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
 
     </header>
   );

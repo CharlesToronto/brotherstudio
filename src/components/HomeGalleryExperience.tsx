@@ -585,6 +585,16 @@ export function HomeGalleryExperience({
   }, []);
 
   useEffect(() => {
+    if (processSteps.length < 2) return;
+
+    const intervalId = window.setInterval(() => {
+      setActiveProcessStep((currentStep) => (currentStep + 1) % processSteps.length);
+    }, 2000);
+
+    return () => window.clearInterval(intervalId);
+  }, [processSteps.length]);
+
+  useEffect(() => {
     if (!activeMobileItem) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -648,15 +658,19 @@ export function HomeGalleryExperience({
     const body = document.body;
 
     const paintGalleryBackground = (progress: number) => {
-      const channel = Math.round(progress * 255);
+      const backgroundRgb = [5, 12, 28]
+        .map((channel) => Math.round(channel + (255 - channel) * progress))
+        .join(" ");
       const textChannel = progress > 0.58 ? 17 : 255;
       sharedSurface?.style.setProperty("--home-surface-text-rgb", `${textChannel} ${textChannel} ${textChannel}`);
+      body.dataset.homeNavTheme = progress > 0.58 ? "light" : "dark";
       const borderAlpha = 0.08 + progress * 0.08;
-      const backgroundRgb = `${channel} ${channel} ${channel}`;
       sharedSurface?.style.setProperty("--home-ambient-visibility", (1 - progress).toFixed(3));
 
+      root.style.setProperty("--home-nav-text-rgb", `${textChannel} ${textChannel} ${textChannel}`);
       root.style.setProperty("--site-background-rgb", backgroundRgb);
       root.style.setProperty("--home-gallery-bg-rgb", backgroundRgb);
+      body.style.setProperty("--home-gallery-progress", progress.toFixed(3));
       body.style.setProperty("--site-background-rgb", backgroundRgb);
       body.style.setProperty("--home-gallery-bg-rgb", backgroundRgb);
       heading.style.setProperty("--home-gallery-bg-rgb", backgroundRgb);
@@ -720,8 +734,11 @@ export function HomeGalleryExperience({
       if (frame) window.cancelAnimationFrame(frame);
       sharedSurface?.style.removeProperty("--home-ambient-visibility");
       sharedSurface?.style.removeProperty("--home-surface-text-rgb");
+      delete body.dataset.homeNavTheme;
+      root.style.removeProperty("--home-nav-text-rgb");
       root.style.removeProperty("--site-background-rgb");
       root.style.removeProperty("--home-gallery-bg-rgb");
+      body.style.removeProperty("--home-gallery-progress");
       body.style.removeProperty("--site-background-rgb");
       body.style.removeProperty("--home-gallery-bg-rgb");
       window.removeEventListener("scroll", syncGalleryBackground);
@@ -819,12 +836,12 @@ export function HomeGalleryExperience({
       >
         <div className="homeGalleryIntro">
           <div className="homeGalleryHeading">
-            <h2 className="homeGalleryTitle">{isFrench ? "Galerie" : "Gallery"}</h2>
+            <h2 className="homeGalleryTitle">Portfolio</h2>
           </div>
 
           <HomeGalleryPrimaryTabs
             activeTab={activePrimaryTab}
-            ariaLabel={isFrench ? "Sections de la galerie" : "Gallery sections"}
+            ariaLabel={isFrench ? "Sections du portfolio" : "Portfolio sections"}
             tabs={primaryTabs}
             onTabChange={setActivePrimaryTab}
           />

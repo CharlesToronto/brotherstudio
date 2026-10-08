@@ -39,7 +39,7 @@ body {
 }
 
 body:has(.homeBlurWordSection) {
-  --site-background-rgb: 0 0 0;
+  --site-background-rgb: 5 12 28;
 }
 
 body:has(.clientAdminLayout),
@@ -2956,7 +2956,7 @@ body:has(.projectFeedbackShell[data-admin-view="true"]) {
   overflow: hidden;
   overscroll-behavior-y: auto;
   touch-action: pan-y;
-  background: #000;
+  background: #050c1c;
 }
 
 .homeHero3dGallery {
@@ -3150,7 +3150,7 @@ body:has(.projectFeedbackShell[data-admin-view="true"]) {
   width: 100%;
   height: 100%;
   padding: 24px;
-  background: #050505;
+  background: transparent;
 }
 
 .threeGalleryFallbackGrid {
@@ -3467,19 +3467,6 @@ html[data-theme="dark"] .siteLogoImageWhite {
   font-weight: 700;
 }
 
-.siteNavSubmenuCaret {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  line-height: 1;
-  transition: transform 180ms ease;
-}
-
-.siteNavSubmenu[data-open="true"] .siteNavSubmenuCaret {
-  transform: rotate(45deg);
-}
-
 .siteNavSubmenuPanel {
   position: absolute;
   top: calc(100% + 10px);
@@ -3491,10 +3478,12 @@ html[data-theme="dark"] .siteLogoImageWhite {
   border: 1px solid rgb(0 0 0 / 0.08);
   background: #fff;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transform: translateX(-50%) translateY(-6px);
   transition:
     opacity 160ms ease,
+    visibility 160ms ease,
     transform 160ms ease;
   backdrop-filter: none;
   box-shadow: 0 16px 34px rgb(0 0 0 / 0.08);
@@ -3502,6 +3491,7 @@ html[data-theme="dark"] .siteLogoImageWhite {
 
 .siteNavSubmenu[data-open="true"] .siteNavSubmenuPanel {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   transform: translateX(-50%) translateY(0);
 }
@@ -6551,6 +6541,11 @@ html[data-theme="dark"] .galleryFilterButton:focus-visible {
   background: transparent;
 }
 
+.homeGallerySection .galleryImageButton,
+.homeGallerySection .homeVideoGalleryCard {
+  border-radius: 10px;
+}
+
 #home-gallery-grid {
   background: transparent;
 }
@@ -6654,27 +6649,33 @@ html[data-theme="dark"] .galleryFilterButton:focus-visible {
 }
 
 .homeProcessStepGroup:nth-child(1) {
-  --home-process-accent: #0057ff;
+  --home-process-accent: #2563eb;
+  --home-process-accent-soft: #eaf3ff;
 }
 
 .homeProcessStepGroup:nth-child(2) {
-  --home-process-accent: #00d5ff;
+  --home-process-accent: #1d63c5;
+  --home-process-accent-soft: #d8e9ff;
 }
 
 .homeProcessStepGroup:nth-child(3) {
-  --home-process-accent: #7c3cff;
+  --home-process-accent: #1557ae;
+  --home-process-accent-soft: #c8defa;
 }
 
 .homeProcessStepGroup:nth-child(4) {
-  --home-process-accent: #ff2bd6;
+  --home-process-accent: #174a99;
+  --home-process-accent-soft: #b9d3f5;
 }
 
 .homeProcessStepGroup:nth-child(5) {
-  --home-process-accent: #00f5a0;
+  --home-process-accent: #143d82;
+  --home-process-accent-soft: #abc7ee;
 }
 
 .homeProcessStepGroup:nth-child(6) {
-  --home-process-accent: #ff8a00;
+  --home-process-accent: #102e67;
+  --home-process-accent-soft: #9db8e5;
 }
 
 .homeProcessStep {
@@ -6700,12 +6701,12 @@ html[data-theme="dark"] .galleryFilterButton:focus-visible {
     transform 220ms ease;
 }
 
-.homeProcessStep:hover,
-.homeProcessStep:focus-visible,
-.homeProcessStep[data-active="true"] {
+.homeProcessSection:not(.campaignLandingProcess) .homeProcessStep:hover,
+.homeProcessSection:not(.campaignLandingProcess) .homeProcessStep:focus-visible,
+.homeProcessSection:not(.campaignLandingProcess) .homeProcessStep[data-active="true"] {
   border-color: transparent;
   background: transparent;
-  transform: translateY(-4px);
+  transform: none;
 }
 
 .homeProcessStep:focus-visible {
@@ -6737,13 +6738,12 @@ html[data-theme="dark"] .galleryFilterButton:focus-visible {
 }
 
 .homeProcessStep:hover .homeProcessNumber,
-.homeProcessStep:focus-visible .homeProcessNumber {
-  border-color: var(--home-process-accent);
-  color: #fff;
-  background: var(--home-process-accent);
-  box-shadow:
-    0 0 0 6px color-mix(in srgb, var(--home-process-accent) 16%, transparent),
-    0 16px 44px color-mix(in srgb, var(--home-process-accent) 42%, transparent);
+.homeProcessStep:focus-visible .homeProcessNumber,
+.homeProcessStep[data-active="true"] .homeProcessNumber {
+  border-color: var(--home-process-accent-soft);
+  color: var(--home-process-accent);
+  background: var(--home-process-accent-soft);
+  box-shadow: 0 16px 44px color-mix(in srgb, var(--home-process-accent-soft) 60%, transparent);
   transform: scale(1.04);
 }
 
@@ -6769,8 +6769,8 @@ html[data-theme="dark"] .galleryFilterButton:focus-visible {
 
 .homeProcessStep:hover .homeProcessStepTitle,
 .homeProcessStep:focus-visible .homeProcessStepTitle {
-  color: var(--home-process-accent);
-  transform: translateY(2px);
+  color: inherit;
+  transform: none;
 }
 
 .homeProcessStepDescription {
@@ -6837,7 +6837,7 @@ html[data-theme="dark"] .galleryFilterButton:focus-visible {
   align-items: center;
   justify-content: center;
   min-height: 54px;
-  border: 1px solid rgb(var(--home-gallery-title-rgb, 255 255 255) / var(--home-gallery-border-alpha, 0.12));
+  border: 0;
   border-radius: 999px;
   background: rgb(var(--home-gallery-title-rgb, 255 255 255) / 0.08);
   color: rgb(var(--home-gallery-title-rgb, 255 255 255) / 0.74);
@@ -6858,7 +6858,7 @@ html[data-theme="dark"] .galleryFilterButton:focus-visible {
 }
 
 .homeGalleryPrimaryTabButton[data-active="true"] {
-  border-color: rgb(var(--home-gallery-title-rgb, 255 255 255) / 0.86);
+  border-color: transparent;
   background: rgb(var(--home-gallery-title-rgb, 255 255 255) / 0.16);
   color: rgb(var(--home-gallery-title-rgb, 255 255 255));
 }
@@ -7352,13 +7352,13 @@ html[data-theme="dark"] .homeCapabilitiesStrip {
 }
 
 html[data-theme="dark"] .homeGalleryPrimaryTabButton {
-  border-color: rgb(var(--home-gallery-title-rgb, 255 255 255) / var(--home-gallery-border-alpha, 0.12));
+  border: 0;
   color: rgb(var(--home-gallery-title-rgb, 255 255 255) / 0.74);
   background: rgb(var(--home-gallery-title-rgb, 255 255 255) / 0.08);
 }
 
 html[data-theme="dark"] .homeGalleryPrimaryTabButton[data-active="true"] {
-  border-color: rgb(var(--home-gallery-title-rgb, 255 255 255) / 0.86);
+  border-color: transparent;
   background: rgb(var(--home-gallery-title-rgb, 255 255 255) / 0.16);
   color: rgb(var(--home-gallery-title-rgb, 255 255 255));
 }
@@ -7438,7 +7438,7 @@ html[data-theme="dark"] .homeCapabilitiesItem:focus-within .homeCapabilitiesPlus
 
 .homeCapabilitiesStrip {
   grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
-  align-items: end;
+  align-items: center;
   gap: 56px;
   padding: 96px var(--page-padding) 82px;
   background:
@@ -7457,10 +7457,11 @@ html[data-theme="dark"] .homeCapabilitiesItem:focus-within .homeCapabilitiesPlus
 }
 
 .homeCapabilitiesTitle {
-  max-width: 10ch;
+  max-width: 16ch;
   white-space: normal;
+  text-wrap: balance;
   color: #fff;
-  font-size: clamp(42px, 6.3vw, 92px);
+  font-size: clamp(32px, 4vw, 56px);
   line-height: 0.92;
   letter-spacing: -0.055em;
 }
@@ -7518,45 +7519,45 @@ html[data-theme="dark"] .homeCapabilitiesItem:focus-within .homeCapabilitiesPlus
 }
 
 .homeCapabilitiesItem:nth-child(1) {
-  --capability-accent: 0 82 255;
-  --capability-accent-soft: 0 224 255;
-  --capability-accent-deep: 40 18 210;
-  --capability-solid: linear-gradient(145deg, #0057ff 0%, #0038b8 100%);
+  --capability-accent: 29 78 216;
+  --capability-accent-soft: 96 165 250;
+  --capability-accent-deep: 30 64 175;
+  --capability-solid: linear-gradient(145deg, #1d4ed8 0%, #1e40af 100%);
 }
 
 .homeCapabilitiesItem:nth-child(2) {
-  --capability-accent: 0 205 255;
-  --capability-accent-soft: 0 255 183;
-  --capability-accent-deep: 0 93 255;
-  --capability-solid: linear-gradient(145deg, #00d5ff 0%, #007bb5 100%);
+  --capability-accent: 7 89 133;
+  --capability-accent-soft: 56 189 248;
+  --capability-accent-deep: 12 74 110;
+  --capability-solid: linear-gradient(145deg, #075985 0%, #0c4a6e 100%);
 }
 
 .homeCapabilitiesItem:nth-child(3) {
-  --capability-accent: 0 230 155;
-  --capability-accent-soft: 148 255 68;
-  --capability-accent-deep: 0 123 105;
-  --capability-solid: linear-gradient(145deg, #7c3cff 0%, #4f1dbb 100%);
+  --capability-accent: 30 64 175;
+  --capability-accent-soft: 96 165 250;
+  --capability-accent-deep: 30 58 138;
+  --capability-solid: linear-gradient(145deg, #1e40af 0%, #1e3a8a 100%);
 }
 
 .homeCapabilitiesItem:nth-child(4) {
-  --capability-accent: 255 116 0;
-  --capability-accent-soft: 255 222 64;
-  --capability-accent-deep: 255 58 48;
-  --capability-solid: linear-gradient(145deg, #ff2bd6 0%, #b70b8e 100%);
+  --capability-accent: 25 65 143;
+  --capability-accent-soft: 96 165 250;
+  --capability-accent-deep: 17 47 107;
+  --capability-solid: linear-gradient(145deg, #19418f 0%, #112f6b 100%);
 }
 
 .homeCapabilitiesItem:nth-child(5) {
-  --capability-accent: 255 0 110;
-  --capability-accent-soft: 255 89 214;
-  --capability-accent-deep: 105 40 255;
-  --capability-solid: linear-gradient(145deg, #00f5a0 0%, #008b70 100%);
+  --capability-accent: 21 94 117;
+  --capability-accent-soft: 56 189 248;
+  --capability-accent-deep: 14 70 91;
+  --capability-solid: linear-gradient(145deg, #155e75 0%, #0e465b 100%);
 }
 
 .homeCapabilitiesItem:nth-child(6) {
-  --capability-accent: 127 72 255;
-  --capability-accent-soft: 0 213 255;
-  --capability-accent-deep: 44 27 255;
-  --capability-solid: linear-gradient(145deg, #ff8a00 0%, #c95600 100%);
+  --capability-accent: 11 31 68;
+  --capability-accent-soft: 59 130 246;
+  --capability-accent-deep: 5 12 28;
+  --capability-solid: linear-gradient(145deg, #0b1f44 0%, #050c1c 100%);
 }
 
 .homeCapabilitiesItem:nth-child(n) {
@@ -7597,6 +7598,15 @@ html[data-theme="dark"] .homeCapabilitiesItem:focus-within .homeCapabilitiesPlus
   transform: none;
   border-color: rgb(255 255 255 / 0.28);
   background: rgb(255 255 255 / 0.18);
+}
+
+.homeCapabilitiesItem .homeCapabilitiesIcon,
+.homeCapabilitiesItem:hover .homeCapabilitiesIcon,
+.homeCapabilitiesItem:focus-within .homeCapabilitiesIcon {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .homeCapabilitiesLabel {
@@ -8237,6 +8247,7 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
   align-items: flex-start;
   justify-content: center;
   height: clamp(220px, 58vw, 320px);
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -8246,6 +8257,7 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
   height: 100%;
   object-fit: contain;
   object-position: center top;
+  border-radius: 10px;
 }
 
 .homeMobileGalleryGrid {
@@ -8258,6 +8270,8 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
   display: block;
   padding: 0;
   border: 0;
+  border-radius: 10px;
+  overflow: hidden;
   background: transparent;
   cursor: pointer;
 }
@@ -8266,6 +8280,7 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
   display: block;
   width: 100%;
   height: auto;
+  border-radius: inherit;
 }
 
 .homeVideoGallery {
@@ -8438,9 +8453,9 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
   }
 
   .homeCapabilitiesTitle {
-    max-width: 11ch;
+    max-width: 16ch;
     white-space: normal;
-    font-size: 44px;
+    font-size: clamp(32px, 9vw, 42px);
   }
 
   .homeGalleryPrimaryTabs {
@@ -8560,6 +8575,26 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
 }
 
 @media (max-width: 640px) {
+  .homeDeveloperValueTitle {
+    font-size: 28px;
+    line-height: 1.05;
+  }
+
+  .homeDeveloperValueCard h3 {
+    font-size: 20px;
+    line-height: 1.15;
+  }
+
+  .homeDeveloperValueCard p {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .homeDeveloperValueIndex {
+    font-size: 28px;
+    line-height: 1;
+  }
+
   .homeProcessSection {
     padding-top: 52px;
     padding-bottom: 58px;
@@ -8589,13 +8624,13 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
     margin-right: calc(var(--page-padding) * -1);
     overflow-x: auto;
     padding-right: var(--page-padding);
+    padding-top: 12px;
+    padding-bottom: 24px;
     scroll-snap-type: x proximity;
   }
 
   .homeProcessList::before {
-    left: 28px;
-    right: 28px;
-    top: 34px;
+    display: none;
   }
 
   .homeProcessStepGroup {
@@ -9004,6 +9039,10 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
     padding-bottom: calc(92px + env(safe-area-inset-bottom));
   }
 
+  .siteMain:has(> .homeBookingSection) {
+    padding-bottom: 20px;
+  }
+
   .siteFooter {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
@@ -9268,7 +9307,7 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
 
   #home-gallery-start {
     margin-top: -1px;
-    background: rgb(var(--site-background-rgb, 0 0 0));
+    background: transparent;
   }
 
   .homeMobileDisplayFilters {
@@ -25089,7 +25128,7 @@ body:has(.dashboardPage),
 }
 
 .siteFooterCityMarqueeStatNumber {
-  font-size: 1.45em;
+  font-size: inherit;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
@@ -27183,7 +27222,8 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
 .realEstateLocalLogo { color: #171817; font-size: 25px; font-weight: 700; letter-spacing: -.065em; }
 .realEstateLocalNav { display: flex; align-items: center; gap: 27px; }
 .realEstateLocalNav > a { position: relative; display: inline-flex; align-items: center; min-height: 44px; color: #171817; font-size: 13px; }
-.realEstateLocalNav > a.is-active::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; background: #171817; content: ""; }
+.realEstateLocalNav > a.is-active { color: #2563eb !important; }
+.realEstateLocalNav > a.is-active::after { content: none; }
 .realEstateLocalNavCta { gap: 8px; padding: 0 16px; border-radius: 999px; background: #171817; color: #fff !important; }
 .realEstateLocalNavCta::after { display: none; }
 .realEstateLocalNavCta.is-active { background: #65735a; }
@@ -27226,7 +27266,7 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
 .homeHeroActions .realEstateHeroActionSecondary { background: #fff; color: #111817; }
 .homeHeroActions .realEstateHeroActionNeon { border: 0 !important; background: linear-gradient(105deg, #3985ff 0%, #b9ddff 25%, #ff8a32 52%, #ffe0b8 70%, #3985ff 100%); background-size: 240% 100%; color: #fff; animation: real-estate-neon-text-flow 4s ease-in-out infinite; }
 .homeHeroActions .realEstateHeroActionNeon::before { display: none; }
-.homeHeroActions .homeHeroActionNeon { border: 0 !important; background-image: linear-gradient(90deg, #3985ff 0%, #3985ff 20%, #b9ddff 35%, #ff8a32 50%, #ffe0b8 65%, #ff8a32 80%, #3985ff 100%) !important; background-position: 100% 50%; background-size: 360% 100%; color: #fff !important; box-shadow: 0 10px 30px rgb(57 133 255 / .32), 0 10px 30px rgb(255 138 50 / .26); will-change: background-position; animation: home-hero-neon-flow 2.4s ease-in-out infinite !important; }
+.homeHeroActions .homeHeroActionNeon { border: 0 !important; background-image: linear-gradient(90deg, #3985ff 0%, #3985ff 20%, #b9ddff 35%, #ff8a32 50%, #ffe0b8 65%, #ff8a32 80%, #3985ff 100%) !important; background-position: 100% 50%; background-size: 360% 100%; color: #fff !important; box-shadow: 0 10px 30px rgb(57 133 255 / .32), 0 10px 30px rgb(255 138 50 / .26); will-change: background-position; animation: home-hero-neon-flow 7s ease-in-out infinite !important; }
 .homeHeroActions .homeHeroActionNeon::before { display: none !important; }
 @keyframes home-hero-neon-flow {
   0%, 100% { background-position: 100% 50%; }
@@ -27387,7 +27427,7 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
   }
 
   .siteFooterCityMarqueeStatNumber {
-    font-size: 1.2em;
+    font-size: inherit;
   }
 }
 
@@ -28049,4 +28089,164 @@ body:has(.campaignLandingValuation) .campaignLandingValuation .campaignLandingNa
   .realEstateFooterGrid { gap: 20px 16px; padding: 20px 0 22px; }
   .realEstateFooterBottom { font-size: 9px; }
   .realEstateFooterBottom span + span { margin-top: 4px; }
+}
+
+/* Blur a separate header layer so dropdowns can sample the page behind them. */
+.siteHeader,
+body:has(.homeBlurWordSection) .siteHeader {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.siteHeader {
+  position: relative;
+  isolation: isolate;
+}
+
+.siteHeader::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.siteNavMobile,
+body:has(.homeBlurWordSection) .siteNavMobile,
+.siteNavMobileSubmenuPanel,
+.siteNavSubmenuPanel {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+.siteNavMobileSubmenuPanel,
+.siteNavSubmenuPanel {
+  border-radius: 16px;
+}
+
+body:has(.homeBlurWordSection) :is(
+  .siteNav .siteNavLink,
+  .siteNav .siteNavSubmenuTrigger,
+  .siteNav .siteNavSublink,
+  .siteNavMobile .siteNavLink:not([data-nav-key="book-meeting"]),
+  .siteNavMobile .siteNavSubmenuTrigger,
+  .siteNavMobile .siteNavSublink,
+  .siteNavMobileSubmenuPanel .siteNavMobileSublink
+) {
+  color: rgb(var(--home-nav-text-rgb, 255 255 255)) !important;
+  transition: color 80ms linear;
+}
+
+/* Keep every site footer on the same navy-blue palette as the real-estate footer. */
+:is(.siteFooter, .campaignLandingFooter, .maretsetWebsiteFooter, .plantazFooter, footer[id="site-footer"]) {
+  background:
+    radial-gradient(ellipse at 12% 15%, rgb(18 39 75 / .4), transparent 60%),
+    radial-gradient(ellipse at 90% 85%, rgb(10 27 57 / .45), transparent 58%),
+    linear-gradient(125deg, #050c1c 0%, #09162d 48%, #030916 100%) !important;
+  color: #fff !important;
+  border-color: rgb(255 255 255 / .2) !important;
+}
+
+:is(.siteFooter, .campaignLandingFooter, .maretsetWebsiteFooter, .plantazFooter, footer[id="site-footer"]) :is(h1, h2, h3, h4, h5, h6, p, a, span, strong, small, nav, div) {
+  color: #fff !important;
+}
+
+:is(.siteFooter, .campaignLandingFooter, .maretsetWebsiteFooter, .plantazFooter, footer[id="site-footer"]) :is(a:hover, a:focus-visible) {
+  color: #c8dcff !important;
+}
+
+.siteFooter .siteFooterCityMarquee {
+  background-image: linear-gradient(90deg, #071329 0%, #10254a 24%, #1c3f78 50%, #10254a 76%, #071329 100%) !important;
+}
+
+/* Match the property's blue-green color field on the dark phase of the general homepage. */
+body:has(.homeBlurWordSection) {
+  background-color: rgb(var(--site-background-rgb, 5 12 28));
+  --home-blue-field:
+    radial-gradient(ellipse at 12% 18%, rgb(24 59 139 / calc(.48 * (1 - var(--home-gallery-progress, 0)))), transparent 60%),
+    radial-gradient(ellipse at 88% 80%, rgb(12 90 74 / calc(.34 * (1 - var(--home-gallery-progress, 0)))), transparent 58%),
+    radial-gradient(ellipse at 68% 30%, rgb(9 34 73 / calc(.45 * (1 - var(--home-gallery-progress, 0)))), transparent 50%);
+  background-image: var(--home-blue-field);
+  background-attachment: fixed;
+}
+
+body:has(.homeBlurWordSection) .homeBlurWordSection {
+  background-color: rgb(var(--site-background-rgb, 5 12 28));
+  background-image: var(--home-blue-field);
+  background-attachment: fixed;
+}
+
+body:has(.homeBlurWordSection):not([data-home-nav-theme="light"]) .siteLogoImageBlack {
+  display: none !important;
+}
+
+body:has(.homeBlurWordSection):not([data-home-nav-theme="light"]) .siteLogoImageWhite {
+  display: block !important;
+}
+
+body:has(.homeBlurWordSection)[data-home-nav-theme="light"] .siteLogoImageBlack {
+  display: block !important;
+}
+
+body:has(.homeBlurWordSection)[data-home-nav-theme="light"] .siteLogoImageWhite {
+  display: none !important;
+}
+
+@media (min-width: 981px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .homeCapabilitiesItem {
+    transition:
+      transform 300ms cubic-bezier(.2, .8, .2, 1),
+      box-shadow 300ms ease,
+      filter 300ms ease,
+      border-color 300ms ease;
+  }
+
+  .homeCapabilitiesItem::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(110deg, transparent 38%, rgb(255 255 255 / .2) 50%, transparent 62%);
+    opacity: 0;
+    transform: translateX(-100%);
+    transition: opacity 180ms ease, transform 650ms cubic-bezier(.2, .8, .2, 1);
+  }
+
+  .homeCapabilitiesItem > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .homeCapabilitiesItem:hover {
+    transform: translateY(-8px) scale(1.025);
+    border-color: rgb(255 255 255 / .42);
+    filter: brightness(1.1);
+    box-shadow:
+      0 24px 54px rgb(var(--capability-accent-soft) / .28),
+      inset 0 1px 0 rgb(255 255 255 / .42);
+  }
+
+  .homeCapabilitiesItem:hover::before {
+    opacity: 1;
+    transform: translateX(100%);
+  }
+
+  .homeCapabilitiesItem:hover .homeCapabilitiesIcon {
+    transform: translateY(-3px) scale(1.08);
+  }
+}
+
+#home-gallery-section .galleryImageButton,
+#home-gallery-section .galleryImageButton .galleryImage {
+  border-radius: 14px !important;
 }

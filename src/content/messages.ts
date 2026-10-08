@@ -307,7 +307,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
     header: {
       nav: {
         home: "Home",
-        gallery: "Gallery",
+        gallery: "Portfolio",
         instagram: "Instagram",
         realEstate: "Real estate",
         services: "Services",
@@ -901,7 +901,7 @@ export const messagesByLocale: Record<Locale, SiteMessages> = {
     header: {
       nav: {
         home: "Accueil",
-        gallery: "Galerie",
+        gallery: "Portfolio",
         instagram: "Instagram",
         realEstate: "Immobilier",
         services: "Services",

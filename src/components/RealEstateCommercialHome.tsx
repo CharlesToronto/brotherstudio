@@ -34,7 +34,7 @@ export function RealEstateCommercialHome({ locale }: { locale: Locale }) {
 
       <section className="realEstateCommercialProcess" aria-labelledby="commercial-process-title">
         <p className="realEstateCommercialEyebrow">Notre accompagnement</p>
-        <h2 id="commercial-process-title">Vous achetez, vendez ou construisez.<br />On vous accompagne.</h2>
+        <h2 id="commercial-process-title">Vous achetez, vendez ou construisez.<br />On donne vie à votre projet.</h2>
         <div className="realEstateCommercialSteps">
           <div><span>01</span><strong>Acheter un bien</strong><p>Nous vous aidons à trouver le lieu qui correspond à vos envies et vous accompagnons à chaque étape de l’achat.</p></div>
           <div><span>02</span><strong>Vendre votre bien</strong><p>Nous mettons votre bien en valeur et définissons avec vous une stratégie de commercialisation adaptée.</p></div>
@@ -44,12 +44,12 @@ export function RealEstateCommercialHome({ locale }: { locale: Locale }) {
       </section>
 
       <section className="realEstateCommercialCta">
-        <div><p className="realEstateCommercialEyebrow">Un projet ?</p><h2>Parlons de votre projet.</h2></div>
+        <div><h2>Parlons de votre projet.</h2></div>
         <a href={CALENDLY_MEETING_URL} target="_blank" rel="noreferrer">Planifier un appel vidéo <span aria-hidden="true">↗</span></a>
       </section>
 
       <section className="realEstateCommercialListingsTeaser">
-        <div><p className="realEstateCommercialEyebrow">À découvrir</p><h2 className="realEstateNeonText">Nos biens immobiliers.</h2></div>
+        <div><h2 className="realEstateNeonText">Nos biens immobiliers.</h2></div>
         <Link href={listingsHref}>Voir tous les biens <span aria-hidden="true">↗</span></Link>
       </section>
       </main>

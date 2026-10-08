@@ -41,7 +41,6 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   ];
   const adminLinks = [
     { label: "MyReview™ Admin", href: "/admin/client-projects" },
-    { label: "Landing page", href: withLocalePath(locale, "/landing") },
     { label: "Team", href: withLocalePath(locale, "/team/call") },
     { label: "Dashboard", href: "/dashboard" },
   ];
