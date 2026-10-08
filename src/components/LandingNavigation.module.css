@@ -1,0 +1,59 @@
+.header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 60;
+  color: var(--campaign-ink);
+  background: rgb(var(--landing-background-rgb, 255 255 255) / .94);
+  border-bottom: 1px solid rgb(var(--landing-text-rgb, 16 16 15) / .14);
+  backdrop-filter: blur(22px);
+}
+.inner { display: flex; align-items: center; justify-content: space-between; gap: 28px; width: min(100% - 64px, 1440px); min-height: 80px; margin: 0 auto; }
+.logo { flex-shrink: 0; font-size: 25px; font-weight: 700; letter-spacing: -.065em; line-height: 1; white-space: nowrap; }
+.brand { display: flex; align-items: center; gap: 24px; }
+.listings { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; border: 1px solid rgb(var(--landing-text-rgb) / .4); border-radius: 999px; background: transparent; color: var(--campaign-ink); font-size: 12px; font-weight: 500; white-space: nowrap; transition: background-color 180ms ease, border-color 180ms ease; }
+.listings:hover { border-color: var(--campaign-ink); background: rgb(var(--landing-text-rgb) / .06); }
+.desktopNav { display: flex; align-items: center; justify-content: center; gap: clamp(20px, 2.5vw, 38px); }
+.desktopNav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; opacity: .8; transition: opacity 180ms ease; white-space: nowrap; }
+.desktopNav a:hover { opacity: 1; }
+.actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.booking { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 0 20px; border: 1px solid rgb(var(--landing-text-rgb) / .15); border-radius: 999px; background: var(--campaign-ink); color: rgb(var(--landing-background-rgb)); font-size: 12px; font-weight: 600; white-space: nowrap; transition: transform 180ms ease; }
+.booking:hover { transform: translateY(-1px); }
+.mobileMenu { display: none; }
+.header a:focus-visible,
+.mobileMenu summary:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
+@media (max-width: 1100px) {
+  .brand { gap: 14px; }
+  .inner { width: calc(100% - 40px); gap: 16px; }
+  .logo { font-size: 22px; }
+  .desktopNav { gap: 18px; }
+  .desktopNav a { font-size: 12px; }
+}
+@media (max-width: 1100px) {
+  .desktopNav { display: none; }
+  .mobileMenu { display: block; }
+  .mobileMenu summary { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid rgb(var(--landing-text-rgb) / .2); border-radius: 50%; cursor: pointer; list-style: none; }
+  .mobileMenu summary::-webkit-details-marker { display: none; }
+  .dropdown { position: absolute; top: calc(100% + 8px); right: 20px; left: 20px; display: grid; padding: 12px; border: 1px solid rgb(var(--landing-text-rgb) / .18); border-radius: 12px; background: rgb(var(--landing-background-rgb)); box-shadow: 0 12px 36px rgb(0 0 0 / .12); }
+  .dropdown a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 0 12px; font-size: 14px; }
+  .dropdown a + a { border-top: 1px solid rgb(var(--landing-text-rgb) / .12); }
+}
+@media (max-width: 640px) {
+  .inner { width: calc(100% - 32px); min-height: 0; padding: 12px 0; flex-wrap: wrap; gap: 12px; }
+  .brand { width: 100%; padding-right: 48px; }
+  .logo { font-size: 21px; line-height: .98; }
+  .logo span { display: block; }
+  .logo span + span { margin-top: 3px; }
+  .actions { width: 100%; gap: 8px; }
+  .listings { padding: 0 14px; font-size: 11px; }
+  .mobileMenu { position: absolute; right: 16px; top: 14px; }
+  .mobileMenu .dropdown { position: fixed; top: 124px; }
+  .booking { padding: 0 12px; gap: 6px; font-size: 11px; }
+  .mobileMenu summary { width: 40px; height: 40px; }
+  .dropdown { left: 16px; right: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .booking { transition: none; } }
+.mobileLabel { display: none; }
+@media (max-width: 640px) { .desktopLabel { display: none; } .mobileLabel { display: inline; } }
+@media (max-width: 360px) {
+  .listings, .booking { padding: 0 10px; gap: 5px; font-size: 10px; }
+}

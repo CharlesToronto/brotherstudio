@@ -6,6 +6,7 @@ import { withLocalePath } from "@/lib/i18n";
 export function RealEstateFooter({ locale }: { locale: Locale }) {
   const homeHref = withLocalePath(locale, "/immobilier");
   const listingsHref = withLocalePath(locale, "/immobilier/biens");
+  const valuationHref = withLocalePath(locale, "/immobilier/vendre");
   const studioHref = withLocalePath(locale, "/immobilier/commercialisation");
 
   return (
@@ -22,6 +23,7 @@ export function RealEstateFooter({ locale }: { locale: Locale }) {
           <nav aria-label="Navigation immobilière">
             <Link href={homeHref}>Home</Link>
             <Link href={listingsHref}>Nos biens immobiliers</Link>
+            <Link href={valuationHref}>{locale === "fr" ? "Vendre mon bien" : "Sell my property"}</Link>
             <Link href={studioHref}>Commercialiser mon projet</Link>
           </nav>
         </div>

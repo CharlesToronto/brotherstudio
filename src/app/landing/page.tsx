@@ -5,5 +5,5 @@ import { getPreferredRequestLocale } from "@/lib/requestLocale";
 
 export default async function LandingRedirectPage() {
   const locale = await getPreferredRequestLocale();
-  redirect(withLocalePath(locale, "/landing"));
+  redirect(withLocalePath(locale, "/immobilier/vendre"));
 }

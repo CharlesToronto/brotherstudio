@@ -1,0 +1,144 @@
+.form.form.form {
+  --landing-background-rgb: 226 229 233;
+  --landing-text-rgb: 25 65 143;
+  --campaign-ink: rgb(var(--landing-text-rgb));
+  color: var(--campaign-ink);
+  color-scheme: light;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  padding: clamp(20px, 2.2vw, 32px);
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.header h3 { margin: 0; font-size: clamp(25px, 2.3vw, 34px); line-height: 1.1; }
+.header p { margin: 10px 0 0; color: rgb(var(--landing-text-rgb) / .7); font-size: 13px; line-height: 1.5; }
+.header .contactHighlight { margin-top: 8px; color: #7dd3fc !important; font-weight: 600; }
+.group { min-width: 0; margin: 0; padding: 0; border: 0; }
+.group + .group { padding-top: 16px; border-top: 1px solid rgb(var(--landing-text-rgb) / .14); }
+.group legend { color: #19418f; display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 0; font-size: 15px; font-weight: 600; }
+.group legend > span { color: inherit; font-size: 11px; font-weight: 500; letter-spacing: .08em; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 12px 14px; }
+.form.form.form label { min-width: 0; gap: 6px; }
+.form.form.form label > span {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--campaign-ink);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.form label em { font-size: 10px; font-weight: 400; font-style: normal; color: rgb(var(--landing-text-rgb) / .65); }
+.form.form.form input,
+.form.form.form select {
+  min-height: 34px;
+  height: 34px;
+  padding: 5px 10px;
+  border: 1px solid rgb(var(--landing-text-rgb) / .23);
+  border-radius: 7px;
+  background: #fff;
+  font-size: 14px;
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+.form.form.form input:hover,
+.form.form.form select:hover { border-color: rgb(var(--landing-text-rgb) / .45); }
+.form.form.form input:focus,
+.form.form.form select:focus { outline: none; border-color: var(--campaign-ink); box-shadow: 0 0 0 3px rgb(var(--landing-text-rgb) / .1); }
+.form.form.form input::placeholder { color: rgb(var(--landing-text-rgb) / .48); }
+.inputWithUnit { position: relative; }
+.form.form.form .inputWithUnit input { padding-right: 66px; }
+.inputWithUnit > span { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); pointer-events: none; color: rgb(var(--landing-text-rgb) / .65); font-size: 12px; }
+.form.form.form :global(.campaignLandingButton) { justify-content: space-between; width: 100%; margin-top: 2px; padding: 14px 18px; border-radius: 7px; letter-spacing: .06em; }
+.form :global(.campaignLandingFormStatus):empty { display: none; }
+@media (max-width: 640px) {
+  .form.form.form { padding: 20px 16px; gap: 18px; }
+  .fields { grid-template-columns: minmax(0, 1fr); }
+  .form.form.form :global(.campaignLandingButton) { justify-content: center; gap: 10px; padding: 14px; font-size: 11px; letter-spacing: .02em; }
+}
+.group[hidden] { display: none; }
+.progress { display: grid; gap: 10px; font-size: 12px; color: #000; }
+.progress > div { height: 3px; background: rgb(var(--landing-text-rgb) / .15); border-radius: 99px; overflow: hidden; }
+.progress i { display: block; height: 100%; background: #fff; transition: width 180ms ease; }
+.back { align-self: flex-start; min-height: 44px; padding: 4px 0; background: transparent; border: 0; color: var(--campaign-ink); font-size: 13px; cursor: pointer; }
+.back:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { .progress i { transition: none; } }
+
+.form.form.form :global(.campaignLandingButton) {
+  background: #19418f;
+  color: #fff;
+}
+.form.form.form :global(.campaignLandingButton):hover {
+  background: #12336f;
+}
+.form.form.form .header h3 { color: #19418f; }
+.form.form.form select option { background: #fff; color: #000; }
+
+@media (max-width: 640px) {
+  .form.form.form input, .form.form.form select { font-size: 16px; }
+  .form.form.form .header h3 { font-size: 25px; }
+}
+
+@media (max-width: 640px) {
+  .form.form.form { padding: 16px 12px; gap: 14px; border-radius: 12px; }
+  .form.form.form .header h3 { font-size: 22px; line-height: 1.15; }
+  .header p { margin-top: 6px; font-size: 12px; line-height: 1.4; }
+  .group + .group { padding-top: 12px; }
+  .group legend { margin-bottom: 8px; font-size: 14px; }
+  .fields { gap: 10px; }
+  .form.form.form label { gap: 4px; }
+  .form.form.form label > span { font-size: 11px; }
+  .form.form.form input,
+  .form.form.form select { padding: 4px 8px; min-height: 34px; height: 34px; }
+  .progress { gap: 6px; font-size: 11px; }
+  .form.form.form :global(.campaignLandingButton) { min-height: 44px; padding: 12px; letter-spacing: 0; }
+}
+
+.form.form.form input,
+.form.form.form select {
+  min-height: 30px;
+  height: 30px;
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+.form.form.form .inputWithUnit input { padding-right: 44px; }
+.inputWithUnit > span { right: 8px; font-size: 10px; }
+@media (max-width: 640px) {
+  .form.form.form .group[data-step="1"] .fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .form.form.form .fields > :global(.campaignLandingFormWide) { grid-column: 1 / -1; }
+}
+
+/* Transparent entry fields with a fine border matching the page text. */
+.form.form.form input,
+.form.form.form select {
+  background: transparent;
+  border: 1px solid var(--valuation-header-color, #000);
+  color: var(--valuation-header-color, #000) !important;
+}
+.form.form.form input::placeholder {
+  color: var(--valuation-header-color, #000) !important;
+  opacity: .6;
+}
+.form.form.form .inputWithUnit > span {
+  color: var(--valuation-header-color, #000) !important;
+}
+
+.form.form.form input,
+.form.form.form select {
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .form.form.form input,
+  .form.form.form select {
+    font-size: 11px;
+  }
+}

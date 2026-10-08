@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, ChevronLeft, FileText, Heart, Map, MapPin, Ruler, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, FileText, Map, MapPin, Ruler, ShieldCheck, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import type { Locale } from "@/lib/i18n";
@@ -80,7 +80,7 @@ const projectProfiles: Record<string, Partial<ProjectProfile>> = {
   },
   "lens-appartement-45": { title: "Appartement 4,5 pièces — Lens", location: "Région de Lens · Valais", status: "Projet neuf", price: "CHF 885’000", image: "/immobilier/lens-appartement-45/vue-1.jpg", images: ["/immobilier/lens-appartement-45/vue-1.jpg", "/immobilier/lens-appartement-45/vue-2.jpg"], category: "Projet neuf", rooms: "4,5 pièces", area: "118 m²", exterior: "Vente sur plans", description: "Immeuble de quatre appartements de 4,5 pièces. Permis de construire délivré en avril 2026, à 8 km de Sierre.", documents: [{ title: "Fiche du bien", type: "WEB", href: "/immobilier/documents/lens-appartement-45.html" }] },
   "lens-appartement-35": { title: "Appartement 3,5 pièces — Lens", location: "Région de Lens · Valais", status: "Projet neuf", price: "CHF 585’000", image: "/immobilier/lens-appartement-35/vue-1.jpg", images: ["/immobilier/lens-appartement-35/vue-1.jpg", "/immobilier/lens-appartement-35/vue-2.jpg"], category: "Projet neuf", rooms: "3,5 pièces", area: "71 m²", exterior: "Vente sur plans", description: "Appartement de 3,5 pièces proposé sur plans. Permis de construire délivré en mars 2026.", documents: [{ title: "Fiche du bien", type: "WEB", href: "/immobilier/documents/lens-appartement-35.html" }] },
-  "lens-villa-construire": { title: "Villa à construire — Lens", location: "Lens · Valais", status: "À construire", price: "CHF 1’300’000", image: "/immobilier/lens-villa/vue-1.jpg", images: ["/immobilier/lens-villa/vue-1.jpg", "/immobilier/lens-villa/vue-2.jpg"], category: "Maison & villa", rooms: "Villa", area: "À compléter", exterior: "Projet neuf", description: "Projet de villa à construire à Lens. La surface et la parcelle ne sont pas indiquées dans la fiche disponible.", documents: [{ title: "Fiche du bien", type: "WEB", href: "/immobilier/documents/lens-villa.html" }] },
+  "lens-villa-construire": { title: "Villa à construire — Lens", location: "Lens · Valais", status: "À construire", price: "CHF 1’300’000", image: "/immobilier/lens-villa/vue-2.jpg", images: ["/immobilier/lens-villa/vue-2.jpg"], category: "Maison & villa", rooms: "Villa", area: "À compléter", exterior: "Projet neuf", description: "Projet de villa à construire à Lens. La surface et la parcelle ne sont pas indiquées dans la fiche disponible.", documents: [{ title: "Fiche du bien", type: "WEB", href: "/immobilier/documents/lens-villa.html" }] },
   "ollon-maison-renover": { title: "Maison à rénover + 2 granges", location: "Ollon · Vaud", status: "À rénover", price: "CHF 600’000", image: "/immobilier/ollon/vue-1.jpg", images: ["/immobilier/ollon/vue-1.jpg", "/immobilier/ollon/vue-2.jpg"], category: "Maison & villa", rooms: "3,5 pièces", area: "133 m²", exterior: "2 granges", description: "Maison de 3,5 pièces à rénover entièrement, accompagnée de deux granges à transformer en habitation. Places de parc disponibles.", documents: [{ title: "Fiche du bien", type: "WEB", href: "/immobilier/documents/ollon.html" }] },
   "soleure-terrain": { title: "Terrain constructible — Soleure", location: "Canton de Soleure", status: "Projet + permis", price: "CHF 4’550’000", image: "/immobilier/soleure/vue-1.jpg", category: "Terrain", rooms: "2 immeubles de 3 étages", area: "3’129 m²", exterior: "Permis 2026", description: "Terrain constructible de 3’129 m² pour un projet de deux immeubles de trois étages, avec permis de construire 2026.", documents: [{ title: "Fiche du bien", type: "WEB", href: "/immobilier/documents/soleure.html" }] },
   "chamoson-terrain": { title: "Mayen de Chamoson — Ovronnaz", location: "Chamoson · Ovronnaz", status: "Terrain", price: "Prix sur demande", image: "/immobilier/chamoson/vue-1.jpg", category: "Terrain", rooms: "Zone touristique", area: "1’738 m²", exterior: "Densité 0,30 / 0,50", description: "Terrain en zone touristique de 1’738 m², dont 339 m² avec une densité de 0,30 et 1’399 m² avec une densité de 0,50.", documents: [{ title: "Fiche du bien", type: "WEB", href: "/immobilier/documents/chamoson.html" }] },
@@ -121,7 +121,6 @@ function getProject(projectId: string): ProjectProfile {
 
 export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale; projectId: string }) {
   const project = getProject(projectId);
-  const [favorite, setFavorite] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const gallery = project.images?.length ? project.images : [project.image];
   const isFrench = locale === "fr";
@@ -146,9 +145,6 @@ export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale
           <div className="realEstateProfileHeaderAside">
             <p className="realEstateProfilePriceLabel">{isFrench ? "Prix de vente" : "Sale price"}</p>
             <p className="realEstateProfilePrice">{project.price}</p>
-            <button className="realEstateProfileFavorite" type="button" onClick={() => setFavorite((value) => !value)} aria-pressed={favorite} aria-label={favorite ? "Retirer des favoris" : "Ajouter aux favoris"}>
-              <Heart aria-hidden="true" size={21} fill={favorite ? "currentColor" : "none"} />
-            </button>
           </div>
         </header>
 

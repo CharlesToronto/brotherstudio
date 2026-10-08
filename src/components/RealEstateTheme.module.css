@@ -1,0 +1,208 @@
+.theme { display: none; }
+/* Shared light-gray theme for the real-estate mini-site and property pages. */
+:global(body):has(.theme) {
+  --site-background-rgb: 226 229 233;
+  --real-estate-border: rgb(0 0 0 / .2);
+  color-scheme: light;
+  color: #000;
+  background-color: #E2E5E9;
+  background-image: none;
+  background-attachment: fixed;
+}
+:global(body):has(.theme) :global(.realEstateSitePage),
+:global(body):has(.theme) :global(.realEstatePage) {
+  background: transparent;
+  color: #000;
+}
+:global(body):has(.theme) :global(.realEstateSitePage :is(h1, h2, h3, p, span, small, strong, a, dt, dd, label, input, select, svg)), :global(body):has(.theme) :global(.realEstateSitePage :is(.realEstateFilterChip, .realEstateViewButton, .realEstateProfileFavorite)) { color: #000; }
+:global(body):has(.theme) :global(.realEstateLocalHeader) {
+  background: rgb(226 229 233 / .94);
+  border-bottom-color: var(--real-estate-border);
+  backdrop-filter: blur(22px);
+}
+:global(body):has(.theme) :global(.realEstateLocalLogo),
+:global(body):has(.theme) :global(.realEstateLocalNav > a) { color: #000; }
+:global(body):has(.theme) :global(.realEstateLocalNav > a.is-active::after),
+:global(body):has(.theme) :global(.realEstateSitePage .realEstateProfileTabs a.is-active::after) { background: #000; }
+:global(body):has(.theme) :global(.realEstateLocalNavCta),
+:global(body):has(.theme) :global(.realEstateLocalNavCta:hover),
+:global(body):has(.theme) :global(.realEstateLocalNavCta:focus-visible) {
+  background: #fff;
+  color: #000 !important;
+}
+:global(body):has(.theme) :global(.realEstateSitePage :is(.realEstateHeroActionPrimary, .realEstateHeroActionSecondary, .realEstateSearchButton, .realEstateSellButton:hover, .realEstateFilterChip[data-active="true"], .realEstateFilterChip:hover, .realEstateFilterChip:focus-visible)), :global(body):has(.theme) :global(.realEstateSitePage .realEstateProfileContact button[type="submit"]) {
+  background: #fff;
+  color: #000;
+}
+:global(body):has(.theme) :global(.realEstateSitePage :is(.realEstateSearchBar, .realEstateViewButton, .realEstateProfileContact, .realEstateProfileParcelCard)) {
+  background: rgb(255 255 255 / .72);
+  border-color: var(--real-estate-border);
+}
+:global(body):has(.theme) :global(.realEstateSitePage :is(.realEstateSellButton, .realEstateFilters, .realEstateFilterChip, .realEstateSearchField, .realEstateEmptyState, .realEstateCommercialSteps > div, .realEstateStudioServices > div, .realEstateStudioDeliverables, .realEstateStudioDeliverables li, .realEstateProfileFavorite, .realEstateProfileTabs, .realEstateProfileFacts, .realEstateProfileFacts > div, .realEstateProfileSection, .realEstateProfileCharacteristics dl > div, .realEstateProfileDocument, .realEstateProfileContact hr, .realEstateProfileContact input)) {
+  border-color: var(--real-estate-border);
+}
+:global(body):has(.theme) :global(.realEstateSitePage .realEstateCommercialCta) { background: rgb(255 255 255 / .55); }
+:global(body):has(.theme) :global(.realEstateSitePage .realEstateCommercialRule) { background: #000; }
+:global(body):has(.theme) :global(.realEstateSitePage .realEstateNeonText) { color: #000; background-image: none; animation: none; }
+:global(body):has(.theme) :global(.realEstateSitePage :is(input, select):focus-visible), :global(body):has(.theme) :global(.realEstateSitePage a:focus-visible), :global(body):has(.theme) :global(.realEstateSitePage button:focus-visible) { outline: 2px solid #000; outline-offset: 4px; }
+:global(body):has(.theme) :global(.realEstateSitePage input::placeholder) { color: rgb(0 0 0 / .65); }
+:global(body):has(.theme) :global(.realEstateSitePage select option) { background: #E2E5E9; color: #000; }
+:global(body):has(.theme) :global(.realEstateSitePage .realEstateProfileFavorite[aria-pressed="true"]) { background: #fff; color: #000; }
+:global(body):has(.theme) :global(.realEstateSitePage .realEstateProfileDocument[href]:hover) { background: rgb(255 255 255 / .06); border-color: #000; }
+:global(body):has(.theme) :global(.realEstateSitePage .realEstateFavoriteButton[data-active="true"]) { color: #ffad66; }
+:global(body):has(.theme) :global(.realEstateSitePage .realEstateFavoriteButton[data-active="true"] svg) { color: inherit; }
+
+:global(body):has(.theme) :global(.realEstateSitePage .realEstateViewButton) {
+  background: #fff;
+  color: #000;
+}
+:global(body):has(.theme) :global(.realEstateSitePage :is(.realEstateHeroActionPrimary, .realEstateHeroActionSecondary, .realEstateSearchButton, .realEstateSellButton:hover, .realEstateFilterChip[data-active="true"], .realEstateFilterChip:hover, .realEstateFilterChip:focus-visible, .realEstateViewButton, .realEstateProfileFavorite[aria-pressed="true"], .realEstateProfileContact button[type="submit"]) :is(span, svg)) {
+  color: inherit;
+}
+
+:global(body):has(.theme) :global(.realEstateFooter) {
+  background: transparent;
+  color: var(--valuation-header-color, #000);
+}
+:global(body):has(.theme) :global(.realEstateFooter :is(p, a, span)) {
+  color: inherit;
+}
+
+:global(body):has(.theme) :global(.realEstateSitePage .realEstateCardStatus) {
+  background: #E2E5E9;
+  color: #000;
+}
+
+:global(body):has(.theme) :global(.realEstateSitePage.realEstateListingsPage :is(h1, h2, h3)),
+:global(body):has(.theme) :global(.realEstateSitePage.realEstateListingsPage :is(h1, h2, h3) a) {
+  color: #19418f;
+}
+
+/* Keep the shared header in step with the valuation page transition. */
+:global(body):has(.theme):has(:global(.campaignLandingValuation)) :global(.realEstateLocalHeader) {
+  background: rgb(var(--site-background-rgb) / .94);
+  color: var(--valuation-header-color, #000);
+  border-bottom-color: currentColor;
+}
+:global(body):has(.theme):has(:global(.campaignLandingValuation)) :global(.realEstateLocalLogo),
+:global(body):has(.theme):has(:global(.campaignLandingValuation)) :global(.realEstateLocalNav > a:not(.realEstateLocalNavCta)) {
+  color: var(--valuation-header-color, #000);
+}
+:global(body):has(.theme):has(:global(.campaignLandingValuation)) :global(.realEstateLocalNav > a.is-active::after) { background: currentColor; }
+
+:global(body):has(.theme) :global(.realEstateFooterTop),
+:global(body):has(.theme) :global(.realEstateFooterBottom) {
+  border-color: currentColor;
+}
+:global(body):has(.theme) :global(.realEstateFooterBottom) {
+  color: inherit;
+}
+/* One continuous gradient for both pages with a scroll transition. */
+:global(body):has(.theme):has(:global(.campaignLandingValuation)),
+:global(body):has(.theme):has(:global(.realEstateListingsPage)),
+:global(body):has(.theme):has(:global(.realEstateCommercialHome)) {
+  background-color: rgb(var(--site-background-rgb));
+  background-image:
+    radial-gradient(ellipse at 12% 18%, rgb(24 59 139 / calc(.48 * var(--valuation-footer-progress, 0))), transparent 60%),
+    radial-gradient(ellipse at 88% 80%, rgb(12 90 74 / calc(.34 * var(--valuation-footer-progress, 0))), transparent 58%),
+    radial-gradient(ellipse at 68% 30%, rgb(9 34 73 / calc(.45 * var(--valuation-footer-progress, 0))), transparent 50%);
+  background-attachment: fixed;
+}
+:global(body):has(.theme) :global(.campaignLandingValuation) {
+  background: transparent;
+}
+:global(body):has(.theme) :global(.campaignLandingValuation::before) {
+  content: none;
+}
+
+:global(body):has(.theme):has(:global(.campaignLandingValuation)) :global(.siteShell),
+:global(body):has(.theme):has(:global(.realEstateListingsPage)) :global(.siteShell),
+:global(body):has(.theme):has(:global(.realEstateCommercialHome)) :global(.siteShell) {
+  background: transparent;
+}
+
+:global(body):has(.theme) :global(.realEstateLocalHeader) {
+  border-bottom: 0;
+}
+
+/* Uniform black typography across the real-estate site and valuation page. */
+:global(body):has(.theme) :global(.realEstateSitePage),
+:global(body):has(.theme) :global(.campaignLandingValuation),
+:global(body):has(.theme) :global(.realEstateLocalHeader),
+:global(body):has(.theme) :global(.realEstateFooter) {
+  color: #000;
+}
+:global(body):has(.theme) :global(:is(.realEstateSitePage, .campaignLandingValuation, .realEstateLocalHeader, .realEstateFooter) :is(h1, h2, h3, h4, h5, h6, p, a, span, small, strong, em, dt, dd, label, legend, input, select, textarea, summary, button)) {
+  color: #000 !important;
+}
+:global(body):has(.theme) :global(.campaignLandingValuation .campaignLandingButton) {
+  background-color: #fff !important;
+}
+
+/* The shared menu stays transparent and blurred throughout scrolling. */
+:global(body):has(.theme) :global(.realEstateLocalHeader),
+:global(body):has(.theme):has(:global(.campaignLandingValuation)) :global(.realEstateLocalHeader) {
+  background: transparent;
+  color: #000;
+  border-bottom: 0;
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+}
+
+:global(body):has(.theme) :global(.campaignLandingValuation #faq details > p) {
+  color: #fff !important;
+}
+
+/* Dark navy footer with subtle blue variations. */
+:global(body):has(.theme) :global(.realEstateFooter) {
+  background:
+    radial-gradient(ellipse at 12% 15%, rgb(18 39 75 / .4), transparent 60%),
+    radial-gradient(ellipse at 90% 85%, rgb(10 27 57 / .45), transparent 58%),
+    linear-gradient(125deg, #050c1c 0%, #09162d 48%, #030916 100%);
+  color: #fff;
+}
+:global(body):has(.theme) :global(.realEstateFooter :is(p, a, span)) {
+  color: #fff !important;
+}
+:global(body):has(.theme) :global(.realEstateFooterBottom) {
+  color: #fff;
+}
+:global(body):has(.theme) :global(.realEstateFooterTop),
+:global(body):has(.theme) :global(.realEstateFooterBottom) {
+  border-color: rgb(255 255 255 / .2);
+}
+
+/* White text on the dark stage of either scroll transition. */
+:global(body):has(.theme) :global(:is(.realEstateListingsPage, .campaignLandingValuation, .realEstateCommercialHome)[data-contact-theme="dark"]),
+:global(body):has(.theme) :global(:is(.realEstateListingsPage, .campaignLandingValuation, .realEstateCommercialHome)[data-contact-theme="dark"] :is(h1, h2, h3, h4, h5, h6, p, a, span, small, strong, em, dt, dd, label, legend, summary, button, svg)) {
+  color: #fff !important;
+}
+:global(body):has(.theme):has(:global([data-contact-theme="dark"])) :global(.realEstateLocalHeader :is(a, span)) {
+  color: #fff !important;
+}
+/* Controls on pale surfaces retain dark text for contrast. */
+:global(body):has(.theme) :global(:is(.realEstateListingsPage, .campaignLandingValuation, .realEstateCommercialHome)[data-contact-theme="dark"] :is(input, select, textarea, .realEstateHeroActionPrimary, .realEstateHeroActionSecondary, .realEstateCardStatus, .realEstateSearchBar, .realEstateSearchButton, .realEstateViewButton, .realEstateFilterChip[data-active="true"], .campaignLandingButton)),
+:global(body):has(.theme) :global(:is(.realEstateListingsPage, .campaignLandingValuation, .realEstateCommercialHome)[data-contact-theme="dark"] :is(.realEstateHeroActionPrimary, .realEstateHeroActionSecondary, .realEstateSearchBar, .realEstateSearchButton, .realEstateViewButton, .realEstateFilterChip[data-active="true"], .campaignLandingButton) :is(span, svg)),
+:global(body):has(.theme):has(:global([data-contact-theme="dark"])) :global(.realEstateLocalHeader .realEstateLocalNavCta),
+:global(body):has(.theme):has(:global([data-contact-theme="dark"])) :global(.realEstateLocalHeader .realEstateLocalNavCta span) {
+  color: #000 !important;
+}
+
+:global(body):has(.theme) :global(.realEstateCommercialHome[data-contact-theme="dark"]) {
+  --real-estate-border: rgb(255 255 255 / .2);
+}
+:global(body):has(.theme) :global(.realEstateCommercialHome[data-contact-theme="dark"] .realEstateCommercialCta) {
+  background: rgb(255 255 255 / .06);
+}
+:global(body):has(.theme) :global(.realEstateCommercialHome[data-contact-theme="dark"] .realEstateCommercialRule) {
+  background: #fff;
+}
+
+:global(body):has(.theme) :global(.campaignLandingValuation#valuation-funnel form :is(input, select, textarea)) {
+  color: var(--valuation-header-color, #000) !important;
+}
+
+:global(body):has(.theme) :global(.campaignLandingValuation#valuation-funnel form legend),
+:global(body):has(.theme) :global(.campaignLandingValuation#valuation-funnel form legend span) {
+  color: #ff8a32 !important;
+}

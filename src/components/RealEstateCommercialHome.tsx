@@ -6,6 +6,7 @@ import { withLocalePath } from "@/lib/i18n";
 import { CALENDLY_MEETING_URL } from "@/lib/calendly";
 
 import { RealEstateNavigation } from "@/components/RealEstateNavigation";
+import { LandingBackgroundTransition } from "@/components/LandingBackgroundTransition";
 import { RealEstateFooter } from "@/components/RealEstateFooter";
 
 export function RealEstateCommercialHome({ locale }: { locale: Locale }) {
@@ -14,7 +15,8 @@ export function RealEstateCommercialHome({ locale }: { locale: Locale }) {
   return (
     <>
       <RealEstateNavigation locale={locale} active="home" />
-      <main className="siteMain realEstateSitePage realEstateCommercialHome">
+      <main id="real-estate-home" className="siteMain realEstateSitePage realEstateCommercialHome">
+      <LandingBackgroundTransition pageId="real-estate-home" triggerSelector=".realEstateCommercialProcess" />
       <section className="realEstateCommercialHero">
         <div className="realEstateCommercialHeroCopy">
           <p className="realEstateCommercialEyebrow">Promotion immobilière</p>
@@ -32,11 +34,12 @@ export function RealEstateCommercialHome({ locale }: { locale: Locale }) {
 
       <section className="realEstateCommercialProcess" aria-labelledby="commercial-process-title">
         <p className="realEstateCommercialEyebrow">Notre accompagnement</p>
-        <h2 id="commercial-process-title">Vous construisez.<br />On s’occupe du reste.</h2>
+        <h2 id="commercial-process-title">Vous achetez, vendez ou construisez.<br />On vous accompagne.</h2>
         <div className="realEstateCommercialSteps">
-          <div><span>01</span><strong>Positionnement & stratégie</strong><p>Clarifier le projet, son marché et la manière de le présenter.</p></div>
-          <div><span>02</span><strong>Images 3D & contenus</strong><p>Créer les visuels, plans et supports qui rendent le projet désirable.</p></div>
-          <div><span>03</span><strong>Site web & commercialisation</strong><p>Mettre en ligne une expérience claire pour présenter et vendre les lots.</p></div>
+          <div><span>01</span><strong>Acheter un bien</strong><p>Nous vous aidons à trouver le lieu qui correspond à vos envies et vous accompagnons à chaque étape de l’achat.</p></div>
+          <div><span>02</span><strong>Vendre votre bien</strong><p>Nous mettons votre bien en valeur et définissons avec vous une stratégie de commercialisation adaptée.</p></div>
+          <div><span>03</span><strong>Commercialiser votre projet</strong><p>Nous créons les images 3D, les supports et le site web pour mettre en valeur votre projet et accompagner la vente des lots.</p></div>
+          <div><span>04</span><strong>Accompagnement à la vente</strong><p>Nous trouvons l’acheteur, organisons les visites et vous accompagnons dans les négociations et les démarches jusqu’à la signature.</p></div>
         </div>
       </section>
 

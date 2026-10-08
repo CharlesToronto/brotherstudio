@@ -14,6 +14,20 @@ type ContactPayload = {
   website?: unknown;
   source?: unknown;
   project?: unknown;
+  submissionId?: unknown;
+  valuation?: unknown;
+};
+
+type ValuationDetails = {
+  firstName: string;
+  lastName: string;
+  propertyType: string;
+  propertyAddress: string;
+  roomCount: string;
+  approximateArea: string;
+  contactTime: string;
+  saleTimeline: string;
+  desiredPriceChf: string;
 };
 
 function asTrimmedString(value: unknown) {
@@ -26,6 +40,30 @@ function isValidEmail(value: string) {
 
 function clip(value: string, max: number) {
   return value.length > max ? value.slice(0, max) : value;
+}
+
+function readValuation(value: unknown): ValuationDetails | null {
+  if (!value || typeof value !== "object") return null;
+  const fields = value as Record<string, unknown>;
+  const result: ValuationDetails = {
+    firstName: clip(asTrimmedString(fields.firstName), 60),
+    lastName: clip(asTrimmedString(fields.lastName), 60),
+    propertyType: clip(asTrimmedString(fields.propertyType), 80),
+    propertyAddress: clip(asTrimmedString(fields.propertyAddress), 500),
+    roomCount: clip(asTrimmedString(fields.roomCount), 20),
+    approximateArea: clip(asTrimmedString(fields.approximateArea), 30),
+    contactTime: clip(asTrimmedString(fields.contactTime), 80),
+    saleTimeline: clip(asTrimmedString(fields.saleTimeline), 80),
+    desiredPriceChf: clip(asTrimmedString(fields.desiredPriceChf), 30),
+  };
+
+  if (!result.firstName || !result.lastName || !result.propertyType || !result.propertyAddress || !result.roomCount || !result.contactTime || !result.saleTimeline) {
+    return null;
+  }
+  if (result.desiredPriceChf && (!/^\d+(?:\.\d{1,2})?$/.test(result.desiredPriceChf) || Number(result.desiredPriceChf) < 0)) {
+    return null;
+  }
+  return result;
 }
 
 function escapeHtml(value: string) {
@@ -66,6 +104,8 @@ export async function POST(request: Request) {
   const message = clip(asTrimmedString(body.message), 4000);
   const source = clip(asTrimmedString(body.source), 80);
   const project = clip(asTrimmedString(body.project), 120);
+  const isValuationRequest = source === "campaign-landing-valuation";
+  const valuation = isValuationRequest ? readValuation(body.valuation) : null;
 
   if (!name) {
     return NextResponse.json({ error: "Name is required." }, { status: 400 });
@@ -77,8 +117,41 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Message is required." }, { status: 400 });
   }
 
+  if (isValuationRequest) {
+    const submissionId = asTrimmedString(body.submissionId);
+    if (!valuation || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(submissionId)) {
+      return NextResponse.json({ error: "Complete valuation details are required." }, { status: 400 });
+    }
+    try {
+      const supabase = getSupabaseAdminClient();
+      const { error } = await supabase.from("property_valuation_requests").upsert({
+        submission_id: submissionId,
+        first_name: valuation.firstName,
+        last_name: valuation.lastName,
+        email,
+        phone,
+        property_type: valuation.propertyType,
+        property_address: valuation.propertyAddress,
+        room_count: valuation.roomCount,
+        approximate_area: valuation.approximateArea || null,
+        contact_time: valuation.contactTime,
+        sale_timeline: valuation.saleTimeline,
+        desired_price_chf: valuation.desiredPriceChf ? Number(valuation.desiredPriceChf) : null,
+        source,
+      }, { onConflict: "submission_id", ignoreDuplicates: true });
+      if (error) throw error;
+    } catch (saveError) {
+      console.error("Failed to save property valuation request in Supabase:", saveError);
+      return NextResponse.json({ error: "Your valuation request could not be saved." }, { status: 503 });
+    }
+  }
+
   const apiKey = process.env.RESEND_API_KEY?.trim() ?? "";
   if (!apiKey) {
+    if (isValuationRequest) {
+      console.warn("Valuation request was saved, but RESEND_API_KEY is missing; no notification email was sent.");
+      return NextResponse.json({ ok: true }, { status: 201 });
+    }
     return NextResponse.json(
       {
         error:
@@ -152,6 +225,10 @@ export async function POST(request: Request) {
       errorPayload?.error?.message ||
       "Email provider error.";
 
+    if (isValuationRequest) {
+      console.error("Valuation request was saved, but the owner notification email failed:", errorMessage);
+      return NextResponse.json({ ok: true }, { status: 201 });
+    }
     return NextResponse.json({ error: errorMessage }, { status: 502 });
   }
 
@@ -211,6 +288,10 @@ export async function POST(request: Request) {
       errorPayload?.error?.message ||
       "Email provider error.";
 
+    if (isValuationRequest) {
+      console.error("Valuation request was saved, but the client confirmation email failed:", errorMessage);
+      return NextResponse.json({ ok: true }, { status: 201 });
+    }
     return NextResponse.json({ error: errorMessage }, { status: 502 });
   }
 

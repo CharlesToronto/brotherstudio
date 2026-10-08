@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   ChevronDown,
-  Heart,
   MapPin,
   Search,
   SlidersHorizontal,
@@ -14,6 +13,7 @@ import {
 import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
 import { RealEstateNavigation } from "@/components/RealEstateNavigation";
+import { LandingBackgroundTransition } from "@/components/LandingBackgroundTransition";
 import { RealEstateFooter } from "@/components/RealEstateFooter";
 
 type ListingCategory =
@@ -125,7 +125,7 @@ const listings: RealEstateListing[] = [
     area: "—",
     exterior: "Projet neuf",
     price: "CHF 1’300’000",
-    image: "/immobilier/lens-villa/vue-1.jpg",
+    image: "/immobilier/lens-villa/vue-2.jpg",
     href: "https://immobiliervalaisan.ch/maison-villa",
   },
   {
@@ -265,15 +265,15 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
   const [search, setSearch] = useState("");
   const [budget, setBudget] = useState("all");
   const [rooms, setRooms] = useState("Toutes les pièces");
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [sortOrder, setSortOrder] = useState("newest");
   const isFrench = locale === "fr";
-  const contactHref = withLocalePath(locale, "/contact");
+  const valuationHref = withLocalePath(locale, "/immobilier/vendre");
 
   const visibleListings = useMemo(() => {
     const category = filterToCategory(activeFilter);
     const normalizedSearch = search.trim().toLocaleLowerCase();
 
-    return listings.filter((listing) => {
+    const filteredListings = listings.filter((listing) => {
       if (category && listing.category !== category) return false;
       if (budget !== "all") {
         const amount = parseListingPrice(listing.price);
@@ -295,18 +295,27 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
         .toLocaleLowerCase()
         .includes(normalizedSearch);
     });
-  }, [activeFilter, budget, rooms, search]);
 
-  const toggleFavorite = (id: string) => {
-    setFavorites((current) =>
-      current.includes(id) ? current.filter((favorite) => favorite !== id) : [...current, id],
-    );
-  };
+    if (sortOrder === "newest") return filteredListings;
+
+    return filteredListings.sort((first, second) => {
+      const firstPrice = parseListingPrice(first.price);
+      const secondPrice = parseListingPrice(second.price);
+
+      // Keep properties without a listed price last in either direction.
+      if (firstPrice === null) return secondPrice === null ? 0 : 1;
+      if (secondPrice === null) return -1;
+      return sortOrder === "price-low"
+        ? firstPrice - secondPrice
+        : secondPrice - firstPrice;
+    });
+  }, [activeFilter, budget, rooms, search, sortOrder]);
 
   return (
     <>
       <RealEstateNavigation locale={locale} active="listings" />
-      <main className="siteMain realEstateSitePage">
+      <main id="real-estate-listings" className="siteMain realEstateSitePage realEstateListingsPage">
+      <LandingBackgroundTransition pageId="real-estate-listings" triggerSelector=".realEstateResultsHeader" />
       <div className="realEstatePage">
       <section className="realEstateShell" aria-labelledby="real-estate-title">
         <div className="realEstateBreadcrumbs" aria-label={isFrench ? "Fil d’Ariane" : "Breadcrumbs"}>
@@ -325,7 +334,7 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
                 : "Discover our selection of properties in French-speaking Switzerland."}
             </p>
           </div>
-          <Link className="realEstateSellButton" href={contactHref}>
+          <Link className="realEstateSellButton" href={valuationHref}>
             {isFrench ? "Vendre mon bien" : "Sell my property"}
             <span aria-hidden="true">↗</span>
           </Link>
@@ -396,7 +405,7 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
           <div className="realEstateResultsActions">
             <label>
               <span>{isFrench ? "Trier :" : "Sort:"}</span>
-              <select defaultValue="newest" aria-label={isFrench ? "Trier les biens" : "Sort properties"}>
+              <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)} aria-label={isFrench ? "Trier les biens" : "Sort properties"}>
                 <option value="newest">{isFrench ? "Nouveautés" : "Newest"}</option>
                 <option value="price-low">{isFrench ? "Prix croissant" : "Price: low to high"}</option>
                 <option value="price-high">{isFrench ? "Prix décroissant" : "Price: high to low"}</option>
@@ -412,8 +421,6 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
         {visibleListings.length > 0 ? (
           <section className="realEstateGrid" aria-label={isFrench ? "Biens disponibles" : "Available properties"}>
             {visibleListings.map((listing) => {
-              const isFavorite = favorites.includes(listing.id);
-
               return (
                 <article className={`realEstateCard${listing.featured ? " realEstateCardFeatured" : ""}`} key={listing.id}>
                   <Link className="realEstateCardMedia" href={withLocalePath(locale, `/immobilier/${listing.id}`)}>
@@ -425,16 +432,6 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
                     />
                     <span className="realEstateCardStatus">{listing.status}</span>
                   </Link>
-                  <button
-                    className="realEstateFavoriteButton"
-                    type="button"
-                    aria-label={isFavorite ? `Retirer ${listing.title} des favoris` : `Ajouter ${listing.title} aux favoris`}
-                    aria-pressed={isFavorite}
-                    data-active={isFavorite ? "true" : "false"}
-                    onClick={() => toggleFavorite(listing.id)}
-                  >
-                    <Heart aria-hidden="true" size={21} strokeWidth={1.5} fill={isFavorite ? "currentColor" : "none"} />
-                  </button>
                   <div className="realEstateCardBody">
                     <p className="realEstateCardLocation">{listing.location}</p>
                     <h2><Link href={withLocalePath(locale, `/immobilier/${listing.id}`)}>{listing.title}</Link></h2>
