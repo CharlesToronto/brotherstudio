@@ -27,5 +27,37 @@ export async function generateMetadata({ params }: RealEstateListingsPageProps):
 
 export default async function RealEstateListingsPage({ params }: RealEstateListingsPageProps) {
   const locale = await resolveLocaleParam(params);
-  return <RealEstateListings locale={locale} listings={await getEstateProperties(locale)} />;
+  const listings = await getEstateProperties(locale);
+  const pageUrl = toAbsoluteUrl(withLocalePath(locale, "/immobilier/biens"));
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        name: locale === "fr" ? "Biens immobiliers à vendre en Suisse romande" : "Properties for sale in French-speaking Switzerland",
+        url: pageUrl,
+        mainEntity: {
+          "@type": "ItemList",
+          itemListElement: listings.map((listing, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name: listing.title,
+            url: toAbsoluteUrl(withLocalePath(locale, `/immobilier/${listing.id}`)),
+            image: listing.images[0] ? toAbsoluteUrl(listing.images[0]) : undefined,
+          })),
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: locale === "fr" ? "Immobilier" : "Real estate", item: toAbsoluteUrl(withLocalePath(locale, "/immobilier")) },
+          { "@type": "ListItem", position: 2, name: locale === "fr" ? "Biens immobiliers" : "Properties", item: pageUrl },
+        ],
+      },
+    ],
+  };
+  return <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+    <RealEstateListings locale={locale} listings={listings} />
+  </>;
 }

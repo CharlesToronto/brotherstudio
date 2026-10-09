@@ -19,9 +19,20 @@ export function LandingFaq({ locale }: { locale: Locale }) {
     { question: "What types of property can I submit?", answer: "The form accepts apartments, houses or villas, buildings, land, commercial properties and traditional granaries. For another property type, select “Other” and we will discuss your enquiry with you." },
     { question: "What happens after I submit my request?", answer: "We contact you to discuss your property, clarify your plans and prepare your valuation. You can also choose a time in the calendar at the bottom of this page for an initial video meeting." },
   ];
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: questions.map(({ question, answer }) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: { "@type": "Answer", text: answer },
+    })),
+  };
 
   return (
-    <section id="faq" className={styles.section} aria-labelledby="landing-faq-title">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <section id="faq" className={styles.section} aria-labelledby="landing-faq-title">
       <div className={styles.heading}>
         <p>{isFrench ? "Questions fréquentes" : "Frequently asked questions"}</p>
         <h2 id="landing-faq-title">{isFrench ? "Avant de vous lancer." : "Before you get started."}</h2>
@@ -34,7 +45,7 @@ export function LandingFaq({ locale }: { locale: Locale }) {
           </details>
         ))}
       </div>
-    </section>
+      </section>
+    </>
   );
 }
-

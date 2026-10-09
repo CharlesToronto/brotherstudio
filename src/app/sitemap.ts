@@ -1,11 +1,18 @@
 import type { MetadataRoute } from "next";
 
+import { getEstateProperties } from "@/lib/estateServer";
 import { LOCALES, withLocalePath } from "@/lib/i18n";
 import { toAbsoluteUrl } from "@/lib/siteUrl";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const entries: MetadataRoute.Sitemap = [];
+  let properties: Awaited<ReturnType<typeof getEstateProperties>> = [];
+  try {
+    properties = await getEstateProperties("fr");
+  } catch {
+    // Keep the static sitemap available during builds without production credentials.
+  }
 
   for (const locale of LOCALES) {
     entries.push({
@@ -50,25 +57,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     });
 
-    for (const projectId of [
-      "monthey-appartement-45",
-      "illarsaz-appartement-4",
-      "lens-appartement-45",
-      "lens-appartement-35",
-      "morgins-chalet",
-      "lens-villa-construire",
-      "ollon-maison-renover",
-      "soleure-terrain",
-      "chamoson-terrain",
-      "valais-central-terrain",
-      "morgins-raccard",
-      "val-de-bagnes-grange",
-      "saviese-mayen",
-      "corps-ferme-fribourgeois",
-    ]) {
+    entries.push({
+      url: toAbsoluteUrl(withLocalePath(locale, "/immobilier/vendre")),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    });
+
+    for (const property of properties) {
+      const updatedAt = new Date(property.updatedAt);
       entries.push({
-        url: toAbsoluteUrl(withLocalePath(locale, `/immobilier/${projectId}`)),
-        lastModified: now,
+        url: toAbsoluteUrl(withLocalePath(locale, `/immobilier/${property.id}`)),
+        lastModified: Number.isNaN(updatedAt.getTime()) ? now : updatedAt,
         changeFrequency: "weekly",
         priority: 0.7,
       });

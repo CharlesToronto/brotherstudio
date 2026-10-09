@@ -5,10 +5,10 @@ export type EstateProperty = {
  image: string; images: string[]; documents: { title: string; title_en: string; type: string; href: string }[];
  content_fr: EstateContent; content_en: EstateContent; updated_at: string;
 };
-export type PublicEstateProperty = EstateContent & { id: string; category: string; featured: boolean; image: string; images: string[]; documents: { title: string; type: string; href: string }[]; facts: {label: string; value: string}[] };
+export type PublicEstateProperty = EstateContent & { id: string; category: string; featured: boolean; image: string; images: string[]; documents: { title: string; type: string; href: string }[]; facts: {label: string; value: string}[]; updatedAt: string };
 export function localizeEstate(p: EstateProperty, locale: string): PublicEstateProperty {
  const c = normalizeEstateContent(locale === 'fr' ? p.content_fr : p.content_en, p.category);
- return { ...c, id: p.id, category: p.category, featured: p.featured, image: p.image, images: p.images,
+ return { ...c, id: p.id, category: p.category, featured: p.featured, image: p.image, images: p.images, updatedAt: p.updated_at,
  documents: p.documents.map(d => ({...d,title:locale === 'fr' ? d.title : d.title_en})),
  facts: [{label:'Type de bien',value:p.category},{label:'Pièces',value:c.rooms},{label:'Surface habitation',value:c.area || 'À compléter'},{label:'Surface extérieure',value:c.outdoorArea || 'À compléter'},{label:'Extérieur / stationnement',value:c.exterior},{label:'Disponibilité / statut',value:c.status}] };
 }

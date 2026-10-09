@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { CampaignLandingPage } from "@/components/CampaignLandingPage";
 import { getLanguageAlternates, withLocalePath } from "@/lib/i18n";
 import { resolveLocaleParam } from "@/lib/localeParams";
+import { toAbsoluteUrl } from "@/lib/siteUrl";
 
 type LandingPageProps = {
   params: Promise<{ locale: string }>;
@@ -25,20 +26,26 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
   return {
     title,
     description,
+    keywords: locale === "fr"
+      ? ["estimation immobilière Suisse", "vendre son bien en Suisse romande", "agence immobilière Suisse romande"]
+      : ["property valuation Switzerland", "sell property French-speaking Switzerland", "Swiss real estate agency"],
     alternates: {
       canonical: withLocalePath(locale, pathname),
       languages: getLanguageAlternates(pathname),
     },
     robots: {
-      index: false,
-      follow: false,
+      index: true,
+      follow: true,
     },
     openGraph: {
       title,
       description,
       url: withLocalePath(locale, pathname),
-      locale: locale === "fr" ? "fr_CA" : "en_CA",
+      locale: locale === "fr" ? "fr_CH" : "en_CH",
+      type: "website",
+      images: [{ url: toAbsoluteUrl("/immobilier/hero-lac-alpes.webp"), alt: title }],
     },
+    twitter: { card: "summary_large_image", title, description, images: [toAbsoluteUrl("/immobilier/hero-lac-alpes.webp")] },
   };
 }
 
