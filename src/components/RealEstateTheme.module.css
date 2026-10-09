@@ -150,7 +150,8 @@
 }
 
 :global(body):has(.theme) :global(.campaignLandingValuation #faq details > p) {
-  color: #fff !important;
+  /* Deep orange stays readable while the valuation page is on its pale stage. */
+  color: #9a3412 !important;
 }
 
 /* Dark navy footer with subtle blue variations. */
@@ -176,6 +177,10 @@
 :global(body):has(.theme) :global(:is(.realEstateListingsPage, .campaignLandingValuation, .realEstateCommercialHome)[data-contact-theme="dark"]),
 :global(body):has(.theme) :global(:is(.realEstateListingsPage, .campaignLandingValuation, .realEstateCommercialHome)[data-contact-theme="dark"] :is(h1, h2, h3, h4, h5, h6, p, a, span, small, strong, em, dt, dd, label, legend, summary, button, svg)) {
   color: #fff !important;
+}
+:global(body):has(.theme) :global(.campaignLandingValuation[data-contact-theme="dark"] #faq details > p) {
+  /* The brighter orange keeps the FAQ answers legible on the dark stage. */
+  color: #ff8a32 !important;
 }
 :global(body):has(.theme):has(:global([data-contact-theme="dark"])) :global(.realEstateLocalHeader :is(a, span)) {
   color: #fff !important;
