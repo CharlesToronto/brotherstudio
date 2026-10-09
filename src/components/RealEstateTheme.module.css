@@ -300,3 +300,15 @@
     display: none;
   }
 }
+
+/* Reserve the full mobile menu height before the listings breadcrumb. */
+@media (max-width: 760px) {
+  :global(body):has(:global(.realEstateListingsPage)) :global(.realEstateLocalLogo) {
+    line-height: 26px;
+  }
+
+  :global(body):has(.theme) :global(.siteMain.realEstateListingsPage) {
+    --real-estate-nav-height: 112px;
+    padding-top: var(--real-estate-nav-height);
+  }
+}
