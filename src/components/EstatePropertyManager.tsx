@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { ESTATE_CATEGORIES, type EstateContent, type EstateProperty } from '@/lib/estate';
-const emptyContent: EstateContent={title:'',location:'',status:'',price:'',rooms:'',area:'',exterior:'',description:''};
-const labels: Record<keyof EstateContent,string>={title:'Titre',location:'Localisation',status:'Disponibilité / statut',price:'Prix affiché',rooms:'Pièces',area:'Surface',exterior:'Extérieur / stationnement',description:'Description'};
+import { ESTATE_CATEGORIES, ESTATE_STATUSES, normalizeEstateContent, type EstateContent, type EstateProperty } from '@/lib/estate';
+const emptyContent: EstateContent={title:'',location:'',status:'',price:'',rooms:'',area:'',outdoorArea:'',exterior:'',description:''};
+const labels: Record<keyof EstateContent,string>={title:'Titre',location:'Localisation',status:'Disponibilité / statut',price:'Prix affiché',rooms:'Pièces',area:'Surface habitation',outdoorArea:'Surface extérieure',exterior:'Extérieur / stationnement',description:'Description'};
 function blank(): EstateProperty{return {id:'',category:'Appartement',published:false,featured:false,sort_order:0,image:'',images:[],documents:[],content_fr:{...emptyContent},content_en:{...emptyContent},updated_at:''};}
 export function EstatePropertyManager({onDirty}:{onDirty:(dirty:boolean)=>void}){
  const [properties,setProperties]=useState<EstateProperty[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[message,setMessage]=useState(''),[revision,setRevision]=useState(0);
@@ -11,7 +11,7 @@ export function EstatePropertyManager({onDirty}:{onDirty:(dirty:boolean)=>void})
  useEffect(()=>{onDirty(dirty);return()=>onDirty(false);},[dirty,onDirty]);
  useEffect(()=>{if(!dirty)return;const handler=(e:BeforeUnloadEvent)=>e.preventDefault();window.addEventListener('beforeunload',handler);return()=>window.removeEventListener('beforeunload',handler);},[dirty]);
  useEffect(()=>{const c=new AbortController();setLoading(true);fetch('/api/estate/properties',{cache:'no-store',signal:c.signal}).then(async r=>{const p=await r.json();if(!r.ok)throw new Error(p.error);setProperties(p.properties);setError('');}).catch(e=>{if(!c.signal.aborted)setError(e.message);}).finally(()=>{if(!c.signal.aborted)setLoading(false);});return()=>c.abort();},[revision]);
- function select(p:EstateProperty){if(dirty&&!window.confirm('Quitter sans enregistrer ce bien ?'))return;setDraft(structuredClone(p));setOriginal(JSON.stringify(p));setMessage('');setError('');if(window.matchMedia('(max-width:760px)').matches)requestAnimationFrame(()=>document.querySelector('.estatePropertyEditor')?.scrollIntoView({block:'start',behavior:'smooth'}));}
+ function select(p:EstateProperty){if(dirty&&!window.confirm('Quitter sans enregistrer ce bien ?'))return;const normalized={...p,content_fr:normalizeEstateContent(p.content_fr,p.category),content_en:normalizeEstateContent(p.content_en,p.category)};setDraft(structuredClone(normalized));setOriginal(JSON.stringify(normalized));setMessage('');setError('');if(window.matchMedia('(max-width:760px)').matches)requestAnimationFrame(()=>document.querySelector('.estatePropertyEditor')?.scrollIntoView({block:'start',behavior:'smooth'}));}
  function update(p:Partial<EstateProperty>){setDraft(d=>d?{...d,...p}:d);}
  async function save(e:React.FormEvent){e.preventDefault();if(!draft)return;setSaving(true);setError('');setMessage('');try{
  const r=await fetch('/api/estate/properties',{method:draft.updated_at?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(draft)});const p=await r.json();if(!r.ok)throw new Error(p.error);
@@ -27,7 +27,33 @@ export function EstatePropertyManager({onDirty}:{onDirty:(dirty:boolean)=>void})
  <fieldset disabled={saving}><div className="estateFieldGrid"><label>Adresse du bien (identifiant)<input value={draft.id} disabled={!!draft.updated_at} pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={120} required onChange={e=>update({id:e.target.value})} placeholder="villa-monthey"/></label><label>Catégorie<select value={draft.category} onChange={e=>update({category:e.target.value})}>{ESTATE_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></label><label>Ordre d’affichage<input type="number" min={-100000} max={100000} value={draft.sort_order} onChange={e=>update({sort_order:Number(e.target.value)})}/></label></div>
  <div className="estateChecks"><label><input type="checkbox" checked={draft.published} onChange={e=>update({published:e.target.checked})}/>Publié sur le site</label><label><input type="checkbox" checked={draft.featured} onChange={e=>update({featured:e.target.checked})}/>Mis en avant</label></div>
  <div className="prospectModeSwitch" aria-label="Langue du contenu"><button type="button" aria-pressed={language==='fr'} onClick={()=>setLanguage('fr')}>Français</button><button type="button" aria-pressed={language==='en'} onClick={()=>setLanguage('en')}>English</button></div><p className="valuationDate">Complétez les deux langues avant de publier.</p>
- <div className="estateFieldGrid">{(Object.keys(labels) as (keyof EstateContent)[]).map(k=><label key={k} className={k==='description'?'estateWide':''}>{labels[k]} · {language.toUpperCase()}{k==='description'?<textarea rows={6} maxLength={15000} value={draft[contentKey][k]} onChange={e=>update({[contentKey]:{...draft[contentKey],[k]:e.target.value}})}/>:<input maxLength={300} value={draft[contentKey][k]} onChange={e=>update({[contentKey]:{...draft[contentKey],[k]:e.target.value}})}/>}</label>)}</div>
+
+ <div className="estateFieldGrid">
+ {(Object.keys(labels) as (keyof EstateContent)[]).map(k => (
+  <label key={k} className={k === 'description' ? 'estateWide' : ''}>
+   {labels[k]} · {language.toUpperCase()}
+   {k === 'status' ? (
+    <select value={draft[contentKey].status} onChange={e => {
+     const option = ESTATE_STATUSES.find(s => s[language] === e.target.value);
+     if (option) update({
+      content_fr: {...draft.content_fr, status: option.fr},
+      content_en: {...draft.content_en, status: option.en},
+     });
+     else update({[contentKey]: {...draft[contentKey], status: e.target.value}});
+    }}>
+     <option value="">Choisir un statut</option>
+     {draft[contentKey].status && !ESTATE_STATUSES.some(s => s[language] === draft[contentKey].status)
+      ? <option value={draft[contentKey].status}>{draft[contentKey].status}</option> : null}
+     {ESTATE_STATUSES.map(s => <option key={s.fr} value={s[language]}>{s[language]}</option>)}
+    </select>
+   ) : k === 'description' ? (
+    <textarea rows={6} maxLength={15000} value={draft[contentKey][k] ?? ''} onChange={e => update({[contentKey]: {...draft[contentKey], [k]: e.target.value}})} />
+   ) : (
+    <input maxLength={300} value={draft[contentKey][k] ?? ''} onChange={e => update({[contentKey]: {...draft[contentKey], [k]: e.target.value}})} />
+   )}
+  </label>
+ ))}
+ </div>
  <h4>Images</h4><label>Image principale (lien ou chemin du site)<input value={draft.image} required onChange={e=>update({image:e.target.value})} placeholder="/immobilier/… ou https://…"/></label>
  <label>Galerie — un lien par ligne<textarea rows={5} value={draft.images.join('\n')} onChange={e=>update({images:e.target.value.split('\n')})} onBlur={()=>update({images:draft.images.map(s=>s.trim()).filter(Boolean)})} required/></label>
  <p className="valuationDate">L’ordre des lignes définit l’ordre du balayage des images.</p>

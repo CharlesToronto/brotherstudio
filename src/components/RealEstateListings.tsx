@@ -238,7 +238,12 @@ export function RealEstateListings({ locale, listings }: { locale: Locale; listi
                   <div className="realEstateCardBody">
                     <p className="realEstateCardLocation">{t(listing.location)}</p>
                     <h2><Link href={withLocalePath(locale, `/immobilier/${listing.id}`)}>{t(listing.title)}</Link></h2>
-                    <p className="realEstateCardDetails">{t(listing.rooms)} · {t(listing.area)} · {t(listing.exterior)}</p>
+                    <p className="realEstateCardDetails">{[
+                      t(listing.rooms),
+                      listing.area ? `${isFrench ? "Surface habitation" : "Living area"} : ${t(listing.area)}` : '',
+                      listing.outdoorArea ? `${isFrench ? "Surface extérieure" : "Outdoor area"} : ${t(listing.outdoorArea)}` : '',
+                      t(listing.exterior),
+                    ].filter(Boolean).join(' · ')}</p>
                     <div className="realEstateCardFooter">
                       <p className="realEstateCardPrice">{t(listing.price)}</p>
                       <Link className="realEstateCardArrow" href={withLocalePath(locale, `/immobilier/${listing.id}`)} aria-label={`Découvrir ${t(listing.title)}`}>↗</Link>

@@ -99,8 +99,8 @@ export function RealEstateProjectProfile({ locale, project }: { locale: Locale; 
           <div className="realEstateProfileContent">
             <section id="property" className="realEstateProfileFacts" aria-label={isFrench ? "Résumé du bien" : "Property summary"}>
               <div><Ruler aria-hidden="true" size={20} /><strong>{t(project.rooms)}</strong><span>{isFrench ? "Configuration" : "Layout"}</span></div>
-              <div><Ruler aria-hidden="true" size={20} /><strong>{t(project.area)}</strong><span>{isFrench ? "habitables" : "living area"}</span></div>
-              <div><Map aria-hidden="true" size={20} /><strong>{t(project.exterior)}</strong><span>{isFrench ? "extérieur" : "outdoor"}</span></div>
+              <div><Ruler aria-hidden="true" size={20} /><strong>{project.area ? t(project.area) : (isFrench ? "À compléter" : "To be confirmed")}</strong><span>{isFrench ? "Surface habitation" : "Living area"}</span></div>
+              <div><Map aria-hidden="true" size={20} /><strong>{project.outdoorArea ? t(project.outdoorArea) : (isFrench ? "À compléter" : "To be confirmed")}</strong><span>{isFrench ? "Surface extérieure" : "Outdoor area"}</span></div>
             </section>
 
             <section className="realEstateProfileSection">
