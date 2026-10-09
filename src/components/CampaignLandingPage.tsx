@@ -43,7 +43,7 @@ export function CampaignLandingPage({ locale, heroVideoSrc, analyticsEnabled = f
 
       <section className="campaignLandingValuationHero" aria-labelledby="landing-hero-title">
         <div className="campaignLandingValuationCopy">
-          <p className="campaignLandingEyebrow campaignLandingEyebrowDark">BrotherStudio · Immobilier</p>
+          <p className="campaignLandingEyebrow campaignLandingEyebrowDark">{isFrench ? "BrotherStudio · Immobilier" : "BrotherStudio · Real Estate"}</p>
           <h1 id="landing-hero-title" className={isFrench ? "campaignLandingHeroTitleTwoLines" : undefined}>
             {isFrench ? <><span>Estimation gratuite</span>{" "}<span>en Suisse romande</span></> : "Free valuation in French-speaking Switzerland"}
           </h1>
@@ -114,3 +114,4 @@ export function CampaignLandingPage({ locale, heroVideoSrc, analyticsEnabled = f
     </>
   );
 }
+

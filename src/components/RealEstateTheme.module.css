@@ -206,3 +206,69 @@
 :global(body):has(.theme) :global(.campaignLandingValuation#valuation-funnel form legend span) {
   color: #ff8a32 !important;
 }
+
+/* Mobile home: place the image below the menu and overlay the copy. */
+@media (max-width: 760px) {
+  :global(body):has(:global(.realEstateCommercialHome)) :global(.realEstateLocalLogo) {
+    line-height: 26px;
+  }
+  :global(body):has(.theme) :global(.siteMain.realEstateCommercialHome) {
+    --real-estate-nav-height: 112px;
+    padding-top: var(--real-estate-nav-height);
+  }
+  :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateCommercialHero) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: max(540px, calc(100svh - 112px));
+    height: auto;
+    isolation: isolate;
+  }
+  :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateCommercialHeroImage),
+  :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateCommercialHeroCopy) {
+    grid-area: 1 / 1;
+  }
+  :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateCommercialHeroImage) {
+    height: auto;
+    min-height: 0;
+    z-index: 0;
+  }
+  :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateCommercialHeroImage::after) {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgb(3 9 22 / .18), rgb(3 9 22 / .42) 35%, rgb(3 9 22 / .85));
+    pointer-events: none;
+  }
+  :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateCommercialHeroCopy) {
+    position: relative;
+    z-index: 1;
+    justify-content: flex-end;
+    padding: 48px 22px 36px;
+  }
+  :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateCommercialHeroCopy :is(h1, p)) {
+    color: #fff !important;
+  }
+  :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateCommercialRule) {
+    margin-top: 24px;
+    background: #fff;
+  }
+  :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateHeroActions) {
+    align-items: stretch;
+    gap: 12px;
+    margin-top: 28px;
+  }
+  :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateHeroActions a) {
+    justify-content: center;
+    min-height: 48px;
+    padding: 12px 16px;
+    white-space: normal;
+    text-align: center;
+    background: #fff;
+    color: #000 !important;
+  }
+  :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateHeroActions a span) {
+    color: #000 !important;
+  }
+}
+
+

@@ -131,7 +131,7 @@ export function LandingContactForm({ locale, analyticsEnabled = false }: { local
         <div className={styles.fields}>
           <label><span>{isFrench ? "Nom" : "Last name"}</span><input name="lastName" autoComplete="family-name" required maxLength={60} placeholder={isFrench ? "Votre nom" : "Your last name"} /></label>
           <label><span>{isFrench ? "Prénom" : "First name"}</span><input name="firstName" autoComplete="given-name" required maxLength={60} placeholder={isFrench ? "Votre prénom" : "Your first name"} /></label>
-          <label><span>Email</span><input name="email" type="email" autoComplete="email" required maxLength={200} placeholder="vous@exemple.ch" /></label>
+          <label><span>{isFrench ? "E-mail" : "Email"}</span><input name="email" type="email" autoComplete="email" required maxLength={200} placeholder={isFrench ? "vous@exemple.ch" : "you@example.ch"} /></label>
           <label><span>{isFrench ? "Téléphone" : "Phone number"}</span><input name="phone" type="tel" autoComplete="tel" required maxLength={40} placeholder="+41 79 123 45 67" /></label>
         </div>
       </fieldset>
@@ -163,7 +163,7 @@ export function LandingContactForm({ locale, analyticsEnabled = false }: { local
               <option value="" disabled>{isFrench ? "Sélectionnez un type de bien" : "Select a property type"}</option>
               {[
                 ["Appartement", "Apartment"], ["Maison / villa", "House / villa"],
-                ["Immeuble", "Building"], ["Raccard", "Raccard"], ["Grange", "Barn"], ["Terrain", "Land"],
+                ["Immeuble", "Building"], ["Raccard", "Traditional granary"], ["Grange", "Barn"], ["Terrain", "Land"],
                 ["Local commercial", "Commercial property"], ["Autre", "Other"],
               ].map(([fr, en]) => <option key={fr} value={fr}>{isFrench ? fr : en}</option>)}
             </select>
@@ -174,7 +174,7 @@ export function LandingContactForm({ locale, analyticsEnabled = false }: { local
             <select name="roomCount" required={!skipsRoomCount} disabled={skipsRoomCount} value={roomCount} onChange={event => setRoomCount(event.target.value)}>
               <option value="" disabled>{isFrench ? "Sélectionnez" : "Select"}</option>
               {Array.from({ length: 11 }, (_, index) => 1 + index * 0.5).map(count => (
-                <option key={count} value={count}>{count}</option>
+                <option key={count} value={count}>{count.toLocaleString(isFrench ? "fr-CH" : "en-CH")}</option>
               ))}
               <option value="6+">{isFrench ? "6 pièces ou plus" : "6 rooms or more"}</option>
             </select>
@@ -215,7 +215,7 @@ export function LandingContactForm({ locale, analyticsEnabled = false }: { local
         </div>
       </fieldset>
 
-      <label className="campaignLandingHoneypot" aria-hidden="true"><span>Website</span><input name="website" tabIndex={-1} autoComplete="off" /></label>
+      <label className="campaignLandingHoneypot" aria-hidden="true"><span>{isFrench ? "Site web" : "Website"}</span><input name="website" tabIndex={-1} autoComplete="off" /></label>
       {step === 2 ? <button className={styles.back} type="button" disabled={status.state === "sending"} onClick={event => { if (event.currentTarget.form) changeStep(event.currentTarget.form, 1); }}>{isFrench ? "← Modifier les informations du bien" : "← Edit property details"}</button> : null}
       <button className="campaignLandingButton campaignLandingButtonDark campaignLandingFormWide realEstateContinueNeon" type="submit" disabled={status.state === "sending"}>
         {status.state === "sending" ? (isFrench ? "Envoi…" : "Sending…") : step === 1 ? (isFrench ? "Continuer vers mes coordonnées" : "Continue to my contact details") : (isFrench ? "Recevoir mon estimation gratuite" : "Request my free valuation")}
@@ -225,3 +225,4 @@ export function LandingContactForm({ locale, analyticsEnabled = false }: { local
     </form>
   );
 }
+

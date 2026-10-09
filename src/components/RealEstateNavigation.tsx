@@ -18,17 +18,18 @@ export function RealEstateNavigation({ locale, active = "home" }: RealEstateNavi
     <header className="realEstateLocalHeader">
       <span className={theme.theme} hidden aria-hidden="true" />
       <div className="realEstateLocalHeaderInner">
-        <Link className="realEstateLocalLogo" href={homeHref} aria-label="Brother Studio Immobilier">
-          brother studio immobilier.
+        <Link className="realEstateLocalLogo" href={homeHref} aria-label={locale === "fr" ? "Brother Studio Immobilier" : "Brother Studio Real Estate"}>
+          {locale === "fr" ? "brother studio immobilier." : "brother studio real estate."}
         </Link>
-        <nav className="realEstateLocalNav" aria-label="Navigation immobilier">
-          <Link className={active === "home" ? "is-active" : ""} href={homeHref}>Home</Link>
-          <Link className={active === "listings" ? "is-active" : ""} href={listingsHref}>Nos biens immobiliers</Link>
+        <nav className="realEstateLocalNav" aria-label={locale === "fr" ? "Navigation immobilière" : "Real estate navigation"}>
+          <Link className={active === "home" ? "is-active" : ""} href={homeHref}>{locale === "fr" ? "Accueil" : "Home"}</Link>
+          <Link className={active === "listings" ? "is-active" : ""} href={listingsHref}>{locale === "fr" ? "Nos biens immobiliers" : "Our properties"}</Link>
           <Link className={active === "sell" ? "is-active" : ""} href={valuationHref}>{locale === "fr" ? "Vendre mon bien" : "Sell my property"}</Link>
-          <a className={`realEstateLocalNavCta${active === "studio" ? " is-active" : ""}`} href="https://brotherstudio.ch" target="_blank" rel="noreferrer">Commercialiser mon projet <span aria-hidden="true">↗</span></a>
+          <a className={`realEstateLocalNavCta${active === "studio" ? " is-active" : ""}`} href={`https://brotherstudio.ch/${locale}`} target="_blank" rel="noreferrer">{locale === "fr" ? "Commercialiser mon projet" : "Market my development"} <span aria-hidden="true">↗</span></a>
           <a href="#site-footer">Contact</a>
         </nav>
       </div>
     </header>
   );
 }
+

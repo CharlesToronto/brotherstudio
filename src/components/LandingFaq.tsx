@@ -16,7 +16,7 @@ export function LandingFaq({ locale }: { locale: Locale }) {
     { question: "How are you paid?", answer: "We are paid on commission, only if your property is sold. No sale, no fee." },
     { question: "How do you estimate my property’s value?", answer: "We draw on our experience of the property market and the Swiss real estate statistics software we use. We also compare your property with similar properties nearby to assess its position in the local market. A visit then helps us refine the valuation based on its condition, features and strengths." },
     { question: "Is a property visit necessary?", answer: "We can prepare a preliminary valuation using the information you provide. A visit then helps us verify the property’s characteristics and refine the estimate. The preliminary valuation does not replace an assessment on site." },
-    { question: "What types of property can I submit?", answer: "The form accepts apartments, houses or villas, buildings, land, commercial properties and raccards. For another property type, select “Other” and we will discuss your enquiry with you." },
+    { question: "What types of property can I submit?", answer: "The form accepts apartments, houses or villas, buildings, land, commercial properties and traditional granaries. For another property type, select “Other” and we will discuss your enquiry with you." },
     { question: "What happens after I submit my request?", answer: "We contact you to discuss your property, clarify your plans and prepare your valuation. You can also choose a time in the calendar at the bottom of this page for an initial video meeting." },
   ];
 
@@ -37,3 +37,4 @@ export function LandingFaq({ locale }: { locale: Locale }) {
     </section>
   );
 }
+

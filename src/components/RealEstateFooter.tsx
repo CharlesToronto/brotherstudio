@@ -12,19 +12,19 @@ export function RealEstateFooter({ locale }: { locale: Locale }) {
   return (
     <footer id="site-footer" className="realEstateFooter">
       <div className="realEstateFooterTop">
-        <Link className="realEstateFooterLogo" href={homeHref} aria-label="Brother Studio Immobilier">
-          brother studio immobilier.
+        <Link className="realEstateFooterLogo" href={homeHref} aria-label={locale === "fr" ? "Brother Studio Immobilier" : "Brother Studio Real Estate"}>
+          {locale === "fr" ? "brother studio immobilier." : "brother studio real estate."}
         </Link>
-        <p>Des lieux à vivre. Des projets à vendre.</p>
+        <p>{locale === "fr" ? "Des lieux à vivre. Des projets à vendre." : "Places to live. Projects to sell."}</p>
       </div>
       <div className="realEstateFooterGrid">
         <div>
-          <p className="realEstateFooterLabel">Immobilier</p>
-          <nav aria-label="Navigation immobilière">
-            <Link href={homeHref}>Home</Link>
-            <Link href={listingsHref}>Nos biens immobiliers</Link>
+          <p className="realEstateFooterLabel">{locale === "fr" ? "Immobilier" : "Real estate"}</p>
+          <nav aria-label={locale === "fr" ? "Navigation immobilière" : "Real estate navigation"}>
+            <Link href={homeHref}>{locale === "fr" ? "Accueil" : "Home"}</Link>
+            <Link href={listingsHref}>{locale === "fr" ? "Nos biens immobiliers" : "Our properties"}</Link>
             <Link href={valuationHref}>{locale === "fr" ? "Vendre mon bien" : "Sell my property"}</Link>
-            <Link href={studioHref}>Commercialiser mon projet</Link>
+            <Link href={studioHref}>{locale === "fr" ? "Commercialiser mon projet" : "Market my development"}</Link>
           </nav>
         </div>
         <div>
@@ -34,14 +34,15 @@ export function RealEstateFooter({ locale }: { locale: Locale }) {
         </div>
         <div>
           <p className="realEstateFooterLabel">Brother Studio</p>
-          <p>Suisse / Canada</p>
-          <a href="https://brotherstudio.ch" target="_blank" rel="noreferrer">Site principal ↗</a>
+          <p>{locale === "fr" ? "Suisse / Canada" : "Switzerland / Canada"}</p>
+          <a href={`https://brotherstudio.ch/${locale}`} target="_blank" rel="noreferrer">{locale === "fr" ? "Site principal ↗" : "Main website ↗"}</a>
         </div>
       </div>
       <div className="realEstateFooterBottom">
-        <span>© {new Date().getFullYear()} Brother Studio Immobilier</span>
-        <span>Créer de la valeur pour les lieux de demain.</span>
+        <span>© {new Date().getFullYear()} {locale === "fr" ? "Brother Studio Immobilier" : "Brother Studio Real Estate"}</span>
+        <span>{locale === "fr" ? "Créer de la valeur pour les lieux de demain." : "Creating value for the places of tomorrow."}</span>
       </div>
     </footer>
   );
 }
+

@@ -12,6 +12,7 @@ import {
 
 import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
+import { realEstateText } from "@/lib/realEstateTranslations";
 import { RealEstateNavigation } from "@/components/RealEstateNavigation";
 import { LandingBackgroundTransition } from "@/components/LandingBackgroundTransition";
 import { RealEstateFooter } from "@/components/RealEstateFooter";
@@ -267,6 +268,7 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
   const [rooms, setRooms] = useState("Toutes les pièces");
   const [sortOrder, setSortOrder] = useState("newest");
   const isFrench = locale === "fr";
+  const t = (value: string) => realEstateText(value, locale);
   const valuationHref = withLocalePath(locale, "/immobilier/vendre");
 
   const visibleListings = useMemo(() => {
@@ -290,7 +292,7 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
       if (rooms !== "Toutes les pièces" && !listing.rooms.startsWith(rooms)) return false;
       if (!normalizedSearch) return true;
 
-      return [listing.location, listing.title, listing.category]
+      return [listing.location, listing.title, listing.category].map((value) => realEstateText(value, locale))
         .join(" ")
         .toLocaleLowerCase()
         .includes(normalizedSearch);
@@ -309,7 +311,7 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
         ? firstPrice - secondPrice
         : secondPrice - firstPrice;
     });
-  }, [activeFilter, budget, rooms, search, sortOrder]);
+  }, [activeFilter, budget, rooms, search, sortOrder, locale]);
 
   return (
     <>
@@ -326,7 +328,7 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
 
         <header className="realEstateHero">
           <div>
-            <p className="realEstateEyebrow">Brother Studio — Immobilier</p>
+            <p className="realEstateEyebrow">{isFrench ? "Brother Studio — Immobilier" : "Brother Studio — Real Estate"}</p>
             <h1 id="real-estate-title">{isFrench ? "Des lieux à vivre." : "Places to live."}</h1>
             <p className="realEstateIntro">
               {isFrench
@@ -352,7 +354,7 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
                 data-active={activeFilter === filter ? "true" : "false"}
                 onClick={() => setActiveFilter(filter)}
               >
-                {filter}
+                {t(filter)}
               </button>
             ))}
           </div>
@@ -386,10 +388,10 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
               <span className="realEstateSearchFieldIcon" aria-hidden="true">⌂</span>
               <span className="srOnly">{isFrench ? "Pièces" : "Rooms"}</span>
               <select value={rooms} onChange={(event) => setRooms(event.target.value)}>
-                <option>Toutes les pièces</option>
-                <option>1,5</option>
-                <option>2,5</option>
-                <option>3,5</option>
+                <option value="Toutes les pièces">{isFrench ? "Toutes les pièces" : "All room counts"}</option>
+                <option value="1,5">{isFrench ? "1,5" : "1.5"}</option>
+                <option value="2,5">{isFrench ? "2,5" : "2.5"}</option>
+                <option value="3,5">{isFrench ? "3,5" : "3.5"}</option>
               </select>
               <ChevronDown aria-hidden="true" size={16} strokeWidth={1.5} />
             </label>
@@ -426,19 +428,19 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
                   <Link className="realEstateCardMedia" href={withLocalePath(locale, `/immobilier/${listing.id}`)}>
                     <Image
                       src={listing.image}
-                      alt={listing.title}
+                      alt={t(listing.title)}
                       fill
                       sizes="(max-width: 760px) 50vw, (max-width: 1100px) 50vw, 33vw"
                     />
-                    <span className="realEstateCardStatus">{listing.status}</span>
+                    <span className="realEstateCardStatus">{t(listing.status)}</span>
                   </Link>
                   <div className="realEstateCardBody">
-                    <p className="realEstateCardLocation">{listing.location}</p>
-                    <h2><Link href={withLocalePath(locale, `/immobilier/${listing.id}`)}>{listing.title}</Link></h2>
-                    <p className="realEstateCardDetails">{listing.rooms} · {listing.area} · {listing.exterior}</p>
+                    <p className="realEstateCardLocation">{t(listing.location)}</p>
+                    <h2><Link href={withLocalePath(locale, `/immobilier/${listing.id}`)}>{t(listing.title)}</Link></h2>
+                    <p className="realEstateCardDetails">{t(listing.rooms)} · {t(listing.area)} · {t(listing.exterior)}</p>
                     <div className="realEstateCardFooter">
-                      <p className="realEstateCardPrice">{listing.price}</p>
-                      <Link className="realEstateCardArrow" href={withLocalePath(locale, `/immobilier/${listing.id}`)} aria-label={`Découvrir ${listing.title}`}>↗</Link>
+                      <p className="realEstateCardPrice">{t(listing.price)}</p>
+                      <Link className="realEstateCardArrow" href={withLocalePath(locale, `/immobilier/${listing.id}`)} aria-label={`Découvrir ${t(listing.title)}`}>↗</Link>
                     </div>
                   </div>
                 </article>
@@ -458,3 +460,4 @@ export function RealEstateListings({ locale }: { locale: Locale }) {
     </>
   );
 }
+

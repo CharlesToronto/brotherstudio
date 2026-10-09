@@ -10,7 +10,7 @@ export function LandingFooter({ locale }: { locale: Locale }) {
     <footer id="site-footer" className={styles.footer}>
       <div className={styles.top}>
         <div className={styles.brand}>
-          <Link className={styles.logo} href={`/${locale}/immobilier`}>brother studio immobilier.</Link>
+          <Link className={styles.logo} href={`/${locale}/immobilier`}>{locale === "fr" ? "brother studio immobilier." : "brother studio real estate."}</Link>
           <p>{isFrench ? "De l’estimation à la vente de votre bien." : "From valuation to the sale of your property."}</p>
         </div>
         <nav aria-label={isFrench ? "Navigation de bas de page" : "Footer navigation"}>
@@ -26,9 +26,10 @@ export function LandingFooter({ locale }: { locale: Locale }) {
         </div>
       </div>
       <div className={styles.bottom}>
-        <span>© {new Date().getFullYear()} Brother Studio Immobilier</span>
+        <span>© {new Date().getFullYear()} {locale === "fr" ? "Brother Studio Immobilier" : "Brother Studio Real Estate"}</span>
         <a href="#valuation-funnel">{isFrench ? "Retour en haut ↑" : "Back to top ↑"}</a>
       </div>
     </footer>
   );
 }
+

@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
+import { realEstateText } from "@/lib/realEstateTranslations";
 import { RealEstateNavigation } from "@/components/RealEstateNavigation";
 import { RealEstateFooter } from "@/components/RealEstateFooter";
 
@@ -124,6 +125,7 @@ export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale
   const [activeImage, setActiveImage] = useState(0);
   const gallery = project.images?.length ? project.images : [project.image];
   const isFrench = locale === "fr";
+  const t = (value: string) => realEstateText(value, locale);
 
   return (
     <>
@@ -133,29 +135,29 @@ export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale
         <nav className="realEstateProfileBreadcrumbs" aria-label={isFrench ? "Fil d’Ariane" : "Breadcrumbs"}>
           <Link href={withLocalePath(locale, "/immobilier/biens")}><ChevronLeft aria-hidden="true" size={14} /> {isFrench ? "Retour aux biens" : "Back to properties"}</Link>
           <span aria-hidden="true">/</span>
-          <span>{project.title}</span>
+          <span>{t(project.title)}</span>
         </nav>
 
         <header className="realEstateProfileHeader">
           <div>
-            <span className="realEstateProfileBadge"><Sparkles aria-hidden="true" size={12} /> {project.status}</span>
-            <h1>{project.title}</h1>
-            <p><MapPin aria-hidden="true" size={17} /> {project.location}</p>
+            <span className="realEstateProfileBadge"><Sparkles aria-hidden="true" size={12} /> {t(project.status)}</span>
+            <h1>{t(project.title)}</h1>
+            <p><MapPin aria-hidden="true" size={17} /> {t(project.location)}</p>
           </div>
           <div className="realEstateProfileHeaderAside">
             <p className="realEstateProfilePriceLabel">{isFrench ? "Prix de vente" : "Sale price"}</p>
-            <p className="realEstateProfilePrice">{project.price}</p>
+            <p className="realEstateProfilePrice">{t(project.price)}</p>
           </div>
         </header>
 
         <section className="realEstateProfileGallery" data-single-image={gallery.length === 1 ? "true" : "false"} aria-label={isFrench ? "Galerie du projet" : "Project gallery"}>
-          <button className="realEstateProfileHeroImage" type="button" onClick={() => setActiveImage(0)} aria-label="Voir la photo principale">
-            <Image src={gallery[activeImage]} alt={project.title} fill priority sizes="(max-width: 800px) 100vw, 58vw" />
+          <button className="realEstateProfileHeroImage" type="button" onClick={() => setActiveImage(0)} aria-label={isFrench ? "Voir la photo principale" : "View the main photo"}>
+            <Image src={gallery[activeImage]} alt={t(project.title)} fill priority sizes="(max-width: 800px) 100vw, 58vw" />
           </button>
           {gallery.length > 1 ? (
             <div className="realEstateProfileGalleryRail">
               {gallery.slice(1).map((image, index) => (
-                <button className={`realEstateProfileGalleryThumb${activeImage === index + 1 ? " is-active" : ""}`} key={`${image}-${index}`} type="button" onClick={() => setActiveImage(index + 1)} aria-label={`Voir la photo ${index + 2}`}>
+                <button className={`realEstateProfileGalleryThumb${activeImage === index + 1 ? " is-active" : ""}`} key={`${image}-${index}`} type="button" onClick={() => setActiveImage(index + 1)} aria-label={`${isFrench ? "Voir la photo" : "View photo"} ${index + 2}`}>
                   <Image src={image} alt="" fill sizes="(max-width: 800px) 25vw, 20vw" />
                 </button>
               ))}
@@ -174,20 +176,20 @@ export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale
         <div className="realEstateProfileLayout">
           <div className="realEstateProfileContent">
             <section id="property" className="realEstateProfileFacts" aria-label={isFrench ? "Résumé du bien" : "Property summary"}>
-              <div><Ruler aria-hidden="true" size={20} /><strong>{project.rooms}</strong><span>{isFrench ? "pièces" : "rooms"}</span></div>
-              <div><Ruler aria-hidden="true" size={20} /><strong>{project.area}</strong><span>{isFrench ? "habitables" : "living area"}</span></div>
-              <div><Map aria-hidden="true" size={20} /><strong>{project.exterior}</strong><span>{isFrench ? "extérieur" : "outdoor"}</span></div>
+              <div><Ruler aria-hidden="true" size={20} /><strong>{t(project.rooms)}</strong><span>{isFrench ? "Configuration" : "Layout"}</span></div>
+              <div><Ruler aria-hidden="true" size={20} /><strong>{t(project.area)}</strong><span>{isFrench ? "habitables" : "living area"}</span></div>
+              <div><Map aria-hidden="true" size={20} /><strong>{t(project.exterior)}</strong><span>{isFrench ? "extérieur" : "outdoor"}</span></div>
             </section>
 
             <section className="realEstateProfileSection">
-              <p className="realEstateProfileOverline">{project.category}</p>
+              <p className="realEstateProfileOverline">{t(project.category)}</p>
               <h2>{isFrench ? "Un projet à découvrir" : "A project to discover"}</h2>
-              <p>{project.description}</p>
+              <p>{t(project.description)}</p>
             </section>
 
             <section className="realEstateProfileSection realEstateProfileCharacteristics">
               <h2>{isFrench ? "Caractéristiques" : "Features"}</h2>
-              <dl>{project.facts.map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
+              <dl>{project.facts.map((fact) => <div key={fact.label}><dt>{t(fact.label)}</dt><dd>{t(fact.value)}</dd></div>)}</dl>
             </section>
 
             <section id="parcel" className="realEstateProfileSection realEstateProfileParcel">
@@ -206,14 +208,14 @@ export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale
 
           <aside className="realEstateProfileContact">
             <p className="realEstateProfilePriceLabel">{isFrench ? "Prix de vente" : "Sale price"}</p>
-            <strong>{project.price}</strong>
+            <strong>{t(project.price)}</strong>
             <hr />
             <h2>{isFrench ? "Visiter ce bien" : "Visit this property"}</h2>
             <p>{isFrench ? "Planifiez une visite et découvrez cette propriété." : "Schedule a visit and discover this property."}</p>
             <form onSubmit={(event) => event.preventDefault()}>
-              <input aria-label="Nom complet" placeholder={isFrench ? "Nom complet *" : "Full name *"} required />
-              <input type="email" aria-label="Adresse e-mail" placeholder={isFrench ? "Adresse e-mail *" : "Email address *"} required />
-              <input type="tel" aria-label="Numéro de téléphone" placeholder={isFrench ? "Numéro de téléphone *" : "Phone number *"} required />
+              <input aria-label={isFrench ? "Nom complet" : "Full name"} placeholder={isFrench ? "Nom complet *" : "Full name *"} required />
+              <input type="email" aria-label={isFrench ? "Adresse e-mail" : "Email address"} placeholder={isFrench ? "Adresse e-mail *" : "Email address *"} required />
+              <input type="tel" aria-label={isFrench ? "Numéro de téléphone" : "Phone number"} placeholder={isFrench ? "Numéro de téléphone *" : "Phone number *"} required />
               <button type="submit">{isFrench ? "Organiser une visite" : "Arrange a visit"} <ArrowUpRight aria-hidden="true" size={16} /></button>
             </form>
             <div className="realEstateProfileTrust"><ShieldCheck aria-hidden="true" size={17} /> {isFrench ? "Réponse personnalisée par Brother Studio" : "Personal reply from Brother Studio"}</div>
@@ -225,3 +227,4 @@ export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale
     </>
   );
 }
+
