@@ -1,6 +1,4 @@
 import Link from "next/link";
-import theme from "./RealEstateTheme.module.css";
-
 import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
 
@@ -9,6 +7,7 @@ export function RealEstateFooter({ locale }: { locale: Locale }) {
   const listingsHref = withLocalePath(locale, "/immobilier/biens");
   const valuationHref = withLocalePath(locale, "/immobilier/vendre");
   const studioHref = withLocalePath(locale, "/immobilier/commercialisation");
+  const mortgageHref = withLocalePath(locale, "/immobilier/calculateur-hypothecaire");
 
   return (
     <footer id="site-footer" className="realEstateFooter">
@@ -24,6 +23,7 @@ export function RealEstateFooter({ locale }: { locale: Locale }) {
           <nav aria-label={locale === "fr" ? "Navigation immobilière" : "Real estate navigation"}>
             <Link href={homeHref}>{locale === "fr" ? "Accueil" : "Home"}</Link>
             <Link href={listingsHref}>{locale === "fr" ? "Nos biens immobiliers" : "Our properties"}</Link>
+            <Link href={mortgageHref}>{locale === "fr" ? "Calculateur hypothécaire" : "Mortgage calculator"}</Link>
             <Link href={valuationHref}>{locale === "fr" ? "Vendre mon bien" : "Sell my property"}</Link>
             <Link href={studioHref}>{locale === "fr" ? "Commercialiser mon projet" : "Market my development"}</Link>
           </nav>
@@ -47,4 +47,3 @@ export function RealEstateFooter({ locale }: { locale: Locale }) {
     </footer>
   );
 }
-

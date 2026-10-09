@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, ChevronLeft, FileText, Map, MapPin, Ruler, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowUpRight, Calculator, ChevronLeft, FileText, Map, MapPin, Ruler, ShieldCheck, Sparkles } from "lucide-react";
 import { useRef, useState } from "react";
 
 import type { PublicEstateProperty } from "@/lib/estate";
@@ -19,6 +19,11 @@ export function RealEstateProjectProfile({ locale, project }: { locale: Locale; 
   const gallery = project.images?.length ? project.images : [project.image];
   const isFrench = locale === "fr";
   const t = (value: string) => realEstateText(value, locale);
+  const priceDigits = project.price.replace(/[^0-9]/g, "");
+  const calculatorHref = {
+    pathname: withLocalePath(locale, "/immobilier/calculateur-hypothecaire"),
+    query: { ...(priceDigits ? { price: priceDigits } : {}), property: t(project.title) },
+  };
 
   return (
     <>
@@ -131,6 +136,10 @@ export function RealEstateProjectProfile({ locale, project }: { locale: Locale; 
           <aside className="realEstateProfileContact">
             <p className="realEstateProfilePriceLabel">{isFrench ? "Prix de vente" : "Sale price"}</p>
             <strong>{t(project.price)}</strong>
+            <Link className="realEstateMortgageCta" href={calculatorHref}>
+              <span><Calculator aria-hidden="true" size={17} /><span><small>{isFrench ? "Financement" : "Financing"}</small><strong>{isFrench ? "Calculer mon financement" : "Calculate my financing"}</strong></span></span>
+              <ArrowUpRight aria-hidden="true" size={16} />
+            </Link>
             <hr />
             <h2>{isFrench ? "Visiter ce bien" : "Visit this property"}</h2>
             <p>{isFrench ? "Planifiez une visite et découvrez cette propriété." : "Schedule a visit and discover this property."}</p>
@@ -144,4 +153,3 @@ export function RealEstateProjectProfile({ locale, project }: { locale: Locale; 
     </>
   );
 }
-

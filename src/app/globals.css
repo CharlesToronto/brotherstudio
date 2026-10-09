@@ -27506,6 +27506,12 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
 .realEstateProfileDocument > span { display: inline-flex; align-items: center; gap: 5px; color: #171817; }
 .realEstateProfileContact { position: sticky; top: 105px; margin-top: 28px; padding: 28px 22px 22px; border: 1px solid rgb(23 24 23 / .14); border-radius: 7px; background: rgb(255 255 255 / .25); }
 .realEstateProfileContact > strong { display: block; margin-top: 3px; font-size: 27px; letter-spacing: -.05em; }
+.realEstateMortgageCta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 19px; padding: 14px; border: 1px solid rgb(23 24 23 / .16); border-radius: 7px; background: rgb(255 255 255 / .32); color: inherit; text-decoration: none; transition: border-color 180ms ease, background 180ms ease, transform 180ms ease; }
+.realEstateMortgageCta:hover, .realEstateMortgageCta:focus-visible { border-color: #171817; background: rgb(255 255 255 / .65); transform: translateY(-1px); }
+.realEstateMortgageCta > span { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.realEstateMortgageCta > span > span { display: grid; gap: 4px; min-width: 0; }
+.realEstateMortgageCta small { color: rgb(23 24 23 / .52); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
+.realEstateMortgageCta strong { font-size: 12px; letter-spacing: -.02em; }
 .realEstateProfileContact hr { margin: 23px 0; border: 0; border-top: 1px solid rgb(23 24 23 / .14); }
 .realEstateProfileContact h2 { margin: 0 0 7px; font-size: 22px; letter-spacing: -.04em; }
 .realEstateProfileContact > p:not(.realEstateProfilePriceLabel) { margin: 0 0 20px; color: rgb(23 24 23 / .64); font-size: 13px; line-height: 1.45; }
@@ -27545,6 +27551,7 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
   .realEstateProfileSection h2 { font-size: 27px; }
   .realEstateProfileSection > p:not(.realEstateProfileOverline) { font-size: 14px; }
   .realEstateProfileContact { position: static; margin-top: 30px; }
+  .realEstateMortgageCta { margin-top: 16px; padding: 13px; }
 }
 
 @media (max-width: 760px) {

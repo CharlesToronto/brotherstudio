@@ -37,6 +37,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
 
     entries.push({
+      url: toAbsoluteUrl(withLocalePath(locale, "/immobilier/calculateur-hypothecaire")),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.75,
+    });
+
+    entries.push({
       url: toAbsoluteUrl(withLocalePath(locale, "/immobilier/commercialisation")),
       lastModified: now,
       changeFrequency: "monthly",
