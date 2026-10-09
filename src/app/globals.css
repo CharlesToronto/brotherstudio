@@ -28250,3 +28250,20 @@ body:has(.homeBlurWordSection)[data-home-nav-theme="light"] .siteLogoImageWhite 
 #home-gallery-section .galleryImageButton .galleryImage {
   border-radius: 14px !important;
 }
+
+/* The fixed mobile menu samples the footer independently of the top logo. */
+@media (max-width: 980px) {
+  .siteHeader[data-mobile-nav-over-footer="true"] .siteNavMobile :is(
+    .siteNavLink,
+    .siteNavLink[data-nav-key="book-meeting"]:hover,
+    .siteNavLink[data-nav-key="book-meeting"]:focus-visible,
+    .siteNavSubmenuTrigger
+  ) {
+    color: #fff !important;
+  }
+
+  .siteHeader[data-mobile-nav-over-footer="true"] .siteNavMobile .siteNavLink[data-nav-key="book-meeting"] {
+    background: transparent !important;
+    color: #fff !important;
+  }
+}

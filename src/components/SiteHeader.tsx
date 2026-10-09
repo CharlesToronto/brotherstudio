@@ -66,6 +66,45 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
     };
   }, [openSubmenu]);
 
+  useEffect(() => {
+    const header = headerRef.current;
+    const nav = header?.querySelector<HTMLElement>(".siteNavMobile");
+    if (!header || !nav) return;
+
+    const mobileQuery = window.matchMedia("(max-width: 980px)");
+    let frame = 0;
+
+    const syncFooterContrast = () => {
+      frame = 0;
+      const navRect = nav.getBoundingClientRect();
+      const sampleY = navRect.top + navRect.height / 2;
+      const overFooter = mobileQuery.matches && navRect.height > 0 &&
+        Array.from(document.querySelectorAll<HTMLElement>("footer, .siteFooter")).some((footer) => {
+          const rect = footer.getBoundingClientRect();
+          return rect.height > 0 && rect.top <= sampleY && rect.bottom >= sampleY;
+        });
+      header.dataset.mobileNavOverFooter = String(overFooter);
+    };
+    const scheduleSync = () => {
+      if (!frame) frame = window.requestAnimationFrame(syncFooterContrast);
+    };
+
+    syncFooterContrast();
+    window.addEventListener("scroll", scheduleSync, { passive: true });
+    window.addEventListener("resize", scheduleSync);
+    const observer = new ResizeObserver(scheduleSync);
+    observer.observe(document.body);
+    observer.observe(nav);
+
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", scheduleSync);
+      window.removeEventListener("resize", scheduleSync);
+      observer.disconnect();
+      delete header.dataset.mobileNavOverFooter;
+    };
+  }, [pathname]);
+
   const localizedHref = (target: string) => withLocalePath(locale, target);
 
   const realEstateSubmenuItems = [
