@@ -272,3 +272,13 @@
 }
 
 
+
+/* Place property categories below the search card on mobile. */
+@media (max-width: 760px) {
+  :global(.realEstateListingsPage .realEstateFilters > .realEstateSearchBar) {
+    order: 0;
+  }
+  :global(.realEstateListingsPage .realEstateFilters > .realEstateFilterChips) {
+    order: 1;
+  }
+}
