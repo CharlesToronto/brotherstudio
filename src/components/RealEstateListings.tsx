@@ -16,6 +16,7 @@ import { withLocalePath } from "@/lib/i18n";
 import { realEstateText } from "@/lib/realEstateTranslations";
 import { RealEstateNavigation } from "@/components/RealEstateNavigation";
 import { LandingBackgroundTransition } from "@/components/LandingBackgroundTransition";
+import { EstateNewsletterForm } from "@/components/EstateNewsletterForm";
 import { RealEstateFooter } from "@/components/RealEstateFooter";
 
 type ListingCategory =
@@ -259,6 +260,7 @@ export function RealEstateListings({ locale, listings }: { locale: Locale; listi
             <p>{isFrench ? "Modifiez vos critères de recherche pour voir d’autres biens." : "Adjust your search criteria to see more properties."}</p>
           </div>
         )}
+        <EstateNewsletterForm locale={locale} />
       </section>
       </div>
       </main>
