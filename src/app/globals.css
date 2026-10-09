@@ -27262,8 +27262,14 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
 .realEstateHeroActions a:hover, .realEstateHeroActions a:focus-visible { transform: translateY(-1px); }
 .homeHeroActions { width: 100%; justify-content: center; margin-top: 24px; pointer-events: auto; }
 .homeHeroActions a { flex: 0 1 300px; width: 300px; justify-content: center; min-height: 52px; padding-inline: 20px; border-radius: 999px; box-shadow: 0 10px 30px rgb(0 0 0 / .3); font-size: 20px; font-weight: 600; }
-.homeHeroActions .realEstateHeroActionPrimary,
 .homeHeroActions .realEstateHeroActionSecondary { background: #fff; color: #111817; }
+
+.homeHeroActions .realEstateHeroActionPrimary {
+  background: rgb(255 255 255 / .22);
+  color: #fff;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
 .homeHeroActions .realEstateHeroActionNeon { border: 0 !important; background: linear-gradient(105deg, #3985ff 0%, #b9ddff 25%, #ff8a32 52%, #ffe0b8 70%, #3985ff 100%); background-size: 240% 100%; color: #fff; animation: real-estate-neon-text-flow 4s ease-in-out infinite; }
 .homeHeroActions .realEstateHeroActionNeon::before { display: none; }
 .homeHeroActions .homeHeroActionNeon { border: 0 !important; background-image: linear-gradient(90deg, #3985ff 0%, #3985ff 20%, #b9ddff 35%, #ff8a32 50%, #ffe0b8 65%, #ff8a32 80%, #3985ff 100%) !important; background-position: 100% 50%; background-size: 360% 100%; color: #fff !important; box-shadow: 0 10px 30px rgb(57 133 255 / .32), 0 10px 30px rgb(255 138 50 / .26); will-change: background-position; animation: home-hero-neon-flow 7s ease-in-out infinite !important; }
@@ -27765,26 +27771,31 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
   }
 
   body:has(.homeBlurWordSection) .siteNavMobile .siteNavLink[data-nav-key="book-meeting"] {
-    border-color: #fff !important;
-    background: #fff !important;
-    color: #050505 !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    color: rgb(var(--home-nav-text-rgb, 255 255 255)) !important;
   }
 
   body:has(.homeBlurWordSection) .siteNavMobile .siteNavLink[data-nav-key="book-meeting"]:hover,
   body:has(.homeBlurWordSection) .siteNavMobile .siteNavLink[data-nav-key="book-meeting"]:focus-visible {
-    background: #e8e8e8 !important;
-    color: #050505 !important;
+    background: transparent !important;
+    color: rgb(var(--home-nav-text-rgb, 255 255 255)) !important;
   }
 
   body:has(.homeBlurWordSection) .siteLogoImageBlack { display: none !important; }
   body:has(.homeBlurWordSection) .siteLogoImageWhite { display: block !important; }
 }
 
-/* Keep the top navigation booking CTA visibly white above page-specific overrides. */
-.siteHeaderBookingCta {
-  background: #fff !important;
+/* Keep booking buttons transparent while preserving their animated border. */
+.siteHeader .siteHeaderBookingCta,
+.siteHeader .siteNavLink[data-nav-key="book-meeting"] {
+  background: transparent !important;
   background-image: none !important;
-  color: #111 !important;
+  color: var(--foreground) !important;
+}
+
+body:has(.homeBlurWordSection) .siteHeader .siteHeaderBookingCta {
+  color: rgb(var(--home-nav-text-rgb, 255 255 255)) !important;
 }
 
 .homeCapabilitiesItem,

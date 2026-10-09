@@ -3,7 +3,6 @@
 import { Dongle } from "next/font/google";
 import Link from "next/link";
 
-import { useHeroScrollBridge } from "@/hooks/useHeroScrollBridge";
 import { withLocalePath, type Locale } from "@/lib/i18n";
 
 const dongle = Dongle({
@@ -12,13 +11,11 @@ const dongle = Dongle({
 });
 
 export function HomeVideoHero({ locale }: { locale: Locale }) {
-  const heroScrollBridgeRef = useHeroScrollBridge<HTMLElement>();
   const isFrench = locale === "fr";
   const listingsHref = withLocalePath(locale, "/immobilier");
 
   return (
     <section
-      ref={heroScrollBridgeRef}
       className="homeBlurWordSection"
       aria-label={isFrench ? "Hero vidéo BrotherStudio" : "BrotherStudio video hero"}
     >
