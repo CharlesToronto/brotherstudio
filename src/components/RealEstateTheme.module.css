@@ -282,3 +282,14 @@
     order: 1;
   }
 }
+
+/* Admin access in the mobile real-estate footer. */
+.mobileAdmin {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .mobileAdmin {
+    display: block;
+  }
+}

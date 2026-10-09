@@ -1,4 +1,5 @@
 import Link from "next/link";
+import theme from "./RealEstateTheme.module.css";
 
 import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
@@ -36,6 +37,7 @@ export function RealEstateFooter({ locale }: { locale: Locale }) {
           <p className="realEstateFooterLabel">Brother Studio</p>
           <p>{locale === "fr" ? "Suisse / Canada" : "Switzerland / Canada"}</p>
           <a href={`https://brotherstudio.ch/${locale}`} target="_blank" rel="noreferrer">{locale === "fr" ? "Site principal ↗" : "Main website ↗"}</a>
+          <Link className={theme.mobileAdmin} href="/admin">Admin</Link>
         </div>
       </div>
       <div className="realEstateFooterBottom">
