@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, ChevronLeft, FileText, Map, MapPin, Ruler, ShieldCheck, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
@@ -123,6 +123,7 @@ function getProject(projectId: string): ProjectProfile {
 export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale; projectId: string }) {
   const project = getProject(projectId);
   const [activeImage, setActiveImage] = useState(0);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const gallery = project.images?.length ? project.images : [project.image];
   const isFrench = locale === "fr";
   const t = (value: string) => realEstateText(value, locale);
@@ -150,14 +151,43 @@ export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale
           </div>
         </header>
 
-        <section className="realEstateProfileGallery" data-single-image={gallery.length === 1 ? "true" : "false"} aria-label={isFrench ? "Galerie du projet" : "Project gallery"}>
-          <button className="realEstateProfileHeroImage" type="button" onClick={() => setActiveImage(0)} aria-label={isFrench ? "Voir la photo principale" : "View the main photo"}>
-            <Image src={gallery[activeImage]} alt={t(project.title)} fill priority sizes="(max-width: 800px) 100vw, 58vw" />
-          </button>
+        <section id="gallery" className="realEstateProfileGallery" data-single-image={gallery.length === 1 ? "true" : "false"} aria-label={isFrench ? "Galerie du projet" : "Project gallery"}>
+          <div
+            className="realEstateProfileHeroImage"
+            role="group"
+            tabIndex={gallery.length > 1 ? 0 : undefined}
+            aria-label={isFrench ? "Photos du bien : balayez ou utilisez les flèches du clavier" : "Property photos: swipe or use the arrow keys"}
+            onKeyDown={(event) => {
+              if (gallery.length < 2 || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+              event.preventDefault();
+              setActiveImage((current) => (current + (event.key === "ArrowRight" ? 1 : -1) + gallery.length) % gallery.length);
+            }}
+            onTouchStart={(event) => {
+              const touch = event.touches[0];
+              touchStart.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
+            }}
+            onTouchMove={(event) => {
+              if (event.touches.length !== 1) touchStart.current = null;
+            }}
+            onTouchCancel={() => { touchStart.current = null; }}
+            onTouchEnd={(event) => {
+              const start = touchStart.current;
+              touchStart.current = null;
+              const touch = event.changedTouches[0];
+              if (!start || !touch || event.touches.length || gallery.length < 2) return;
+              const dx = touch.clientX - start.x;
+              const dy = touch.clientY - start.y;
+              if (Math.abs(dx) < 40 || Math.abs(dx) <= Math.abs(dy) * 1.2) return;
+              setActiveImage((current) => (current + (dx < 0 ? 1 : -1) + gallery.length) % gallery.length);
+            }}
+          >
+            <Image src={gallery[activeImage]} alt={t(project.title)} fill priority sizes="(max-width: 800px) 100vw, 58vw" draggable={false} />
+            {gallery.length > 1 ? <span className="realEstateProfilePhotoCount" aria-live="polite">{activeImage + 1} / {gallery.length}</span> : null}
+          </div>
           {gallery.length > 1 ? (
             <div className="realEstateProfileGalleryRail">
-              {gallery.slice(1).map((image, index) => (
-                <button className={`realEstateProfileGalleryThumb${activeImage === index + 1 ? " is-active" : ""}`} key={`${image}-${index}`} type="button" onClick={() => setActiveImage(index + 1)} aria-label={`${isFrench ? "Voir la photo" : "View photo"} ${index + 2}`}>
+              {gallery.map((image, index) => (
+                <button className={`realEstateProfileGalleryThumb${activeImage === index ? " is-active" : ""}`} key={`${image}-${index}`} type="button" onClick={() => setActiveImage(index)} aria-label={`${isFrench ? "Voir la photo" : "View photo"} ${index + 1}`}>
                   <Image src={image} alt="" fill sizes="(max-width: 800px) 25vw, 20vw" />
                 </button>
               ))}
