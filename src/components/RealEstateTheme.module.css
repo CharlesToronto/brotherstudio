@@ -315,3 +315,10 @@
     padding-top: var(--real-estate-nav-height);
   }
 }
+
+/* More compact properties teaser on the mobile real-estate homepage. */
+@media (max-width: 760px) {
+  :global(.realEstateCommercialHome .realEstateCommercialListingsTeaser) {
+    padding-block: 48px;
+  }
+}
