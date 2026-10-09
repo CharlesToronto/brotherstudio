@@ -9230,7 +9230,7 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
     scroll-padding-inline: 12px;
     scroll-snap-type: x proximity;
     scrollbar-width: none;
-    touch-action: pan-x;
+    touch-action: pan-x pan-y pinch-zoom;
   }
 
   .homeSceneFilters::-webkit-scrollbar {
@@ -9354,7 +9354,7 @@ html[data-theme="dark"] .homeSceneFilterButton:focus-visible {
     scroll-snap-type: x proximity;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
+    touch-action: pan-x pan-y pinch-zoom;
   }
 
   .homeSceneFilters::-webkit-scrollbar {
@@ -27333,7 +27333,7 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
   .realEstateSitePage { --real-estate-nav-height: 96px; }
   .realEstateLocalHeaderInner { display: block; width: auto; min-height: 0; padding: 18px 14px 0; }
   .realEstateLocalLogo { display: block; margin-bottom: 13px; font-size: 22px; }
-  .realEstateLocalNav { gap: 18px; overflow-x: auto; margin-inline: -14px; padding: 0 14px; scrollbar-width: none; }
+  .realEstateLocalNav { gap: 18px; overflow-x: auto; margin-inline: -14px; padding: 8px 14px; scrollbar-width: none; }
   .realEstateLocalNav::-webkit-scrollbar { display: none; }
   .realEstateLocalNav > a { flex: 0 0 auto; min-height: 39px; font-size: 11px; white-space: nowrap; }
   .realEstateLocalNavCta { padding-inline: 12px; }
