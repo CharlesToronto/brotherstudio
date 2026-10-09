@@ -74,7 +74,8 @@ export default async function RootLayout({
   const isBareExperiencePage = subpath === "/myexperience" || subpath.startsWith("/myexperience/");
   const isCampaignLandingPage = subpath === "/landing";
   const isPlantazWebsitePage = subpath === "/mywebsite/plantaz";
-  const hasStandardChrome = !isBareExperiencePage && !isCampaignLandingPage;
+  const isEstateAdmin = subpath === "/admin/immobilier";
+  const hasStandardChrome = !isBareExperiencePage && !isCampaignLandingPage && !isEstateAdmin;
   const analyticsDisabled = cookieStore.get(ANALYTICS_EXCLUSION_COOKIE)?.value === "1";
   const shouldLoadAnalytics =
     !analyticsDisabled && process.env.NODE_ENV === "production" && process.env.VERCEL === "1";
@@ -103,7 +104,7 @@ export default async function RootLayout({
             {children}
             {hasStandardChrome && !isPlantazWebsitePage ? <SiteFooter locale={locale} /> : null}
           </div>
-          <SiteAssistantBubble hasMobileMenu={hasStandardChrome} locale={locale} />
+          {!isEstateAdmin ? <SiteAssistantBubble hasMobileMenu={hasStandardChrome} locale={locale} /> : null}
         </div>
         {shouldLoadAnalytics ? (
           <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />

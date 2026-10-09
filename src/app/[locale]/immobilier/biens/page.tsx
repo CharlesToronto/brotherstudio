@@ -1,3 +1,5 @@
+import { getEstateProperties } from "@/lib/estateServer";
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 
 import { RealEstateListings } from "@/components/RealEstateListings";
@@ -25,5 +27,5 @@ export async function generateMetadata({ params }: RealEstateListingsPageProps):
 
 export default async function RealEstateListingsPage({ params }: RealEstateListingsPageProps) {
   const locale = await resolveLocaleParam(params);
-  return <RealEstateListings locale={locale} />;
+  return <RealEstateListings locale={locale} listings={await getEstateProperties(locale)} />;
 }

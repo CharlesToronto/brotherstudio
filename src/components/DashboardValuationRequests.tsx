@@ -1,4 +1,5 @@
 "use client";
+import { VISIT_STATUSES } from "@/lib/estate";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw, Search, House, Download, CalendarDays, List, ArrowUpRight, ArrowDownRight } from "lucide-react";
@@ -9,14 +10,15 @@ import { DashboardProspectDetail } from "@/components/DashboardProspectDetail";
 
 const dateFormatter = new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short", timeZone: VALUATION_TIME_ZONE });
 function normalize(value: string) { return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
-function exportCsv(requests: ValuationRequest[]) {
-  const csv = buildValuationCsv(requests);
+function exportCsv(requests: ValuationRequest[], visits: boolean) {
+  const csv = buildValuationCsv(requests, visits);
   const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
   const link = document.createElement("a"); link.href = url; link.download = `prospects-immobiliers-${valuationDateKey(new Date())}.csv`; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function DashboardValuationRequests({ onUnsavedChange }: { onUnsavedChange?: (dirty: boolean) => void }) {
+export function DashboardValuationRequests({ onUnsavedChange, visits = false }: { onUnsavedChange?: (dirty: boolean) => void; visits?: boolean }) {
+  const statuses = visits ? VISIT_STATUSES : VALUATION_STATUSES;
   const [requests, setRequests] = useState<ValuationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,7 +49,7 @@ export function DashboardValuationRequests({ onUnsavedChange }: { onUnsavedChang
     async function load() {
       setLoading(true); setError("");
       try {
-        const response = await fetch("/api/dashboard/valuation-requests", { cache: "no-store", signal: controller.signal });
+        const response = await fetch(visits ? "/api/estate/visits" : "/api/dashboard/valuation-requests", { cache: "no-store", signal: controller.signal });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || "Impossible de charger les demandes.");
         if (!controller.signal.aborted) setRequests(payload.requests);
@@ -58,7 +60,7 @@ export function DashboardValuationRequests({ onUnsavedChange }: { onUnsavedChang
     const refresh = () => setRevision(value => value + 1);
     window.addEventListener("brotherstudio-admin-unlocked", refresh);
     return () => { controller.abort(); window.removeEventListener("brotherstudio-admin-unlocked", refresh); };
-  }, [revision]);
+  }, [revision, visits]);
 
   const today = valuationDateKey(new Date());
   const overdue = requests.filter(request => isOpenProspect(request) && request.next_follow_up && request.next_follow_up < today);
@@ -89,8 +91,8 @@ export function DashboardValuationRequests({ onUnsavedChange }: { onUnsavedChang
   function resetFilters() { change(() => { setMode("received"); setSearch(""); setPropertyType(""); setStatusFilter(""); setSelectedDay(null); setAllDates(true); setOverdueOnly(false); setPage(0); setSelectedId(null); }); }
 
   return <div className="valuationWorkspace" aria-busy={loading}>
-    <div className="valuationHeading"><div><p className="valuationEyebrow">Vendre un bien · gestion des prospects</p><h2>Votre suivi immobilier</h2><p>Réception des demandes, suivi commercial et prochaines actions.</p></div>
-      <div className="prospectHeaderActions"><button type="button" className="valuationRefresh" disabled={loading || !!error || !filtered.length} onClick={() => exportCsv(filtered)}><Download size={16} aria-hidden="true" /> Exporter la sélection</button>
+    <div className="valuationHeading"><div><p className="valuationEyebrow">{visits ? "Demandes de visite · contacts des biens" : "Vendre un bien · gestion des prospects"}</p><h2>Votre suivi immobilier</h2><p>Réception des demandes, suivi commercial et prochaines actions.</p></div>
+      <div className="prospectHeaderActions"><button type="button" className="valuationRefresh" disabled={loading || !!error || !filtered.length} onClick={() => exportCsv(filtered, visits)}><Download size={16} aria-hidden="true" /> Exporter la sélection</button>
         <button type="button" className="valuationRefresh" disabled={loading} onClick={() => change(() => setRevision(value => value + 1))}><RefreshCw size={16} aria-hidden="true" />Actualiser</button></div>
     </div>
     {error ? <p className="valuationError" role="alert">{error}</p> : null}
@@ -107,13 +109,13 @@ export function DashboardValuationRequests({ onUnsavedChange }: { onUnsavedChang
             <strong>{item.count}</strong><span className="prospectBarTrack"><span style={{ height: `${item.count ? Math.max(5, item.count / maxTrend * 100) : 0}%` }} /></span><small>{new Intl.DateTimeFormat("fr-CA", { month: "short", timeZone: "UTC" }).format(new Date(`${item.key}-01T12:00:00Z`))}</small>
           </button>)}</div>
         </section>
-        <section className="prospectPipeline"><h3>Avancement des prospects</h3><p>Tous les prospects · cliquez pour filtrer</p><div>{VALUATION_STATUSES.map(item => <button type="button" key={item.value} data-status={item.value} aria-pressed={statusFilter === item.value} onClick={() => change(() => { setStatusFilter(statusFilter === item.value ? "" : item.value); setSelectedId(null); setPage(0); setAllDates(true); setSelectedDay(null); setOverdueOnly(false); })}><span className="prospectStatusDot" /><span>{item.label}</span><strong>{requests.filter(request => request.status === item.value).length}</strong></button>)}</div></section>
+        <section className="prospectPipeline"><h3>Avancement des prospects</h3><p>Tous les prospects · cliquez pour filtrer</p><div>{statuses.map(item => <button type="button" key={item.value} data-status={item.value} aria-pressed={statusFilter === item.value} onClick={() => change(() => { setStatusFilter(statusFilter === item.value ? "" : item.value); setSelectedId(null); setPage(0); setAllDates(true); setSelectedDay(null); setOverdueOnly(false); })}><span className="prospectStatusDot" /><span>{item.label}</span><strong>{requests.filter(request => request.status === item.value).length}</strong></button>)}</div></section>
       </div>
       {overdue.length > 0 ? <div className="prospectOverdueAlert"><span><strong>{overdue.length} relance{overdue.length > 1 ? "s" : ""} en retard.</strong> Reprenez contact avec ces prospects.</span><button type="button" onClick={() => change(() => { setOverdueOnly(true); setMode("followup"); setSearch(""); setPropertyType(""); setStatusFilter(""); setView("list"); setSelectedId(null); setPage(0); })}>Voir les relances</button></div> : null}
       <div className="valuationFilters">
         <label className="valuationSearch"><Search size={18} aria-hidden="true" /><span className="sr-only">Rechercher un prospect</span><input type="search" placeholder="Nom, email, téléphone ou adresse…" value={search} onChange={event => { const value = event.target.value; change(() => { setSearch(value); setPage(0); setSelectedId(null); }); }} /></label>
         <label><span className="sr-only">Type de bien</span><select value={propertyType} onChange={event => { const value = event.target.value; change(() => { setPropertyType(value); setPage(0); setSelectedId(null); }); }}><option value="">Tous les types de biens</option>{types.map(type => <option key={type}>{type}</option>)}</select></label>
-        <label><span className="sr-only">Statut du prospect</span><select value={statusFilter} onChange={event => { const value = event.target.value; change(() => { setStatusFilter(value); setPage(0); setSelectedId(null); }); }}><option value="">Tous les statuts</option>{VALUATION_STATUSES.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label>
+        <label><span className="sr-only">Statut du prospect</span><select value={statusFilter} onChange={event => { const value = event.target.value; change(() => { setStatusFilter(value); setPage(0); setSelectedId(null); }); }}><option value="">Tous les statuts</option>{statuses.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label>
       </div>
       <div className="prospectViewToolbar"><div className="prospectModeSwitch" aria-label="Affichage des prospects"><button type="button" aria-pressed={view === "calendar"} onClick={() => setView("calendar")}><CalendarDays size={16} /> Calendrier</button><button type="button" aria-pressed={view === "list"} onClick={() => setView("list")}><List size={16} /> Liste</button></div>
         <div className="prospectDateScope"><label><input type="checkbox" checked={allDates} onChange={event => { const checked = event.target.checked; change(() => { setAllDates(checked); setSelectedDay(null); setOverdueOnly(false); setSelectedId(null); setPage(0); }); }} />Toutes les dates</label><button type="button" onClick={resetFilters}>Réinitialiser les filtres</button></div>
@@ -123,15 +125,15 @@ export function DashboardValuationRequests({ onUnsavedChange }: { onUnsavedChang
         onMode={value => change(() => { setMode(value); setOverdueOnly(false); setSelectedId(null); setPage(0); })} /> : <div className="prospectListScope"><select aria-label="Type de date" value={mode} onChange={event => { const value = event.target.value as CalendarMode; change(() => { setMode(value); setSelectedId(null); setPage(0); }); }}><option value="received">Formulaires reçus</option><option value="followup">Relances à faire</option></select><input aria-label="Mois affiché" type="month" value={month} onChange={event => changeMonth(event.target.value || today.slice(0, 7))} /></div>}
       <div className="valuationColumns"><div>
         <div className="prospectResultsHeading"><h3>{overdueOnly ? "Relances en retard" : selectedDay ? new Intl.DateTimeFormat("fr-CA", { dateStyle: "long", timeZone: "UTC" }).format(new Date(`${selectedDay}T12:00:00Z`)) : allDates ? "Toutes les demandes" : monthLabel(month)}</h3><span>{filtered.length} prospect{filtered.length > 1 ? "s" : ""} · {mode === "received" ? "réception" : "relance"}</span></div>
-        {filtered.length === 0 ? <div className="valuationEmpty"><House size={28} aria-hidden="true" /><h3>{requests.length ? "Aucun prospect sur cette sélection" : "Aucune demande pour le moment"}</h3><p>{requests.length ? "Choisissez une autre date ou réinitialisez les filtres." : "Les réponses au formulaire « Vendre un bien » apparaîtront ici."}</p>{requests.length ? <button type="button" className="valuationRefresh" onClick={resetFilters}>Voir toutes les demandes</button> : null}</div> : <ul className="valuationList">{visible.map(request => <li key={request.id}><button type="button" aria-pressed={selected?.id === request.id} onClick={() => change(() => setSelectedId(request.id))}>
+        {filtered.length === 0 ? <div className="valuationEmpty"><House size={28} aria-hidden="true" /><h3>{requests.length ? "Aucun prospect sur cette sélection" : "Aucune demande pour le moment"}</h3><p>{requests.length ? "Choisissez une autre date ou réinitialisez les filtres." : visits ? "Les demandes envoyées depuis les fiches des biens apparaîtront ici." : "Les réponses au formulaire « Vendre un bien » apparaîtront ici."}</p>{requests.length ? <button type="button" className="valuationRefresh" onClick={resetFilters}>Voir toutes les demandes</button> : null}</div> : <ul className="valuationList">{visible.map(request => <li key={request.id}><button type="button" aria-pressed={selected?.id === request.id} onClick={() => change(() => setSelectedId(request.id))}>
           <span className="valuationListTop"><strong>{request.first_name} {request.last_name}</strong><span>{request.property_type}</span></span><span className="valuationAddress">{request.property_address}</span>
-          <span className="prospectStatusBadge" data-status={request.status}>{statusLabel(request.status)}</span>
-          <span className="valuationListBottom"><time dateTime={request.created_at}>{dateFormatter.format(new Date(request.created_at))}</time><span>Vente : {request.sale_timeline}</span></span>
+          <span className="prospectStatusBadge" data-status={request.status}>{visits ? statuses.find(s=>s.value===request.status)?.label : statusLabel(request.status)}</span>
+          <span className="valuationListBottom"><time dateTime={request.created_at}>{dateFormatter.format(new Date(request.created_at))}</time><span>{visits ? "Demande de visite" : `Vente : ${request.sale_timeline}`}</span></span>
           {request.next_follow_up && isOpenProspect(request) ? <span className="prospectCardFollowup" data-overdue={request.next_follow_up < today}>Relance : {request.next_follow_up.split("-").reverse().join("/")}</span> : null}
         </button></li>)}</ul>}
         {filtered.length > 20 ? <div className="valuationPagination"><button type="button" disabled={currentPage === 0} onClick={() => change(() => { setPage(currentPage - 1); setSelectedId(null); })}>Précédent</button><span>Page {currentPage + 1} / {Math.ceil(filtered.length / 20)}</span><button type="button" disabled={(currentPage + 1) * 20 >= filtered.length} onClick={() => change(() => { setPage(currentPage + 1); setSelectedId(null); })}>Suivant</button></div> : null}
-      </div>{selected ? <DashboardProspectDetail key={`${selected.id}-${editorVersion}`} request={selected} onDirty={onDirty} onSaved={updated => { setRequests(current => current.map(request => request.id === updated.id ? updated : request)); setSelectedId(updated.id); }} /> : <section className="prospectNoSelection"><h3>La fiche complète, au même endroit</h3><p>Sélectionnez un prospect pour consulter ses réponses, enregistrer vos notes et planifier une relance.</p></section>}</div>
-      <details className="prospectHelp"><summary>Comment utiliser cet espace ?</summary><ol><li>Consultez le calendrier pour voir quand les formulaires ont été remplis et combien ont été reçus chaque jour.</li><li>Ouvrez un prospect, contactez-le par email ou téléphone, puis passez son statut à « Contacté ».</li><li>Ajoutez vos notes et une date de prochaine relance, puis enregistrez le suivi.</li><li>Retrouvez les actions planifiées dans « Relances à faire ». Les dossiers « Vendu » et « Sans suite » quittent les relances actives.</li><li>Suivez le volume mensuel et l’avancement des dossiers. L’export CSV contient les prospects de la sélection actuelle.</li></ol><p>Les relances sont affichées dans cet espace ; aucun email ni rappel automatique n’est envoyé.</p></details>
+      </div>{selected ? <DashboardProspectDetail visits={visits} key={`${selected.id}-${editorVersion}`} request={selected} onDirty={onDirty} onSaved={updated => { setRequests(current => current.map(request => request.id === updated.id ? updated : request)); setSelectedId(updated.id); }} /> : <section className="prospectNoSelection"><h3>La fiche complète, au même endroit</h3><p>Sélectionnez un prospect pour consulter ses réponses, enregistrer vos notes et planifier une relance.</p></section>}</div>
+      <details className="prospectHelp"><summary>Comment utiliser cet espace ?</summary><ol><li>Consultez le calendrier pour voir quand les formulaires ont été remplis et combien ont été reçus chaque jour.</li><li>Ouvrez un prospect, contactez-le par email ou téléphone, puis passez son statut à « Contacté ».</li><li>Ajoutez vos notes et une date de prochaine relance, puis enregistrez le suivi.</li><li>Retrouvez les actions planifiées dans « Relances à faire ». Les dossiers « {visits ? "Conclu" : "Vendu"} » et « Sans suite » quittent les relances actives.</li><li>Suivez le volume mensuel et l’avancement des dossiers. L’export CSV contient les prospects de la sélection actuelle.</li></ol><p>Les relances sont affichées dans cet espace ; aucun email ni rappel automatique n’est envoyé.</p></details>
     </>}
   </div>;
 }

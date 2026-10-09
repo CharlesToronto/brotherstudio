@@ -5,123 +5,15 @@ import Link from "next/link";
 import { ArrowUpRight, ChevronLeft, FileText, Map, MapPin, Ruler, ShieldCheck, Sparkles } from "lucide-react";
 import { useRef, useState } from "react";
 
+import type { PublicEstateProperty } from "@/lib/estate";
+import { EstateVisitForm } from "@/components/EstateVisitForm";
 import type { Locale } from "@/lib/i18n";
 import { withLocalePath } from "@/lib/i18n";
 import { realEstateText } from "@/lib/realEstateTranslations";
 import { RealEstateNavigation } from "@/components/RealEstateNavigation";
 import { RealEstateFooter } from "@/components/RealEstateFooter";
 
-type ProjectProfile = {
-  id: string;
-  title: string;
-  location: string;
-  status: string;
-  price: string;
-  image: string;
-  images?: string[];
-  documents: ProjectDocument[];
-  category: string;
-  rooms: string;
-  area: string;
-  exterior: string;
-  description: string;
-  facts: { label: string; value: string }[];
-};
-
-type ProjectDocument = {
-  title: string;
-  type: string;
-  href?: string;
-};
-
-const imageFallback = "/immobilier/monthey/vue-1.webp";
-
-const projectProfiles: Record<string, Partial<ProjectProfile>> = {
-  "monthey-appartement-45": {
-    title: "Appartement 4,5 pièces — Monthey",
-    location: "Monthey · Valais",
-    status: "À vendre",
-    price: "CHF 650’000",
-    image: "/immobilier/monthey/vue-1.webp",
-    images: ["/immobilier/monthey/vue-1.webp", "/immobilier/monthey/vue-2.jpg"],
-    category: "Appartement",
-    rooms: "4,5 pièces",
-    area: "130 m²",
-    exterior: "2 places de parc",
-    description: "Appartement de 4,5 pièces composé d’une cuisine avec salle à manger, d’un salon, de trois chambres et de deux salles d’eau. Deux places de parc extérieures sont incluses.",
-    documents: [],
-  },
-  "illarsaz-appartement-4": {
-    title: "Appartement 4 pièces — Illarsaz",
-    location: "Illarsaz · Valais",
-    status: "À vendre",
-    price: "CHF 620’000",
-    image: "/immobilier/illarsaz/vue-1.jpg",
-    images: ["/immobilier/illarsaz/vue-1.jpg", "/immobilier/illarsaz/vue-2.jpg"],
-    category: "Appartement",
-    rooms: "4 pièces",
-    area: "110 m²",
-    exterior: "Box + place de parc",
-    description: "Appartement de 4 pièces comprenant deux chambres, un dressing, un box et une place de parc extérieure incluse.",
-    documents: [],
-  },
-  "morgins-chalet": {
-    title: "Chalet à vendre — Morgins",
-    location: "Morgins · Valais",
-    status: "À vendre",
-    price: "CHF 650’000",
-    image: "/immobilier/morgins-chalet/vue-1.jpg",
-    images: ["/immobilier/morgins-chalet/vue-1.jpg", "/immobilier/morgins-chalet/vue-2.jpg"],
-    category: "Maison & villa",
-    rooms: "Chalet",
-    area: "98 m²",
-    exterior: "Parcelle 518 m²",
-    description: "Chalet à vendre à Morgins, d’une surface de 98 m² sur une parcelle de 518 m².",
-    documents: [],
-  },
-  "lens-appartement-45": { title: "Appartement 4,5 pièces — Lens", location: "Région de Lens · Valais", status: "Projet neuf", price: "CHF 885’000", image: "/immobilier/lens-appartement-45/vue-1.jpg", images: ["/immobilier/lens-appartement-45/vue-1.jpg", "/immobilier/lens-appartement-45/vue-2.jpg"], category: "Projet neuf", rooms: "4,5 pièces", area: "118 m²", exterior: "Vente sur plans", description: "Immeuble de quatre appartements de 4,5 pièces. Permis de construire délivré en avril 2026, à 8 km de Sierre.", documents: [] },
-  "lens-appartement-35": { title: "Appartement 3,5 pièces — Lens", location: "Région de Lens · Valais", status: "Projet neuf", price: "CHF 585’000", image: "/immobilier/lens-appartement-35/vue-1.jpg", images: ["/immobilier/lens-appartement-35/vue-1.jpg", "/immobilier/lens-appartement-35/vue-2.jpg"], category: "Projet neuf", rooms: "3,5 pièces", area: "71 m²", exterior: "Vente sur plans", description: "Appartement de 3,5 pièces proposé sur plans. Permis de construire délivré en mars 2026.", documents: [] },
-  "lens-villa-construire": { title: "Villa à construire — Lens", location: "Lens · Valais", status: "À construire", price: "CHF 1’300’000", image: "/immobilier/lens-villa/vue-2.jpg", images: ["/immobilier/lens-villa/vue-2.jpg"], category: "Maison & villa", rooms: "Villa", area: "À compléter", exterior: "Projet neuf", description: "Projet de villa à construire à Lens. La surface et la parcelle ne sont pas indiquées dans la fiche disponible.", documents: [] },
-  "ollon-maison-renover": { title: "Maison à rénover + 2 granges", location: "Ollon · Vaud", status: "À rénover", price: "CHF 600’000", image: "/immobilier/ollon/vue-1.jpg", images: ["/immobilier/ollon/vue-1.jpg", "/immobilier/ollon/vue-2.jpg"], category: "Maison & villa", rooms: "3,5 pièces", area: "133 m²", exterior: "2 granges", description: "Maison de 3,5 pièces à rénover entièrement, accompagnée de deux granges à transformer en habitation. Places de parc disponibles.", documents: [] },
-  "soleure-terrain": { title: "Terrain constructible — Soleure", location: "Canton de Soleure", status: "Projet + permis", price: "CHF 4’550’000", image: "/immobilier/soleure/vue-1.jpg", category: "Terrain", rooms: "2 immeubles de 3 étages", area: "3’129 m²", exterior: "Permis 2026", description: "Terrain constructible de 3’129 m² pour un projet de deux immeubles de trois étages, avec permis de construire 2026.", documents: [] },
-  "chamoson-terrain": { title: "Mayen de Chamoson — Ovronnaz", location: "Chamoson · Ovronnaz", status: "Terrain", price: "Prix sur demande", image: "/immobilier/chamoson/vue-1.jpg", category: "Terrain", rooms: "Zone touristique", area: "1’738 m²", exterior: "Densité 0,30 / 0,50", description: "Terrain en zone touristique de 1’738 m², dont 339 m² avec une densité de 0,30 et 1’399 m² avec une densité de 0,50.", documents: [] },
-  "valais-central-terrain": { title: "Terrain constructible — Valais central", location: "Valais central", status: "Projet + permis", price: "Prix sur demande", image: "/immobilier/valais-central/vue-1.jpg", category: "Terrain", rooms: "24 appartements", area: "2’890 m²", exterior: "Permis de construire", description: "Projet immobilier avec permis de construire sur une surface de 2’890 m², pour 24 appartements.", documents: [] },
-  "morgins-raccard": { title: "Chalet à rafraîchir — Morgins", location: "Morgins · Valais", status: "À rafraîchir", price: "CHF 660’000", image: "/immobilier/morgins-raccard/vue-1.jpg", images: ["/immobilier/morgins-raccard/vue-1.jpg", "/immobilier/morgins-raccard/vue-2.jpg"], category: "Raccard & mayen", rooms: "Chalet", area: "96 m²", exterior: "Parcelle 514 m²", description: "Chalet de 96 m² sur une parcelle de 514 m², proche des commodités, facile d’accès et à rafraîchir.", documents: [] },
-  "val-de-bagnes-grange": { title: "Grange avec chambre — Val de Bagnes", location: "Val de Bagnes · Valais", status: "À vendre", price: "CHF 120’000", image: "/immobilier/val-de-bagnes/vue-1.jpg", images: ["/immobilier/val-de-bagnes/vue-1.jpg", "/immobilier/val-de-bagnes/vue-2.jpg"], category: "Raccard & mayen", rooms: "1 chambre", area: "8’500 m²", exterior: "Grange", description: "Grange à vendre avec une chambre, sur une parcelle de 8’500 m².", documents: [] },
-  "saviese-mayen": { title: "Mayen à rénover — Savièse", location: "Savièse · Valais", status: "À rénover", price: "CHF 275’000", image: "/immobilier/saviese/vue-1.jpg", images: ["/immobilier/saviese/vue-1.jpg", "/immobilier/saviese/vue-2.jpg"], category: "Raccard & mayen", rooms: "Résidence secondaire", area: "105 m²", exterior: "Parcelle 349 m²", description: "Mayen à rénover destiné à la résidence secondaire uniquement, avec une superficie au sol de 105 m² sur une parcelle de 349 m².", documents: [] },
-  "corps-ferme-fribourgeois": { title: "Corps de ferme fribourgeois", location: "Suisse romande", status: "À rénover", price: "CHF 900’000", image: "/immobilier/corps-ferme/vue-1.jpg", category: "À rénover", rooms: "2 appartements à créer", area: "Jardin 2’400 m²", exterior: "Grange + étage", description: "Corps de ferme très volumineux à rénover entièrement, avec deux appartements à créer dans la grange et un jardin de 2’400 m² non constructible.", documents: [] },
-};
-
-function getProject(projectId: string): ProjectProfile {
-  const project = projectProfiles[projectId] ?? {};
-  return {
-    id: projectId,
-    title: project.title ?? "Profil du projet immobilier",
-    location: project.location ?? "Localisation à compléter",
-    status: project.status ?? "À vendre",
-    price: project.price ?? "Prix sur demande",
-    image: project.image ?? imageFallback,
-    images: project.images?.length ? project.images : undefined,
-    documents: project.documents ?? [],
-    category: project.category ?? "Projet immobilier",
-    rooms: project.rooms ?? "À compléter",
-    area: project.area ?? "À compléter",
-    exterior: project.exterior ?? "À compléter",
-    description:
-      project.description ??
-      "Les informations détaillées de ce projet seront ajoutées prochainement. Contactez-nous pour recevoir les premiers éléments disponibles et être informé de la suite du dossier.",
-    facts: project.facts ?? [
-      { label: "Type de bien", value: project.category ?? "À compléter" },
-      { label: "Pièces", value: project.rooms ?? "À compléter" },
-      { label: "Surface habitable", value: project.area ?? "À compléter" },
-      { label: "Extérieur / stationnement", value: project.exterior ?? "À compléter" },
-      { label: "Disponibilité", value: "À convenir" },
-    ],
-  };
-}
-
-export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale; projectId: string }) {
-  const project = getProject(projectId);
+export function RealEstateProjectProfile({ locale, project }: { locale: Locale; project: PublicEstateProperty }) {
   const [activeImage, setActiveImage] = useState(0);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const gallery = project.images?.length ? project.images : [project.image];
@@ -181,14 +73,14 @@ export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale
               setActiveImage((current) => (current + (dx < 0 ? 1 : -1) + gallery.length) % gallery.length);
             }}
           >
-            <Image src={gallery[activeImage]} alt={t(project.title)} fill priority sizes="(max-width: 800px) 100vw, 58vw" draggable={false} />
+            <Image unoptimized={gallery[activeImage].startsWith("https:")} src={gallery[activeImage]} alt={t(project.title)} fill priority sizes="(max-width: 800px) 100vw, 58vw" draggable={false} />
             {gallery.length > 1 ? <span className="realEstateProfilePhotoCount" aria-live="polite">{activeImage + 1} / {gallery.length}</span> : null}
           </div>
           {gallery.length > 1 ? (
             <div className="realEstateProfileGalleryRail">
               {gallery.map((image, index) => (
                 <button className={`realEstateProfileGalleryThumb${activeImage === index ? " is-active" : ""}`} key={`${image}-${index}`} type="button" onClick={() => setActiveImage(index)} aria-label={`${isFrench ? "Voir la photo" : "View photo"} ${index + 1}`}>
-                  <Image src={image} alt="" fill sizes="(max-width: 800px) 25vw, 20vw" />
+                  <Image unoptimized={image.startsWith("https:")} src={image} alt="" fill sizes="(max-width: 800px) 25vw, 20vw" />
                 </button>
               ))}
               <button className="realEstateProfileAllPhotos" type="button" onClick={() => setActiveImage(0)}><span>{gallery.length}</span> {isFrench ? "Toutes les photos" : "All photos"} <ArrowUpRight aria-hidden="true" size={15} /></button>
@@ -242,12 +134,7 @@ export function RealEstateProjectProfile({ locale, projectId }: { locale: Locale
             <hr />
             <h2>{isFrench ? "Visiter ce bien" : "Visit this property"}</h2>
             <p>{isFrench ? "Planifiez une visite et découvrez cette propriété." : "Schedule a visit and discover this property."}</p>
-            <form onSubmit={(event) => event.preventDefault()}>
-              <input aria-label={isFrench ? "Nom complet" : "Full name"} placeholder={isFrench ? "Nom complet *" : "Full name *"} required />
-              <input type="email" aria-label={isFrench ? "Adresse e-mail" : "Email address"} placeholder={isFrench ? "Adresse e-mail *" : "Email address *"} required />
-              <input type="tel" aria-label={isFrench ? "Numéro de téléphone" : "Phone number"} placeholder={isFrench ? "Numéro de téléphone *" : "Phone number *"} required />
-              <button type="submit">{isFrench ? "Organiser une visite" : "Arrange a visit"} <ArrowUpRight aria-hidden="true" size={16} /></button>
-            </form>
+            <EstateVisitForm locale={locale} propertyId={project.id} />
             <div className="realEstateProfileTrust"><ShieldCheck aria-hidden="true" size={17} /> {isFrench ? "Réponse personnalisée par Brother Studio" : "Personal reply from Brother Studio"}</div>
           </aside>
         </div>

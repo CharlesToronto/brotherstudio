@@ -37,7 +37,7 @@ export function RealEstateFooter({ locale }: { locale: Locale }) {
           <p className="realEstateFooterLabel">Brother Studio</p>
           <p>{locale === "fr" ? "Suisse / Canada" : "Switzerland / Canada"}</p>
           <a href={`https://brotherstudio.ch/${locale}`} target="_blank" rel="noreferrer">{locale === "fr" ? "Site principal ↗" : "Main website ↗"}</a>
-          <Link className={theme.mobileAdmin} href="/admin">Admin</Link>
+          <Link href="/admin/immobilier">Admin</Link>
         </div>
       </div>
       <div className="realEstateFooterBottom">

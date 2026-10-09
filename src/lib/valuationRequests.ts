@@ -1,5 +1,8 @@
 export type ValuationRequest = {
   id: string;
+  property_slug?: string;
+  property_title?: string;
+  locale?: string;
   first_name: string;
   last_name: string;
   email: string;

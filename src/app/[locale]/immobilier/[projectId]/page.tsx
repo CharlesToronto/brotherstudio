@@ -1,3 +1,6 @@
+import { getEstateProperty } from "@/lib/estateServer";
+import { notFound } from "next/navigation";
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 
 import { RealEstateProjectProfile } from "@/components/RealEstateProjectProfile";
@@ -31,5 +34,7 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
 export default async function RealEstateProjectPage({ params }: ProjectPageProps) {
   const { locale, projectId } = await params;
   const resolvedLocale = await resolveLocaleParam(Promise.resolve({ locale }));
-  return <RealEstateProjectProfile locale={resolvedLocale} projectId={projectId} />;
+  const project = await getEstateProperty(projectId, resolvedLocale);
+  if (!project) notFound();
+  return <RealEstateProjectProfile locale={resolvedLocale} project={project} />;
 }

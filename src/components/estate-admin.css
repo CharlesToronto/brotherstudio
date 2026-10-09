@@ -1,0 +1,22 @@
+.estateAdmin {width:100%;max-width:1440px;margin:0 auto;padding:110px 32px 64px;color:#0f172a;background:#f8fafc;min-height:100vh;font-family:Arial,sans-serif;}
+.estateAdminHeader{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:32px;}
+.estateAdminHeader h1{font-size:clamp(26px,4vw,38px);letter-spacing:-.04em;margin:0;}
+.estateAdminHeader p:last-child{color:#64748b;font-size:14px;}
+.estateAdmin .dashboardTopTabs{margin-bottom:28px;}
+.estateAdmin .dashboardTopTabs button{display:flex;align-items:center;gap:8px;}
+.estateAdmin a{color:#2563eb;}
+.estateLogin{max-width:420px;margin:60px auto;padding:30px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;}
+.estatePropertyColumns{display:grid;grid-template-columns:minmax(240px,.65fr) minmax(0,1.4fr);gap:24px;align-items:start;}
+.estatePropertyEditor{background:white;padding:26px;border:1px solid #e2e8f0;border-radius:20px;}
+.estatePropertyEditor fieldset{display:grid;gap:18px;border:0;padding:0;margin:0;min-width:0;}
+.estateFieldGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.estateWide{grid-column:1/-1;}.estatePropertyEditor h3{margin:0;font-size:24px;}
+.estateSearch{display:grid;gap:8px;margin-bottom:16px;font-size:13px;}
+.estateSearch input{padding:14px;border:1px solid #e2e8f0;border-radius:12px;width:100%;background:white;color:#0f172a;}
+.estateChecks{display:flex;gap:20px;flex-wrap:wrap;}.estateChecks label{display:flex;flex-direction:row;align-items:center;gap:8px;}.estateChecks input{width:18px;height:18px;}
+.estateEditorActions{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}.estateDelete{color:#be123c;}
+.estateDocument{display:grid;gap:12px;padding:16px;border:1px solid #e2e8f0;border-radius:12px;}.prospectSource{padding:16px;background:#eff6ff;border-radius:12px;line-height:1.6;font-size:14px;overflow-wrap:anywhere;}
+@media(max-width:760px){.estateAdmin{padding:100px 16px 40px;}.estateAdminHeader{display:grid;}.estatePropertyColumns{grid-template-columns:1fr;}.estateFieldGrid{grid-template-columns:1fr;}.estatePropertyEditor{padding:18px;}.estateAdmin .dashboardTopTabs button{padding:12px 10px;font-size:12px;}.estateLogin{margin:24px auto;}}
+.estateAdmin .valuationFilters > label{min-width:0;}
+.estateAdmin .valuationFilters select{max-width:100%;}
+@media(max-width:760px){.estateAdmin .valuationFilters{display:grid;grid-template-columns:minmax(0,1fr);}.estateAdmin .valuationSearch{min-height:48px;}.estatePropertyColumns>aside .valuationList{max-height:340px;overflow:auto;}.estatePropertyEditor{scroll-margin-top:20px;}}
