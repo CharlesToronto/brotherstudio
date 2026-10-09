@@ -1,0 +1,163 @@
+/* Dashboard finance and property valuation inbox. */
+.dashboardTopTabs { display: flex; gap: 8px; padding: 6px; width: fit-content; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 16px; background: #f1f5f9; }
+.dashboardTopTabs button { padding: 12px 20px; border: 0; border-radius: 11px; background: transparent; color: #64748b; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.dashboardTopTabs button[aria-selected="true"] { background: #fff; color: #2563eb; box-shadow: 0 2px 8px rgb(15 23 42 / .08); }
+.dashboardTopTabs button:focus-visible, .valuationWorkspace :is(button, a, input, select):focus-visible { outline: 2px solid #2563eb; outline-offset: 3px; }
+.valuationWorkspace { display: grid; gap: 24px; }
+.valuationHeading { display: flex; justify-content: space-between; align-items: start; gap: 20px; }
+.valuationEyebrow { margin: 0 0 10px; color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .16em; }
+.valuationHeading h2 { margin: 0; font-size: clamp(24px, 3vw, 32px); font-weight: 600; letter-spacing: -.04em; }
+.valuationHeading > div > p:last-child { margin: 10px 0 0; color: #64748b; font-size: 14px; }
+.valuationRefresh, .valuationPagination button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; min-height: 42px; padding: 8px 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; font: inherit; font-size: 13px; cursor: pointer; }
+.valuationWorkspace button:disabled { opacity: .5; cursor: default; }
+.valuationSummary { display: flex; align-items: baseline; gap: 12px; padding: 20px 24px; border: 1px solid #dbeafe; border-radius: 18px; background: #eff6ff; color: #1d4ed8; }
+.valuationSummary strong { font-size: 32px; letter-spacing: -.04em; }
+.valuationSummary span { font-size: 14px; }
+.valuationFilters { display: flex; gap: 12px; }
+.valuationSearch { display: flex; align-items: center; gap: 10px; flex: 1; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 12px; color: #64748b; background: #fff; }
+.valuationSearch input { width: 100%; min-width: 0; height: 46px; border: 0; background: transparent; color: #0f172a; font: inherit; font-size: 14px; }
+.valuationFilters select { height: 46px; width: 100%; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; color: #334155; font: inherit; font-size: 14px; }
+.valuationError { color: #be123c; }
+.valuationEmpty { display: grid; justify-items: center; gap: 12px; padding: 48px 24px; border: 1px dashed #cbd5e1; border-radius: 20px; text-align: center; color: #64748b; }
+.valuationEmpty h3 { margin: 0; color: #0f172a; font-size: 20px; }
+.valuationEmpty p { margin: 0; font-size: 14px; }
+.valuationColumns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px; align-items: start; }
+.valuationResultCount { margin: 0 0 12px; font-size: 12px; color: #64748b; }
+.valuationList { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.valuationList button { display: grid; gap: 10px; width: 100%; padding: 18px; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; font: inherit; text-align: left; cursor: pointer; }
+.valuationList button[aria-pressed="true"] { border-color: #2563eb; background: #eff6ff; box-shadow: inset 3px 0 #2563eb; }
+.valuationListTop, .valuationListBottom { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.valuationListTop strong { font-size: 16px; color: #0f172a; }
+.valuationListTop > span { padding: 4px 8px; border-radius: 6px; background: #f1f5f9; color: #475569; font-size: 11px; }
+.valuationAddress { font-size: 14px; color: #475569; overflow-wrap: anywhere; }
+.valuationListBottom { font-size: 11px; color: #64748b; }
+.valuationDetail { position: sticky; top: 100px; padding: 26px; border: 1px solid #e2e8f0; border-radius: 20px; background: #fff; }
+.valuationDetail h3 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -.03em; }
+.valuationDate { margin: 8px 0 20px; color: #64748b; font-size: 12px; }
+.valuationContact { display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 22px; }
+.valuationContact a { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 9px 12px; border-radius: 10px; background: #eff6ff; color: #1d4ed8; font-size: 13px; overflow-wrap: anywhere; }
+.valuationDetail dl { margin: 0; }
+.valuationDetail dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 20px; padding: 13px 0; border-top: 1px solid #e2e8f0; font-size: 13px; }
+.valuationDetail dt { color: #64748b; }
+.valuationDetail dd { margin: 0; color: #0f172a; overflow-wrap: anywhere; }
+.valuationPagination { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 20px; font-size: 12px; }
+@media (max-width: 760px) {
+  .dashboardTopTabs { width: 100%; }
+  .dashboardTopTabs button { flex: 1; padding: 12px 10px; font-size: 12px; }
+  .valuationHeading { flex-wrap: wrap; }
+  .valuationFilters { flex-direction: column; }
+  .valuationColumns { grid-template-columns: minmax(0, 1fr); }
+  .valuationDetail { position: static; padding: 20px; }
+}
+
+.prospectHeaderActions { display: flex; flex-wrap: wrap; gap: 10px; }
+.prospectStats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.prospectStats article { display: grid; gap: 10px; padding: 22px; border: 1px solid #e2e8f0; border-radius: 18px; background: #fff; }
+.prospectStats article > span { font-size: 12px; font-weight: 600; color: #64748b; }
+.prospectStats strong { font-size: 36px; line-height: 1; letter-spacing: -.04em; color: #0f172a; }
+.prospectStats small { color: #64748b; font-size: 11px; line-height: 1.6; }
+.prospectStats .is-blue { background: #eff6ff; border-color: #dbeafe; }
+.prospectStats .is-blue strong { color: #1d4ed8; }
+.prospectStats .is-amber { background: #fffbeb; border-color: #fde68a; }
+.prospectOverview { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; }
+.prospectTrend, .prospectPipeline, .prospectCalendar { padding: 24px; border: 1px solid #e2e8f0; border-radius: 20px; background: #fff; }
+.prospectSectionTitle { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.prospectSectionTitle > span { display: inline-flex; gap: 4px; align-items: center; font-size: 12px; color: #64748b; }
+.valuationWorkspace :is(.prospectTrend, .prospectPipeline) h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.prospectTrendBars { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; margin-top: 24px; }
+.prospectTrendBars button { display: grid; justify-items: center; gap: 8px; border: 0; padding: 0 6px; background: transparent; color: #64748b; cursor: pointer; }
+.prospectTrendBars button strong { font-size: 13px; color: #334155; }
+.prospectTrendBars button small { font-size: 11px; }
+.prospectBarTrack { display: flex; align-items: end; width: 100%; max-width: 42px; height: 105px; border-radius: 6px; background: #f1f5f9; }
+.prospectBarTrack > span { display: block; width: 100%; border-radius: 6px; background: #93c5fd; }
+.prospectTrendBars button[data-current="true"] .prospectBarTrack > span { background: #2563eb; }
+.prospectPipeline > p { margin: 6px 0 14px; font-size: 12px; color: #64748b; }
+.prospectPipeline > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.prospectPipeline button { display: flex; gap: 8px; align-items: center; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; font-size: 12px; text-align: left; cursor: pointer; }
+.prospectPipeline button strong { margin-left: auto; font-size: 17px; }
+.prospectPipeline button[aria-pressed="true"] { border-color: #2563eb; background: #eff6ff; }
+.prospectStatusDot { flex-shrink: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--prospect-status-color, #2563eb); }
+.valuationWorkspace [data-status="new"] { --prospect-status-color: #2563eb; }
+.valuationWorkspace [data-status="contacted"] { --prospect-status-color: #0891b2; }
+.valuationWorkspace [data-status="valuation"] { --prospect-status-color: #7c3aed; }
+.valuationWorkspace [data-status="mandate"] { --prospect-status-color: #059669; }
+.valuationWorkspace [data-status="closed"] { --prospect-status-color: #15803d; }
+.valuationWorkspace [data-status="lost"] { --prospect-status-color: #64748b; }
+.prospectStatusBadge { width: fit-content; padding: 4px 9px; border-radius: 6px; font-size: 11px; background: color-mix(in srgb, var(--prospect-status-color) 10%, white); color: var(--prospect-status-color); }
+.prospectOverdueAlert { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 20px; border: 1px solid #fed7aa; border-radius: 14px; background: #fff7ed; color: #9a3412; font-size: 13px; }
+.prospectOverdueAlert button, .prospectDateScope button, .prospectClearDay { border: 0; padding: 6px 0; background: transparent; color: #1d4ed8; font: inherit; font-size: 12px; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+.prospectViewToolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+.prospectModeSwitch { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: #f1f5f9; width: fit-content; }
+.prospectModeSwitch button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 0; padding: 9px 14px; border-radius: 9px; background: transparent; color: #64748b; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.prospectModeSwitch button[aria-pressed="true"] { background: #fff; color: #1d4ed8; box-shadow: 0 2px 5px rgb(15 23 42 / .06); }
+.prospectDateScope { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.prospectDateScope label { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #475569; }
+.prospectDateScope input { accent-color: #2563eb; }
+.prospectCalendarHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.prospectCalendarHeader h3 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 22px; font-weight: 600; text-transform: capitalize; }
+.prospectMonthActions { display: flex; gap: 8px; }
+.prospectMonthActions button { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 9px; background: #fff; font: inherit; font-size: 12px; cursor: pointer; }
+.prospectCalendarControls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0; }
+.prospectCalendarGrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.prospectWeekday { padding: 10px; text-align: center; font-size: 11px; color: #64748b; font-weight: 600; }
+.prospectCalendarDay, .prospectCalendarBlank { position: relative; min-height: 96px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.prospectCalendarBlank { background: #f8fafc; border-color: transparent; }
+.prospectCalendarDay { display: flex; flex-direction: column; justify-content: space-between; align-items: start; gap: 10px; padding: 12px; color: #334155; cursor: pointer; }
+.prospectCalendarDay[data-today="true"] { border-color: #93c5fd; }
+.prospectCalendarDay[data-today="true"] .prospectDayNumber { color: #1d4ed8; font-weight: 700; }
+.prospectCalendarDay[aria-pressed="true"] { border-color: #2563eb; background: #eff6ff; box-shadow: inset 0 0 0 1px #2563eb; }
+.prospectDayNumber { font-size: 13px; }
+.prospectDayCount { display: flex; align-items: baseline; gap: 6px; padding: 4px 8px; border-radius: 6px; background: #dbeafe; color: #1d4ed8; font-size: 11px; }
+.prospectDayCount.is-followup { background: #fef3c7; color: #92400e; }
+.prospectDayCount strong { font-size: 16px; }
+.prospectFollowupDot { position: absolute; top: 13px; right: 13px; width: 6px; height: 6px; border-radius: 50%; background: #d97706; }
+.prospectCalendarHint { margin: 16px 0 0; color: #64748b; font-size: 12px; line-height: 1.6; }
+.prospectResultsHeading { display: grid; gap: 6px; margin-bottom: 16px; }
+.prospectResultsHeading h3 { margin: 0; font-size: 18px; font-weight: 600; text-transform: capitalize; }
+.prospectResultsHeading > span { font-size: 12px; color: #64748b; }
+.prospectCardFollowup { font-size: 12px; color: #475569; }
+.prospectCardFollowup[data-overdue="true"] { color: #b45309; font-weight: 600; }
+.prospectNoSelection { padding: 36px 26px; border: 1px dashed #cbd5e1; border-radius: 20px; color: #64748b; }
+.prospectNoSelection h3 { margin: 0 0 12px; color: #334155; font-size: 18px; }
+.prospectNoSelection p { margin: 0; font-size: 14px; line-height: 1.7; }
+.prospectFollowupForm { display: grid; gap: 14px; margin-bottom: 26px; padding: 20px; border-radius: 14px; background: #f8fafc; }
+.prospectFollowupForm h4, .prospectAnswersHeading { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+.prospectFollowupForm label { display: grid; gap: 7px; font-size: 12px; font-weight: 500; color: #475569; }
+.prospectFollowupForm :is(input, select, textarea), .prospectListScope :is(input, select) { width: 100%; min-width: 0; min-height: 42px; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 9px; background: #fff; color: #0f172a; font: inherit; font-size: 13px; }
+.prospectFollowupForm textarea { resize: vertical; line-height: 1.7; }
+.prospectSaveRow { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.prospectSaveRow button { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 0; border-radius: 9px; background: #2563eb; color: #fff; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.prospectSaveRow > span { color: #64748b; font-size: 11px; }
+.prospectSuccess { margin: 0; color: #15803d; font-size: 12px; }
+.prospectHelp { padding: 18px 22px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; font-size: 13px; color: #475569; }
+.prospectHelp summary { cursor: pointer; color: #334155; font-weight: 600; }
+.prospectHelp ol { padding-left: 20px; margin: 18px 0; }
+.prospectHelp li { padding: 5px 0; line-height: 1.7; }
+.prospectHelp p { margin: 0; font-size: 12px; color: #64748b; }
+.prospectListScope { display: flex; gap: 12px; }
+.prospectListScope > * { max-width: 250px; }
+@media (max-width: 1050px) {
+  .prospectStats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .valuationFilters { flex-wrap: wrap; }
+  .valuationSearch { flex-basis: 100%; }
+}
+@media (max-width: 760px) {
+  .prospectOverview { grid-template-columns: minmax(0, 1fr); }
+  .prospectStats article { padding: 16px; }
+  .prospectStats article > span { font-size: 11px; }
+  .prospectStats strong { font-size: 30px; }
+  .prospectTrend, .prospectPipeline, .prospectCalendar { padding: 16px; }
+  .prospectCalendarHeader { align-items: start; flex-wrap: wrap; }
+  .prospectCalendarHeader h3 { font-size: 20px; }
+  .prospectCalendarControls { align-items: start; flex-direction: column; }
+  .prospectCalendarGrid { gap: 3px; }
+  .prospectCalendarDay, .prospectCalendarBlank { min-height: 65px; border-radius: 7px; }
+  .prospectCalendarDay { padding: 6px; gap: 5px; }
+  .prospectDayCount { padding: 2px 5px; }
+  .prospectDayCount > span { display: none; }
+  .prospectDayCount strong { font-size: 12px; }
+  .prospectWeekday { padding: 5px 0; font-size: 10px; }
+  .prospectFollowupDot { top: 7px; right: 5px; width: 4px; height: 4px; }
+  .prospectFollowupForm { padding: 14px; }
+  .prospectOverdueAlert { align-items: start; flex-direction: column; }
+}

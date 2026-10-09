@@ -1,9 +1,11 @@
 "use client";
 
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CreditCard, FileText, Folder, Pencil, Search, Trash2, User, UserPlus, X } from "lucide-react";
 
 import { AdminLockOverlay } from "@/components/AdminLockOverlay";
+import { DashboardValuationRequests } from "@/components/DashboardValuationRequests";
+import "@/components/dashboard-workspace.css";
 import {
   DASHBOARD_PAYMENT_STATUSES,
   DASHBOARD_SERVICE_OPTIONS,
@@ -507,6 +509,15 @@ const dashboardIconButtonClass = `${dashboardButtonMotionClass} hover:-translate
 const dashboardDangerButtonClass = `${dashboardButtonMotionClass} hover:-translate-y-0.5 hover:bg-rose-100 hover:shadow-[0_8px_20px_rgba(244,63,94,0.16)]`;
 
 export default function DashboardPage() {
+  const [activeTab, setActiveTab] = useState<"finance" | "prospects">("finance");
+  const prospectDirtyRef = useRef(false);
+  const onProspectDirty = useCallback((dirty: boolean) => { prospectDirtyRef.current = dirty; }, []);
+  function selectDashboardTab(next: "finance" | "prospects") {
+    if (next === activeTab) return true;
+    if (prospectDirtyRef.current && !window.confirm("Le suivi du prospect n’est pas enregistré. Quitter cet onglet sans enregistrer ?")) return false;
+    setActiveTab(next);
+    return true;
+  }
   const clientPickerRef = useRef<HTMLSelectElement | null>(null);
   const paymentCarouselRef = useRef<HTMLElement | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -1834,7 +1845,7 @@ export default function DashboardPage() {
 
   return (
     <main className="dashboardPage min-h-screen bg-white text-neutral-950">
-      <AdminLockOverlay title="Accès Dashboard" storageKey="bs_dashboard_unlocked" />
+      <AdminLockOverlay title="Accès Dashboard" />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10 sm:px-8 lg:px-10">
         <header className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-neutral-400">
@@ -1844,12 +1855,26 @@ export default function DashboardPage() {
             Dashboard
           </h1>
           <p className="max-w-2xl text-sm leading-7 text-neutral-600 sm:text-base">
-            Vue rapide des clients, projets et projections financières.
+            Vos finances et vos demandes de vente immobilière, au même endroit.
           </p>
           {statusMessage ? <p className="text-sm text-emerald-700">{statusMessage}</p> : null}
           {errorMessage ? <p className="text-sm text-rose-700">{errorMessage}</p> : null}
         </header>
 
+        <div className="dashboardTopTabs" role="tablist" aria-label="Sections du dashboard">
+          {([ ["finance", "Finance"], ["prospects", "Prospect vente immobilière"] ] as const).map(([key, label]) => (
+            <button key={key} type="button" role="tab" id={`dashboard-tab-${key}`} aria-selected={activeTab === key} aria-controls={`dashboard-panel-${key}`} tabIndex={activeTab === key ? 0 : -1}
+              onClick={() => selectDashboardTab(key)}
+              onKeyDown={event => {
+                if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+                event.preventDefault();
+                const next = event.key === "Home" ? "finance" : event.key === "End" ? "prospects" : activeTab === "finance" ? "prospects" : "finance";
+                if (selectDashboardTab(next)) document.getElementById(`dashboard-tab-${next}`)?.focus();
+              }}>{label}</button>
+          ))}
+        </div>
+        {activeTab === "prospects" ? <div id="dashboard-panel-prospects" role="tabpanel" aria-labelledby="dashboard-tab-prospects" tabIndex={0}><DashboardValuationRequests onUnsavedChange={onProspectDirty} /></div> : null}
+        <div id="dashboard-panel-finance" role="tabpanel" aria-labelledby="dashboard-tab-finance" tabIndex={0} hidden={activeTab !== "finance"} style={{ display: activeTab === "finance" ? "grid" : "none", gap: "2rem" }}>
         <section className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)]">
           <article className="rounded-[28px] border border-neutral-200 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -2382,6 +2407,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </details>
+        </div>
       </div>
       {showNewClientForm ? (
         <div
