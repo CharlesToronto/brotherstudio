@@ -365,3 +365,11 @@
     scroll-margin-top: 128px;
   }
 }
+
+/* Hide photo-count badges on mobile property galleries. */
+@media (max-width: 760px) {
+  :global(body):has(.theme) :global(.realEstateProfilePage .realEstateProfilePhotoCount),
+  :global(body):has(.theme) :global(.realEstateProfilePage .realEstateProfileAllPhotos) {
+    display: none;
+  }
+}
