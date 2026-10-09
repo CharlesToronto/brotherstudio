@@ -293,3 +293,10 @@
     display: block;
   }
 }
+
+/* The mobile navigation already provides the property-selling link. */
+@media (max-width: 760px) {
+  :global(.realEstateListingsPage .realEstateHero .realEstateSellButton) {
+    display: none;
+  }
+}
