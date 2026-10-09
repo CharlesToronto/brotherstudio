@@ -253,12 +253,15 @@
     background: #fff;
   }
   :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateHeroActions) {
-    align-items: stretch;
+    align-items: center;
     gap: 12px;
     margin-top: 28px;
   }
   :global(body):has(.theme) :global(.realEstateCommercialHome .realEstateHeroActions a) {
     justify-content: center;
+    box-sizing: border-box;
+    width: min(100%, 270px);
+    align-self: center;
     min-height: 48px;
     padding: 12px 16px;
     white-space: normal;
