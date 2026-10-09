@@ -5,6 +5,7 @@ import Script from "next/script";
 import "./globals.css";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { SiteAssistantBubble } from "@/components/SiteAssistantBubble";
+import { RealEstateFooter } from "@/components/RealEstateFooter";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { site } from "@/content/site";
@@ -102,7 +103,7 @@ export default async function RootLayout({
             {hasStandardChrome && !isPlantazWebsitePage ? <SiteHeader locale={locale} /> : null}
             {!analyticsDisabled ? <AnalyticsTracker /> : null}
             {children}
-            {hasStandardChrome && !isPlantazWebsitePage ? <SiteFooter locale={locale} /> : null}
+            {isEstateAdmin ? <RealEstateFooter locale={locale} /> : hasStandardChrome && !isPlantazWebsitePage ? <SiteFooter locale={locale} /> : null}
           </div>
           {!isEstateAdmin ? <SiteAssistantBubble hasMobileMenu={hasStandardChrome} locale={locale} /> : null}
         </div>
