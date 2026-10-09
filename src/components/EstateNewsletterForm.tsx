@@ -29,7 +29,7 @@ export function EstateNewsletterForm({ locale }: { locale: Locale }) {
       : <form onSubmit={submit} className={styles.form}>
         <div className={styles.row}><label className={styles.email}><span className="srOnly">{fr ? 'Adresse email' : 'Email address'}</span>
           <input type="email" name="email" placeholder={fr ? 'Votre adresse email' : 'Your email address'} autoComplete="email" required maxLength={254} disabled={busy}/></label>
-          <button type="submit" className="realEstateSellButton" disabled={busy}>{busy ? (fr ? 'Inscription…' : 'Subscribing…') : (fr ? 'M’inscrire' : 'Subscribe')} <span aria-hidden="true">↗</span></button></div>
+          <button type="submit" className={`realEstateSellButton ${styles.submitButton}`} disabled={busy}>{busy ? (fr ? 'Inscription…' : 'Subscribing…') : (fr ? 'M’inscrire' : 'Subscribe')} <span aria-hidden="true">↗</span></button></div>
         <label className={styles.consent}><input name="consent" type="checkbox" required disabled={busy}/><span>{fr ? 'J’accepte de recevoir la newsletter immobilière de Brother Studio.' : 'I agree to receive the Brother Studio property newsletter.'}</span></label>
         <div className={styles.trap} aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off"/></label></div>
         {error ? <p className={styles.error} role="alert">{error}</p> : null}
