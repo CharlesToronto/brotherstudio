@@ -27265,7 +27265,7 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
 .homeHeroActions .realEstateHeroActionSecondary { background: #fff; color: #111817; }
 
 .homeHeroActions .realEstateHeroActionPrimary {
-  background: rgb(255 255 255 / .22);
+  background: transparent;
   color: #fff;
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
