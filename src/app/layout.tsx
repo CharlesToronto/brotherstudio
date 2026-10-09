@@ -76,6 +76,7 @@ export default async function RootLayout({
   const isCampaignLandingPage = subpath === "/landing";
   const isPlantazWebsitePage = subpath === "/mywebsite/plantaz";
   const isEstateAdmin = subpath === "/admin/immobilier";
+  const isRealEstatePage = subpath === "/immobilier" || subpath.startsWith("/immobilier/");
   const hasStandardChrome = !isBareExperiencePage && !isCampaignLandingPage && !isEstateAdmin;
   const analyticsDisabled = cookieStore.get(ANALYTICS_EXCLUSION_COOKIE)?.value === "1";
   const shouldLoadAnalytics =
@@ -103,7 +104,7 @@ export default async function RootLayout({
             {hasStandardChrome && !isPlantazWebsitePage ? <SiteHeader locale={locale} /> : null}
             {!analyticsDisabled ? <AnalyticsTracker /> : null}
             {children}
-            {isEstateAdmin ? <RealEstateFooter locale={locale} /> : hasStandardChrome && !isPlantazWebsitePage ? <SiteFooter locale={locale} /> : null}
+            {isEstateAdmin ? <RealEstateFooter locale={locale} /> : !isRealEstatePage && hasStandardChrome && !isPlantazWebsitePage ? <SiteFooter locale={locale} /> : null}
           </div>
           {!isEstateAdmin ? <SiteAssistantBubble hasMobileMenu={hasStandardChrome} locale={locale} /> : null}
         </div>
