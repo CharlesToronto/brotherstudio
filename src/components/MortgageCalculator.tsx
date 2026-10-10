@@ -74,7 +74,7 @@ export function MortgageCalculator({ locale, initialPrice, propertyLabel, embedd
     query: { ...(initialPrice ? { price: initialPrice } : {}), ...(propertyLabel ? { property: propertyLabel } : {}) },
   };
   const calculatorCard = (
-    <section className={styles.card} aria-label={isFrench ? "Calculateur hypothécaire" : "Mortgage calculator"}>
+    <section className={styles.card} data-mortgage-calculator aria-label={isFrench ? "Calculateur hypothécaire" : "Mortgage calculator"}>
       <form className={styles.form} onSubmit={(event) => event.preventDefault()}>
         <h2>{isFrench ? "Votre projet" : "Your project"}</h2>
         <p className={styles.formIntro}>{isFrench ? "Les champs sont indicatifs et ne constituent pas une demande de crédit." : "The fields are indicative and do not constitute a credit application."}</p>

@@ -14,7 +14,7 @@
   background: transparent;
   color: #000;
 }
-:global(body):has(.theme) :global(.realEstateSitePage :is(h1, h2, h3, p, span, small, strong, a, dt, dd, label, input, select, svg)), :global(body):has(.theme) :global(.realEstateSitePage :is(.realEstateFilterChip, .realEstateViewButton, .realEstateProfileFavorite)) { color: #000; }
+:global(body):has(.theme) :global(.realEstateSitePage :is(h1, h2, h3, p, span, small, strong, a, dt, dd, label, input, select, svg):not([data-mortgage-calculator] *)), :global(body):has(.theme) :global(.realEstateSitePage :is(.realEstateFilterChip, .realEstateViewButton, .realEstateProfileFavorite)) { color: #000; }
 :global(body):has(.theme) :global(.realEstateLocalHeader) {
   background: rgb(226 229 233 / .94);
   border-bottom-color: var(--real-estate-border);
@@ -132,7 +132,7 @@
 :global(body):has(.theme) :global(.realEstateFooter) {
   color: #000;
 }
-:global(body):has(.theme) :global(:is(.realEstateSitePage, .campaignLandingValuation, .realEstateLocalHeader, .realEstateFooter) :is(h1, h2, h3, h4, h5, h6, p, a, span, small, strong, em, dt, dd, label, legend, input, select, textarea, summary, button)) {
+:global(body):has(.theme) :global(:is(.realEstateSitePage, .campaignLandingValuation, .realEstateLocalHeader, .realEstateFooter) :is(h1, h2, h3, h4, h5, h6, p, a, span, small, strong, em, dt, dd, label, legend, input, select, textarea, summary, button):not([data-mortgage-calculator] *)) {
   color: #000 !important;
 }
 :global(body):has(.theme) :global(.campaignLandingValuation .campaignLandingButton) {
