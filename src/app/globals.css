@@ -27268,21 +27268,10 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
 .homeHeroActions .homeHeroDiscoverButton:hover,
 .homeHeroActions .homeHeroDiscoverButton:focus-visible {
   position: relative;
-  isolation: isolate;
   background: none;
   border: 0;
   box-shadow: none;
   color: #fff;
-}
-
-/* Paint the frosted surface separately from the label, as in the header. */
-.homeHeroDiscoverButton::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  pointer-events: none;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
 }
