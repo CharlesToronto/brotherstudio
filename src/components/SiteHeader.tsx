@@ -112,16 +112,22 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
 
   const realEstateSubmenuItems = [
     {
+      key: "home",
       label: locale === "fr" ? "Accueil" : "Home",
       href: localizedHref("/immobilier"),
+      isCurrent: subpath === "/immobilier",
     },
     {
+      key: "properties",
       label: locale === "fr" ? "Nos biens" : "Properties",
       href: localizedHref("/immobilier/biens"),
+      isCurrent: subpath === "/immobilier/biens",
     },
     {
+      key: "sell",
       label: locale === "fr" ? "Vendre mon bien" : "Sell my property",
       href: localizedHref("/immobilier/vendre"),
+      isCurrent: subpath === "/immobilier/vendre",
     },
   ];
 
