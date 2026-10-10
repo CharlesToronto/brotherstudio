@@ -27272,8 +27272,8 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
   border: 0;
   box-shadow: none;
   color: #fff;
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
 /* Persistent route filters can isolate the video from descendant backdrop layers. */
