@@ -32,6 +32,8 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
   const headerRef = useRef<HTMLElement>(null);
   const desktopRealEstateTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileRealEstateTriggerRef = useRef<HTMLButtonElement>(null);
+  const desktopMoreTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileMoreTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -41,7 +43,7 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
   }, [locale]);
 
   useEffect(() => {
-    if (openSubmenu !== "real-estate") return;
+    if (openSubmenu !== "real-estate" && openSubmenu !== "more") return;
 
     const closeOnOutsideClick = (event: PointerEvent) => {
       if (event.target instanceof Node && !headerRef.current?.contains(event.target)) {
@@ -51,9 +53,10 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpenSubmenu(null);
-        const trigger = window.matchMedia("(max-width: 980px)").matches
-          ? mobileRealEstateTriggerRef.current
-          : desktopRealEstateTriggerRef.current;
+        const isMobile = window.matchMedia("(max-width: 980px)").matches;
+        const trigger = openSubmenu === "real-estate"
+          ? (isMobile ? mobileRealEstateTriggerRef.current : desktopRealEstateTriggerRef.current)
+          : (isMobile ? mobileMoreTriggerRef.current : desktopMoreTriggerRef.current);
         trigger?.focus();
       }
     };
@@ -122,6 +125,27 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
     },
   ];
 
+  const moreSubmenuItems = [
+    {
+      key: "insights",
+      label: "Insights",
+      href: localizedHref("/insights"),
+      isCurrent: subpath === "/insights",
+    },
+    {
+      key: "about",
+      label: messages.nav.about,
+      href: localizedHref("/about"),
+      isCurrent: subpath === "/about",
+    },
+    {
+      key: "price",
+      label: messages.nav.price,
+      href: localizedHref("/price"),
+      isCurrent: subpath === "/price" || subpath === "/services",
+    },
+  ];
+
   const navItems = [
     {
       key: "home",
@@ -135,13 +159,6 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
       label: messages.nav.gallery,
       href: `${localizedHref("/")}#home-gallery-section`,
       isCurrent: false,
-      kind: "link" as const,
-    },
-    {
-      key: "insights",
-      label: "Insights",
-      href: localizedHref("/insights"),
-      isCurrent: subpath === "/insights",
       kind: "link" as const,
     },
     {
@@ -163,17 +180,10 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
       kind: "link" as const,
     },
     {
-      key: "price",
-      label: messages.nav.price,
-      href: localizedHref("/price"),
-      isCurrent: subpath === "/price" || subpath === "/services",
-      kind: "link" as const,
-    },
-    {
-      key: "about",
-      label: messages.nav.about,
-      href: localizedHref("/about"),
-      isCurrent: subpath === "/about",
+      key: "more",
+      label: locale === "fr" ? "Plus" : "More",
+      href: localizedHref("/insights"),
+      isCurrent: moreSubmenuItems.some((submenuItem) => submenuItem.isCurrent),
       kind: "link" as const,
     },
     {
@@ -205,10 +215,18 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
         "data-nav-key": item.key,
       };
 
-      if (item.key === "real-estate") {
+      if (item.key === "real-estate" || item.key === "more") {
         const isOpen = openSubmenu === item.key;
-        const isCurrent = subpath.startsWith("/immobilier");
-        const panelId = isMobile ? "mobile-real-estate-submenu" : "real-estate-submenu";
+        const submenuItems = item.key === "real-estate" ? realEstateSubmenuItems : moreSubmenuItems;
+        const isCurrent = item.key === "real-estate"
+          ? subpath.startsWith("/immobilier")
+          : moreSubmenuItems.some((submenuItem) => submenuItem.isCurrent);
+        const panelId = item.key === "real-estate"
+          ? (isMobile ? "mobile-real-estate-submenu" : "real-estate-submenu")
+          : (isMobile ? "mobile-more-submenu" : "more-submenu");
+        const triggerRef = item.key === "real-estate"
+          ? (isMobile ? mobileRealEstateTriggerRef : desktopRealEstateTriggerRef)
+          : (isMobile ? mobileMoreTriggerRef : desktopMoreTriggerRef);
 
         return (
           <div
@@ -218,7 +236,7 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
             data-open={isOpen}
           >
             <button
-              ref={isMobile ? mobileRealEstateTriggerRef : desktopRealEstateTriggerRef}
+              ref={triggerRef}
               type="button"
               className="siteNavSubmenuTrigger"
               data-current={isCurrent}
@@ -236,12 +254,12 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
                 aria-hidden={!isOpen}
                 inert={!isOpen}
               >
-                {realEstateSubmenuItems.map((submenuItem) => (
+                {submenuItems.map((submenuItem) => (
                   <Link
                     key={submenuItem.href}
                     className="siteNavSublink"
                     href={submenuItem.href}
-                    aria-current={subpath === submenuItem.href.replace(`/${locale}`, "") ? "page" : undefined}
+                    aria-current={(submenuItem.isCurrent ?? (subpath === submenuItem.href.replace(`/${locale}`, ""))) ? "page" : undefined}
                     onClick={() => setOpenSubmenu(null)}
                   >
                     {submenuItem.label}
@@ -325,18 +343,22 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
         {renderNavItems(mobilePrimaryItems, true)}
       </nav>
 
-      {openSubmenu === "real-estate" ? (
+      {openSubmenu === "real-estate" || openSubmenu === "more" ? (
         <nav
-          id="mobile-real-estate-submenu"
+          id={openSubmenu === "real-estate" ? "mobile-real-estate-submenu" : "mobile-more-submenu"}
           className="siteNavMobileSubmenuPanel"
-          aria-label={locale === "fr" ? "Pages immobilières" : "Real estate pages"}
+          aria-label={
+            openSubmenu === "real-estate"
+              ? (locale === "fr" ? "Pages immobilières" : "Real estate pages")
+              : (locale === "fr" ? "Pages supplémentaires" : "More pages")
+          }
         >
-          {realEstateSubmenuItems.map((submenuItem) => (
+          {(openSubmenu === "real-estate" ? realEstateSubmenuItems : moreSubmenuItems).map((submenuItem) => (
             <Link
               key={submenuItem.href}
               className="siteNavMobileSublink"
               href={submenuItem.href}
-              aria-current={subpath === submenuItem.href.replace(`/${locale}`, "") ? "page" : undefined}
+              aria-current={(submenuItem.isCurrent ?? (subpath === submenuItem.href.replace(`/${locale}`, ""))) ? "page" : undefined}
               onClick={() => setOpenSubmenu(null)}
             >
               {submenuItem.label}
