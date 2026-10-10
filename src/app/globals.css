@@ -27267,12 +27267,31 @@ body:has(.realEstateSitePage) .siteChrome > .siteFooter { display: none !importa
 .homeHeroActions .homeHeroDiscoverButton,
 .homeHeroActions .homeHeroDiscoverButton:hover,
 .homeHeroActions .homeHeroDiscoverButton:focus-visible {
+  position: relative;
+  isolation: isolate;
   background: none;
   border: 0;
   box-shadow: none;
   color: #fff;
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
+}
+
+/* Paint the frosted surface separately from the label, as in the header. */
+.homeHeroDiscoverButton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+/* Persistent route filters can isolate the video from descendant backdrop layers. */
+.siteChrome > main:has(.homeVideoHeroMedia) {
+  animation: none;
+  filter: none;
+  will-change: auto;
 }
 .homeHeroActions .realEstateHeroActionNeon { border: 0 !important; background: linear-gradient(105deg, #3985ff 0%, #b9ddff 25%, #ff8a32 52%, #ffe0b8 70%, #3985ff 100%); background-size: 240% 100%; color: #fff; animation: real-estate-neon-text-flow 4s ease-in-out infinite; }
 .homeHeroActions .realEstateHeroActionNeon::before { display: none; }
