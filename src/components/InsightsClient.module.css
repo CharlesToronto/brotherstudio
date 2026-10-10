@@ -32,7 +32,7 @@
 .read { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--insights-line); padding-top: 15px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--insights-ink); max-width: 760px; }
 .read b { font-size: 20px; letter-spacing: 0; font-weight: 400; transition: transform .2s; }
 .card:hover .read b { transform: translateX(4px); }
-.cta { background: var(--insights-ink); color: #fff; padding: 60px; display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 100px; }
+.cta { background: radial-gradient(ellipse at 12% 15%, rgb(18 39 75 / .4), transparent 60%), radial-gradient(ellipse at 90% 85%, rgb(10 27 57 / .45), transparent 58%), linear-gradient(125deg, #050c1c 0%, #09162d 48%, #030916 100%); color: #fff; padding: 60px; display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 100px; }
 .cta .eyebrow { color: #aaa; }
 .cta h2 { font-family: var(--font-serif, Georgia, "Times New Roman", serif); font-size: clamp(34px, 5vw, 64px); font-weight: 400; line-height: 1; letter-spacing: -.05em; margin: 14px 0 0; max-width: 700px; }
 .ctaLink { border: 1px solid #777; padding: 15px 20px; white-space: nowrap; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
