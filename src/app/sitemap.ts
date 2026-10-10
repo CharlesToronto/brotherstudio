@@ -30,6 +30,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
 
     entries.push({
+      url: toAbsoluteUrl(withLocalePath(locale, "/insights")),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.72,
+    });
+
+    entries.push({
       url: toAbsoluteUrl(withLocalePath(locale, "/immobilier")),
       lastModified: now,
       changeFrequency: "weekly",
