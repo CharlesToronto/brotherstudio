@@ -138,6 +138,13 @@ export function SiteHeader({ locale: layoutLocale }: SiteHeaderProps) {
       kind: "link" as const,
     },
     {
+      key: "insights",
+      label: "Insights",
+      href: localizedHref("/insights"),
+      isCurrent: subpath === "/insights",
+      kind: "link" as const,
+    },
+    {
       key: "mystudio",
       label: "MYSTUDIO",
       href: localizedHref("/mystudio"),
