@@ -1,9 +1,8 @@
 "use client";
 
 import { Dongle } from "next/font/google";
-import Link from "next/link";
 
-import { withLocalePath, type Locale } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
 
 const dongle = Dongle({
   subsets: ["latin"],
@@ -12,7 +11,6 @@ const dongle = Dongle({
 
 export function HomeVideoHero({ locale }: { locale: Locale }) {
   const isFrench = locale === "fr";
-  const listingsHref = withLocalePath(locale, "/immobilier");
 
   return (
     <section
@@ -45,7 +43,6 @@ export function HomeVideoHero({ locale }: { locale: Locale }) {
           </div>
           <div className="realEstateHeroActions homeHeroActions">
             <a className="realEstateHeroActionSecondary realEstateHeroActionNeon homeHeroActionNeon" href="#home-capabilities-title">Commercialiser mon projet <span aria-hidden="true">↗</span></a>
-            <Link className="homeHeroDiscoverButton" href={listingsHref} target="_blank" rel="noopener noreferrer">Découvrir nos biens <span aria-hidden="true">↗</span></Link>
           </div>
         </div>
 
