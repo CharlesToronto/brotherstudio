@@ -382,3 +382,9 @@
     display: none;
   }
 }
+
+/* Keep every text element in the dark real-estate footer white. */
+:global(body):has(.theme) :global(footer#site-footer.realEstateFooter),
+:global(body):has(.theme) :global(footer#site-footer.realEstateFooter *) {
+  color: #fff !important;
+}
