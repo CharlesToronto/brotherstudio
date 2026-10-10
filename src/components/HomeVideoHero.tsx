@@ -1,8 +1,9 @@
 "use client";
 
 import { Dongle } from "next/font/google";
+import Link from "next/link";
 
-import type { Locale } from "@/lib/i18n";
+import { withLocalePath, type Locale } from "@/lib/i18n";
 
 const dongle = Dongle({
   subsets: ["latin"],
@@ -17,23 +18,33 @@ export function HomeVideoHero({ locale }: { locale: Locale }) {
       className="homeBlurWordSection"
       aria-label={isFrench ? "Hero vidéo BrotherStudio" : "BrotherStudio video hero"}
     >
-      <video
-        className="homeVideoHeroMedia"
-        src="/videos/bs-home-hero.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        aria-hidden="true"
-      />
-
-      <div className="homeHeroOverlay">
+      <div className="homeHeroOverlay" style={{ isolation: "isolate", background: "none" }}>
+        <video
+          className="homeVideoHeroMedia"
+          src="/videos/bs-home-hero.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+          style={{ position: "absolute", inset: 0, zIndex: -2 }}
+        />
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: -1,
+            pointerEvents: "none",
+            background: "linear-gradient(180deg, rgb(0 0 0 / .18) 0%, rgb(0 0 0 / .03) 26%, rgb(0 0 0 / .02) 68%, rgb(0 0 0 / .62) 100%)",
+          }}
+        />
         <div className={`homeHeroCopy ${dongle.className}`}>
           <p className="homeHeroEyebrow">
             {isFrench ? "De l’idée à la vente." : "From idea to sale."}
           </p>
-          <h1 className="homeHeroTitle">BROTHERSTUDIO</h1>
+          <h1 className="homeHeroTitle" style={{ mixBlendMode: "normal" }}>BROTHERSTUDIO</h1>
           <div className="homeHeroValue">
             <p className="homeHeroValueText">
               {isFrench
@@ -43,6 +54,9 @@ export function HomeVideoHero({ locale }: { locale: Locale }) {
           </div>
           <div className="realEstateHeroActions homeHeroActions">
             <a className="realEstateHeroActionSecondary realEstateHeroActionNeon homeHeroActionNeon" href="#home-capabilities-title">Commercialiser mon projet <span aria-hidden="true">↗</span></a>
+            <Link className="homeHeroDiscoverButton" href={withLocalePath(locale, "/immobilier/biens")}>
+              {isFrench ? "Voir nos biens" : "View our properties"} <span aria-hidden="true">↗</span>
+            </Link>
           </div>
         </div>
 
