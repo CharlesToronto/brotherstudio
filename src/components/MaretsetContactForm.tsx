@@ -1,5 +1,7 @@
 "use client";
 
+import { submitTrackedContact } from "@/lib/metaPixel";
+
 import { FormEvent, useState } from "react";
 
 type MaretsetContactFormProps = {
@@ -46,11 +48,7 @@ export function MaretsetContactForm({ locale }: MaretsetContactFormProps) {
     setSubmitState({ status: "idle", message: "" });
 
     try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await submitTrackedContact(payload);
       const data = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
 
       if (!response.ok || !data?.ok) {
@@ -80,7 +78,7 @@ export function MaretsetContactForm({ locale }: MaretsetContactFormProps) {
   };
 
   return (
-    <form className="maretsetContactForm" onSubmit={handleSubmit}>
+    <form data-meta-form="maretset" className="maretsetContactForm" onSubmit={handleSubmit}>
       <div className="maretsetContactFormGrid">
         <label>
           <span>{isFr ? "Nom complet" : "Full name"}</span>

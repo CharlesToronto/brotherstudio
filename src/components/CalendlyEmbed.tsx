@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 
+import { trackMeta } from "@/lib/metaPixel";
 import { buildCalendlyEmbedUrl } from "@/lib/calendly";
 
 type CalendlyEmbedProps = {
@@ -37,6 +38,21 @@ export function CalendlyEmbed({ title, url }: CalendlyEmbedProps) {
       resize: true,
     });
   }, [embedUrl, isScriptReady]);
+
+  useEffect(() => {
+    const scheduled = new Set<string>();
+    function onMessage(event: MessageEvent) {
+      const frame = containerRef.current?.querySelector("iframe");
+      if (event.origin !== "https://calendly.com" || !frame || event.source !== frame.contentWindow) return;
+      if (event.data?.event !== "calendly.event_scheduled") return;
+      const uri = event.data?.payload?.event?.uri;
+      if (typeof uri !== "string" || scheduled.has(uri)) return;
+      scheduled.add(uri);
+      trackMeta("Schedule", { booking_provider: "calendly" });
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   return (
     <>

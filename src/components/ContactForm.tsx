@@ -1,5 +1,7 @@
 "use client";
 
+import { submitTrackedContact } from "@/lib/metaPixel";
+
 import { FormEvent, useState } from "react";
 
 import type { ContactFormMessages } from "@/content/messages";
@@ -48,11 +50,7 @@ export function ContactForm({ messages }: ContactFormProps) {
     setSubmitState({ status: "idle", message: "" });
 
     try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await submitTrackedContact(payload);
 
       const data = (await response.json().catch(() => null)) as
         | { ok?: boolean; error?: string }
@@ -81,7 +79,7 @@ export function ContactForm({ messages }: ContactFormProps) {
   };
 
   return (
-    <form className="contactForm" onSubmit={handleSubmit}>
+    <form data-meta-form="contact" className="contactForm" onSubmit={handleSubmit}>
       <div className="contactField">
         <label className="contactLabel" htmlFor="contact-name">
           {messages.labels.name}

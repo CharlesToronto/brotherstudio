@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { MetaPixel } from "@/components/MetaPixel";
 import { SiteAssistantBubble } from "@/components/SiteAssistantBubble";
 import { RealEstateFooter } from "@/components/RealEstateFooter";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -85,6 +86,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} data-theme="light">
       <body>
+        {!analyticsDisabled && process.env.NODE_ENV === "production" ? <MetaPixel /> : null}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

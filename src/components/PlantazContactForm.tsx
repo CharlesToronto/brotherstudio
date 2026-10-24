@@ -1,5 +1,7 @@
 "use client";
 
+import { submitTrackedContact } from "@/lib/metaPixel";
+
 import { FormEvent, useState } from "react";
 
 export function PlantazContactForm() {
@@ -18,10 +20,7 @@ export function PlantazContactForm() {
     setIsError(false);
 
     try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
+      const response = await submitTrackedContact({
           name: String(data.get("name") ?? ""),
           email: String(data.get("email") ?? ""),
           phone: String(data.get("phone") ?? ""),
@@ -29,8 +28,7 @@ export function PlantazContactForm() {
           website: String(data.get("website") ?? ""),
           source: "plantaz-sales-website",
           project: "Plantaz",
-        }),
-      });
+        });
       const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (!response.ok || !payload?.ok) throw new Error(payload?.error || "La demande n’a pas pu être envoyée.");
 
@@ -45,7 +43,7 @@ export function PlantazContactForm() {
   };
 
   return (
-    <form className="plantazContactForm" onSubmit={handleSubmit}>
+    <form data-meta-form="plantaz" className="plantazContactForm" onSubmit={handleSubmit}>
       <div className="plantazContactGrid">
         <label><span>Nom complet</span><input name="name" type="text" autoComplete="name" required maxLength={120} /></label>
         <label><span>E-mail</span><input name="email" type="email" autoComplete="email" required maxLength={200} /></label>

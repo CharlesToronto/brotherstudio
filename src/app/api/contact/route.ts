@@ -1,4 +1,7 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
+
+import { randomUUID } from "node:crypto";
+import { sendMetaLead } from "@/lib/metaConversions";
 
 import { site } from "@/content/site";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
@@ -104,6 +107,13 @@ export async function POST(request: Request) {
   const message = clip(asTrimmedString(body.message), 4000);
   const source = clip(asTrimmedString(body.source), 80);
   const project = clip(asTrimmedString(body.project), 120);
+  const metaFormName = ({ "campaign-landing-valuation": "valuation", "plantaz-sales-website": "plantaz", "maretset-sales-website": "maretset" } as Record<string, string>)[source] ?? "contact";
+  const successResponse = () => {
+    const submissionId = asTrimmedString(body.submissionId);
+    const metaEventId = /^[0-9a-f-]{36}$/i.test(submissionId) ? `lead-${submissionId}` : randomUUID();
+    after(() => sendMetaLead(request, { eventId: metaEventId, formName: metaFormName, email }));
+    return NextResponse.json({ ok: true, metaEventId, metaFormName }, { status: 201 });
+  };
   const isValuationRequest = source === "campaign-landing-valuation";
   const valuation = isValuationRequest ? readValuation(body.valuation) : null;
 
@@ -150,7 +160,7 @@ export async function POST(request: Request) {
   if (!apiKey) {
     if (isValuationRequest) {
       console.warn("Valuation request was saved, but RESEND_API_KEY is missing; no notification email was sent.");
-      return NextResponse.json({ ok: true }, { status: 201 });
+      return successResponse();
     }
     return NextResponse.json(
       {
@@ -227,7 +237,7 @@ export async function POST(request: Request) {
 
     if (isValuationRequest) {
       console.error("Valuation request was saved, but the owner notification email failed:", errorMessage);
-      return NextResponse.json({ ok: true }, { status: 201 });
+      return successResponse();
     }
     return NextResponse.json({ error: errorMessage }, { status: 502 });
   }
@@ -290,7 +300,7 @@ export async function POST(request: Request) {
 
     if (isValuationRequest) {
       console.error("Valuation request was saved, but the client confirmation email failed:", errorMessage);
-      return NextResponse.json({ ok: true }, { status: 201 });
+      return successResponse();
     }
     return NextResponse.json({ error: errorMessage }, { status: 502 });
   }
@@ -328,5 +338,5 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true }, { status: 201 });
+  return successResponse();
 }

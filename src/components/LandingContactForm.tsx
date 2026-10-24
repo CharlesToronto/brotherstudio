@@ -1,5 +1,7 @@
 "use client";
 
+import { submitTrackedContact, trackMeta } from "@/lib/metaPixel";
+
 import { useRef, useState, type FormEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
@@ -22,6 +24,8 @@ export function LandingContactForm({ locale, analyticsEnabled = false }: { local
   const completedProperty = useRef(false);
   const submissionId = useRef<string | null>(null);
   function record(name: string) {
+    if (name === "landing_property_completed") trackMeta("FormStepCompleted", { form_name: "valuation", step: 1 }, undefined, true);
+    if (name === "landing_form_error") trackMeta("FormError", { form_name: "valuation" }, undefined, true);
     if (analyticsEnabled) {
       try { track(name, { locale }); } catch { /* Analytics must never block a request. */ }
     }
@@ -62,10 +66,7 @@ export function LandingContactForm({ locale, analyticsEnabled = false }: { local
     setStatus({ state: "sending", message: "" });
     try {
       submissionId.current ??= crypto.randomUUID();
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
+      const response = await submitTrackedContact({
           name: `${firstName} ${lastName}`,
           email: String(data.get("email") ?? ""),
           phone: String(data.get("phone") ?? ""),
@@ -86,8 +87,7 @@ export function LandingContactForm({ locale, analyticsEnabled = false }: { local
             saleTimeline: String(data.get("saleMonths") ?? ""),
             desiredPriceChf: desiredPrice,
           },
-        }),
-      });
+        });
       const payload = await response.json().catch(() => null) as { ok?: boolean } | null;
       if (!response.ok || !payload?.ok) throw new Error("Contact request failed");
       record("landing_form_submitted");
@@ -119,7 +119,7 @@ export function LandingContactForm({ locale, analyticsEnabled = false }: { local
   );
 
   return (
-    <form className={`campaignLandingForm ${styles.form}`} noValidate onSubmit={handleSubmit} onChange={() => { if (!started.current) { started.current = true; record("landing_form_started"); } }} aria-busy={status.state === "sending"} aria-labelledby="landing-form-title">
+    <form data-meta-form="valuation" className={`campaignLandingForm ${styles.form}`} noValidate onSubmit={handleSubmit} onChange={() => { if (!started.current) { started.current = true; record("landing_form_started"); } }} aria-busy={status.state === "sending"} aria-labelledby="landing-form-title">
       <div className={styles.header}>
         <h3 id="landing-form-title">{isFrench ? "Votre estimation gratuite" : "Your free valuation"}</h3>
         <p>{isFrench ? "Ces informations nous permettent de vous donner une pré-estimation de votre bien avant la visite." : "This information allows us to provide a preliminary valuation of your property before the visit."}</p>
